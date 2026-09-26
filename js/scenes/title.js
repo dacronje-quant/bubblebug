@@ -1,6 +1,11 @@
 // ════════════════════════════════════════════════════════════════
 //  TITLE — both kittens snoozing on a sunny hill while bubbles drift
-//  up. Any key, button or tap at all starts the game.
+//  up, and two big picture buttons:
+//    ▶  CONTINUE — jump straight back into the saved adventure (greyed
+//                  out when there isn't one yet)
+//    🌱 NEW GAME — pick a kitten and start fresh; if an adventure is
+//                  saved, a picture "erase it?" check (✓ / ✗) comes first
+//  Keyboard / gamepad: ◀ ▶ to choose, jump to press. Taps work too.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -68,31 +73,197 @@
     },
   };
 
+  const G_ = () => BB.G;
+  const S = () => BB.Audio.sfx;
+
   BB.Title = {
-    t: 0,
-    enter() { this.t = 0; this.leaving = 0; BB.Music.play('lullaby'); },
+    t: 0, focus: 0, confirm: null, hasSave: false, summary: null,
+
+    enter() {
+      this.t = 0; this.confirm = null; this.leaving = false;
+      this.hasSave = BB.Save.exists() && BB.Save.load();
+      this.summary = this.hasSave ? {
+        cat: BB.Save.data.cat,
+        stars: BB.Save.count(BB.Save.data.sparkles),
+        hearts: BB.Save.count(BB.Save.data.friends),
+        family: BB.Save.count(BB.Save.data.family || {}),
+      } : null;
+      this.focus = this.hasSave ? 0 : 1;
+      BB.Music.play('lullaby');
+    },
+
+    // button layout (logical px)
+    btn(i) { return { x: G_().W / 2 + (i === 0 ? -120 : 120), y: 330, r: 62 }; },
+    cbtn(i) { return { x: G_().W / 2 + (i === 0 ? -95 : 95), y: 372, r: 46 }; }, // confirm: 0 = ✓ erase, 1 = ✗ keep
+
+    choose(i) {
+      if (this.leaving) return;
+      if (i === 0) {
+        if (!this.hasSave) { S().hmph(); return; }
+        this.leaving = true;
+        S().confirm();
+        BB.Main.go('play', { cat: BB.Save.data.cat, resume: true });
+      } else {
+        S().select();
+        if (this.hasSave) { this.confirm = { t: 0, focus: 1 }; return; }
+        this.startFresh();
+      }
+    },
+
+    startFresh() {
+      this.leaving = true;
+      BB.Save.reset();
+      S().confirm();
+      BB.Main.go('select');
+    },
+
     update() {
       this.t++;
-      G().t++;
+      G_().t++;
       UI.tickBubbles();
-      const taps = BB.Input.takePointers();
-      if (!this.leaving && this.t > 20 && (BB.Input.any || BB.Input._anyKey || taps.length)) {
-        BB.Input._anyKey = false;
-        this.leaving = 1;
-        BB.Audio.sfx.confirm();
-        BB.Main.go('select');
-      }
+      const I = BB.Input;
+      const taps = I.takePointers();
       BB.Input._anyKey = false;
+      if (this.t < 15 || this.leaving) return;
+
+      if (this.confirm) {
+        const cf = this.confirm;
+        cf.t++;
+        if (I.pressed.left) { cf.focus = 0; S().select(); }
+        if (I.pressed.right) { cf.focus = 1; S().select(); }
+        if (I.pressed.back || I.pressed.pause) { this.confirm = null; S().select(); return; }
+        if (cf.t > 10 && (I.pressed.jump || I.pressed.confirm || I.pressed.bubble)) {
+          if (cf.focus === 0) this.startFresh(); else { this.confirm = null; S().select(); }
+          return;
+        }
+        for (const p of taps) {
+          for (let i = 0; i < 2; i++) {
+            const b = this.cbtn(i);
+            if (Math.hypot(p.x - b.x, p.y - b.y) < b.r + 8) {
+              if (i === 0) this.startFresh(); else { this.confirm = null; S().select(); }
+              return;
+            }
+          }
+        }
+        return;
+      }
+
+      if (I.pressed.left && this.focus !== 0) { this.focus = 0; S().select(); }
+      if (I.pressed.right && this.focus !== 1) { this.focus = 1; S().select(); }
+      if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) this.choose(this.focus);
+      for (const p of taps) {
+        for (let i = 0; i < 2; i++) {
+          const b = this.btn(i);
+          if (Math.hypot(p.x - b.x, p.y - b.y) < b.r + 10) { this.focus = i; this.choose(i); }
+        }
+      }
     },
+
     draw(c) {
       const t = this.t;
+      const G = G_();
       UI.drawScenery(c, t, 0);
-      // both kittens snoozing / sitting on the hill
-      BB.Kittens.draw(c, 'marshmallow', { mode: 'sit', t, blink: (t % 240) < 8 ? 1 : 0, yawn: (t % 600) > 520 ? Math.sin(((t % 600) - 520) / 80 * Math.PI) : 0 }, G().W / 2 - 90, G().H - 95, 3.2, 1);
-      BB.Kittens.draw(c, 'phoebe', { mode: 'sit', t: t + 50, blink: ((t + 90) % 260) < 8 ? 1 : 0, ear: (t % 170) < 12 ? Math.sin((t % 170) / 12 * Math.PI * 2) : 0 }, G().W / 2 + 90, G().H - 95, 3.2, -1);
+      BB.Kittens.draw(c, 'marshmallow', { mode: 'sit', t, blink: (t % 240) < 8 ? 1 : 0, yawn: (t % 600) > 520 ? Math.sin(((t % 600) - 520) / 80 * Math.PI) : 0 }, G.W / 2 - 90, G.H - 60, 2.8, 1);
+      BB.Kittens.draw(c, 'phoebe', { mode: 'sit', t: t + 50, blink: ((t + 90) % 260) < 8 ? 1 : 0, ear: (t % 170) < 12 ? Math.sin((t % 170) / 12 * Math.PI * 2) : 0 }, G.W / 2 + 90, G.H - 60, 2.8, -1);
       UI.drawBubbles(c);
-      UI.logo(c, t);
-      UI.playButton(c, G().W / 2, G().H / 2 + 10, 44, t, false);
+      UI.logo(c, t, 110);
+      this.drawContinue(c, t);
+      this.drawNew(c, t);
+      if (this.confirm) this.drawConfirm(c, t);
+    },
+
+    ring(c, b, col, on, t, dim) {
+      const G = G_();
+      const k = on ? 1.08 + Math.sin(t * 0.1) * 0.04 : 1;
+      if (on && !dim) G.drawGlow(b.x, b.y, b.r * 2.3, '#fff4c2', 0.65, c);
+      c.save(); c.translate(b.x, b.y); c.scale(k, k);
+      c.fillStyle = dim ? '#b8b2c4' : col; c.strokeStyle = '#ffffff'; c.lineWidth = 7;
+      G.circle(0, 0, b.r, c); c.fill(); c.stroke();
+      return k;
+    },
+
+    // ▶ Continue: play arrow, the saved kitten peeking over, and its tallies
+    drawContinue(c, t) {
+      const G = G_(), b = this.btn(0), dim = !this.hasSave;
+      c.save();
+      if (dim) c.globalAlpha = 0.5;
+      this.ring(c, b, '#5fd48a', this.focus === 0, t, dim);
+      c.fillStyle = '#ffffff';
+      c.beginPath(); c.moveTo(-15, -24); c.lineTo(26, 0); c.lineTo(-15, 24); c.closePath(); c.fill();
+      c.restore();
+      if (this.summary) {
+        BB.Kittens.draw(c, this.summary.cat, { mode: 'sit', t, happy: (t % 200) > 150 }, b.x - 58, b.y - 30, 1.5, 1);
+        // the saved tallies, in a little pill beside the button
+        const fam = this.summary.family;
+        const w = fam ? 204 : 140, px = b.x - b.r - 14 - w, py = b.y + 22;
+        c.fillStyle = 'rgba(30,20,50,0.45)'; G.rrect(px, py, w, 34, 17, c); c.fill();
+        c.fillStyle = '#ffd84a'; G.star(px + 20, py + 17, 9, 5, 0.5, -Math.PI / 2, c); c.fill();
+        G.text(String(this.summary.stars), px + 48, py + 18, 17, '#fff6d6', null);
+        c.fillStyle = '#ff7eb6'; G.heart(px + 84, py + 19, 8, c); c.fill();
+        G.text(String(this.summary.hearts), px + 112, py + 18, 17, '#ffe3f0', null);
+        if (fam) {
+          BB.MapView.catFace(c, px + 150, py + 18, 1.05, '#fff1dc', '#9a7a64');
+          G.text(String(fam), px + 178, py + 18, 17, '#fff1dc', null);
+        }
+      }
+      c.restore();
+      c.globalAlpha = 1;
+    },
+
+    // 🌱 New Game: a little sprout with a sparkle
+    drawNew(c, t) {
+      const G = G_(), b = this.btn(1);
+      this.ring(c, b, '#ff8fb8', this.focus === 1, t, false);
+      c.fillStyle = '#8a5a34'; G.rrect(-16, 8, 32, 22, 6, c); c.fill();
+      c.fillStyle = '#b07a4a'; G.rrect(-19, 4, 38, 8, 4, c); c.fill();
+      const sway = Math.sin(t * 0.06) * 0.1;
+      c.save(); c.rotate(sway);
+      c.strokeStyle = '#3f8f35'; c.lineWidth = 5; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(0, 5); c.lineTo(0, -18); c.stroke();
+      c.fillStyle = '#8fe388';
+      G.ellipse(-12, -20, 13, 7, 0.5, c); c.fill();
+      G.ellipse(12, -26, 13, 7, -0.5, c); c.fill();
+      c.restore();
+      c.fillStyle = '#fff6c2';
+      G.twinkle(24, -30, 7 + Math.sin(t * 0.15) * 2, c); c.fill();
+      c.restore();
+    },
+
+    // "Erase the saved adventure?"  — ✓ start fresh / ✗ keep it
+    drawConfirm(c, t) {
+      const G = G_(), cf = this.confirm;
+      const a = Math.min(1, cf.t / 10);
+      c.save();
+      c.globalAlpha = a;
+      c.fillStyle = 'rgba(25,15,45,0.55)'; c.fillRect(0, 0, G.W, G.H);
+      c.fillStyle = '#fff6de'; c.strokeStyle = '#d9a95a'; c.lineWidth = 6;
+      G.rrect(G.W / 2 - 230, 170, 460, 280, 34, c); c.fill(); c.stroke();
+      // the adventure that would be erased, with a gentle "poof" cloud over it
+      const s = this.summary;
+      BB.Kittens.draw(c, s.cat, { mode: 'sit', t, blink: (t % 160) < 8 ? 1 : 0 }, G.W / 2 - 40, 280, 1.8, 1);
+      c.fillStyle = '#ffd84a'; G.star(G.W / 2 + 30, 232, 11, 5, 0.5, -Math.PI / 2, c); c.fill();
+      G.text(String(s.stars), G.W / 2 + 70, 233, 22, '#8a5a14', null);
+      c.fillStyle = '#ff7eb6'; G.heart(G.W / 2 + 30, 268, 10, c); c.fill();
+      G.text(String(s.hearts), G.W / 2 + 70, 268, 22, '#b8407a', null);
+      c.strokeStyle = 'rgba(200,80,110,0.8)'; c.lineWidth = 6; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(G.W / 2 - 100, 300); c.lineTo(G.W / 2 + 100, 205); c.stroke();
+      // ✓ erase and start fresh
+      const yes = this.cbtn(0), no = this.cbtn(1);
+      for (const [b, i, col] of [[yes, 0, '#5fd48a'], [no, 1, '#ff8fb8']]) {
+        const on = cf.focus === i;
+        if (on) G.drawGlow(b.x, b.y, b.r * 2.2, '#fff4c2', 0.6, c);
+        const k = on ? 1.1 + Math.sin(t * 0.12) * 0.04 : 1;
+        c.save(); c.translate(b.x, b.y); c.scale(k, k);
+        c.fillStyle = col; c.strokeStyle = '#ffffff'; c.lineWidth = 6;
+        G.circle(0, 0, b.r, c); c.fill(); c.stroke();
+        c.strokeStyle = '#ffffff'; c.lineWidth = 9; c.lineCap = 'round'; c.lineJoin = 'round';
+        c.beginPath();
+        if (i === 0) { c.moveTo(-17, 1); c.lineTo(-5, 14); c.lineTo(18, -13); }
+        else { c.moveTo(-14, -14); c.lineTo(14, 14); c.moveTo(14, -14); c.lineTo(-14, 14); }
+        c.stroke();
+        c.restore();
+      }
+      c.restore();
     },
   };
 })(window.BB);

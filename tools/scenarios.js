@@ -67,7 +67,7 @@ const out = process.argv[2] || '.';
   await start('h4', true); await tp('h4', 8, 13); await wait(300); await shot('petals');
   await start('h4', false); await tp('h4', 8, 13); await wait(300); await shot('petals_off');
 
-  // 7. Cloud King and the party
+  // 7. Cloud King (his gate opens onto the Rainbow Bridge)
   await start('k3', true);
   await tp('k3', 8, 13);
   await wait(300); await shot('king');
@@ -80,8 +80,12 @@ const out = process.argv[2] || '.';
   await tp('k3', 26, 13);
   await hold('ArrowRight', 800);
   await wait(800);
-  await tp('k4', 9, 13);
-  await hold('ArrowRight', 400);
+  console.log('past the gate', await st());
+
+  // 8. The Rainbow Party, at the very top of the Starfall Shaft
+  await start('t5', true);
+  await tp('t5', 10, 13);
+  await hold('ArrowRight', 800);
   await wait(4500); await shot('party');
   console.log('party', await st());
 

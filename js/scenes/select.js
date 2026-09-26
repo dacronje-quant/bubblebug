@@ -1,8 +1,8 @@
 // ════════════════════════════════════════════════════════════════
-//  SELECT — pick your kitten. Tap a kitten (or use ◀ ▶ and jump).
-//  The highlighted kitten hops and mews hello. If there's a saved
-//  adventure, picking a kitten simply continues it — and a little sprout
-//  button (hold it down) lets a grown-up start fresh.
+//  SELECT — pick your kitten for a brand-new adventure. Tap a kitten (or
+//  use ◀ ▶ and jump). The highlighted kitten hops and mews hello.
+//  (Continuing a saved adventure goes straight from the title screen
+//  into the game with the kitten it was saved with.)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -12,17 +12,15 @@
   const CATS = ['marshmallow', 'phoebe'];
 
   BB.Select = {
-    t: 0, sel: 0, chosen: null, chosenT: 0, hopT: [0, 0], holdT: 0, resetFx: 0,
+    t: 0, sel: 0, chosen: null, chosenT: 0, hopT: [0, 0],
 
     enter() {
-      this.t = 0; this.chosen = null; this.chosenT = 0; this.holdT = 0;
-      BB.Save.load();
+      this.t = 0; this.chosen = null; this.chosenT = 0;
       this.sel = Math.max(0, CATS.indexOf(BB.Save.data.cat));
       BB.Music.play('lullaby');
     },
 
     spot(i) { return { x: G().W / 2 + (i ? 190 : -190), y: 400 }; },
-    sprout() { return { x: G().W - 60, y: G().H - 56, r: 30 }; },
 
     pick(i) {
       if (this.sel !== i) { this.sel = i; S().select(); }
@@ -46,7 +44,6 @@
       BB.UI.tickBubbles();
       BB.Particles.update();
       for (let i = 0; i < 2; i++) if (this.hopT[i] > 0) this.hopT[i]--;
-      if (this.resetFx > 0) this.resetFx--;
 
       if (this.chosen) {
         if (++this.chosenT === 55) {
@@ -60,25 +57,7 @@
       if (inp.pressed.right) this.pick(1);
       if (inp.pressed.jump || inp.pressed.confirm || inp.pressed.bubble) this.confirm();
 
-      // grown-up "fresh start": hold the sprout (or hold Backspace)
-      let holding = inp.held.back && !inp.held.pause;
-      const sp = this.sprout();
-      if (BB.Input.pointerDown && BB.Save.exists()) {
-        const p = BB.Input.pointerDown;
-        if (Math.hypot(p.x - sp.x, p.y - sp.y) < sp.r + 10) holding = true;
-      }
-      if (holding && BB.Save.exists()) {
-        this.holdT++;
-        if (this.holdT > 100) {
-          BB.Save.reset();
-          this.holdT = 0; this.resetFx = 60;
-          S().gate();
-          BB.Particles.burst('spark', sp.x, sp.y, 20, { color: '#bff5a8', speed: 3, life: 40 });
-        }
-      } else this.holdT = Math.max(0, this.holdT - 4);
-
       for (const p of inp.takePointers()) {
-        if (Math.hypot(p.x - sp.x, p.y - sp.y) < sp.r + 10) continue;
         for (let i = 0; i < 2; i++) {
           const s = this.spot(i);
           if (Math.abs(p.x - s.x) < 150 && p.y > 170 && p.y < 520) { this.pick(i); this.confirm(); }
@@ -128,27 +107,6 @@
         }
       }
 
-      // continuing an adventure? show its stars & hearts
-      if (BB.Save.exists()) {
-        const d = BB.Save.data;
-        c.fillStyle = 'rgba(30,20,50,0.4)'; G().rrect(G().W / 2 - 90, 222, 180, 40, 20, c); c.fill();
-        c.fillStyle = '#ffd84a'; G().star(G().W / 2 - 62, 242, 11, 5, 0.5, -Math.PI / 2, c); c.fill();
-        G().text(String(BB.Save.count(d.sparkles)), G().W / 2 - 28, 243, 20, '#fff6d6', null);
-        c.fillStyle = '#ff7eb6'; G().heart(G().W / 2 + 24, 244, 10, c); c.fill();
-        G().text(String(BB.Save.count(d.friends)), G().W / 2 + 58, 243, 20, '#ffe3f0', null);
-        // sprout "fresh start" button (hold to use)
-        const sp = this.sprout();
-        c.fillStyle = 'rgba(30,20,50,0.35)'; G().circle(sp.x, sp.y, sp.r, c); c.fill();
-        if (this.holdT > 0) {
-          c.strokeStyle = '#bff5a8'; c.lineWidth = 5;
-          c.beginPath(); c.arc(sp.x, sp.y, sp.r - 3, -Math.PI / 2, -Math.PI / 2 + (this.holdT / 100) * Math.PI * 2); c.stroke();
-        }
-        c.strokeStyle = '#6cc24a'; c.lineWidth = 3;
-        c.beginPath(); c.moveTo(sp.x, sp.y + 14); c.lineTo(sp.x, sp.y - 2); c.stroke();
-        c.fillStyle = '#8fe388';
-        G().ellipse(sp.x - 8, sp.y - 4, 8, 4, 0.5, c); c.fill();
-        G().ellipse(sp.x + 8, sp.y - 8, 8, 4, -0.5, c); c.fill();
-      }
       BB.Particles.draw(c, { x: 0, y: 0 });
       if (this.chosen) {
         c.fillStyle = `rgba(255,250,240,${Math.max(0, (this.chosenT - 30) / 25)})`;

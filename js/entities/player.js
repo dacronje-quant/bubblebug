@@ -78,6 +78,19 @@
       pl.happyT = 20;
     }
     if (fx & FX.CLIMB_START) A().climb();
+    if (fx & (FX.SPLASH | FX.BREACH)) { A().splash(); PT().splash(cx, b.y + b.h / 2, '#dff8ff'); }
+    if (fx & FX.BREACH) { A().jump(pl.cat); pl.squash = 1.3; }
+    if (fx & FX.BBOUNCE) {
+      // a big bubble appears under the paws and goes *pop*
+      A().bounce(); A().pop(0.7); pl.squash = 1.35;
+      PT().ring(cx, feet + 4, BB.CATS[pl.cat].bubbleTint, 22);
+      PT().burst('dot', cx, feet + 4, 10, { color: '#e8fbff', speed: 2.5, life: 22, size: 2.4 });
+    }
+    if (fx & FX.FLAP) {
+      A().djump(pl.cat); pl.squash = 1.2;
+      PT().burst('star', cx, feet - 4, 5, { color: '#ffe27a', speed: 2, life: 30 });
+    }
+    if (b.inWater && pl.t % 12 === 0) PT().trail('dot', cx + b.facing * 8, b.y + 4, 'rgba(230,250,255,0.9)');
     if (b.climbing && pl.t % 10 === 0) A().climb();
     if (fx & FX.LEDGE) PT().dust(cx, feet, 3);
     if (b.floating && pl.t % 7 === 0) PT().seed(cx + (Math.random() - 0.5) * 16, b.y - 20);
@@ -97,7 +110,7 @@
     idleAnims(pl, false);
 
     // ── bubbles ──
-    if (input.pressed.bubble && pl.bubbleCd <= 0 && env.bubbleCount < C.BUBBLE_MAX) {
+    if (input.pressed.bubble && !(fx & FX.BBOUNCE) && pl.bubbleCd <= 0 && env.bubbleCount < C.BUBBLE_MAX) {
       pl.bubbleCd = C.BUBBLE_COOLDOWN;
       pl.puff = 1;
       pl.idleT = 0;
@@ -162,6 +175,7 @@
     if (pl.state === 'gift') { p.mode = 'sit'; p.happy = true; p.look = -1; return p; }
     if (pl.state === 'party') { p.mode = (pl.t % 60) < 30 ? 'stand' : 'air'; p.happy = true; return p; }
     if (b.climbing) { p.mode = 'climb'; return p; }
+    if (b.inWater) { p.mode = 'run'; p.swim = true; p.phase = pl.t * 0.15; return p; }
     if (!b.grounded) { p.mode = b.floating ? 'float' : 'air'; return p; }
     if (Math.abs(b.vx) > 0.4) { p.mode = 'run'; return p; }
     const sitAt = pl.cat === 'marshmallow' ? 120 : 170;
@@ -183,7 +197,20 @@
     const face = pl.state === 'bench' ? 1 : b.facing;
     const drawX = b.climbing ? x + b.climbing * 2 : x;
     // drawn a touch larger than the collision box so little eyes can find it
-    BB.Kittens.draw(c, pl.cat, pose(pl), drawX, y + (pl.state === 'bench' ? -6 : 0), 1.2, face);
+    const ps = pose(pl);
+    // the Star Whale's star wings, fluttering whenever you're up in the air
+    if (abilities.wings && pl.state === 'play' && !b.grounded && !b.inWater && !b.climbing) {
+      const fl = b.vy < 0 ? Math.sin(pl.t * 0.6) * 0.5 : Math.sin(pl.t * 0.15) * 0.15;
+      for (const d of [-1, 1]) {
+        c.save(); c.translate(drawX - face * 4, y - 20); c.rotate(d * (0.7 + fl));
+        c.fillStyle = 'rgba(255,226,122,0.95)'; c.strokeStyle = '#c28a14'; c.lineWidth = 1.2;
+        G().star(d * -9, -2, 8, 5, 0.5, -Math.PI / 2, c); c.fill(); c.stroke();
+        c.restore();
+      }
+    }
+    BB.Kittens.draw(c, pl.cat, ps, drawX, y + (pl.state === 'bench' ? -6 : 0), 1.2, face);
+    // the Sea Turtle's shimmering bubble helmet
+    if (ps.swim) G().bubble(drawX + face * 10, y - 23, 15, '#bff4ff', 0.75, c);
   }
   const G = () => BB.G;
 

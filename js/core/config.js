@@ -45,6 +45,12 @@
     FLOAT_FALL: 1.25,       // dandelion glide fall speed
     UPDRAFT: -7.2,          // breeze lift speed (carries you ~1.5 tiles past the top)
     UPDRAFT_ACC: 0.9,
+    SWIM_UP: -2.9,          // Sea Turtle: holding jump underwater
+    SWIM_SINK: 1.3,
+    SWIM_SPEED: 0.8,
+    JUMP_SPRING: -12.6,     // Snow Hare: ≈ 5.6 tiles
+    BUBBLE_BOUNCE: -10,     // Otter: a bubble under your paws ≈ 3.5 tiles
+    FLAP: -7.6,             // Star Whale: each flap of the star wings
 
     // ── Bubbles ──
     BUBBLE_SPEED: 4.6,

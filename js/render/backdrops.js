@@ -106,6 +106,94 @@
       c = L[2].ctx;
       for (let i = 0; i < 8; i++) { const x = rnd() * LW; wrap(xx => cloud(c, xx, LH - 20 - rnd() * 40, 1.2 + rnd() * 1.2, '#ffffff'), x); }
     },
+    lagoon(Z, L, rnd) {
+      // far: a glittering sea, a little island and puffy clouds
+      let c = L[0].ctx;
+      for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => cloud(c, xx, 70 + rnd() * 120, 0.7 + rnd() * 0.6, 'rgba(255,255,255,0.85)'), x); }
+      c.fillStyle = BB.mix(Z.far, '#2fc0d8', 0.4); c.fillRect(0, LH - 300, LW, 300);
+      c.fillStyle = 'rgba(255,255,255,0.5)';
+      for (let i = 0; i < 40; i++) { const x = rnd() * LW, y = LH - 290 + rnd() * 120; c.fillRect(x, y, 10 + rnd() * 20, 2); }
+      for (let i = 0; i < 2; i++) {
+        const x = 200 + i * 600 + rnd() * 200;
+        wrap(xx => { c.fillStyle = Z.far; c.beginPath(); c.ellipse(xx, LH - 300, 120, 34, 0, Math.PI, 0); c.fill(); palm(c, xx + 20, LH - 330, 110, BB.mix(Z.far, '#3f8a6a', 0.3)); }, x);
+      }
+      // mid: leaning palm trees on the dunes
+      c = L[1].ctx;
+      hills(c, LH - 130, 26, Z.mid, rnd, 4);
+      for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => palm(c, xx, LH - 120, 220 + rnd() * 120, Z.mid), x); }
+      // near: beach grass
+      c = L[2].ctx;
+      grassBlades(c, Z.near, rnd, 16, 150);
+    },
+    dunes(Z, L, rnd) {
+      // far: flat-topped mesas shimmering in the heat
+      let c = L[0].ctx;
+      for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => mesa(c, xx, LH - 220, 160 + rnd() * 160, 120 + rnd() * 140, BB.mix(Z.far, Z.sky[1], 0.35)), x); }
+      hills(c, LH - 210, 40, Z.far, rnd, 3);
+      // mid: rolling dunes with tall cacti
+      c = L[1].ctx;
+      hills(c, LH - 150, 60, Z.mid, rnd, 3);
+      for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => bigCactus(c, xx, LH - 120, 120 + rnd() * 120, Z.mid), x); }
+      // near: sand ridges and dry grass
+      c = L[2].ctx;
+      hills(c, LH - 40, 30, Z.near, rnd, 6);
+      grassBlades(c, Z.near, rnd, 10, 110);
+    },
+    frost(Z, L, rnd) {
+      // far: snowy mountains
+      let c = L[0].ctx;
+      for (let i = 0; i < 6; i++) { const x = rnd() * LW; wrap(xx => mountain(c, xx, LH - 160, 200 + rnd() * 160, 260 + rnd() * 200, Z.far, '#ffffff'), x); }
+      // mid: a frosty pine forest
+      c = L[1].ctx;
+      hills(c, LH - 120, 30, Z.mid, rnd, 4);
+      for (let i = 0; i < 12; i++) { const x = rnd() * LW; wrap(xx => bigPine(c, xx, LH - 110, 140 + rnd() * 140, Z.mid), x); }
+      // near: drifts and dark pines
+      c = L[2].ctx;
+      for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => bigPine(c, xx, LH, 180 + rnd() * 160, Z.near), x); }
+      hills(c, LH - 30, 24, '#e8f2ff', rnd, 5);
+    },
+    autumn(Z, L, rnd) {
+      // far: hills dotted with round orange trees
+      let c = L[0].ctx;
+      hills(c, LH - 230, 50, BB.mix(Z.far, Z.sky[1], 0.3), rnd, 3);
+      for (let i = 0; i < 14; i++) { const x = rnd() * LW; wrap(xx => roundTree(c, xx, LH - 210 - rnd() * 30, 30 + rnd() * 20, BB.mix(Z.far, Z.sky[1], 0.15), BB.mix(Z.far, '#6a4a34', 0.4)), x); }
+      hills(c, LH - 180, 40, Z.far, rnd, 4);
+      // mid: big maples
+      c = L[1].ctx;
+      for (let i = 0; i < 6; i++) { const x = rnd() * LW; wrap(xx => roundTree(c, xx, LH - 80 - rnd() * 60, 70 + rnd() * 50, Z.mid, BB.mix(Z.mid, '#3a2010', 0.5), 260), x); }
+      hills(c, LH - 100, 30, BB.mix(Z.mid, '#3a2010', 0.3), rnd, 5);
+      // near: ferns and leaf piles
+      c = L[2].ctx;
+      ferns(c, Z.near, rnd);
+    },
+    springs(Z, L, rnd) {
+      // far: a big gentle mountain with a snowy cap
+      let c = L[0].ctx;
+      for (let i = 0; i < 2; i++) { const x = 300 + i * 600 + rnd() * 100; wrap(xx => mountain(c, xx, LH - 160, 380, 360, Z.far, '#f4e8f4'), x); }
+      hills(c, LH - 170, 30, BB.mix(Z.far, Z.mid, 0.5), rnd, 4);
+      // mid: bamboo groves with warm lanterns
+      c = L[1].ctx;
+      for (let i = 0; i < 18; i++) { const x = rnd() * LW; wrap(xx => bamboo(c, xx, LH, 360 + rnd() * 200, 10 + rnd() * 6, Z.mid), x); }
+      for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => lantern(c, xx, 180 + rnd() * 200, Z.mid), x); }
+      // near: dark bamboo and leaves
+      c = L[2].ctx;
+      for (let i = 0; i < 7; i++) { const x = rnd() * LW; wrap(xx => bamboo(c, xx, LH, 500 + rnd() * 200, 16 + rnd() * 8, Z.near), x); }
+    },
+    starlight(Z, L, rnd) {
+      // far: glittering crystal spires and a ringed planet
+      let c = L[0].ctx;
+      for (let i = 0; i < 8; i++) {
+        const x = rnd() * LW, h = 200 + rnd() * 320, w = 30 + rnd() * 40;
+        wrap(xx => crystalPillar(c, xx, LH, w, h, BB.mix(Z.far, '#8a7aff', 0.2), 0.3), x);
+      }
+      // mid: little floating islands
+      c = L[1].ctx;
+      for (let i = 0; i < 6; i++) { const x = rnd() * LW; wrap(xx => floatIsland(c, xx, 180 + rnd() * 300, 60 + rnd() * 50, Z.mid, rnd), x); }
+      // near: crystal grass
+      c = L[2].ctx;
+      grassBlades(c, Z.near, rnd, 20, 160);
+      for (let i = 0; i < 4; i++) { const x = rnd() * LW; wrap(xx => crystalPillar(c, xx, LH, 26 + rnd() * 20, 90 + rnd() * 90, Z.near, 0.5), x); }
+    },
   };
 
   // ──── shape helpers ────
@@ -257,6 +345,91 @@
     }
   }
 
+  function palm(c, x, y, h, col) {
+    c.strokeStyle = col; c.lineWidth = 12; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(x, y + 60); c.quadraticCurveTo(x + h * 0.25, y - h * 0.5, x + h * 0.1, y - h); c.stroke();
+    c.fillStyle = col;
+    const tx = x + h * 0.1, ty = y - h;
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI + i * (Math.PI / 5) + 0.1;
+      c.beginPath(); c.moveTo(tx, ty);
+      c.quadraticCurveTo(tx + Math.cos(a) * h * 0.3, ty + Math.sin(a) * h * 0.3 - 20, tx + Math.cos(a) * h * 0.45, ty + Math.sin(a) * h * 0.2 + 30);
+      c.quadraticCurveTo(tx + Math.cos(a) * h * 0.25, ty + Math.sin(a) * h * 0.2, tx, ty + 6); c.fill();
+    }
+    G.circle(tx - 6, ty + 10, 8, c); c.fill(); G.circle(tx + 6, ty + 12, 8, c); c.fill();
+  }
+  function mesa(c, x, y, w, h, col) {
+    c.fillStyle = col;
+    c.beginPath(); c.moveTo(x - w / 2 - 30, y + 200); c.lineTo(x - w / 2, y - h + 14); c.quadraticCurveTo(x - w / 2, y - h, x - w / 2 + 14, y - h);
+    c.lineTo(x + w / 2 - 14, y - h); c.quadraticCurveTo(x + w / 2, y - h, x + w / 2, y - h + 14); c.lineTo(x + w / 2 + 30, y + 200); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.12)'; c.fillRect(x - w / 2 + 4, y - h * 0.6, w - 8, 10); c.fillRect(x - w / 2 + 2, y - h * 0.3, w - 4, 8);
+  }
+  function bigCactus(c, x, y, h, col) {
+    c.fillStyle = col;
+    const w = h * 0.16;
+    G.rrect(x - w / 2, y - h, w, h + 150, w / 2, c); c.fill();
+    G.rrect(x - w * 2, y - h * 0.65, w * 0.8, h * 0.35, w * 0.4, c); c.fill();
+    c.fillRect(x - w * 2, y - h * 0.35, w * 1.6, w * 0.8);
+    G.rrect(x + w * 1.2, y - h * 0.8, w * 0.8, h * 0.4, w * 0.4, c); c.fill();
+    c.fillRect(x + w * 0.4, y - h * 0.45, w * 1.6, w * 0.8);
+  }
+  function mountain(c, x, y, w, h, col, cap) {
+    c.fillStyle = col;
+    c.beginPath(); c.moveTo(x - w, y + 200); c.lineTo(x - w * 0.12, y - h + 20); c.quadraticCurveTo(x, y - h - 6, x + w * 0.12, y - h + 20); c.lineTo(x + w, y + 200); c.closePath(); c.fill();
+    c.fillStyle = cap;
+    c.beginPath(); c.moveTo(x - w * 0.3, y - h * 0.62);
+    c.lineTo(x - w * 0.12, y - h + 20); c.quadraticCurveTo(x, y - h - 6, x + w * 0.12, y - h + 20); c.lineTo(x + w * 0.3, y - h * 0.62);
+    for (let i = 3; i >= -3; i--) c.lineTo(x + i * w * 0.1, y - h * 0.62 + (i % 2 ? 14 : -4));
+    c.closePath(); c.fill();
+  }
+  function bigPine(c, x, y, h, col) {
+    c.fillStyle = col;
+    c.fillRect(x - h * 0.03, y - h * 0.2, h * 0.06, h * 0.2 + 100);
+    for (let i = 0; i < 4; i++) {
+      const w = h * (0.34 - i * 0.07), ty = y - h * 0.15 - i * h * 0.2;
+      c.beginPath(); c.moveTo(x - w, ty); c.lineTo(x, ty - h * 0.32); c.lineTo(x + w, ty); c.closePath(); c.fill();
+    }
+    c.fillStyle = 'rgba(255,255,255,0.55)';
+    for (let i = 0; i < 4; i++) {
+      const w = h * (0.34 - i * 0.07), ty = y - h * 0.15 - i * h * 0.2;
+      c.beginPath(); c.moveTo(x - w * 0.9, ty); c.quadraticCurveTo(x - w * 0.5, ty - 8, x, ty - 4); c.quadraticCurveTo(x + w * 0.5, ty - 8, x + w * 0.9, ty); c.lineTo(x + w * 0.9, ty + 3); c.lineTo(x - w * 0.9, ty + 3); c.fill();
+    }
+  }
+  function roundTree(c, x, y, r, leaf, trunk, trunkH = 0) {
+    c.fillStyle = trunk;
+    c.fillRect(x - r * 0.12, y - r * 0.2, r * 0.24, r * 0.2 + (trunkH || r) + 100);
+    c.fillStyle = leaf;
+    G.circle(x, y - r * 0.6 - trunkH * 0.3, r, c); c.fill();
+    G.circle(x - r * 0.7, y - r * 0.2 - trunkH * 0.3, r * 0.7, c); c.fill();
+    G.circle(x + r * 0.7, y - r * 0.25 - trunkH * 0.3, r * 0.72, c); c.fill();
+  }
+  function bamboo(c, x, y, h, w, col) {
+    c.fillStyle = col;
+    c.fillRect(x - w / 2, y - h, w, h);
+    c.fillStyle = BB.mix(col, '#000000', 0.25);
+    for (let k = y - 60; k > y - h; k -= 70) c.fillRect(x - w / 2 - 1, k, w + 2, 4);
+    c.fillStyle = col;
+    for (let k = y - 90; k > y - h; k -= 140) {
+      for (const d of [-1, 1]) { c.beginPath(); c.ellipse(x + d * (w + 14), k - 6, 20, 5, d * -0.5, 0, TAU); c.fill(); }
+    }
+  }
+  function lantern(c, x, y, col) {
+    c.strokeStyle = col; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(x, 0); c.lineTo(x, y - 18); c.stroke();
+    G.drawGlow(x, y, 60, '#ffb070', 0.5, c);
+    c.fillStyle = '#ff9a5a'; G.ellipse(x, y, 14, 18, 0, c); c.fill();
+    c.fillStyle = 'rgba(255,230,180,0.8)'; G.ellipse(x, y, 7, 14, 0, c); c.fill();
+    c.fillStyle = '#6a2a2a'; c.fillRect(x - 8, y - 20, 16, 4); c.fillRect(x - 8, y + 16, 16, 4);
+  }
+  function floatIsland(c, x, y, w, col, rnd) {
+    c.fillStyle = col;
+    c.beginPath(); c.ellipse(x, y, w, w * 0.22, 0, Math.PI, 0);
+    c.quadraticCurveTo(x + w * 0.6, y + w * 0.4, x, y + w * 0.9); c.quadraticCurveTo(x - w * 0.6, y + w * 0.4, x - w, y); c.fill();
+    G.drawGlow(x, y + w * 0.5, w, '#b8a0ff', 0.25, c);
+    c.fillStyle = 'rgba(255,246,208,0.8)';
+    for (let i = 0; i < 3; i++) { G.twinkle(x + (rnd() - 0.5) * w, y - 6 - rnd() * 10, 3, c); c.fill(); }
+  }
+
   function layersFor(zone) {
     let L = cache.get(zone);
     if (!L) {
@@ -306,6 +479,61 @@
     } else if (Z.key === 'ruins') {
       c.fillStyle = 'rgba(255,255,255,0.08)';
       for (let i = 0; i < 5; i++) { cloud(c, ((i * 260 + px * 4 + t * 0.1) % (G.W + 300)) - 150, 50 + i * 18, 2.2, 'rgba(220,230,240,0.18)'); }
+    } else if (Z.key === 'lagoon') {
+      const sx = 820 + (px % 60), sy = 100;
+      G.drawGlow(sx, sy, 200, '#fff4c2', 0.7, c);
+      c.fillStyle = '#fffbe6'; G.circle(sx, sy, 32, c); c.fill();
+      // two lazy seagulls
+      c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = 3; c.lineCap = 'round';
+      for (let i = 0; i < 2; i++) {
+        const gx = ((t * 0.3 + i * 400) % (G.W + 200)) - 100, gy = 150 + i * 40 + Math.sin(t * 0.02 + i) * 10, f = Math.sin(t * 0.12 + i) * 5;
+        c.beginPath(); c.moveTo(gx - 14, gy - f); c.quadraticCurveTo(gx - 6, gy - 8, gx, gy); c.quadraticCurveTo(gx + 6, gy - 8, gx + 14, gy - f); c.stroke();
+      }
+    } else if (Z.key === 'dunes') {
+      // a huge, low, friendly sun
+      const sx = 300 + (px % 40), sy = 170;
+      G.drawGlow(sx, sy, 320, '#ffe0a0', 0.8, c);
+      c.fillStyle = '#fff4d0'; G.circle(sx, sy, 60, c); c.fill();
+    } else if (Z.key === 'frost') {
+      // a soft aurora
+      c.save(); c.globalAlpha = 0.28;
+      for (let i = 0; i < 3; i++) {
+        c.strokeStyle = ['#9ff0e0', '#b8a0ff', '#8fd8ff'][i]; c.lineWidth = 26 - i * 6;
+        c.beginPath();
+        for (let x = -20; x <= G.W + 20; x += 20) c.lineTo(x, 90 + i * 30 + Math.sin(x * 0.006 + t * 0.01 + i) * 30);
+        c.stroke();
+      }
+      c.restore();
+    } else if (Z.key === 'autumn') {
+      const sx = 860 + (px % 60), sy = 130;
+      G.drawGlow(sx, sy, 240, '#ffd08a', 0.6, c);
+      c.fillStyle = '#fff0d0'; G.circle(sx, sy, 38, c); c.fill();
+    } else if (Z.key === 'springs' || Z.key === 'starlight') {
+      const n = Z.key === 'starlight' ? 110 : 50;
+      for (let i = 0; i < n; i++) {
+        const x = ((BB.hash(i, 1, 7) * G.W + px * (i % 3)) % G.W + G.W) % G.W, y = BB.hash(i, 2, 7) * G.H * 0.7;
+        c.fillStyle = `rgba(255,250,235,${0.3 + 0.6 * Math.abs(Math.sin(t * 0.03 + i))})`;
+        G.twinkle(x, y, 1.2 + BB.hash(i, 3, 7) * 2.2, c); c.fill();
+      }
+      if (Z.key === 'springs') {
+        // a big round moon
+        G.drawGlow(240, 120, 180, '#fff0d8', 0.55, c);
+        c.fillStyle = '#fff6e6'; G.circle(240, 120, 44, c); c.fill();
+        c.fillStyle = 'rgba(230,210,200,0.6)'; G.circle(226, 110, 8, c); c.fill(); G.circle(256, 132, 6, c); c.fill();
+      } else {
+        // a ringed planet and the odd shooting star
+        G.drawGlow(900, 140, 160, '#c8a0ff', 0.45, c);
+        c.fillStyle = '#e8b8ff'; G.circle(900, 140, 40, c); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.25)'; G.circle(888, 128, 22, c); c.fill();
+        c.strokeStyle = 'rgba(255,230,160,0.85)'; c.lineWidth = 5;
+        c.beginPath(); c.ellipse(900, 140, 70, 14, -0.3, 0, TAU); c.stroke();
+        const ph = t % 400;
+        if (ph < 50) {
+          const sx = 200 + ph * 12, sy = 60 + ph * 4;
+          c.strokeStyle = `rgba(255,250,220,${1 - ph / 50})`; c.lineWidth = 3;
+          c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx - 70, sy - 24); c.stroke();
+        }
+      }
     }
   }
 

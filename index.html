@@ -21,6 +21,9 @@
     <div class="tbtn" id="t-jump" data-act="jump"><svg viewBox="0 0 64 64"><path d="M16 40 L32 22 L48 40" /><path d="M20 50 L44 50" class="thin"/></svg></div>
   </div>
 
+  <!-- See-through map while you play (also M / Tab / gamepad Select) -->
+  <button id="map-btn" aria-label="Map"><svg viewBox="0 0 32 32"><path d="M4 8 L11 5 L21 8 L28 5 L28 24 L21 27 L11 24 L4 27 Z"/><path class="fold" d="M11 5 L11 24 M21 8 L21 27"/></svg></button>
+
   <!-- Pause (parents: this is also where "home" and the map live) -->
   <button id="pause-btn" aria-label="Pause"><svg viewBox="0 0 32 32"><rect x="9" y="8" width="5" height="16" rx="2"/><rect x="18" y="8" width="5" height="16" rx="2"/></svg></button>
 
@@ -41,6 +44,12 @@
   <script src="js/world/rooms/hive.js"></script>
   <script src="js/world/rooms/ruins.js"></script>
   <script src="js/world/rooms/clouds.js"></script>
+  <script src="js/world/rooms/lagoon.js"></script>
+  <script src="js/world/rooms/dunes.js"></script>
+  <script src="js/world/rooms/frost.js"></script>
+  <script src="js/world/rooms/autumn.js"></script>
+  <script src="js/world/rooms/springs.js"></script>
+  <script src="js/world/rooms/starlight.js"></script>
 
   <!-- Engine -->
   <script src="js/engine/physics.js"></script>
@@ -55,6 +64,7 @@
   <script src="js/render/backdrops.js"></script>
   <script src="js/render/lighting.js"></script>
   <script src="js/render/hud.js"></script>
+  <script src="js/render/mapview.js"></script>
 
   <!-- Things that live in the world -->
   <script src="js/entities/player.js"></script>

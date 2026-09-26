@@ -11,6 +11,21 @@
 //   • ledge assist: arriving a little low against a ledge pops you on top
 //   • corner slip: bonking your head on a corner slides you around it
 //   • variable jump: tap for a hop, hold to soar
+//
+//  Powers (abilities object):
+//   doubleJump  jump again in mid-air            (Butterfly Elder)
+//   wallClimb   hold towards a wall to climb     (Snail Elder) — not ice `I`
+//   glow        glow-petals `:` become solid     (Firefly Elder)
+//   float       hold jump while falling to glide (Dandelion Elder)
+//   swim        water `~` is safe: hold jump to swim up, and you leap out
+//               at the surface                   (Sea Turtle Elder)
+//   dig         sandstone `X` crumbles away      (Tortoise Elder)
+//   spring      much higher jumps                (Snow Hare Elder)
+//   rings       step into a fairy ring `1`–`9` to pop out at its twin
+//                                                (Badger Elder)
+//   bubbleBounce  press bubble in mid-air to bounce off a big bubble
+//                                                (Otter Elder)
+//   wings       keep pressing jump to flap higher and higher (Star Whale)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -22,20 +37,30 @@
   const FX = BB.FX = {
     JUMP: 1, DJUMP: 2, LAND: 4, BOUNCE: 8, WALLJUMP: 16, HAZARD: 32,
     CLIMB_START: 64, LEDGE: 128, BONK: 256, UPDRAFT: 512,
+    PORTAL: 1024, BBOUNCE: 2048, FLAP: 4096, SPLASH: 8192, BREACH: 16384,
   };
+
+  // Powers in effect for the current step (sandstone solidity depends on them)
+  let AB = {};
 
   // ── Tile classification ──
   // side/ceiling solidity: out-of-world counts as a wall (invisible edge)
-  function solidSide(ch) { return ch === '#' || ch === 'M' || ch === 'G' || ch === null; }
+  function solidSide(ch) {
+    return ch === '#' || ch === 'M' || ch === 'G' || ch === 'I' || ch === null || (ch === 'X' && !AB.dig);
+  }
   // What your feet can stand on. Out-of-world is air, so open pits drop
   // you into the dandelion rescue rather than onto an invisible floor.
   function landKind(ch, ab) {
-    if (ch === '#' || ch === 'G') return 1;          // solid
+    if (ch === '#' || ch === 'G' || ch === 'I') return 1; // solid
+    if (ch === 'X') return ab.dig ? 0 : 1;           // sandstone (crumbles with Mighty Paws)
     if (ch === 'M') return 3;                        // bouncy
     if (ch === '-') return 2;                        // one-way
     if (ch === ':') return ab.glow ? 2 : 0;          // glow petal
     return 0;
   }
+  const isPortal = ch => ch !== null && ch >= '1' && ch <= '9';
+  // Water is only dangerous before the Sea Turtle's gift; mist always is.
+  const hazardous = (ch, ab) => ch === '%' || (ch === '~' && !ab.swim);
 
   function sideAt(px, py) { return solidSide(W().tile(Math.floor(px / T), Math.floor(py / T))); }
 
@@ -58,25 +83,34 @@
       coyote: 0, jumpBuf: 0, djUsed: false, bouncing: false,
       climbing: 0, climbPush: 0, wallLock: 0, floating: false, inUpdraft: false,
       airTicks: 0, fx: 0, lastSafe: { x, y },
+      bbUsed: false, inWater: false, inPortal: true,
     };
   }
 
-  // Wall directly beside the body on side `dir` (checks mid and upper body)
+  // Climbable wall directly beside the body on side `dir` (mid and upper
+  // body). Ice is too slippery for sticky paws.
   function wallBeside(p, dir) {
     const x = dir > 0 ? p.x + p.w + 1 : p.x - 1;
-    return sideAt(x, p.y + p.h * 0.5) || sideAt(x, p.y + 4);
+    const grip = py => { const ch = W().tile(Math.floor(x / T), Math.floor(py / T)); return solidSide(ch) && ch !== 'I'; };
+    return grip(p.y + p.h * 0.5) || grip(p.y + 4);
   }
 
   function step(p, inp, ab) {
+    AB = ab;
     p.fx = 0;
     const wasGrounded = p.grounded;
+    const wasInWater = p.inWater;
+    const cx0 = p.x + p.w / 2;
+    p.inWater = !!ab.swim && W().tile(Math.floor(cx0 / T), Math.floor((p.y + p.h / 2) / T)) === '~';
+    const swim = p.inWater;
 
     // ── Horizontal intent ──
     let dir = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
     if (p.wallLock > 0) { p.wallLock--; if (dir === -p.facing) dir = 0; }
-    const target = dir * C.RUN;
+    const target = dir * C.RUN * (swim ? C.SWIM_SPEED : 1);
     let acc;
-    if (p.grounded) acc = dir ? C.ACC_GROUND : C.DEC_GROUND;
+    if (swim) acc = dir ? 0.4 : 0.25;
+    else if (p.grounded) acc = dir ? C.ACC_GROUND : C.DEC_GROUND;
     else acc = dir ? C.ACC_AIR : C.DEC_AIR;
     // turning around is always crisp
     if (dir && BB.sign(p.vx) === -dir) acc *= 1.6;
@@ -86,9 +120,10 @@
     // ── Timers ──
     if (p.grounded) { p.coyote = C.COYOTE; p.airTicks = 0; } else { if (p.coyote > 0) p.coyote--; p.airTicks++; }
     if (inp.jumpPressed) p.jumpBuf = C.BUFFER; else if (p.jumpBuf > 0) p.jumpBuf--;
+    if (swim) p.jumpBuf = 0; // underwater, holding jump swims instead
 
     // ── Wall climbing (Snail Elder) ──
-    if (ab.wallClimb && dir && wallBeside(p, dir) && !(p.grounded && inp.jump)) {
+    if (ab.wallClimb && !swim && dir && wallBeside(p, dir) && !(p.grounded && inp.jump)) {
       p.climbPush++;
       if (p.climbPush >= (p.grounded ? C.CLIMB_DELAY : 1)) {
         if (!p.climbing) p.fx |= FX.CLIMB_START;
@@ -111,26 +146,41 @@
       p.jumpBuf = 0; p.coyote = 0; p.bouncing = false; p.djUsed = false;
       p.fx |= FX.WALLJUMP;
     } else if (p.jumpBuf > 0 && (p.grounded || p.coyote > 0)) {
-      p.vy = C.JUMP;
+      p.vy = ab.spring ? C.JUMP_SPRING : C.JUMP;
       p.grounded = false; p.coyote = 0; p.jumpBuf = 0; p.bouncing = false;
       p.fx |= FX.JUMP;
-    } else if (inp.jumpPressed && !p.grounded && ab.doubleJump && !p.djUsed && p.airTicks > 2) {
+    } else if (inp.jumpPressed && !p.grounded && !swim && ab.doubleJump && !p.djUsed && p.airTicks > 2) {
       p.vy = C.DJUMP;
       p.djUsed = true; p.jumpBuf = 0; p.bouncing = false;
       p.fx |= FX.DJUMP;
+    } else if (inp.jumpPressed && !p.grounded && !swim && ab.wings && p.airTicks > 2) {
+      // Star Wings: every further press is another flap
+      p.vy = Math.min(p.vy, C.FLAP);
+      p.jumpBuf = 0; p.bouncing = false;
+      p.fx |= FX.FLAP;
+    }
+    // Bubble Bounce: blow a big bubble under your paws and spring off it
+    if (inp.bubblePressed && ab.bubbleBounce && !p.grounded && !swim && !p.climbing && !p.bbUsed && p.airTicks > 2) {
+      p.vy = C.BUBBLE_BOUNCE;
+      p.bbUsed = true; p.bouncing = true;
+      p.fx |= FX.BBOUNCE;
     }
 
     // ── Vertical forces ──
     const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
     p.inUpdraft = W().tile(Math.floor(cx / T), Math.floor(cy / T)) === '^';
     p.floating = false;
-    if (p.climbing) {
+    if (swim) {
+      // paddle: hold jump to swim up, let go to drift gently down
+      p.vy = inp.jump ? BB.approach(p.vy, C.SWIM_UP, 0.35) : BB.approach(p.vy, C.SWIM_SINK, 0.15);
+      p.djUsed = false; p.bbUsed = false; p.bouncing = false;
+    } else if (p.climbing) {
       p.vy = -C.CLIMB;
-      p.djUsed = false;
+      p.djUsed = false; p.bbUsed = false;
     } else if (p.inUpdraft) {
       p.vy = BB.approach(p.vy, C.UPDRAFT, C.UPDRAFT_ACC);
       p.bouncing = true;       // keep full rise after leaving the breeze
-      p.djUsed = false;
+      p.djUsed = false; p.bbUsed = false;
       p.fx |= FX.UPDRAFT;
     } else {
       let g;
@@ -157,15 +207,40 @@
       if (k === 1 || k === 2) { p.grounded = true; p.groundKind = k; }
     }
     if (p.grounded) {
-      p.djUsed = false;
+      p.djUsed = false; p.bbUsed = false;
       p.climbing = 0;
       if (!wasGrounded) p.fx |= FX.LAND;
     }
 
+    // ── Water entry / dolphin leap out of the surface ──
+    const ncx = p.x + p.w / 2;
+    const nowWater = !!ab.swim && W().tile(Math.floor(ncx / T), Math.floor((p.y + p.h / 2) / T)) === '~';
+    if (nowWater && !wasInWater) p.fx |= FX.SPLASH;
+    if (wasInWater && !nowWater && inp.jump && p.vy < 0) {
+      p.vy = C.JUMP * 0.85; p.bouncing = false;
+      p.fx |= FX.BREACH;
+    }
+    p.inWater = nowWater;
+
+    // ── Fairy rings ──
+    const here = W().tile(Math.floor(ncx / T), Math.floor((p.y + p.h / 2) / T));
+    if (isPortal(here)) {
+      if (ab.rings && !p.inPortal) {
+        const twin = W().portalTwin(Math.floor(ncx / T), Math.floor((p.y + p.h / 2) / T));
+        if (twin) {
+          p.x = twin.tx * T + (T - p.w) / 2;
+          p.y = (twin.ty + 1) * T - p.h;
+          p.vx = 0; p.vy = 0;
+          p.fx |= FX.PORTAL;
+        }
+      }
+      p.inPortal = true;
+    } else p.inPortal = false;
+
     // ── Safety & rescue ──
-    const room = W().roomAtPx(cx, p.y + p.h / 2);
-    const feetTile = W().tile(Math.floor(cx / T), Math.floor((p.y + p.h - 6) / T));
-    if (!room || feetTile === '~') {
+    const room = W().roomAtPx(p.x + p.w / 2, p.y + p.h / 2);
+    const feetTile = W().tile(Math.floor((p.x + p.w / 2) / T), Math.floor((p.y + p.h - 6) / T));
+    if (!room || hazardous(feetTile, ab)) {
       p.fx |= FX.HAZARD;
     } else if (p.grounded && p.groundKind === 1 && isSafeFooting(p, ab)) {
       p.lastSafe.x = p.x; p.lastSafe.y = p.y;
@@ -178,7 +253,8 @@
     const fy = Math.floor((p.y + p.h + 1) / T);
     const l = Math.floor((p.x + 1) / T), r = Math.floor((p.x + p.w - 1) / T);
     for (let tx = l - 1; tx <= r + 1; tx++) {
-      if (W().tile(tx, fy - 1) === '~' || W().tile(tx, fy) === '~') return false;
+      const a = W().tile(tx, fy - 1), b = W().tile(tx, fy);
+      if (a === '~' || b === '~' || a === '%' || b === '%') return false;
     }
     return landKind(W().tile(l, fy), ab) === 1 && landKind(W().tile(r, fy), ab) === 1;
   }
@@ -275,5 +351,8 @@
     }
   }
 
-  BB.Physics = { step, newBody, landKind, solidSide, rectSolid, isSafeFooting };
+  BB.Physics = {
+    step, newBody, landKind, solidSide, rectSolid, isSafeFooting, isPortal, hazardous,
+    setAbilities(ab) { AB = ab; },
+  };
 })(window.BB);

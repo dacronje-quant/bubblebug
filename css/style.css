@@ -67,6 +67,30 @@ body.touch.in-play #touch { display: block; }
 #t-jump  { right: max(18px, env(safe-area-inset-right)); background: rgba(95, 212, 138, 0.45); width: clamp(88px, 15vmin, 132px); height: clamp(88px, 15vmin, 132px); }
 #t-bubble { right: calc(max(18px, env(safe-area-inset-right)) + clamp(104px, 17vmin, 150px)); background: rgba(95, 184, 255, 0.45); }
 
+/* ──── Map button (see-through map overlay) ──── */
+#map-btn {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: calc(max(12px, env(safe-area-inset-right)) + 62px);
+  z-index: 20;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.7);
+  background: rgba(40, 24, 70, 0.45);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+body.in-play #map-btn { display: flex; }
+#map-btn svg { width: 30px; height: 30px; }
+#map-btn path { fill: #ffe6a8; stroke: #fff; stroke-width: 1.5; stroke-linejoin: round; }
+#map-btn path.fold { fill: none; stroke: rgba(160, 110, 40, 0.8); }
+#map-btn.on { background: rgba(255, 214, 120, 0.55); }
+#map-btn:active { transform: scale(0.9); }
+
 /* ──── Pause button ──── */
 #pause-btn {
   position: fixed;

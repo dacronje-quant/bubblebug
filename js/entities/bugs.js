@@ -22,15 +22,25 @@
     bunny: 'hop', frog: 'hop',
     bee: 'hover', moth: 'hover', bluebird: 'hover', bat: 'hover', owl: 'hover',
     spider: 'dangle',
+    crab: 'walk', seal: 'walk', fennec: 'walk', lizard: 'walk', scarab: 'walk', penguin: 'walk', polarcub: 'walk',
+    arcticfox: 'walk', fawn: 'walk', raccoon: 'walk', capybara: 'walk', monkey: 'walk', unicorn: 'walk',
+    meerkat: 'hop', squirrel: 'hop',
+    jellyfish: 'hover', fish: 'hover', koi: 'hover', dragon: 'hover',
   };
   const SPEED = {
     ladybug: 0.5, beetle: 0.55, caterpillar: 0.3, pillbug: 0.45, snailet: 0.22,
     hedgehog: 0.45, mouse: 0.7, mole: 0.4, bearcub: 0.45, turtle: 0.2, duckling: 0.55, lamb: 0.4,
     bunny: 1.3, frog: 1.1,
+    crab: 0.6, seal: 0.35, fennec: 0.6, lizard: 0.5, scarab: 0.45, penguin: 0.35, polarcub: 0.4, arcticfox: 0.6,
+    fawn: 0.5, raccoon: 0.5, capybara: 0.25, monkey: 0.5, unicorn: 0.5, meerkat: 1.2, squirrel: 1.3,
   };
   // how far the body centre sits above the ground, and the hit radius
-  const LIFT = { bearcub: 14, lamb: 12, bunny: 12, hedgehog: 11, duckling: 11, mouse: 10, mole: 10, turtle: 9, frog: 10 };
-  const RADIUS = { bearcub: 19, owl: 17, lamb: 17, bat: 17, bunny: 16 };
+  const LIFT = {
+    bearcub: 14, lamb: 12, bunny: 12, hedgehog: 11, duckling: 11, mouse: 10, mole: 10, turtle: 9, frog: 10,
+    crab: 10, seal: 10, fennec: 12, lizard: 9, penguin: 13, polarcub: 13, arcticfox: 12, fawn: 14, raccoon: 12,
+    capybara: 12, monkey: 12, unicorn: 14, meerkat: 12, squirrel: 12,
+  };
+  const RADIUS = { bearcub: 19, owl: 17, lamb: 17, bat: 17, bunny: 16, polarcub: 18, capybara: 18, unicorn: 18, fawn: 17, seal: 17 };
   const LOOK = 1.3;      // critters are drawn a little larger than life so small eyes can read their faces
   const KING_LOOK = 1.4;
 

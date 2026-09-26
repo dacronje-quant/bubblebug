@@ -41,6 +41,77 @@
     },
   };
 
+  // ──── The kittens' family (secret characters, one hidden in each zone) ────
+  // Marshmallow's family are all colour-pointed Birmans; Phoebe's are a
+  // tortie, tabby and calico bunch. `size` is how big they're drawn.
+  const base = (from, over) => Object.assign({}, CATS[from], over);
+  const blueEyes = { iris: '#3d8ff0', irisLight: '#a8e0ff', irisDark: '#123f8f' };
+  Object.assign(CATS, {
+    mamaMallow: base('marshmallow', {
+      id: 'mamaMallow', name: "Marshmallow's Mama", size: 1.6, voice: 470, cushion: '#ffb3d1',
+      point: '#7a5a4a', pointDark: '#4e3428', tail: '#c8b4a2', tailTip: '#6e5040', nose: '#4a3a36',
+      acc: { bow: '#ff8fb8' },
+    }),
+    papaBirman: base('marshmallow', {
+      id: 'papaBirman', name: "Marshmallow's Papa", size: 1.75, voice: 360, cushion: '#9fd6ff',
+      fur: '#f2f0ec', furShade: '#dcdde2', point: '#7f8aa0', pointDark: '#56607a', tail: '#c4c8d2', tailTip: '#5e687e',
+      earInner: '#c9b8c8', nose: '#5a6070', acc: { bowtie: '#5fb8ff' },
+    }),
+    grannyLilac: base('marshmallow', {
+      id: 'grannyLilac', name: "Marshmallow's Granny", size: 1.5, voice: 420, cushion: '#d8b8ff',
+      fur: '#f6f2f4', point: '#a898a8', pointDark: '#86768a', tail: '#d8ccd6', tailTip: '#8a7a8e', nose: '#8a7080',
+      acc: { glasses: '#7a5a8a', flower: '#d8b8ff' },
+    }),
+    bigSisterCocoa: base('marshmallow', {
+      id: 'bigSisterCocoa', name: "Marshmallow's big sister", size: 1.2, voice: 560, cushion: '#c9a6ff',
+      point: '#8a5a3e', pointDark: '#6a3e28', tail: '#d0b49a', tailTip: '#6a3e28', nose: '#6a4a3e',
+      acc: { bow: '#b99cff' },
+    }),
+    babySnowflake: base('marshmallow', {
+      id: 'babySnowflake', name: "Marshmallow's baby brother", size: 0.9, voice: 760, cushion: '#9ff0e0',
+      fur: '#fff8ee', point: '#e8a060', pointDark: '#d07a3a', tail: '#f4d4b0', tailTip: '#d07a3a', nose: '#e89a80',
+      acc: { scarf: '#4fc3c8' },
+    }),
+    grandpaSeal: base('marshmallow', {
+      id: 'grandpaSeal', name: "Marshmallow's Grandpa", size: 1.7, voice: 330, cushion: '#ffd98a',
+      fur: '#efe6da', point: '#5a4034', pointDark: '#3a261e', tail: '#b09a88', tailTip: '#4a3228', nose: '#3a2a26',
+      acc: { glasses: '#4a3a2a', bowtie: '#c0484a' },
+    }),
+    mamaTortie: base('phoebe', {
+      id: 'mamaTortie', name: "Phoebe's Mama", size: 1.6, voice: 450, cushion: '#ffd166',
+      fur: '#3e2a1e', patch: '#c86a26', patchLight: '#e0985a', face: '#9a5c2e', acc: { flower: '#ff9ec7' },
+    }),
+    papaGinger: base('phoebe', {
+      id: 'papaGinger', name: "Phoebe's Papa", pattern: 'tabby', size: 1.75, voice: 350, cushion: '#8fe388',
+      fur: '#e8923c', furShade: '#cc7428', stripe: '#a8521a', patch: '#b85e20', face: '#e8923c', tail: '#e8923c', tailTip: '#a8521a',
+      iris: '#e0a030', irisLight: '#fff0a0', irisDark: '#9a6010', nose: '#e88a7a', acc: { bowtie: '#3f8f35' },
+    }),
+    grannyGrey: base('phoebe', {
+      id: 'grannyGrey', name: "Phoebe's Granny", pattern: 'tabby', size: 1.5, voice: 410, cushion: '#b8c8ff',
+      fur: '#b8bcc6', furShade: '#9aa0ac', stripe: '#5e6270', patch: '#7a7e8a', face: '#b8bcc6', tail: '#b8bcc6', tailTip: '#5e6270',
+      nose: '#d89aa0', acc: { glasses: '#5a4a6a', scarf: '#ff9ec7' },
+    }),
+    bigBrotherTiger: base('phoebe', {
+      id: 'bigBrotherTiger', name: "Phoebe's big brother", pattern: 'tabby', size: 1.25, voice: 520, cushion: '#ffb35c',
+      fur: '#9a7250', furShade: '#7a5638', stripe: '#3e2818', patch: '#5a3e28', face: '#9a7250', tail: '#9a7250', tailTip: '#3e2818',
+      acc: { bandana: '#e84a4a' },
+    }),
+    babyPatches: base('phoebe', {
+      id: 'babyPatches', name: "Phoebe's baby sister", pattern: 'calico', size: 0.9, voice: 780, cushion: '#ffc6e6',
+      fur: '#fffaf2', furShade: '#ece2d4', patch: '#e8883a', patchLight: '#f0a860', stripe: '#2e2424', face: '#fffaf2',
+      tail: '#e8883a', tailTip: '#2e2424', nose: '#ffa0a8', acc: { bow: '#ff7eb6' },
+    }),
+    grandpaStripes: base('phoebe', {
+      id: 'grandpaStripes', name: "Phoebe's Grandpa", pattern: 'tabby', size: 1.7, voice: 320, cushion: '#b99cff',
+      fur: '#8a7a6a', furShade: '#6e6052', stripe: '#3e342a', patch: '#56483a', face: '#8a7a6a', tail: '#8a7a6a', tailTip: '#3e342a',
+      acc: { glasses: '#3a2a1a', bowtie: '#5fb8ff' },
+    }),
+  });
+  CATS.marshmallow.voice = 620; CATS.phoebe.voice = 540;
+  CATS.marshmallow.size = CATS.phoebe.size = 1.2;
+  BB.FAMILY = ['mamaMallow', 'mamaTortie', 'papaBirman', 'papaGinger', 'grannyLilac', 'grannyGrey',
+    'bigSisterCocoa', 'bigBrotherTiger', 'babySnowflake', 'babyPatches', 'grandpaSeal', 'grandpaStripes'];
+
   // ──── small helpers ────
   function limb(c, x0, y0, len, ang, w, color, outline, pawColor) {
     const x1 = x0 + Math.sin(ang) * len, y1 = y0 + Math.cos(ang) * len;
@@ -127,6 +198,26 @@
       c.fillStyle = g; c.fillRect(-rx - 2, -ry - 2, rx * 2 + 4, ry * 2 + 4);
       c.fillStyle = BB.rgba(cat.point, 0.28); G.ellipse(-rx * 0.8, -ry * 0.2, rx * 0.45, ry, 0, c); c.fill();
       c.fillStyle = cat.belly; G.ellipse(rx * 0.75, ry * 0.2, rx * 0.45, ry * 0.9, 0, c); c.fill();
+    } else if (cat.pattern === 'tabby') {
+      // classic tabby: soft darker back, curved stripes, white tummy
+      c.fillStyle = cat.furShade; G.ellipse(-rx * 0.1, -ry * 0.55, rx * 1.1, ry * 0.6, 0, c); c.fill();
+      c.strokeStyle = cat.stripe; c.lineWidth = 1.5; c.lineCap = 'round';
+      for (let i = -3; i <= 2; i++) {
+        c.beginPath();
+        c.moveTo(i * rx * 0.28, -ry - 1);
+        c.quadraticCurveTo(i * rx * 0.28 + 2.4, -ry * 0.25, i * rx * 0.28 - 0.4, ry * 0.4);
+        c.stroke();
+      }
+      if (cat.belly !== cat.fur) {
+        c.fillStyle = cat.belly;
+        G.ellipse(rx * 0.85, ry * 0.35, rx * 0.4, ry * 0.85, 0, c); c.fill();
+        G.ellipse(0, ry * 1.05, rx * 0.7, ry * 0.35, 0, c); c.fill();
+      }
+    } else if (cat.pattern === 'calico') {
+      // calico: white with big ginger and black patches
+      c.fillStyle = cat.patch; G.ellipse(-rx * 0.45, -ry * 0.3, rx * 0.5, ry * 0.6, 0.3, c); c.fill();
+      c.fillStyle = cat.stripe; G.ellipse(rx * 0.2, -ry * 0.6, rx * 0.32, ry * 0.4, -0.2, c); c.fill();
+      c.fillStyle = cat.patch; G.ellipse(rx * 0.55, -ry * 0.1, rx * 0.2, ry * 0.25, 0, c); c.fill();
     } else {
       // Tortoiseshell-tabby patchwork
       c.fillStyle = cat.patch;
@@ -184,6 +275,17 @@
       g.addColorStop(0, cat.pointDark); g.addColorStop(0.35, BB.rgba(cat.point, 0.85)); g.addColorStop(1, BB.rgba(cat.point, 0));
       c.fillStyle = g; c.fillRect(-rx, -ry, rx * 2, ry * 2);
       c.fillStyle = BB.rgba(cat.point, 0.3); G.ellipse(-7, -6, 5, 5, 0, c); c.fill();
+    } else if (cat.pattern === 'tabby') {
+      c.strokeStyle = cat.stripe; c.lineWidth = 1.3; c.lineCap = 'round';
+      for (const dx of [-1.5, 1.8, 5]) { c.beginPath(); c.moveTo(dx, -8.8); c.lineTo(dx + 0.3, -3.6); c.stroke(); }
+      c.beginPath(); c.moveTo(-8.5, -1); c.lineTo(-4.5, 0); c.moveTo(-8.5, 2); c.lineTo(-5, 2.6); c.stroke();
+      if (cat.belly !== cat.fur) {
+        c.fillStyle = cat.belly;
+        G.ellipse(5.2, 5.4, 5.2, 3.6, 0, c); c.fill();
+      }
+    } else if (cat.pattern === 'calico') {
+      c.fillStyle = cat.patch; G.ellipse(-6, -4, 6, 6, 0, c); c.fill();
+      c.fillStyle = cat.stripe; G.ellipse(8, -6, 5, 4.5, 0, c); c.fill();
     } else {
       c.fillStyle = cat.face; c.fillRect(-rx, -ry, rx * 2, ry * 2);
       c.fillStyle = cat.fur; G.ellipse(-8, 0, 5, 9, 0, c); c.fill();
@@ -275,7 +377,51 @@
       c.beginPath(); c.moveTo(8, 4 + dy * 0.5); c.lineTo(8 + len, 3 + dy * 1.5 + wig); c.stroke();
       c.beginPath(); c.moveTo(0, 4 + dy * 0.5); c.lineTo(-len + 1, 3 + dy * 1.5 - wig); c.stroke();
     }
+    if (cat.acc) drawAccessories(c, cat);
     c.restore();
+  }
+
+  // ──── Family accessories: bows, flowers, glasses, bowties, scarves ────
+  function drawAccessories(c, cat) {
+    const acc = cat.acc || {};
+    c.lineJoin = 'round';
+    if (acc.scarf) {
+      c.fillStyle = acc.scarf; c.strokeStyle = BB.mix(acc.scarf, '#000000', 0.3); c.lineWidth = 0.9;
+      G.rrect(-6, 6.5, 16, 4, 2, c); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(-3, 9); c.lineTo(-6, 16); c.lineTo(-1.5, 15); c.lineTo(0, 9.5); c.closePath(); c.fill(); c.stroke();
+    }
+    if (acc.bandana) {
+      c.fillStyle = acc.bandana;
+      c.beginPath(); c.moveTo(-5, 6.5); c.lineTo(10, 6.5); c.lineTo(3, 13); c.closePath(); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.8)'; G.circle(2, 8.5, 0.8, c); c.fill(); G.circle(5, 9.5, 0.8, c); c.fill();
+    }
+    if (acc.bowtie) {
+      c.fillStyle = acc.bowtie; c.strokeStyle = BB.mix(acc.bowtie, '#000000', 0.35); c.lineWidth = 0.8;
+      c.beginPath(); c.moveTo(3, 9); c.lineTo(-1.5, 6.5); c.lineTo(-1.5, 11.5); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(3, 9); c.lineTo(7.5, 6.5); c.lineTo(7.5, 11.5); c.closePath(); c.fill(); c.stroke();
+      G.circle(3, 9, 1.3, c); c.fill();
+    }
+    if (acc.glasses) {
+      c.strokeStyle = acc.glasses; c.lineWidth = 0.9;
+      G.circle(-0.6, -0.6, 3.4, c); c.stroke();
+      G.circle(6.2, -0.6, 3.8, c); c.stroke();
+      c.beginPath(); c.moveTo(2.8, -1); c.lineTo(2.4, -1); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.25)'; G.circle(6.8, -1.8, 1.3, c); c.fill();
+    }
+    if (acc.bow) {
+      c.fillStyle = acc.bow; c.strokeStyle = BB.mix(acc.bow, '#000000', 0.3); c.lineWidth = 0.8;
+      c.save(); c.translate(6, -9.5); c.rotate(-0.3);
+      G.ellipse(-3, 0, 3.2, 2.2, 0.3, c); c.fill(); c.stroke();
+      G.ellipse(3, 0, 3.2, 2.2, -0.3, c); c.fill(); c.stroke();
+      G.circle(0, 0, 1.3, c); c.fill();
+      c.restore();
+    }
+    if (acc.flower) {
+      c.save(); c.translate(6.5, -10);
+      for (let i = 0; i < 5; i++) { const a = i / 5 * TAU; c.fillStyle = acc.flower; G.circle(Math.cos(a) * 2, Math.sin(a) * 2, 1.6, c); c.fill(); }
+      c.fillStyle = '#ffd34d'; G.circle(0, 0, 1.2, c); c.fill();
+      c.restore();
+    }
   }
 
   // ──── The whole kitten ────
@@ -357,7 +503,8 @@
     c.fillStyle = cat.pattern === 'points' ? cat.fur : cat.fur;
     c.strokeStyle = outline; c.lineWidth = 1.3;
     G.ellipse(-6, -5, 7, 5.5, 0, c); c.fill(); c.stroke();
-    if (cat.pattern === 'torbie') { c.fillStyle = cat.patch; G.ellipse(-7, -6, 4, 3, 0.4, c); c.fill(); }
+    if (cat.pattern === 'torbie' || cat.pattern === 'calico') { c.fillStyle = cat.patch; G.ellipse(-7, -6, 4, 3, 0.4, c); c.fill(); }
+    if (cat.pattern === 'tabby') { c.strokeStyle = cat.stripe; c.lineWidth = 1.3; c.beginPath(); c.arc(-6, -5, 4, 3.6, 5.6); c.stroke(); }
     // upright body
     drawBody(c, cat, -1, -11 + breathe, 8, 10.5, 0.15);
     // front legs + paws together (Phoebe's lifted paw for grooming)

@@ -108,7 +108,7 @@
     ambientUpdate(zoneKey, rainy, cam, lastCam) {
       const G = BB.G;
       const dx = cam.x - lastCam.x, dy = cam.y - lastCam.y;
-      const want = { pollen: 28, spores: 36, glints: 30, honey: 26, rain: 16, wisps: 20 }[BB.ZONES.find(z => z.key === zoneKey).ambient] || 20;
+      const want = { pollen: 28, spores: 36, glints: 30, honey: 26, rain: 16, wisps: 20, bubbles: 22, sand: 30, snow: 60, leaves: 22, steam: 16, stars: 40 }[BB.ZONES.find(z => z.key === zoneKey).ambient] || 20;
       const kind = BB.ZONES.find(z => z.key === zoneKey).ambient;
       while (ambient.length < want) {
         ambient.push({ kind, x: Math.random() * G.W, y: Math.random() * G.H, ph: Math.random() * TAU, s: 0.5 + Math.random(), depth: 0.3 + Math.random() * 0.9 });
@@ -124,6 +124,12 @@
         else if (kind === 'honey') { a.y += 0.15 * a.s; a.x += Math.sin(a.ph) * 0.15; }
         else if (kind === 'rain') { a.y += 0.3; a.x += 0.1; }
         else if (kind === 'wisps') { a.x += 0.35 * a.s; }
+        else if (kind === 'bubbles') { a.y -= 0.35 * a.s; a.x += Math.sin(a.ph * 2) * 0.3; }
+        else if (kind === 'sand') { a.x += 0.9 * a.s; a.y += Math.sin(a.ph * 1.5) * 0.25; }
+        else if (kind === 'snow') { a.y += 0.45 * a.s; a.x += Math.sin(a.ph) * 0.4; }
+        else if (kind === 'leaves') { a.y += 0.4 * a.s; a.x += Math.sin(a.ph) * 0.8 + 0.2; }
+        else if (kind === 'steam') { a.y -= 0.3 * a.s; a.x += Math.sin(a.ph) * 0.2; }
+        else if (kind === 'stars') { a.y += 0.03; }
         if (a.x < -20) a.x += G.W + 40; if (a.x > G.W + 20) a.x -= G.W + 40;
         if (a.y < -20) a.y += G.H + 40; if (a.y > G.H + 20) a.y -= G.H + 40;
       }
@@ -149,6 +155,20 @@
           case 'honey': G.drawGlow(a.x, a.y, 5 * a.s, '#ffd66b', 0.4 + tw * 0.4, c); break;
           case 'rain': c.fillStyle = 'rgba(210,235,255,0.25)'; G.circle(a.x, a.y, 1.6 * a.s, c); c.fill(); break;
           case 'wisps': c.fillStyle = `rgba(255,255,255,${0.15 + tw * 0.15})`; G.ellipse(a.x, a.y, 30 * a.s, 5 * a.s, 0, c); c.fill(); break;
+          case 'bubbles':
+            c.strokeStyle = `rgba(255,255,255,${0.35 + tw * 0.3})`; c.lineWidth = 1.2;
+            G.circle(a.x, a.y, 3 * a.s, c); c.stroke();
+            c.fillStyle = 'rgba(255,255,255,0.5)'; G.circle(a.x - a.s, a.y - a.s, 0.8 * a.s, c); c.fill(); break;
+          case 'sand': c.fillStyle = `rgba(255,236,190,${0.3 + tw * 0.3})`; G.circle(a.x, a.y, 1.2 * a.s, c); c.fill(); break;
+          case 'snow': c.fillStyle = `rgba(255,255,255,${0.55 + tw * 0.35})`; G.circle(a.x, a.y, 1.8 * a.s, c); c.fill(); break;
+          case 'leaves': {
+            c.save(); c.translate(a.x, a.y); c.rotate(a.ph * 2); c.scale(a.s, a.s);
+            c.fillStyle = ['#e8783a', '#ffb060', '#d8442a', '#ffd04a'][Math.floor(a.depth * 4) % 4];
+            c.beginPath(); c.moveTo(-5, 0); c.quadraticCurveTo(0, -4, 5, 0); c.quadraticCurveTo(0, 4, -5, 0); c.fill();
+            c.restore(); break;
+          }
+          case 'steam': G.drawGlow(a.x, a.y, 30 * a.s, '#fff0f5', 0.12 + tw * 0.1, c); break;
+          case 'stars': c.fillStyle = `rgba(255,248,220,${tw * 0.9})`; G.twinkle(a.x, a.y, 2.2 * a.s, c); c.fill(); break;
         }
       }
       if (rain.length) {

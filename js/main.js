@@ -124,6 +124,12 @@
       if (Main.name === 'play' && !BB.Play.gift) Main.go('pause');
       else if (Main.name === 'pause') { BB.Pause.leave(); Main.go('play-resume'); }
     });
+    const mapBtn = document.getElementById('map-btn');
+    mapBtn.addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      unlock();
+      if (Main.name === 'play') BB.Play.toggleMap();
+    });
     // stepping away from the tablet pauses the game
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && Main.name === 'play' && !BB.Play.gift) Main.go('pause');

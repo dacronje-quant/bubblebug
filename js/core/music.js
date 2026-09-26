@@ -62,6 +62,42 @@
       melody: line(`D6 . B5 . G5 . B5 D6   E6 . C6 . G5 . C6 E6   C6 . A5 . E5 . A5 C6   D6 . . C6 B5 . A5 .
                     G6 . D6 . B5 . D6 .   E6 . G6 . E6 . C6 .   A5 . C6 . E6 . F#6 .   G6 . . . D6 . . .`),
     },
+    lagoon: {
+      bpm: 96, lead: 'marimba', arp: 'harp', perc: 'shaker', padBright: 1400,
+      chords: ['F3 A3 C4', 'Bb2 D3 F3', 'C3 E3 G3', 'F3 A3 C4', 'D3 F3 A3', 'Bb2 D3 F3', 'C3 E3 G3', 'F3 A3 C4'].map(chord),
+      melody: line(`C5 . F5 A5 . F5 C6 .   Bb5 . D6 . Bb5 . F5 .   G5 . C6 . E6 . C6 .   A5 . F5 . C5 . . .
+                    D5 . F5 A5 . F5 D6 .   D6 . Bb5 . F5 . D5 .   E5 G5 C6 . Bb5 G5 E5 .   F5 . . . A5 . . .`),
+    },
+    dunes: {
+      bpm: 92, lead: 'marimba', arp: 'musicbox', perc: 'tick', padBright: 1100,
+      chords: ['D3 F3 A3', 'C3 E3 G3', 'D3 F3 A3', 'A2 C3 E3', 'Bb2 D3 F3', 'C3 E3 G3', 'A2 C#3 E3', 'D3 F3 A3'].map(chord),
+      melody: line(`D5 . F5 . A5 G5 F5 .   E5 . G5 . C6 . G5 .   F5 . A5 . D6 C6 A5 .   E5 . . C5 E5 . . .
+                    F5 . Bb5 . D6 . Bb5 .   G5 . C6 . E6 . D6 C6   C#6 . A5 . E5 . G5 .   F5 . E5 . D5 . . .`),
+    },
+    frost: {
+      bpm: 80, lead: 'bell', arp: 'musicbox', perc: 'tick', padBright: 1500,
+      chords: ['G3 B3 D4', 'E3 G3 B3', 'C3 E3 G3', 'D3 F#3 A3', 'G3 B3 D4', 'B2 D3 F#3', 'C3 E3 G3', 'D3 A3 F#4'].map(chord),
+      melody: line(`B5 . D6 . G6 . D6 .   B5 . G5 . E5 . G5 .   C6 . E6 . G6 . E6 .   D6 . . . A5 . . .
+                    G5 . B5 . D6 . G6 .   F#6 . D6 . B5 . F#5 .   E6 . D6 . C6 . B5 .   A5 . . . D6 . . .`),
+    },
+    autumn: {
+      bpm: 90, lead: 'piano', arp: 'harp', perc: 'shaker', padBright: 1000,
+      chords: ['D3 F#3 A3', 'B2 D3 F#3', 'G2 B2 D3', 'A2 C#3 E3', 'D3 F#3 A3', 'G2 B2 D3', 'E3 G3 B3', 'A2 E3 C#4'].map(chord),
+      melody: line(`A5 . F#5 . D5 . F#5 A5   B5 . A5 . F#5 . D5 .   G5 . B5 . D6 . B5 .   A5 . . . E5 . . .
+                    F#5 . A5 . D6 . C#6 D6   B5 . G5 . D5 . G5 .   E5 . G5 . B5 . A5 G5   E5 . . . C#5 . . .`),
+    },
+    springs: {
+      bpm: 68, lead: 'harp', arp: 'bell', perc: 'drop', padBright: 800,
+      chords: ['A2 E3 C4', 'F2 C3 A3', 'C3 G3 E4', 'G2 D3 B3', 'A2 E3 C4', 'F2 C3 A3', 'G2 D3 B3', 'A2 E3 A3'].map(chord),
+      melody: line(`E5 . . G5 A5 . . .   C6 . A5 . G5 . E5 .   D5 . E5 . G5 . . .   E5 . D5 . . . . .
+                    A5 . . C6 D6 . . .   E6 . D6 . C6 . A5 .   G5 . A5 . C6 . D6 .   A5 . . . . . . .`),
+    },
+    starlight: {
+      bpm: 78, lead: 'bell', arp: 'harp', perc: 'tick', padBright: 1500,
+      chords: ['F3 A3 E4', 'G3 B3 D4', 'E3 G3 B3', 'A2 C3 E3', 'F3 A3 C4', 'G3 B3 D4', 'C3 E3 G3', 'C3 G3 E4'].map(chord),
+      melody: line(`C6 . A5 . F5 . A5 B5   D6 . B5 . G5 . B5 D6   E6 . . B5 G5 . E5 .   A5 . . . C6 . . .
+                    F6 . E6 . C6 . A5 .   B5 . D6 . G6 . D6 .   E6 . D6 . C6 . G5 .   C6 . . . . . . .`),
+    },
     lullaby: { // title, select & finale-rest
       bpm: 70, lead: 'musicbox', arp: 'harp', perc: null, padBright: 700,
       chords: ['C3 G3 E4', 'A2 E3 C4', 'F2 C3 A3', 'G2 D3 B3', 'C3 G3 E4', 'A2 E3 C4', 'F2 C3 A3', 'G2 D3 G3'].map(chord),

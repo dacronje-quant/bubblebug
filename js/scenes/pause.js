@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════════════════════
 //  PAUSE — four big picture buttons: keep playing ▶, sound 🔊,
-//  kingdom map 🗺 and home 🏠 (back to kitten select). The map shows
+//  kingdom map 🗺 and home 🏠 (back to the title screen). The map shows
 //  every room you've visited in its biome colour, a star on rooms
 //  whose sparkles are all found, and your kitten's face where you are.
 // ════════════════════════════════════════════════════════════════
@@ -23,7 +23,7 @@
       if (b === 'resume') { this.leave(); BB.Main.go('play-resume'); }
       else if (b === 'sound') BB.Audio.toggle();
       else if (b === 'map') this.map = true;
-      else if (b === 'home') { this.leave(); BB.Play.writeSave(); BB.Main.go('select'); }
+      else if (b === 'home') { this.leave(); BB.Play.writeSave(); BB.Main.go('title'); }
     },
 
     update() {
@@ -77,42 +77,6 @@
       }
     },
 
-    drawMap(c) {
-      const W = BB.World, save = BB.Play.save;
-      // fit the map to the rooms explored so far
-      const seen = W.rooms.filter(r => save.visited[r.id]);
-      const bd = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
-      for (const r of seen) { bd.x0 = Math.min(bd.x0, r.x); bd.y0 = Math.min(bd.y0, r.y); bd.x1 = Math.max(bd.x1, r.x + r.w); bd.y1 = Math.max(bd.y1, r.y + r.h); }
-      const pad = 90;
-      const sc = Math.min(4, (G().W - pad * 2) / (bd.x1 - bd.x0), (G().H - pad * 2) / (bd.y1 - bd.y0));
-      const ox = (G().W - (bd.x1 - bd.x0) * sc) / 2, oy = (G().H - (bd.y1 - bd.y0) * sc) / 2;
-      const t = this.t;
-      // parchment
-      c.fillStyle = '#fff6de'; c.strokeStyle = '#d9a95a'; c.lineWidth = 6;
-      G().rrect(40, 40, G().W - 80, G().H - 80, 30, c); c.fill(); c.stroke();
-      c.strokeStyle = 'rgba(217,169,90,0.35)'; c.lineWidth = 2; c.setLineDash([6, 8]);
-      G().rrect(56, 56, G().W - 112, G().H - 112, 22, c); c.stroke(); c.setLineDash([]);
-      for (const r of W.rooms) {
-        if (!save.visited[r.id]) continue;
-        const x = ox + (r.x - bd.x0) * sc, y = oy + (r.y - bd.y0) * sc, w = r.w * sc, h = r.h * sc;
-        const Z = BB.ZONES[r.zone];
-        c.fillStyle = BB.mix(Z.sky[1], Z.top, 0.45);
-        G().rrect(x + 1.5, y + 1.5, w - 3, h - 3, 6, c); c.fill();
-        c.strokeStyle = BB.mix(Z.topDark, '#5a3a24', 0.4); c.lineWidth = 2; c.stroke();
-        const stars = r.things.filter(th => th.ch === '*');
-        if (stars.length && stars.every(s => save.sparkles[s.tx + ',' + s.ty])) {
-          c.fillStyle = '#ffd84a'; G().star(x + w - 7, y + 7, 5, 5, 0.5, -Math.PI / 2, c); c.fill();
-        }
-        if (r.things.some(th => th.ch === 'B')) { c.fillStyle = '#ffd98a'; G().circle(x + 6, y + h - 6, 3, c); c.fill(); }
-        if (r.def.elder && save.abilities[r.def.elder]) BB.HUD.abilityIcon(c, r.def.elder, x + w / 2, y + h / 2, 0.6);
-        if (r === BB.Play.room) {
-          c.strokeStyle = `rgba(255,244,194,${0.6 + Math.sin(t * 0.15) * 0.4})`; c.lineWidth = 3;
-          G().rrect(x, y, w, h, 4, c); c.stroke();
-          const b = BB.Play.pl.body;
-          const kx = ox + (b.x / BB.CFG.TILE - bd.x0) * sc, ky = oy + (b.y / BB.CFG.TILE - bd.y0) * sc;
-          BB.Kittens.draw(c, BB.Play.pl.cat, { mode: 'sit', t, happy: true }, kx + 10, ky + 24, Math.max(0.9, sc / 2.2), 1);
-        }
-      }
-    },
+    drawMap(c) { BB.MapView.draw(c, 'full', this.t); },
   };
 })(window.BB);

@@ -263,7 +263,7 @@
     meow(cat) {
       if (!ctx || muted) return;
       const t = ctx.currentTime;
-      const base = cat === 'marshmallow' ? 620 : 520;
+      const base = (BB.CATS && BB.CATS[cat] && BB.CATS[cat].voice) || 560;
       const osc = ctx.createOscillator(); osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(base * 0.85, t);
       osc.frequency.linearRampToValueAtTime(base * 1.25, t + 0.12);
@@ -324,6 +324,11 @@
     whoosh() { noise({ dur: 0.35, vol: 0.05, freq: 600, to: 2400, q: 0.8 }); },
     yarn() { tone({ type: 'triangle', freq: 300 + Math.random() * 80, to: 200, dur: 0.1, vol: 0.06 }); },
     splash() { noise({ dur: 0.35, vol: 0.09, freq: 1200, to: 400, q: 0.6, verb: 0.3 }); },
+    // sandstone crumbling under Mighty Paws: a soft sandy shush + tumble
+    crumble() {
+      noise({ dur: 0.4, vol: 0.08, freq: 700, to: 250, q: 0.5, ftype: 'lowpass' });
+      [0, 0.06, 0.12].forEach(d => tone({ type: 'triangle', freq: 180 - d * 300, delay: d, dur: 0.09, vol: 0.05 }));
+    },
     party() {
       if (!ctx) return;
       const t = ctx.currentTime;

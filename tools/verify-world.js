@@ -2,36 +2,40 @@
 // ════════════════════════════════════════════════════════════════
 //  WORLD VERIFIER — proves the kingdom has no softlocks.
 //
-//  Loads the real game modules (world, rooms, physics) into a sandbox and
-//  explores every standing spot the kitten can reach, by simulating a
-//  large family of button sequences (walks, hops, full jumps, run-ups,
-//  mid-air steering, double jumps, wall kicks, glides) with the exact
-//  movement code the game uses.
+//  Loads the real game modules (world, rooms, physics) and explores every
+//  standing spot the kitten can reach, by simulating a large family of
+//  button sequences (walks, hops, full jumps, run-ups, mid-air steering,
+//  double jumps, wall kicks, glides, swims, bubble bounces, star-wing
+//  flaps) with the exact movement code the game uses.
 //
-//  For each story stage (no powers → +Double Jump → +Wall Climb → +Glow
-//  → +Float) it checks:
-//    1. the next elder (or the Cloud King and finale) is reachable, and
+//  For each story stage (no powers → +Double Jump → … → +Star Wings) it
+//  checks:
+//    1. the next elder (or, at the end, the Rainbow Party) is reachable, and
 //    2. from EVERY spot you can reach in that stage, the goal is still
-//       reachable (zero softlocks — falling in water always floats you
-//       back to safety, and that rescue is modelled too).
-//  With every power it also checks you can always walk home to the start
-//  (for backtracking to secrets) and lists any collectible out of reach.
+//       reachable (zero softlocks — falling in water or mist always floats
+//       you back to safety, and that rescue is modelled too).
+//  With every power it also checks you can always travel home to the start
+//  (for backtracking to secrets), and that every collectible, critter and
+//  hidden family member is reachable.
 //
-//  Usage:  node tools/verify-world.js [--map ROOM_ID] [--quick]
+//  Stages start at the previous elder, so they're independent and run in
+//  parallel worker threads (one per CPU core).
+//
+//  Usage:  node tools/verify-world.js [--map ROOM_ID] [--stage N]
 //  Exit code 0 = every check passed.
 // ════════════════════════════════════════════════════════════════
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const os = require('os');
+const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 
 const ROOT = path.join(__dirname, '..');
-const args = process.argv.slice(2);
-const mapRoom = args.includes('--map') ? args[args.indexOf('--map') + 1] : null;
 
 // ──── Load game modules (they attach to window.BB) ────
 // runInThisContext rather than a vm sandbox: sandboxed global lookups are
-// ~10× slower, and this search runs millions of physics ticks.
+// ~10× slower, and this search runs hundreds of millions of physics ticks.
 global.window = global;
 const load = f => vm.runInThisContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), { filename: f });
 ['js/core/bb.js', 'js/core/config.js', 'js/world/zones.js', 'js/world/world.js'].forEach(load);
@@ -44,6 +48,18 @@ const BB = global.BB;
 const W = BB.World.build();
 const C = BB.CFG, T = C.TILE;
 const P = BB.Physics, FX = BB.FX;
+
+// The order elders give their gifts in
+const POWERS = ['doubleJump', 'wallClimb', 'glow', 'float', 'swim', 'dig', 'spring', 'rings', 'bubbleBounce', 'wings'];
+const NAMES = {
+  doubleJump: 'Butterfly Elder (Double Jump)', wallClimb: 'Snail Elder (Sticky Paws)', glow: 'Firefly Elder (Glow)',
+  float: 'Dandelion Elder (Float)', swim: 'Sea Turtle Elder (Swim)', dig: 'Tortoise Elder (Mighty Paws)',
+  spring: 'Snow Hare Elder (Spring Paws)', rings: 'Badger Elder (Fairy Rings)', bubbleBounce: 'Otter Elder (Bubble Bounce)',
+  wings: 'Star Whale (Star Wings)', finale: 'the Rainbow Party',
+};
+const STAGES = POWERS.map((goal, i) => ({ i, goal, have: POWERS.slice(0, i) }))
+  .concat([{ i: POWERS.length, goal: 'finale', have: POWERS.slice() }]);
+const abilitiesOf = have => Object.fromEntries(have.map(k => [k, true]));
 
 // ──── Coverage grid (which tiles the kitten's body ever touched) ────
 const B = W.bounds;
@@ -68,28 +84,59 @@ function buildPlans(ab) {
       }
     }
   }
-  // Pure climbing / updraft riding: hold a direction and jump every so often
+  // Bubble Bounce: press bubble in mid-air (with or without a double jump first)
+  if (ab.bubbleBounce) {
+    for (const d of [0, -1, 1]) for (const run of d ? [0, 10] : [0]) {
+      for (const dj of [null, 16]) for (const bb of [14, 30]) plans.push({ kind: 'jump', d, run, h: 999, air: 'hold', dj, bb });
+    }
+  }
+  // Star Wings: flap a few times (or many), steering now, later, or only
+  // once the flapping stops — then drift down onto whatever's below
+  if (ab.wings) {
+    for (const d of [0, -1, 1]) for (const air of d ? ['hold', 'late', 'after'] : ['hold']) {
+      for (const flaps of [2, 4, 7, 11, 16, 24]) plans.push({ kind: 'jump', d, run: 0, h: 999, air, dj: null, flap: 16, flaps, long: true });
+    }
+  }
+  return plans;
+}
+
+// Swimming (only tried from spots under water): hold jump to paddle up,
+// start steering after a while, and maybe let go to sink onto a ledge
+function buildSwimPlans() {
+  const plans = [];
+  for (const d of [-1, 1]) for (const wait of [0, 30, 80, 150, 250, 380]) {
+    for (const stop of [null, 60]) plans.push({ kind: 'swim', d, wait, stop: stop == null ? null : wait + stop, run: 0 });
+  }
+  for (const stop of [40, 120, 240]) plans.push({ kind: 'swim', d: 0, wait: 0, stop, run: 0 });
   return plans;
 }
 
 function planInput(pl, t, st) {
-  const inp = { left: false, right: false, jump: false, jumpPressed: false };
+  const inp = { left: false, right: false, jump: false, jumpPressed: false, bubblePressed: false };
   const setDir = d => { inp.left = d < 0; inp.right = d > 0; };
   if (st.settling) return inp;
+  if (pl.kind === 'swim') {
+    inp.jump = pl.stop == null || t < pl.stop;
+    if (t === 0) inp.jumpPressed = true;
+    if (t >= pl.wait) setDir(pl.d);
+    return inp;
+  }
   if (pl.kind === 'walk') {
     if (t < pl.k || (pl.keep && st.airborne)) setDir(pl.d);
     return inp;
   }
-  // jump plan
   if (t < pl.run) { setDir(pl.d); return inp; }
   const tj = t - pl.run;
   let d = pl.d;
   if (pl.air === 'stop' && tj >= 12) d = 0;
   else if (pl.air === 'rev' && tj >= 14) d = -pl.d;
   else if (pl.air === 'late' && tj < 10) d = 0;
+  else if (pl.air === 'after' && tj < 10 + pl.flap * pl.flaps) d = 0;
   setDir(d);
   if (tj === 0) inp.jumpPressed = true;
   if (pl.dj != null && tj === pl.dj) inp.jumpPressed = true;
+  if (pl.flap && tj >= 10 && (tj - 10) % pl.flap === 0 && (tj - 10) / pl.flap < pl.flaps) inp.jumpPressed = true;
+  if (pl.bb != null && tj === pl.bb) inp.bubblePressed = true;
   inp.jump = tj < pl.h || (pl.dj != null && tj >= pl.dj);
   return inp;
 }
@@ -101,8 +148,10 @@ function simulate(node, pl, ab, cover) {
   const p = P.newBody(node.x, node.y);
   p.grounded = true; p.coyote = C.COYOTE;
   p.lastSafe = { x: node.safeX, y: node.safeY };
-  const st = { airborne: false, settling: false, settleT: 0 };
-  for (let t = 0; t < 300; t++) {
+  const st = { airborne: false, settling: false };
+  const maxT = pl.long ? 600 : 320;
+  // a long, slow swim through deep water may take a while longer
+  for (let t = 0; t < maxT || (p.inWater && t < 1600); t++) {
     const inp = planInput(pl, t, st);
     const fx = P.step(p, inp, ab);
     if (cover) {
@@ -114,7 +163,8 @@ function simulate(node, pl, ab, cover) {
     }
     if (fx & FX.HAZARD) return { rescue: { x: p.lastSafe.x, y: p.lastSafe.y } };
     if (!p.grounded) st.airborne = true;
-    const planOver = pl.kind === 'walk' ? t >= pl.k : t >= pl.run + 2;
+    if (fx & FX.PORTAL) st.airborne = true; // a ring hop counts as a journey
+    const planOver = pl.kind === 'walk' ? t >= pl.k : pl.kind === 'swim' ? t >= pl.wait + 2 : t >= pl.run + 2;
     if (p.grounded && planOver && (st.airborne || pl.kind === 'walk' || t > pl.run + 20)) {
       st.settling = true;
       if (Math.abs(p.vx) < 0.01) return { node: p };
@@ -123,9 +173,7 @@ function simulate(node, pl, ab, cover) {
   return null;
 }
 
-// ──── Graph exploration ────
-// Resumable: `st` keeps nodes, coverage and the work queue so that when a
-// gate opens we only re-expand the spots near it instead of starting over.
+// ──── Graph exploration (resumable, so gates can open mid-search) ────
 function newState() { return { nodes: new Map(), cover: new Uint8Array(GW * GH), queue: [] }; }
 
 function addNode(st, x, y, sx, sy) {
@@ -141,24 +189,22 @@ function addNode(st, x, y, sx, sy) {
 
 function explore(st, ab) {
   const plans = buildPlans(ab);
+  const wetPlans = ab.swim ? plans.concat(buildSwimPlans()) : plans;
   while (st.queue.length) {
     const n = st.queue.pop();
-    for (const pl of plans) {
+    const wet = ab.swim && W.tile(Math.floor((n.x + C.PW / 2) / T), Math.floor((n.y + C.PH / 2) / T)) === '~';
+    for (const pl of wet ? wetPlans : plans) {
       const r = simulate(n, pl, ab, st.cover);
       if (!r) continue;
       if (r.node) {
         const p = r.node;
         const safe = P.isSafeFooting(p, ab);
-        const m = addNode(st, p.x, p.y, safe ? p.x : n.safeX, safe ? p.y : n.safeY);
-        n.edges.add(m.k);
+        n.edges.add(addNode(st, p.x, p.y, safe ? p.x : n.safeX, safe ? p.y : n.safeY).k);
       } else if (r.rescue) {
-        const m = addNode(st, r.rescue.x, r.rescue.y, r.rescue.x, r.rescue.y);
-        n.edges.add(m.k);
+        n.edges.add(addNode(st, r.rescue.x, r.rescue.y, r.rescue.x, r.rescue.y).k);
       }
     }
-    if (st.nodes.size % 500 === 0 && st.queue.length) process.stdout.write(`\r  … ${st.nodes.size} spots`);
   }
-  process.stdout.write('\r');
   return st;
 }
 
@@ -182,7 +228,7 @@ function canReach(nodes, goalKeys) {
 function spotFor(tx, ty) {
   const x = tx * T + (T - C.PW) / 2;
   let y = (ty + 1) * T - C.PH;
-  for (let i = 0; i < 40; i++) { // drop onto the floor
+  for (let i = 0; i < 40; i++) {
     const k = P.landKind(W.tile(tx, Math.floor((y + C.PH + 1) / T)), {});
     if (k === 1 || k === 2) break;
     y += T;
@@ -217,11 +263,18 @@ function bubbleable(nodes, tx, ty) {
 
 // Open gates whose buds are bubbleable / whose King is reachable, then
 // re-expand the spots in and around those rooms, until nothing changes.
-function exploreWithGates(starts, ab) {
+// Gates stay open once opened (the save remembers), so a stage that starts
+// in a later zone begins with every gate of the zones before it open —
+// earlier stages prove each of those gates can be opened on the way.
+function exploreWithGates(starts, ab, openBeforeZone = 0) {
   W.build();
+  P.setAbilities(ab);
   const st = newState();
   for (const s0 of starts) addNode(st, s0.x, s0.y, s0.x, s0.y);
   const opened = new Set();
+  for (const room of W.rooms) {
+    if (room.zone < openBeforeZone && room.grid.some(r => r.includes('G'))) { W.openGates(room); opened.add(room.id); }
+  }
   for (;;) {
     explore(st, ab);
     const now = [];
@@ -243,134 +296,151 @@ function exploreWithGates(starts, ab) {
   return st;
 }
 
-// ──── Story stages ────
-const elderOf = ab => W.rooms.find(r => r.def.elder === ab);
-function elderThing(ability) {
-  const room = elderOf(ability);
-  if (!room) return null;
-  return room.things.find(t => t.ch === 'E');
+function goalThing(goal) {
+  if (goal === 'finale') return W.findThings('F')[0] || null;
+  const room = W.rooms.find(r => r.def.elder === goal);
+  return room ? room.things.find(t => t.ch === 'E') : null;
 }
 
-const STAGES = [
-  { name: 'Start → Butterfly Elder (Double Jump)', ab: {}, goal: 'doubleJump' },
-  { name: 'Double Jump → Snail Elder (Wall Climb)', ab: { doubleJump: true }, goal: 'wallClimb' },
-  { name: 'Wall Climb → Firefly Elder (Glow)', ab: { doubleJump: true, wallClimb: true }, goal: 'glow' },
-  { name: 'Glow → Dandelion Elder (Float)', ab: { doubleJump: true, wallClimb: true, glow: true }, goal: 'float' },
-  { name: 'Float → Cloud King & Finale', ab: { doubleJump: true, wallClimb: true, glow: true, float: true }, goal: 'finale' },
-];
+function startFor(stage) {
+  if (stage.i === 0) { const s = W.findThings('S')[0]; return s ? spotFor(s.tx, s.ty) : null; }
+  const prev = goalThing(POWERS[stage.i - 1]);
+  return prev ? spotFor(prev.tx, prev.ty) : null;
+}
 
-let failures = 0;
-const fail = msg => { failures++; console.log('  ✗ ' + msg); };
-const pass = msg => console.log('  ✓ ' + msg);
+const where = n => {
+  const r = W.roomAtPx(n.x + 10, n.y + 12);
+  return `room ${r ? r.id : '?'} tile (${Math.floor((n.x + 10) / T) - (r ? r.x : 0)}, ${Math.floor((n.y + 12) / T) - (r ? r.y : 0)})`;
+};
 
-const startThing = W.findThings('S')[0];
-if (!startThing) { console.log('No start spot (S) found'); process.exit(1); }
-let starts = [spotFor(startThing.tx, startThing.ty)];
-const t0 = Date.now();
+function roomTouched(cover, r) {
+  for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (cover[cellIdx(r.x + x, r.y + y)]) return true;
+  return false;
+}
 
-function goalKeysFor(stage, res) {
-  let things;
-  if (stage.goal === 'finale') things = W.findThings('F');
-  else { const e = elderThing(stage.goal); things = e ? [e] : []; }
-  if (!things.length) return { keys: [], thing: null };
-  const th = things[0];
-  // goal nodes: any standing node whose body is within reach of the thing
+// ──── One story stage (runs inside a worker) ────
+function runStage(stage, mapRoom) {
+  const out = [];
+  let failures = 0;
+  const fail = msg => { failures++; out.push('  ✗ ' + msg); };
+  const pass = msg => out.push('  ✓ ' + msg);
+  const t0 = Date.now();
+  const ab = abilitiesOf(stage.have);
+  const start = startFor(stage);
+  const th = goalThing(stage.goal);
+  if (!start) { fail('stage start is not placed in the world'); return { out, failures }; }
+  if (!th) { fail(`goal "${stage.goal}" is not placed in the world`); return { out, failures }; }
+
+  const startRoom = W.roomAtPx(start.x + 10, start.y + 12);
+  const res = exploreWithGates([start], ab, startRoom ? startRoom.zone : 0);
+  out.push(`  explored ${res.nodes.size} standing spots (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
   const keys = [];
   for (const n of res.nodes.values()) {
     const cx = n.x + C.PW / 2, cy = n.y + C.PH / 2;
     if (Math.abs(cx - (th.tx * T + 16)) < 56 && Math.abs(cy - (th.ty * T + 16)) < 56) keys.push(n.k);
   }
-  return { keys, thing: th };
-}
-
-let finalRes = null;
-for (const stage of STAGES) {
-  console.log(`\n▶ ${stage.name}`);
-  const ts = Date.now();
-  const res = exploreWithGates(starts, stage.ab);
-  console.log(`  (${((Date.now() - ts) / 1000).toFixed(1)}s)`);
-  const { keys, thing } = goalKeysFor(stage, res);
-  console.log(`  explored ${res.nodes.size} standing spots`);
-  if (!thing) { fail(`goal for "${stage.goal}" is not placed in the world`); break; }
   if (!keys.length) {
-    fail(`goal "${stage.goal}" is NOT reachable`);
-    reportRooms(res);
-    break;
+    fail(`${NAMES[stage.goal]} is NOT reachable`);
+    const seen = new Set();
+    for (const n of res.nodes.values()) { const r = W.roomAtPx(n.x + 10, n.y + 12); if (r) seen.add(r.id); }
+    out.push('  rooms reached: ' + [...seen].join(' '));
+    return { out, failures };
   }
-  pass(`goal "${stage.goal}" reachable`);
+  pass(`${NAMES[stage.goal]} is reachable`);
   const ok = canReach(res.nodes, keys);
   const stuck = [...res.nodes.values()].filter(n => !ok.has(n.k));
   if (stuck.length) {
     fail(`${stuck.length} softlock spot(s) — goal unreachable from:`);
-    for (const n of stuck.slice(0, 12)) {
-      const r = W.roomAtPx(n.x + 10, n.y + 12);
-      console.log(`      room ${r ? r.id : '?'} tile (${Math.floor((n.x + 10) / T) - (r ? r.x : 0)}, ${Math.floor((n.y + 12) / T) - (r ? r.y : 0)})`);
-    }
+    for (const n of stuck.slice(0, 12)) out.push('      ' + where(n));
   } else pass('no softlocks: every reachable spot can still reach the goal');
-  // next stage starts at the goal
-  starts = keys.slice(0, 1).map(k => { const n = res.nodes.get(k); return { x: n.x, y: n.y }; });
-  finalRes = res;
+
+  // Gates: rooms marked `needs: <power>` must stay out of reach without it
+  const leaks = W.rooms.filter(r => r.def.needs && !stage.have.includes(r.def.needs) && roomTouched(res.cover, r));
+  if (leaks.length) fail('gated room(s) reachable too early: ' + leaks.map(r => `${r.id} (needs ${r.def.needs})`).join(', '));
+  else if (W.rooms.some(r => r.def.needs && !stage.have.includes(r.def.needs))) pass('every power gate holds (no sneaking ahead)');
+
   if (stage.goal === 'finale') {
     // Backtracking: with every power, can every spot get back to the start?
-    const home = [...res.nodes.values()].filter(n => {
-      const s = spotFor(startThing.tx, startThing.ty);
-      return Math.abs(n.x - s.x) < 40 && Math.abs(n.y - s.y) < 4;
-    }).map(n => n.k);
+    const s = W.findThings('S')[0], sp = spotFor(s.tx, s.ty);
+    const home = [...res.nodes.values()].filter(n => Math.abs(n.x - sp.x) < 40 && Math.abs(n.y - sp.y) < 4).map(n => n.k);
     const back = canReach(res.nodes, home);
     const lost = [...res.nodes.values()].filter(n => !back.has(n.k));
     if (lost.length) {
-      fail(`${lost.length} spot(s) cannot walk back home:`);
-      for (const n of lost.slice(0, 12)) {
-        const r = W.roomAtPx(n.x + 10, n.y + 12);
-        console.log(`      room ${r ? r.id : '?'} tile (${Math.floor((n.x + 10) / T) - (r ? r.x : 0)}, ${Math.floor((n.y + 12) / T) - (r ? r.y : 0)})`);
-      }
+      fail(`${lost.length} spot(s) cannot travel back home:`);
+      for (const n of lost.slice(0, 12)) out.push('      ' + where(n));
     } else pass('every spot can travel back to the start (free backtracking)');
-  }
-}
 
-function reportRooms(res) {
-  const seen = new Set();
-  for (const n of res.nodes.values()) { const r = W.roomAtPx(n.x + 10, n.y + 12); if (r) seen.add(r.id); }
-  console.log('  rooms reached: ' + [...seen].join(' '));
-}
-
-// ──── Collectibles with every power ────
-if (finalRes) {
-  console.log('\n▶ Collectibles & landmarks (all powers)');
-  const missing = [];
-  for (const room of W.rooms) {
-    for (const t of room.things) {
-      if ('*TBnfy'.includes(t.ch) && !touched(finalRes.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) {
-        missing.push(`${t.ch} in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`);
+    // Collectibles, critters and family members
+    const missing = [];
+    for (const room of W.rooms) {
+      for (const t of room.things) {
+        const at = `in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`;
+        if ('*TBnfy&'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
+        if ('bc'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 4)) missing.push(`critter ${at}`);
+        if (t.ch === 'o' && !bubbleable(res.nodes, t.tx, t.ty)) missing.push(`bud ${at} can't be bubbled`);
       }
-      if ('bc'.includes(t.ch) && !touched(finalRes.cover, t.tx, t.ty, 4)) missing.push(`critter in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`);
-      if (t.ch === 'o' && !bubbleable(finalRes.nodes, t.tx, t.ty)) missing.push(`bud in ${room.id} at (${t.tx - room.x},${t.ty - room.y}) can't be bubbled`);
+    }
+    const unvisited = W.rooms.filter(r => !roomTouched(res.cover, r));
+    if (unvisited.length) fail('rooms never entered: ' + unvisited.map(r => r.id).join(', '));
+    if (missing.length) { fail(`${missing.length} collectible(s)/landmark(s) out of reach:`); missing.forEach(m => out.push('      ' + m)); }
+    else pass('every sparkle, toy, bench, flower, firefly, critter and family member is reachable');
+    out.push(`  (${W.rooms.length} rooms · ${W.findThings('*').length} sparkles · ${W.findThings('b').length + W.findThings('c').length} gloomy critters · ` +
+      `${W.findThings('T').length} toys · ${W.findThings('&').length} family members · ${W.findThings('B').length} benches)`);
+
+    if (mapRoom) {
+      const r = W.byId[mapRoom];
+      out.push(`\nRoom ${mapRoom} — '•' = air the kitten can reach (all powers)`);
+      for (let y = 0; y < r.h; y++) {
+        let row = '';
+        for (let x = 0; x < r.w; x++) {
+          const ch = r.grid[y][x];
+          row += ch === '.' && res.cover[cellIdx(r.x + x, r.y + y)] ? '•' : ch;
+        }
+        out.push('  ' + row);
+      }
     }
   }
-  const unvisited = W.rooms.filter(r => {
-    for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (finalRes.cover[cellIdx(r.x + x, r.y + y)]) return false;
-    return true;
-  });
-  if (unvisited.length) fail('rooms never entered: ' + unvisited.map(r => r.id).join(', '));
-  if (missing.length) { fail(`${missing.length} collectible(s)/landmark(s) out of reach:`); missing.forEach(m => console.log('      ' + m)); }
-  else pass('every sparkle, toy, bench, flower, firefly and critter is reachable');
-  const total = W.findThings('*').length;
-  console.log(`  (${total} sparkles, ${W.findThings('b').length + W.findThings('c').length} gloomy critters, ${W.findThings('T').length} toys, ${W.rooms.length} rooms)`);
+  return { out, failures };
 }
 
-// ──── Optional ASCII map of a room with coverage overlay ────
-if (mapRoom && finalRes) {
-  const r = W.byId[mapRoom];
-  console.log(`\nRoom ${mapRoom} — '•' = air the kitten can reach (all powers)`);
-  for (let y = 0; y < r.h; y++) {
-    let s = '';
-    for (let x = 0; x < r.w; x++) {
-      const ch = r.grid[y][x];
-      s += ch === '.' && finalRes.cover[cellIdx(r.x + x, r.y + y)] ? '•' : ch;
+// ──── Main thread: fan the stages out over the CPU cores ────
+if (isMainThread) {
+  const args = process.argv.slice(2);
+  const mapRoom = args.includes('--map') ? args[args.indexOf('--map') + 1] : null;
+  const only = args.includes('--stage') ? +args[args.indexOf('--stage') + 1] : null;
+  const todo = STAGES.filter(s => only == null || s.i === only);
+  const t0 = Date.now();
+  const results = new Array(STAGES.length);
+  let next = 0, running = 0;
+  const cores = Math.max(1, Math.min(os.cpus().length, todo.length));
+  console.log(`Verifying ${W.rooms.length} rooms across ${todo.length} story stage(s) on ${cores} thread(s)…`);
+  const launch = () => {
+    while (running < cores && next < todo.length) {
+      const stage = todo[next++];
+      running++;
+      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom } });
+      w.on('message', r => {
+        results[stage.i] = r;
+        console.log(`  · finished: ${NAMES[stage.goal]} (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
+      });
+      w.on('error', e => { results[stage.i] = { out: ['  ✗ worker crashed: ' + e.stack], failures: 1 }; });
+      w.on('exit', () => { running--; if (next < todo.length) launch(); else if (running === 0) finish(); });
     }
-    console.log('  ' + s);
-  }
+  };
+  const finish = () => {
+    let failures = 0;
+    for (const s of todo) {
+      const r = results[s.i];
+      const have = s.have.length ? '+' + s.have[s.have.length - 1] : 'no powers';
+      console.log(`\n▶ Stage ${s.i + 1}: ${have} → ${NAMES[s.goal]}`);
+      console.log(r.out.join('\n'));
+      failures += r.failures;
+    }
+    console.log(`\n${failures ? '✗ ' + failures + ' problem(s) found' : '✓ World verified — zero softlocks'}  (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
+    process.exit(failures ? 1 : 0);
+  };
+  launch();
+} else {
+  const stage = STAGES[workerData.stage];
+  parentPort.postMessage(runStage(stage, workerData.mapRoom));
 }
-
-console.log(`\n${failures ? '✗ ' + failures + ' problem(s) found' : '✓ World verified — zero softlocks'}  (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
-process.exit(failures ? 1 : 0);

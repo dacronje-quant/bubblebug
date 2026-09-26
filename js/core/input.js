@@ -1,14 +1,14 @@
 // ════════════════════════════════════════════════════════════════
 //  INPUT — keyboard, gamepads and chunky touch buttons, merged into
 //  one tiny vocabulary a 3-year-old can drive:
-//      ◀  ▶  jump  bubble   (plus up/down/pause for menus)
+//      ◀  ▶  jump  bubble   (plus up/down/pause/map for menus)
 //  `poll()` runs once per simulation tick and produces clean
 //  `pressed` edges so a tap is never lost between frames.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
 
-  const ACTIONS = ['left', 'right', 'up', 'down', 'jump', 'bubble', 'pause', 'confirm', 'back'];
+  const ACTIONS = ['left', 'right', 'up', 'down', 'jump', 'bubble', 'pause', 'confirm', 'back', 'map'];
 
   const KEYMAP = {
     ArrowLeft: ['left'], KeyA: ['left'],
@@ -20,6 +20,7 @@
     ShiftLeft: ['bubble'], ShiftRight: ['bubble'],
     Enter: ['confirm'], NumpadEnter: ['confirm'],
     Escape: ['pause', 'back'], KeyP: ['pause'], Backspace: ['back'],
+    KeyM: ['map'], Tab: ['map'],
   };
 
   const blank = () => Object.fromEntries(ACTIONS.map(a => [a, false]));
@@ -62,6 +63,7 @@
       return {
         left: this.held.left, right: this.held.right,
         jump: this.held.jump, jumpPressed: this.pressed.jump,
+        bubblePressed: this.pressed.bubble,
       };
     },
 
@@ -108,7 +110,7 @@
       if (b(2)) out.confirm = true;
       if (b(1)) out.back = true;
       if (b(9)) out.pause = true;
-      if (b(8)) out.back = true;
+      if (b(8)) { out.back = true; out.map = true; }
     }
     return out;
   }

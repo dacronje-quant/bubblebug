@@ -11,6 +11,8 @@
 //   bud         sleepy buds: bubble them all to open a vine gate
 //   elder       ancient bug elders who give a new power
 //   finale      the rainbow party
+//   family &    a member of the kittens' own family, napping somewhere
+//               secret — find them all and they come to the party
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -22,7 +24,7 @@
   const S = () => BB.Audio.sfx;
   const TAU = Math.PI * 2;
 
-  const TYPE = { '*': 'sparkle', B: 'bench', R: 'sign', L: 'sign', U: 'sign', D: 'sign', f: 'firefly', T: 'toy', y: 'yarn', n: 'flower', o: 'bud', E: 'elder', F: 'finale' };
+  const TYPE = { '*': 'sparkle', B: 'bench', R: 'sign', L: 'sign', U: 'sign', D: 'sign', f: 'firefly', T: 'toy', y: 'yarn', n: 'flower', o: 'bud', E: 'elder', F: 'finale', '&': 'family' };
   const DIR = { R: [1, 0], L: [-1, 0], U: [0, -1], D: [0, 1] };
   const FLOWER_TUNE = [72, 74, 76, 79, 81, 79, 76, 74];
   let flowerNote = 0;
@@ -51,6 +53,10 @@
       case 'yarn': th.vx = 0; th.vy = 0; th.r = 8; break;
       case 'bud': th.bloom = save.buds[key] ? 1 : 0; break;
       case 'elder': th.ability = room.def.elder; th.awake = 0; break;
+      case 'family':
+        th.fam = room.def.family; th.found = !!save.family[th.fam];
+        th.y = floorBelow(thing.tx, thing.ty); th.facing = 1; th.hop = 0; th.hopV = 0;
+        break;
     }
     return th;
   }
@@ -120,6 +126,15 @@
       }
       case 'finale':
         if (dist < 90 && !ctx.partyStarted) ctx.onFinale(th);
+        break;
+      case 'family':
+        th.facing = dx > 0 ? 1 : -1;
+        if (!th.found && dist < 110 && ctx.pl.state === 'play') { th.found = true; th.hopV = -4; ctx.onFamily(th); }
+        if (th.found) {
+          if (dist < 150 && th.t % 45 === 0) PT().heart(th.x + (Math.random() - 0.5) * 20, th.y - 50);
+          if (dist < 90 && th.hop === 0 && Math.random() < 0.02) th.hopV = -3;
+          if (th.hopV || th.hop < 0) { th.hop += th.hopV; th.hopV += 0.3; if (th.hop >= 0) { th.hop = 0; th.hopV = 0; } }
+        }
         break;
     }
   }
@@ -233,6 +248,26 @@
           G().bubble(x + 30, y - 60 - k * 20, 7 + k * 3, '#d8f4ff', 1 - k, c);
         }
         ctx.light(x, y - 10, 200, '#fff4c2', 1);
+        break;
+      }
+      case 'family': {
+        const m = BB.CATS[th.fam];
+        if (!m) break;
+        // a cushion to curl up on
+        c.fillStyle = m.cushion || '#ffb3d1';
+        G().ellipse(x, y - 3, 30 * (m.size || 1.4) / 1.4, 7, 0, c); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.35)'; G().ellipse(x - 6, y - 6, 16, 3, 0, c); c.fill();
+        const near = ctx.pl ? Math.hypot(ctx.pl.body.x - th.x, ctx.pl.body.y - th.y) : 999;
+        let pose;
+        if (!th.found) pose = { mode: 'sleep', t: th.t, ear: near < 260 && th.t % 90 < 12 ? Math.sin((th.t % 90) / 12 * Math.PI * 2) : 0 };
+        else pose = { mode: th.hop < 0 ? 'air' : near < 140 ? 'stand' : 'sit', vy: -2, happy: true, t: th.t };
+        BB.Kittens.draw(c, th.fam, pose, x, y - 4 + th.hop, m.size || 1.4, th.found ? th.facing : 1);
+        if (!th.found) {
+          // sleepy "z" bubbles drifting up
+          const k = (th.t % 100) / 100;
+          G().bubble(x + 18 + k * 8, y - 40 - k * 30, 3 + k * 4, '#ffffff', 1 - k, c);
+        }
+        ctx.light(x, y - 20, 120, '#ffe0b0', 0.7);
         break;
       }
       case 'finale': {

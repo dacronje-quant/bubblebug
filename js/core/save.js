@@ -13,7 +13,11 @@
       cat: 'marshmallow',
       room: null, x: null, y: null,        // resume spot (world px)
       bench: null,                          // last bench rested at {x,y}
-      abilities: { doubleJump: false, wallClimb: false, glow: false, float: false },
+      abilities: {
+        doubleJump: false, wallClimb: false, glow: false, float: false,
+        swim: false, dig: false, spring: false, rings: false, bubbleBounce: false, wings: false,
+      },
+      family: {},                           // family member id → 1 (found)
       sparkles: {},                         // key → 1
       friends: {},                          // key → 1
       toys: {},                             // toy id → 1
@@ -39,6 +43,7 @@
           if (d && d.v === 2) {
             if (d.cat === 'pip') d.cat = 'phoebe'; // the tabby's early name
             this.data = Object.assign(fresh(), d);
+            this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
             return true;
           }
         }

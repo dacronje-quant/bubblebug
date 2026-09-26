@@ -19,12 +19,18 @@
 //   :  glow petal (solid w/ Glow)   F  finale party     S  start spot
 //   ^  breezy updraft
 //   G  bud gate (opens when every bud in the room blooms)
+//   %  sky-mist (dandelion rescue, even for swimmers)
+//   I  ice / sugar-glass: solid, too slippery to climb
+//   X  sandstone: solid until the Tortoise's Mighty Paws crumble it
+//   1–9 fairy rings: each digit appears exactly twice in the world; with
+//      the Badger's gift, stepping into one pops you out at its twin
+//   &  a lost member of the kittens' family (hidden down a side passage)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
   const T = BB.CFG.TILE;
 
-  const ENTITY_CHARS = '*bcBEKfRLUDTynoFS';
+  const ENTITY_CHARS = '*bcBEKfRLUDTynoFS&';
   const DEFS = [];
 
   // Rooms register themselves from js/world/rooms/*.js
@@ -67,8 +73,10 @@
             const ch = row[c];
             if (ENTITY_CHARS.includes(ch)) {
               room.things.push({ ch, tx: def.x + c, ty: def.y + r });
-              // a treasure tucked between shy walls stays hidden behind them
-              row[c] = (line[c - 1] === 'H' || line[c + 1] === 'H') ? 'H' : '.';
+              // a treasure tucked between shy walls stays hidden behind them,
+              // and anything placed underwater stays surrounded by water
+              const west = line[c - 1], east = line[c + 1];
+              row[c] = (west === 'H' || east === 'H') ? 'H' : (west === '~' || east === '~') ? '~' : '.';
             }
           }
           room.grid.push(row);
@@ -94,6 +102,20 @@
       this.gw = x1 - x0; this.gh = y1 - y0;
       this.flat = new Uint8Array(this.gw * this.gh);
       for (const room of this.rooms) this._stamp(room);
+      // pair up the fairy rings
+      this.portals = new Map();
+      const seen = {};
+      for (const room of this.rooms) {
+        for (let r = 0; r < room.h; r++) for (let c = 0; c < room.w; c++) {
+          const ch = room.grid[r][c];
+          if (ch >= '1' && ch <= '9') (seen[ch] = seen[ch] || []).push({ tx: room.x + c, ty: room.y + r });
+        }
+      }
+      for (const [d, list] of Object.entries(seen)) {
+        if (list.length !== 2) throw new Error(`Fairy ring ${d} appears ${list.length} times (needs exactly 2)`);
+        this.portals.set(list[0].tx + ',' + list[0].ty, list[1]);
+        this.portals.set(list[1].tx + ',' + list[1].ty, list[0]);
+      }
       return this;
     },
 
@@ -136,12 +158,16 @@
       return CH[this.flat[(ty - b.y0) * this.gw + (tx - b.x0)]];
     },
 
-    setTile(tx, ty, ch) {
+    portalTwin(tx, ty) { return this.portals.get(tx + ',' + ty) || null; },
+
+    // `quiet` skips re-painting the room's terrain (for tiles drawn live,
+    // like crumbling sandstone)
+    setTile(tx, ty, ch, quiet) {
       const r = this.roomAtTile(tx, ty);
       if (!r) return;
       r.grid[ty - r.y][tx - r.x] = ch;
       this.flat[(ty - this.bounds.y0) * this.gw + (tx - this.bounds.x0)] = ch.charCodeAt(0);
-      r.version++;
+      if (!quiet) r.version++;
     },
 
     // Opens a room's bud gates (G → g).

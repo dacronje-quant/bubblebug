@@ -140,6 +140,16 @@
           BB.Save.write();
         },
         onFinale(th) { self.startParty(th); },
+        onFamily(th) {
+          self.save.family[th.fam] = 1;
+          self.pl.happyT = 120;
+          S().meow(self.pl.cat);
+          setTimeout(() => S().meow(th.fam), 350);
+          S().befriend();
+          for (let i = 0; i < 14; i++) PT().heart(th.x + (Math.random() - 0.5) * 50, th.y - 20 - Math.random() * 30);
+          PT().burst('confetti', th.x, th.y - 30, 24, { speed: 3.5, g: 0.08, life: 70 });
+          BB.Save.write();
+        },
       };
     },
 
@@ -189,13 +199,20 @@
       this.partyStarted = true;
       this.save.finale = true;
       BB.Save.write();
-      const kinds = Object.values(this.save.friends).filter(k => typeof k === 'string' && k !== 'king');
+      // every friend floats in on a little cloud, row after row…
+      const kinds = Object.values(this.save.friends).filter(k => typeof k === 'string');
       const guests = [];
-      const n = Math.min(kinds.length, 28);
+      const n = Math.min(kinds.length, 50);
       for (let i = 0; i < n; i++) {
-        const side = i % 2 ? 1 : -1, row = Math.floor(i / 2);
-        guests.push({ kind: kinds[i], x: th.x + side * (70 + (row % 7) * 38), y: th.y + 6 - Math.floor(row / 7) * 96, t: Math.random() * 100, facing: -side });
+        const row = Math.floor(i / 10), col = i % 10;
+        guests.push({ kind: kinds[i], x: th.x + (col - 4.5) * 44 + (row % 2) * 18, y: th.y - 110 - row * 58, t: Math.random() * 100, facing: col < 5 ? 1 : -1, cloud: true });
       }
+      // …and the kittens' family stand right beside you
+      const fam = Object.keys(this.save.family || {});
+      fam.forEach((id, i) => {
+        const side = i % 2 ? 1 : -1, k = Math.floor(i / 2);
+        guests.push({ cat: id, x: th.x + side * (80 + k * 48), y: th.y + 16, t: Math.random() * 100, facing: -side });
+      });
       this.party = { th, t: 0, guests, card: 0 };
       BB.Music.play('party');
       S().party();
@@ -220,6 +237,7 @@
       G().t++;
       const I = BB.Input;
       if (I.pressed.pause && !this.gift) { BB.Main.go('pause'); return; }
+      if (I.pressed.map) this.toggleMap();
 
       const cam = Cam();
       if (cam.sliding) {
@@ -238,8 +256,26 @@
       });
       if ((fx & FX.HAZARD) && this.pl.state === 'play') BB.Player.startRescue(this.pl);
 
-      // ── room change? glide the camera ──
       const b = this.pl.body;
+      // ── fairy ring hop: pop out at the twin with a sparkly flash ──
+      if (fx & FX.PORTAL) {
+        const r = W().roomAtPx(b.x + b.w / 2, b.y + b.h / 2);
+        if (r) {
+          if (r.zone !== this.room.zone) this.enterZone(r.zone);
+          this.room = r; this.save.visited[r.id] = 1;
+          cam.snap(r, b);
+          this.flash = 16;
+          S().secret(); S().whoosh();
+          PT().burst('spark', b.x + b.w / 2, b.y + b.h / 2, 18, { color: '#ffe6a8', speed: 3, life: 36 });
+          PT().ring(b.x + b.w / 2, b.y + b.h, '#ffe6a8', 26);
+          BB.Bubbles.clear();
+          this.writeSave();
+        }
+      }
+      // ── Mighty Paws: cracked sandstone crumbles at a touch ──
+      if (ab.dig) this.crumbleAround(b);
+
+      // ── room change? glide the camera ──
       if (this.pl.state !== 'rescue') {
         const r = W().roomAtPx(b.x + b.w / 2, b.y + b.h / 2);
         if (r && r !== this.room) {
@@ -310,6 +346,29 @@
       this.shy[room.id] = BB.lerp(this.shy[room.id] == null ? 1 : this.shy[room.id], target, 0.12);
     },
 
+    crumbleAround(b) {
+      const T = C.TILE;
+      for (let ty = Math.floor((b.y - 4) / T); ty <= Math.floor((b.y + b.h + 4) / T); ty++) {
+        for (let tx = Math.floor((b.x - 4) / T); tx <= Math.floor((b.x + b.w + 4) / T); tx++) {
+          if (W().tile(tx, ty) !== 'X') continue;
+          W().setTile(tx, ty, '.', true);
+          const Z = BB.ZONES[this.room.zone];
+          PT().burst('dust', tx * T + 16, ty * T + 16, 8, { color: Z.groundLight, speed: 2.4, life: 34, g: 0.12, size: 4 });
+          PT().burst('dot', tx * T + 16, ty * T + 16, 6, { color: Z.ground, speed: 3, life: 28, g: 0.2, size: 3 });
+          if (!this.crumbleCd) { S().crumble(); this.crumbleCd = 6; }
+        }
+      }
+      if (this.crumbleCd) this.crumbleCd--;
+    },
+
+    // the see-through map floats over the game while you keep playing
+    toggleMap() {
+      this.mapOn = !this.mapOn;
+      BB.Audio.sfx.select();
+      const btn = document.getElementById('map-btn');
+      if (btn) btn.classList.toggle('on', this.mapOn);
+    },
+
     darkness() {
       const room = this.room;
       const d = room.def.dark != null ? room.def.dark : BB.ZONES[room.zone].dark;
@@ -337,7 +396,7 @@
       this.lastCam = { x: cam.x, y: cam.y };
 
       const visible = W().roomsInRect(cam.x - 64, cam.y - 64, G().W + 128, G().H + 128);
-      const env = { glow: this.save.abilities.glow, px: this.pl.body.x + 10, py: this.pl.body.y + 12 };
+      const env = { glow: this.save.abilities.glow, rings: this.save.abilities.rings, dig: this.save.abilities.dig, px: this.pl.body.x + 10, py: this.pl.body.y + 12 };
       for (const r of visible) BB.Tiles.drawStatic(c, r, cam, 0);
       for (const r of visible) BB.Tiles.drawLive(c, r, cam, t, env);
 
@@ -382,6 +441,7 @@
         stars: BB.Save.count(this.save.sparkles),
         hearts: BB.Save.count(this.save.friends),
         abilities: this.save.abilities, toys: this.save.toys,
+        family: BB.Save.count(this.save.family || {}),
       }, t);
       BB.HUD.drawZoneCard(c, this.cardZone, this.zoneCard / 40, t);
       if (this.gift && this.gift.card > 0) {
@@ -389,6 +449,8 @@
         BB.HUD.drawAbilityCard(c, this.gift.ability, this.gift.t, this.pl.cat, this.gift.card);
       }
       if (this.party && this.party.card > 0) this.drawPartyCard(c, this.party.card);
+      if (this.flash > 0) { c.fillStyle = `rgba(255,248,220,${this.flash / 20})`; c.fillRect(0, 0, G().W, G().H); this.flash--; }
+      if (this.mapOn && !(this.gift && this.gift.card > 0)) BB.MapView.draw(c, 'overlay', t);
     },
 
     drawShy(c, room, cam) {
@@ -405,7 +467,14 @@
     drawGuests(c, cam) {
       for (const g of this.party.guests) {
         const hop = Math.abs(Math.sin(g.t * 0.12)) * -10;
-        BB.Critters.drawBug(c, g.kind, g.x - cam.x, g.y - cam.y + hop - 4, { t: g.t, mood: 0, facing: g.facing, joy: true, spin: Math.sin(g.t * 0.1) * 0.2, scale: 1.3 });
+        const x = g.x - cam.x, y = g.y - cam.y;
+        if (g.cat) {
+          const m = BB.CATS[g.cat];
+          BB.Kittens.draw(c, g.cat, { mode: g.t % 90 < 45 ? 'sit' : 'stand', happy: true, t: g.t }, x, y + hop * 0.6, m && m.size || 1.4, g.facing);
+        } else {
+          if (g.cloud) BB.Backdrops.cloud(c, x - 20, y + 16, 0.28, 'rgba(255,255,255,0.9)');
+          BB.Critters.drawBug(c, g.kind, x, y + hop - 4, { t: g.t, mood: 0, facing: g.facing, joy: true, spin: Math.sin(g.t * 0.1) * 0.2, scale: 1.2 });
+        }
         if (g.t % 70 === 0) PT().heart(g.x, g.y - 20);
       }
     },
@@ -427,19 +496,21 @@
       const t = this.party.t;
       BB.Kittens.draw(c, 'marshmallow', { mode: t % 60 < 30 ? 'sit' : 'stand', happy: true, t }, cx - 60, cy + 20, 2.6, 1);
       BB.Kittens.draw(c, 'phoebe', { mode: t % 60 >= 30 ? 'sit' : 'stand', happy: true, t }, cx + 60, cy + 20, 2.6, -1);
-      // tallies: stars, hearts, toys
+      // tallies: stars, hearts, family — then every toy
       const y = cy + 80;
       c.fillStyle = '#ffd84a'; c.strokeStyle = '#c28a14'; c.lineWidth = 2;
-      G().star(cx - 150, y, 16, 5, 0.5, -Math.PI / 2, c); c.fill(); c.stroke();
-      G().text(String(BB.Save.count(this.save.sparkles)), cx - 100, y + 2, 30, '#8a5a14', null);
+      G().star(cx - 190, y, 16, 5, 0.5, -Math.PI / 2, c); c.fill(); c.stroke();
+      G().text(String(BB.Save.count(this.save.sparkles)), cx - 140, y + 2, 30, '#8a5a14', null);
       c.fillStyle = '#ff7eb6'; c.strokeStyle = '#b8407a';
-      G().heart(cx + 20, y + 4, 16, c); c.fill(); c.stroke();
-      G().text(String(BB.Save.count(this.save.friends)), cx + 70, y + 2, 30, '#b8407a', null);
-      let tx = cx - 110;
-      for (const toy of ['yarn', 'feather', 'bell', 'mouse', 'boat', 'star']) {
+      G().heart(cx - 40, y + 4, 16, c); c.fill(); c.stroke();
+      G().text(String(BB.Save.count(this.save.friends)), cx + 5, y + 2, 30, '#b8407a', null);
+      BB.MapView.catFace(c, cx + 100, y + 2, 2, '#fff1dc', '#9a7a64');
+      G().text(String(BB.Save.count(this.save.family || {})), cx + 145, y + 2, 30, '#8a5a3a', null);
+      let tx = cx - 209;
+      for (const toy of ['yarn', 'feather', 'bell', 'mouse', 'boat', 'star', 'shell', 'bucket', 'mitten', 'kite', 'duck', 'rocket']) {
         c.globalAlpha = Math.min(1, a) * (this.save.toys[toy] ? 1 : 0.2);
-        BB.HUD.toyIcon(c, toy, tx, cy + 130, 1.1, t);
-        tx += 44;
+        BB.HUD.toyIcon(c, toy, tx, cy + 130, 1, t);
+        tx += 38;
       }
       c.restore();
     },
