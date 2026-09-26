@@ -16,6 +16,7 @@
     canvas, ctx,
     W: C.VIEW_W, H: C.VIEW_H,
     scale: 1,                 // backing pixels per logical pixel
+    maxScale: C.MAX_RENDER_SCALE, // lowered automatically on slow machines
     view: { x: 0, y: 0, w: 0, h: 0 }, // canvas placement in CSS px
     t: 0,                     // global animation clock (ticks)
 
@@ -26,7 +27,7 @@
       if (h > vh) { h = vh; w = vh * aspect; }
       w = Math.floor(w); h = Math.floor(h);
       const dpr = window.devicePixelRatio || 1;
-      const s = BB.clamp((w * dpr) / G.W, 1, C.MAX_RENDER_SCALE);
+      const s = BB.clamp((w * dpr) / G.W, 0.75, G.maxScale);
       const changed = Math.abs(s - G.scale) > 0.01 || canvas.width !== Math.round(G.W * s);
       G.scale = s;
       canvas.width = Math.round(G.W * s);

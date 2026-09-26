@@ -278,10 +278,12 @@
       return;
     }
     if (Z.key === 'clouds') {
+      c.fillStyle = '#b9a8ee';
+      for (let i = 0; i < 3; i++) { G.circle(x + 5 + i * 11, y + 5, 8 + h(i) * 2.5, c); c.fill(); }
       c.fillStyle = '#ffffff';
-      for (let i = 0; i < 3; i++) { G.circle(x + 5 + i * 11, y + 4, 6 + h(i) * 2.5, c); c.fill(); }
-      c.fillStyle = BB.rgba(Z.ledgeDark, 0.5);
-      c.fillRect(x, y + 7, T, 3);
+      for (let i = 0; i < 3; i++) { G.circle(x + 5 + i * 11, y + 4, 6.5 + h(i) * 2.5, c); c.fill(); }
+      c.fillStyle = 'rgba(255,226,122,0.7)';
+      G.circle(x + 16, y - 1, 1.3, c); c.fill();
       return;
     }
     const x0 = x - (L ? 1 : -1), x1 = x + T + (R ? 1 : -1);
@@ -373,13 +375,17 @@
   // Draws a room's terrain; with `shyOnly`, just its shy walls at `shyAlpha`
   function drawStatic(c, room, cam, shyAlpha, shyOnly) {
     const e = get(room);
-    const dx = room.px - 32 - cam.x, dy = room.py - 32 - cam.y;
-    if (!shyOnly) { c.drawImage(e.canvas, dx, dy, room.pw + 64, room.ph + 64); return; }
-    if (e.shy && shyAlpha > 0.01) {
-      c.globalAlpha = shyAlpha;
-      c.drawImage(e.shy, dx, dy, room.pw + 64, room.ph + 64);
-      c.globalAlpha = 1;
-    }
+    const img = shyOnly ? e.shy : e.canvas;
+    if (!img || (shyOnly && shyAlpha <= 0.01)) return;
+    // only blit the part of the (large) room canvas that is on screen
+    const ox = room.px - 32, oy = room.py - 32;
+    const x0 = Math.max(ox, cam.x), y0 = Math.max(oy, cam.y);
+    const x1 = Math.min(ox + room.pw + 64, cam.x + G.W), y1 = Math.min(oy + room.ph + 64, cam.y + G.H);
+    if (x1 <= x0 || y1 <= y0) return;
+    const k = e.scale;
+    if (shyOnly) c.globalAlpha = shyAlpha;
+    c.drawImage(img, (x0 - ox) * k, (y0 - oy) * k, (x1 - x0) * k, (y1 - y0) * k, x0 - cam.x, y0 - cam.y, x1 - x0, y1 - y0);
+    c.globalAlpha = 1;
   }
 
   // front=false: breezes, petals, gates, mushrooms · front=true: water (over the kitten)
@@ -466,28 +472,38 @@
 
   function drawPetal(c, Z, tx, ty, x, y, t, env) {
     const cx = x + T / 2, cy = y + 4;
+    const L = W().tile(tx - 1, ty) === ':', R = W().tile(tx + 1, ty) === ':';
     if (!env.glow) {
-      // sleepy closed bud: a faint dotted hint that *something* is here
+      // sleepy, closed: only a faint dotted hint that *something* is here
       c.save();
-      c.setLineDash([2, 3]);
-      c.strokeStyle = 'rgba(255,240,180,0.45)'; c.lineWidth = 1.2;
-      G.ellipse(cx, cy + 2, 13, 4, 0, c); c.stroke();
+      c.setLineDash([2, 4]);
+      c.strokeStyle = 'rgba(255,240,180,0.5)'; c.lineWidth = 1.5;
+      c.beginPath(); c.moveTo(x + (L ? 0 : 4), y + 3); c.lineTo(x + T - (R ? 0 : 4), y + 3); c.stroke();
       c.restore();
-      c.fillStyle = 'rgba(255,230,160,0.35)';
-      c.beginPath(); c.ellipse(cx, cy, 4, 6, 0, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(255,230,160,0.3)';
+      c.beginPath(); c.ellipse(cx, cy - 2, 3, 5, 0, 0, TAU); c.fill();
       return;
     }
-    const near = env.px != null ? BB.clamp(1 - Math.hypot(env.px - (tx * T + T / 2), env.py - (ty * T + 4)) / 260, 0, 1) : 0.5;
-    const open = 0.6 + near * 0.4;
-    G.drawGlow(cx, cy, 26 + near * 16, '#fff3b0', 0.35 + near * 0.35, c);
-    const cols = ['#ffe9a8', '#ffc9e3', '#fff6d6'];
-    for (let i = -2; i <= 2; i++) {
-      c.save(); c.translate(cx, cy + 4); c.rotate(i * 0.42 * open);
-      c.fillStyle = cols[(i + 2) % 3]; c.strokeStyle = 'rgba(200,140,60,0.7)'; c.lineWidth = 1;
-      c.beginPath(); c.ellipse(0, -7, 5, 9, 0, 0, TAU); c.fill(); c.stroke();
+    const near = env.px != null ? BB.clamp(1 - Math.hypot(env.px - cx - (0), env.py - (ty * T + 4)) / 260, 0, 1) : 0.5;
+    const pulse = 0.5 + near * 0.5 + Math.sin(t * 0.06 + tx) * 0.08;
+    G.drawGlow(cx, cy, 30 + near * 16, '#fff3b0', 0.3 + near * 0.35, c);
+    // a glowing lily-pad platform you can clearly stand on
+    const x0 = x + (L ? -1 : 2), x1 = x + T + (R ? 1 : -2);
+    const g = c.createLinearGradient(0, y, 0, y + 8);
+    g.addColorStop(0, BB.mix('#fff6c8', '#ffd98a', 1 - pulse)); g.addColorStop(1, '#f2a94a');
+    c.fillStyle = g; c.strokeStyle = 'rgba(190,120,40,0.8)'; c.lineWidth = 1.2;
+    G.rrect(x0, y, x1 - x0, 7, L && R ? 1 : 4, c); c.fill(); c.stroke();
+    // petals curling up from the pad
+    for (const px of [x + 9, x + 23]) {
+      c.save(); c.translate(px, y + 1);
+      for (const a of [-0.5, 0, 0.5]) {
+        c.save(); c.rotate(a * (0.7 + near * 0.3));
+        c.fillStyle = BB.rgba(a ? '#ffc9e3' : '#ffe9a8', 0.95); c.strokeStyle = 'rgba(200,120,90,0.6)'; c.lineWidth = 0.8;
+        c.beginPath(); c.ellipse(0, -5, 2.6, 5.5, 0, 0, TAU); c.fill(); c.stroke();
+        c.restore();
+      }
       c.restore();
     }
-    c.fillStyle = '#ffffff'; G.circle(cx, cy + 1, 2.5, c); c.fill();
   }
 
   function drawGate(c, Z, tx, ty, x, y, t) {

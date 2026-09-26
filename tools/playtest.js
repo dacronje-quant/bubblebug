@@ -1,6 +1,6 @@
 // Dev helper: drive the real game with simulated keys and grab screenshots.
 //   node tools/playtest.js <outDir> [scenario]
-const { chromium } = require('/opt/node22/lib/node_modules/playwright');
+const { chromium } = (() => { try { return require('playwright'); } catch (e) { return require('/opt/node22/lib/node_modules/playwright'); } })();
 const [out = '.', scenario = 'intro'] = process.argv.slice(2);
 (async () => {
   const browser = await chromium.launch();

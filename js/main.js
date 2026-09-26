@@ -57,9 +57,26 @@
     },
   };
 
+  // ──── Adaptive quality ────
+  // If frames are consistently slow (an older PC without much graphics
+  // power), gently lower the render resolution until play is smooth.
+  let slowT = 0, avgDt = 16.7;
+  function adaptQuality(dt) {
+    if (document.hidden || dt > 200) return;
+    avgDt = avgDt * 0.95 + dt * 0.05;
+    if (avgDt > 24 && G.scale > 0.8) {
+      if (++slowT > 120) {
+        G.maxScale = Math.max(0.75, Math.min(G.maxScale, G.scale) - 0.25);
+        G.resize(); BB.Tiles.clear();
+        slowT = 0; avgDt = 16.7;
+      }
+    } else slowT = Math.max(0, slowT - 1);
+  }
+
   // ──── Loop ────
   let acc = 0, last = performance.now();
   function frame(now) {
+    adaptQuality(now - last);
     acc += Math.min(100, now - last);
     last = now;
     let steps = 0;

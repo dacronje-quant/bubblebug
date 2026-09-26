@@ -23,7 +23,8 @@
       const G = BB.G;
       const want = {
         x: p.x + p.w / 2 - G.W / 2 + this.lookX,
-        y: p.y + p.h / 2 - G.H * 0.55 + this.lookY,
+        // on touchscreens frame the kitten a little higher, clear of the thumb buttons
+        y: p.y + p.h / 2 - G.H * (BB.Input.touchEnabled ? 0.5 : 0.55) + this.lookY,
       };
       return this.clampTo(room, want.x, want.y);
     },
