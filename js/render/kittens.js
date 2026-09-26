@@ -380,8 +380,26 @@
     c.fillStyle = cat.nose;
     c.beginPath(); c.moveTo(3.4, 2.1); c.lineTo(6.2, 2.1); c.lineTo(4.8, 3.7); c.closePath(); c.fill();
     c.strokeStyle = cat.outline; c.lineWidth = 0.9; c.lineCap = 'round';
-    const yawn = pose.yawn || 0, puff = pose.puff || 0;
-    if (yawn > 0.05) {
+    const yawn = pose.yawn || 0, puff = pose.puff || 0, munch = pose.munch || 0;
+    if (munch > 0.3) {
+      // nom nom nom: a chewing mouth between chubby cheeks
+      const chew = Math.abs(Math.sin(t * 0.5));
+      c.fillStyle = '#b8405a';
+      G.ellipse(4.8, 5.3, 1.3, 0.35 + chew * 1.1, 0, c); c.fill(); c.stroke();
+      c.fillStyle = BB.rgba(cat.pattern === 'points' ? cat.fur : cat.belly, 0.95);
+      c.lineWidth = 0.7;
+      for (const cx of [1.8, 7.8]) { G.circle(cx, 4.6 + chew * 0.3, 1.9, c); c.fill(); c.stroke(); }
+    } else if (munch > 0.02) {
+      // …and a happy lick of the lips
+      c.beginPath();
+      c.moveTo(4.8, 3.7); c.lineTo(4.8, 4.6);
+      c.arc(3.8, 4.6, 1, 0, Math.PI * 0.9);
+      c.moveTo(4.8, 4.6); c.arc(5.8, 4.6, 1, Math.PI, Math.PI * 0.1, true);
+      c.stroke();
+      c.fillStyle = '#ff8fa8';
+      const lk = Math.sin((0.3 - munch) / 0.3 * Math.PI);
+      G.ellipse(5.9 + lk * 0.8, 5.5, 1.2, 0.8 + lk * 0.6, 0.5, c); c.fill(); c.stroke();
+    } else if (yawn > 0.05) {
       c.fillStyle = '#b8405a';
       G.ellipse(4.8, 6 + yawn * 1.2, 1.6 + yawn * 0.8, 1 + yawn * 2.4, 0, c); c.fill(); c.stroke();
       c.fillStyle = '#ff8fa8'; G.ellipse(4.8, 7 + yawn * 2, 1 + yawn * 0.5, 0.6 + yawn * 0.8, 0, c); c.fill();

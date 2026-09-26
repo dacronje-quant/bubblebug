@@ -66,6 +66,7 @@
     // ── Feelings (a gentle kind of danger) ──
     MOOD_MAX: 4,            // happy suns; a gloomy bump or a tumble costs one
     HURT_INVULN: 100,       // ticks of blinking safety after a bump
+    BUMP_INVULN: 50,        // (Easy: a shorter breather, since bumps cost nothing)
     RESPAWN_INVULN: 150,
     SAD_TIME: 84,           // the too-sad sniffle before floating home
     IRIS_TIME: 26,

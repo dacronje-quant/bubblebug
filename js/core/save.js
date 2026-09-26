@@ -98,4 +98,19 @@
     },
     count(obj) { return Object.keys(obj).length; },
   };
+
+  // How brave? A grown-up setting chosen on the title screen, kept on this
+  // device (so it applies to Continue and New Game alike):
+  //   Easy (default) — bumps just knock the kitten back with a silly boing;
+  //                    no suns are lost and nobody ever gets too sad
+  //   Hard           — bumps and boss sad attacks cost happy suns; with no
+  //                    suns left the kitten floats back to its save point
+  const HARD_KEY = 'bubblepaws_hard';
+  BB.Settings = {
+    hard: (() => { try { return localStorage.getItem(HARD_KEY) === '1'; } catch (e) { return false; } })(),
+    setHard(on) {
+      this.hard = !!on;
+      try { localStorage.setItem(HARD_KEY, on ? '1' : '0'); } catch (e) { /* storage blocked */ }
+    },
+  };
 })(window.BB);

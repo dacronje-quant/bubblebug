@@ -293,6 +293,7 @@
 
   // ──── Happy suns (the kitten's feelings) ────
   function drawMood(c, s, t) {
+    if (!s.hard) { drawCozy(c, s, t); return; }
     const max = s.moodMax || 4, mood = s.mood;
     const shake = s.hurtT > 0 ? Math.sin(s.hurtT * 1.3) * (s.hurtT / 36) * 4 : 0;
     c.save();
@@ -309,6 +310,29 @@
       const fresh = on && i === mood - 1 && s.healT > 0 ? 1 + Math.sin((30 - s.healT) / 30 * Math.PI) * 0.45 : 1;
       if (on) sun(c, x, y, fresh, t + i * 17);
       else rainCloudIcon(c, x, y, t + i * 23, i === mood && s.hurtT > 0 ? s.hurtT / 36 : 0);
+    }
+    c.restore();
+  }
+
+  // Easy mode: no suns to lose, just the kitten and a heart in a bubble
+  // (it gives a happy little squeeze after a snack)
+  function drawCozy(c, s, t) {
+    c.save();
+    c.fillStyle = 'rgba(30,20,50,0.38)';
+    G.rrect(12, 12, 150, 38, 19, c); c.fill();
+    const yum = s.munchT > 0 ? Math.min(1, s.munchT / 40) : 0;
+    BB.Kittens.draw(c, s.cat || 'marshmallow', { mode: 'sit', t, happy: true, blink: (t % 200) < 6 ? 1 : 0 }, 34, 47, 0.6, 1);
+    const k = 1 + Math.sin(t * 0.07) * 0.05 + Math.sin(yum * Math.PI) * 0.3;
+    c.save(); c.translate(104, 31); c.scale(k, k);
+    G.bubble(0, 0, 15, '#ffc6e6', 0.95, c);
+    c.fillStyle = '#ff6f9f'; G.heart(0, 2, 9, c); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.7)'; G.circle(-3.5, -2.5, 1.8, c); c.fill();
+    c.restore();
+    // two tiny hearts drift up out of the bubble
+    for (let i = 0; i < 2; i++) {
+      const ph = ((t * 0.012) + i * 0.5) % 1;
+      c.globalAlpha = Math.sin(ph * Math.PI) * 0.8;
+      c.fillStyle = '#ffb3cf'; G.heart(126 + i * 12 + Math.sin(ph * 6 + i) * 3, 38 - ph * 22, 3.5, c); c.fill();
     }
     c.restore();
   }

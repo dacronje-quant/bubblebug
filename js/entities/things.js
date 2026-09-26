@@ -13,6 +13,7 @@
 //   finale      the rainbow party
 //   family &    a member of the kittens' own family, napping somewhere
 //               secret — find them all and they come to the party
+//  (puzzle pieces live in puzzles.js and cat food in food.js)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -41,6 +42,7 @@
 
   function create(thing, room, save) {
     if (BB.Puzzles.TYPES[thing.ch]) return BB.Puzzles.create(thing, room, save);
+    if (BB.Food.TYPES[thing.ch]) return BB.Food.create(thing, room);
     const type = TYPE[thing.ch];
     if (!type) return null;
     const key = thing.tx + ',' + thing.ty;
@@ -71,6 +73,7 @@
 
   function update(th, ctx) {
     if (th.puzzle) return BB.Puzzles.update(th, ctx);
+    if (th.food) return BB.Food.update(th, ctx);
     th.t++;
     const pb = ctx.pl.body;
     const pcx = pb.x + pb.w / 2, pcy = pb.y + pb.h / 2;
@@ -171,6 +174,7 @@
   // Bubble targets for this thing (or null)
   function target(th, ctx) {
     if (th.puzzle) return BB.Puzzles.target(th, ctx);
+    if (th.food) return null;
     switch (th.type) {
       case 'bud': return th.bloom ? null : { x: th.x, y: th.y, r: 14, homing: true, hit: () => { bloomBud(th, ctx); return true; } };
       case 'flower': return { x: th.x, y: th.y - 30, r: 16, homing: false, hit: () => { sing(th); return true; } };
@@ -194,6 +198,7 @@
   // ──── Drawing ────
   function draw(c, th, cam, ctx) {
     if (th.puzzle) return BB.Puzzles.draw(c, th, cam, ctx);
+    if (th.food) return BB.Food.draw(c, th, cam);
     const x = th.x - cam.x, y = th.y - cam.y;
     if (x < -100 || x > G().W + 100 || y < -140 || y > G().H + 140) return;
     const t = th.t;

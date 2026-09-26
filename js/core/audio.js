@@ -373,6 +373,15 @@
       inst.bell(midi(84), t, 0.05, sfxBus); inst.bell(midi(91), t + 0.08, 0.04, sfxBus);
     },
 
+    // nom nom: little crunches and a happy chirp (a bowl gets a tune too)
+    munch(big) {
+      if (!ctx) return;
+      const n = big ? 4 : 2;
+      for (let i = 0; i < n; i++) noise({ delay: i * 0.11, dur: 0.05, vol: 0.08, freq: 1700 + Math.random() * 900, q: 1.6 });
+      tone({ type: 'triangle', freq: 540, to: 820, glide: 0.1, delay: n * 0.11 + 0.03, dur: 0.15, vol: 0.07, vib: [18, 20] });
+      if (big) [79, 84, 88].forEach((m, i) => inst.musicbox(midi(m), ctx.currentTime + 0.55 + i * 0.07, 0.08, sfxBus));
+    },
+
     // ──── Puzzles ────
     padPress(n) {
       noise({ dur: 0.06, vol: 0.07, freq: 900, q: 1.2 });

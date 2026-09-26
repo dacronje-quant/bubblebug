@@ -99,7 +99,8 @@
       this.gift = null; this.party = null; this.partyStarted = false;
       this.lastZone = -1;
       // feelings, save point & friends that follow you
-      this.mood = C.MOOD_MAX; this.invuln = 60; this.hurtT = 0; this.healT = 0;
+      this.mood = C.MOOD_MAX; this.invuln = 60; this.hurtT = 0; this.healT = 0; this.munchT = 0;
+      BB.Food.clearDrops();
       this.checkpoint = { x, y };
       this.pendingCP = false;
       this.lantern = null;
@@ -145,20 +146,29 @@
     },
 
     // ──── Feelings ────
+    // Hard: a bump costs a happy sun. Easy: just a knock-back and a boing.
     hurt(fromX) {
       const pl = this.pl, b = pl.body;
       if (pl.state !== 'play' || this.invuln > 0 || this.party || this.gift) return false;
-      this.mood = Math.max(0, this.mood - 1);
-      this.invuln = C.HURT_INVULN;
-      this.hurtT = 36;
+      const hard = BB.Settings.hard;
+      if (hard) {
+        this.mood = Math.max(0, this.mood - 1);
+        this.hurtT = 36;
+      }
+      this.invuln = hard ? C.HURT_INVULN : C.BUMP_INVULN;
       pl.hurtT = 24;
       const dir = (b.x + b.w / 2) >= fromX ? 1 : -1;
       b.vx = dir * (b.inWater ? 2.6 : 4.2);
       if (!b.inWater) { b.vy = Math.min(b.vy, -5); b.grounded = false; }
       b.climbing = 0;
-      S().ouch(pl.cat);
-      PT().burst('dot', b.x + b.w / 2, b.y + 4, 9, { color: '#9fc0e8', speed: 2.2, life: 30, size: 3, up: 0.6 });
-      this.shake(5);
+      if (hard) {
+        S().ouch(pl.cat);
+        PT().burst('dot', b.x + b.w / 2, b.y + 4, 9, { color: '#9fc0e8', speed: 2.2, life: 30, size: 3, up: 0.6 });
+      } else {
+        S().hmph();
+        PT().burst('spark', b.x + b.w / 2, b.y + 4, 6, { color: '#fff4c2', speed: 2, life: 22 });
+      }
+      this.shake(hard ? 5 : 3);
       if (this.mood <= 0) this.startSad();
       return true;
     },
@@ -207,6 +217,7 @@
       pl.state = 'play'; pl.idleT = 0; pl.happyT = 40; pl.squash = 0.8;
       BB.Bubbles.clear(); BB.Bosses.clear();
       for (const bs of this.ents[r.id].bosses) BB.Bosses.calm(bs);
+      for (const th of this.ents[r.id].things) if (th.food) BB.Food.regrow(th, true);
       this.trail = [{ x: b.x + b.w / 2, y: b.y + b.h }];
       for (const f of this.followers) { f.x = b.x + b.w / 2 - b.facing * 20; f.feetY = b.y + b.h; f.y = f.type === 'key' ? b.y - 20 : f.feetY; }
       this.iris = { t: 0, close: false };
@@ -300,6 +311,9 @@
       if (!room) return;
       for (const bs of this.ents[room.id].bosses) BB.Bosses.reset(bs);
       BB.Bosses.clear();
+      // snacks are back for next time; boss treats don't wait around
+      for (const th of this.ents[room.id].things) if (th.food) BB.Food.regrow(th, true);
+      BB.Food.clearDrops();
       this.activeBoss = null;
       this.bossCard = null;
       if (this.bossMusic) { this.bossMusic = false; BB.Music.play(BB.ZONES[room.zone].key); }
@@ -366,6 +380,19 @@
         },
         onElder(th) { self.startGift(th); },
         onFinale(th) { self.startParty(th); },
+        // nom nom: in Hard a treat brings a sun back (a bowl, all of them);
+        // in Easy it's just yummy
+        onEat(th) {
+          const big = th.type === 'bowl';
+          self.munchT = big ? 70 : 42;
+          self.pl.munchT = self.munchT; self.pl.munchLen = self.munchT;
+          self.pl.happyT = Math.max(self.pl.happyT, 24);
+          S().munch(big);
+          PT().burst('dot', th.x, th.y - 16, big ? 14 : 8, { color: '#e0a060', speed: 2.2, life: 26, size: 2.4, g: 0.18, up: 0.9 });
+          if (BB.Settings.hard && self.mood < C.MOOD_MAX) self.heal(big ? C.MOOD_MAX : 1, th.x, th.y - 24);
+          else for (let i = 0; i < (big ? 7 : 3); i++) PT().heart(th.x + (Math.random() - 0.5) * 34, th.y - 24 - Math.random() * 22);
+        },
+        dropFood: (x, y) => BB.Food.drop(x, y, self.pl.body.x + self.pl.body.w / 2, self.room),
         onFamily(th) {
           self.save.family[th.fam] = 1;
           self.pl.happyT = 120;
@@ -485,6 +512,7 @@
       if (this.shakeT > 0) { this.shakeT--; if (!this.shakeT) this.shakeAmp = 0; }
       if (this.hurtT > 0) this.hurtT--;
       if (this.healT > 0) this.healT--;
+      if (this.munchT > 0) this.munchT--;
       if (this.invuln > 0 && this.pl.state === 'play') this.invuln--;
       if (this.bossCard && ++this.bossCard.t > 200) this.bossCard = null;
       if (this.lantern) this.lantern.t++;
@@ -520,7 +548,7 @@
       // a tumble into water or mist: dandelion rescue (and a little sadder,
       // unless the kitten is still blinking from a bump that knocked it in)
       if ((fx & FX.HAZARD) && this.pl.state === 'play') {
-        if (this.invuln <= 0) { this.mood = Math.max(0, this.mood - 1); this.hurtT = 36; }
+        if (BB.Settings.hard && this.invuln <= 0) { this.mood = Math.max(0, this.mood - 1); this.hurtT = 36; }
         if (this.mood <= 0) this.startSad();
         else { BB.Player.startRescue(this.pl); this.invuln = Math.max(this.invuln, 70); S().ouch(this.pl.cat); }
       }
@@ -589,6 +617,7 @@
       for (const bs of e.bosses) BB.Bosses.update(bs, ctx);
       for (const f of this.followers.slice()) BB.Things.update(f, ctx);
       BB.Bosses.updateHazards(ctx);
+      BB.Food.updateDrops(ctx);
 
       // ── bubbles ──
       const targets = [];
@@ -726,6 +755,7 @@
       }
       for (const h of this.hopHome) this.drawHopHome(c, h, cam);
       for (const f of this.followers) BB.Things.draw(c, f, cam, ctx);
+      BB.Food.drawDrops(c, cam);
 
       BB.Player.draw(c, this.pl, cam, this.save.abilities);
       if (this.pl.sad > 0.5 || this.pl.state === 'sad') {
@@ -775,6 +805,7 @@
         abilities: this.save.abilities, toys: this.save.toys,
         family: BB.Save.count(this.save.family || {}),
         mood: this.mood, moodMax: C.MOOD_MAX, cat: this.pl.cat, hurtT: this.hurtT, healT: this.healT,
+        hard: BB.Settings.hard, munchT: this.munchT,
       }, t);
       for (const f of this.healFx) {
         // a heart flies from a new friend up to your happy suns

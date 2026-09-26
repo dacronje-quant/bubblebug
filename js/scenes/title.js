@@ -5,7 +5,12 @@
 //                  out when there isn't one yet)
 //    🌱 NEW GAME — pick a kitten and start fresh; if an adventure is
 //                  saved, a picture "erase it?" check (✓ / ✗) comes first
-//  Keyboard / gamepad: ◀ ▶ to choose, jump to press. Taps work too.
+//  and, in the corner, a grown-up picker for how brave the adventure is:
+//    💗 EASY — bumps only knock the kitten back; nobody gets too sad
+//    ☀ HARD — bumps and boss sad attacks cost happy suns, and a kitten
+//             with none left floats back to its save point
+//  Keyboard / gamepad: ◀ ▶ to choose, jump to press, ▼ for the picker.
+//  Taps work too.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -96,7 +101,7 @@
   const S = () => BB.Audio.sfx;
 
   BB.Title = {
-    t: 0, focus: 0, confirm: null, hasSave: false, summary: null,
+    t: 0, focus: 0, lastFocus: 1, confirm: null, hasSave: false, summary: null, modeT: 99,
 
     enter() {
       this.t = 0; this.confirm = null; this.leaving = false;
@@ -113,6 +118,7 @@
 
     // button layout (logical px)
     btn(i) { return { x: G_().W / 2 + (i === 0 ? -120 : 120), y: 330, r: 62 }; },
+    mbtn(i) { return { x: G_().W - 170 + i * 78, y: 466, r: 25 }; }, // mode: 0 = easy, 1 = hard
     cbtn(i) { return { x: G_().W / 2 + (i === 0 ? -95 : 95), y: 372, r: 46 }; }, // confirm: 0 = ✓ erase, 1 = ✗ keep
 
     choose(i) {
@@ -129,6 +135,13 @@
       }
     },
 
+    setMode(hard) {
+      if (BB.Settings.hard === hard) return;
+      BB.Settings.setHard(hard);
+      this.modeT = 0;
+      if (hard) S().bossGrumble(); else S().cheerUp();
+    },
+
     startFresh() {
       this.leaving = true;
       BB.Save.reset();
@@ -137,7 +150,7 @@
     },
 
     update() {
-      this.t++;
+      this.t++; this.modeT++;
       G_().t++;
       UI.tickBubbles();
       const I = BB.Input;
@@ -167,10 +180,24 @@
         return;
       }
 
-      if (I.pressed.left && this.focus !== 0) { this.focus = 0; S().select(); }
-      if (I.pressed.right && this.focus !== 1) { this.focus = 1; S().select(); }
-      if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) this.choose(this.focus);
+      if (this.focus === 2) {
+        // the Easy / Hard picker (↑ goes back; ↑ is also "jump", so check it first)
+        if (I.pressed.up) { this.focus = this.lastFocus; S().select(); }
+        else if (I.pressed.left) this.setMode(false);
+        else if (I.pressed.right) this.setMode(true);
+        else if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) this.setMode(!BB.Settings.hard);
+      } else if (I.pressed.down) {
+        this.lastFocus = this.focus; this.focus = 2; S().select();
+      } else {
+        if (I.pressed.left && this.focus !== 0) { this.focus = 0; S().select(); }
+        if (I.pressed.right && this.focus !== 1) { this.focus = 1; S().select(); }
+        if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) this.choose(this.focus);
+      }
       for (const p of taps) {
+        for (let i = 0; i < 2; i++) {
+          const m = this.mbtn(i);
+          if (Math.hypot(p.x - m.x, p.y - m.y) < m.r + 12) { this.focus = 2; this.setMode(i === 1); return; }
+        }
         for (let i = 0; i < 2; i++) {
           const b = this.btn(i);
           if (Math.hypot(p.x - b.x, p.y - b.y) < b.r + 10) { this.focus = i; this.choose(i); }
@@ -188,7 +215,55 @@
       UI.logo(c, t, 110);
       this.drawContinue(c, t);
       this.drawNew(c, t);
+      this.drawMode(c, t);
       if (this.confirm) this.drawConfirm(c, t);
+    },
+
+    // 💗 Easy / ☀ Hard: two picture buttons on a little cloud-pill
+    drawMode(c, t) {
+      const G = G_(), hard = BB.Settings.hard;
+      const a = this.mbtn(0), b = this.mbtn(1);
+      const px = a.x - a.r - 18, pw = b.x - a.x + (a.r + 18) * 2, py = a.y - a.r - 12, ph = a.r * 2 + 46;
+      c.save();
+      c.fillStyle = 'rgba(30,20,50,0.42)'; G.rrect(px, py, pw, ph, 26, c); c.fill();
+      if (this.focus === 2) {
+        c.strokeStyle = `rgba(255,244,194,${0.7 + Math.sin(t * 0.12) * 0.3})`; c.lineWidth = 3;
+        G.rrect(px, py, pw, ph, 26, c); c.stroke();
+      }
+      const pop = this.modeT < 16 ? Math.sin(this.modeT / 16 * Math.PI) * 0.18 : 0;
+      [[a, false, '#ff9ec7', 'Easy'], [b, true, '#ffb347', 'Hard']].forEach(([m, isHard, col, label]) => {
+        const on = hard === isHard;
+        const k = on ? 1.06 + pop + Math.sin(t * 0.08) * 0.03 : 0.9;
+        c.save();
+        c.globalAlpha = on ? 1 : 0.55;
+        if (on) G.drawGlow(m.x, m.y, m.r * 2, '#fff4c2', 0.5, c);
+        c.translate(m.x, m.y); c.scale(k, k);
+        c.fillStyle = on ? col : '#b8b2c4'; c.strokeStyle = '#ffffff'; c.lineWidth = 4;
+        G.circle(0, 0, m.r, c); c.fill(); c.stroke();
+        if (!isHard) {
+          // a heart safe inside a bubble
+          G.bubble(0, 0, 15, '#ffffff', 0.9, c);
+          c.fillStyle = '#ff5f93'; G.heart(0, 2, 9, c); c.fill();
+        } else {
+          // a happy sun with a little rain-cloud creeping up on it
+          c.strokeStyle = '#fff1a8'; c.lineWidth = 2.4; c.lineCap = 'round';
+          for (let i = 0; i < 8; i++) {
+            const an = i / 8 * Math.PI * 2 + t * 0.01;
+            c.beginPath(); c.moveTo(-3 + Math.cos(an) * 11, -3 + Math.sin(an) * 11); c.lineTo(-3 + Math.cos(an) * 14, -3 + Math.sin(an) * 14); c.stroke();
+          }
+          c.fillStyle = '#ffe066'; c.strokeStyle = '#d99a14'; c.lineWidth = 1.4;
+          G.circle(-3, -3, 9, c); c.fill(); c.stroke();
+          c.fillStyle = '#6a4a14';
+          G.circle(-6, -4, 1.1, c); c.fill(); G.circle(0, -4, 1.1, c); c.fill();
+          c.fillStyle = 'rgba(160,166,196,0.95)';
+          c.beginPath(); c.arc(4, 8, 5, 0, Math.PI * 2); c.arc(10, 5, 6, 0, Math.PI * 2); c.arc(15, 9, 4.5, 0, Math.PI * 2); c.fill();
+          const ph2 = (t * 0.05) % 1;
+          c.fillStyle = `rgba(140,190,255,${1 - ph2})`; G.ellipse(10, 14 + ph2 * 5, 1.2, 1.9, 0, c); c.fill();
+        }
+        c.restore();
+        G.text(label, m.x, m.y + m.r + 15, 15, on ? '#fff8e8' : 'rgba(255,248,232,0.6)', 'rgba(40,24,60,0.7)');
+      });
+      c.restore();
     },
 
     ring(c, b, col, on, t, dim) {

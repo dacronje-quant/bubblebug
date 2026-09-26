@@ -33,12 +33,14 @@
 //   d  lost baby — it follows you home; A  its mama (bring all her babies)
 //   k  golden key;  Z  the keyhole it opens
 //   V  song bell;  O  the singing stone that shows the tune to repeat
+//   cat food (regrows; in Hard it cheers you back up):
+//   e  a fishy treat (+1 happy sun);  W  a full food bowl (every sun)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
   const T = BB.CFG.TILE;
 
-  const ENTITY_CHARS = '*bcBEKfRLUDTynoFS&QPdAkZVO';
+  const ENTITY_CHARS = '*bcBEKfRLUDTynoFS&QPdAkZVOeW';
   const DEFS = [];
 
   // Rooms register themselves from js/world/rooms/*.js

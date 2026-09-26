@@ -538,6 +538,8 @@
     if (b.hits >= b.D.per) {
       b.hits = 0;
       b.clouds--;
+      // a fishy treat bounces out, right when a sad kitten could use one
+      if (ctx.dropFood) ctx.dropFood(b.x, b.y - b.D.lift * 0.5);
       const cx = b.x, cy = b.y - b.D.lift - 46;
       b.pops.push({ t: 0, x: cx, y: cy });
       S().bossCloudPop();

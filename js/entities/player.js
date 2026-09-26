@@ -25,7 +25,7 @@
       phase: 0, squash: 1, puff: 0,
       blink: 0, blinkT: 90, idleT: 0,
       yawn: 0, yawnT: 0, ear: 0, earT: 0, lick: 0, lickT: 0, wiggleT: 0,
-      happyT: 0, stepT: 0,
+      happyT: 0, stepT: 0, munchT: 0, munchLen: 1,
       bubbleCd: 0,
       rescue: null,             // { fx, fy, tx, ty, t }
       benchT: 0,
@@ -40,6 +40,7 @@
     pl.squash = BB.lerp(pl.squash, 1, 0.2);
     if (pl.happyT > 0) pl.happyT--;
     if (pl.hurtT > 0) pl.hurtT--;
+    if (pl.munchT > 0) pl.munchT--;
 
     // blinking
     if (--pl.blinkT <= 0) { pl.blinkT = 100 + Math.random() * 180; pl.blink = 1; }
@@ -171,6 +172,7 @@
     const p = {
       t: pl.t, blink: pl.blink, squash: pl.squash, puff: pl.puff, yawn: pl.yawn,
       ear: pl.ear, lick: pl.lick, happy: pl.happyT > 0, phase: pl.phase, vy: b.vy, tail: 0,
+      munch: pl.munchT > 0 ? pl.munchT / pl.munchLen : 0,
     };
     p.sad = pl.happyT > 0 ? 0 : pl.sad || 0;
     if (pl.state === 'sad') {
