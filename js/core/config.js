@@ -1,0 +1,65 @@
+// ════════════════════════════════════════════════════════════════
+//  CONFIG — every gameplay tuning number lives here.
+//  All physics values are per fixed 60 Hz simulation tick, in pixels.
+// ════════════════════════════════════════════════════════════════
+(function (BB) {
+  'use strict';
+
+  BB.CFG = Object.freeze({
+    TILE: 32,
+    VIEW_W: 960,            // logical view (16:9)
+    VIEW_H: 540,
+    STEP: 1000 / 60,        // fixed simulation step (ms)
+
+    // ── Kitten body ──
+    PW: 20,                 // collision width
+    PH: 24,                 // collision height
+
+    // ── Running ──
+    RUN: 3.6,               // top speed
+    ACC_GROUND: 0.75,
+    DEC_GROUND: 0.9,        // snappy stop — no ice-skating
+    ACC_AIR: 0.55,
+    DEC_AIR: 0.3,
+
+    // ── Jumping ──
+    JUMP: -10.6,            // ≈ 4 tiles with a full hold
+    DJUMP: -9.6,            // butterfly double jump ≈ 3.3 tiles
+    G_UP: 0.44,             // gravity while rising and holding jump
+    G_CUT: 1.3,             // gravity while rising after releasing (short hops)
+    G_DOWN: 0.6,            // gravity while falling
+    MAX_FALL: 9.5,
+    COYOTE: 8,              // ticks you may still jump after walking off a ledge
+    BUFFER: 9,              // ticks a jump press is remembered before landing
+
+    // ── Assists ──
+    LEDGE_ASSIST: 18,       // px: feet this far below a ledge top still pop you up
+    CORNER_SLIP: 11,        // px: head-bonks this close to a corner slide around it
+
+    // ── Abilities ──
+    BOUNCE: -14,            // mushroom bounce ≈ 7 tiles
+    CLIMB: 2.6,             // snail wall-climb speed
+    CLIMB_DELAY: 5,         // ticks of pushing into a wall before claws engage
+    WALLJUMP_X: 4.2,
+    WALLJUMP_LOCK: 9,
+    FLOAT_FALL: 1.25,       // dandelion glide fall speed
+    UPDRAFT: -7.2,          // breeze lift speed (carries you ~1.5 tiles past the top)
+    UPDRAFT_ACC: 0.9,
+
+    // ── Bubbles ──
+    BUBBLE_SPEED: 4.6,
+    BUBBLE_LIFE: 75,
+    BUBBLE_COOLDOWN: 12,
+    BUBBLE_MAX: 4,
+    BUBBLE_ASSIST: 0.18,    // gentle homing towards gloomy bugs
+
+    // ── Friends ──
+    BUG_MOOD: 3,            // bubbles to cheer up a regular bug
+    KING_MOOD: 6,
+
+    // ── Presentation ──
+    ROOM_SLIDE: 26,         // ticks for the camera to glide between rooms
+    RESCUE_TIME: 80,        // ticks of the dandelion float back to safety
+    MAX_RENDER_SCALE: 2,
+  });
+})(window.BB);
