@@ -146,8 +146,10 @@
 
   BB.Music = {
     SONGS,
+    wanted: null,
     play(name) {
-      if (!ensureBusses()) return;
+      this.wanted = name;
+      if (!ensureBusses()) return; // no audio yet — started once the player taps/presses
       if (name === songName) return;
       songName = name;
       const s = SONGS[name] || SONGS.gardens;

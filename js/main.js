@@ -1,0 +1,137 @@
+// ════════════════════════════════════════════════════════════════
+//  MAIN — boot, scene switching and the fixed-step game loop.
+//  Simulation always runs at exactly 60 ticks per second (so a 144 Hz
+//  monitor doesn't make the kitten zoom), and rendering happens once per
+//  display frame.
+// ════════════════════════════════════════════════════════════════
+(function (BB) {
+  'use strict';
+  const C = BB.CFG;
+  const G = BB.G;
+
+  const SCENES = { title: BB.Title, select: BB.Select, play: BB.Play, pause: BB.Pause };
+
+  const Main = BB.Main = {
+    scene: null, name: '',
+    fade: 0, fadeDir: 0, next: null,
+
+    // go('play', opts) — fade through a soft lilac; pause/resume are instant
+    go(name, opts) {
+      if (name === 'pause') { this.set('pause'); return; }
+      if (name === 'play-resume') { this.scene = BB.Play; this.name = 'play'; BB.Input.clearAll(); return; }
+      this.next = { name, opts };
+      this.fadeDir = 1;
+    },
+
+    set(name, opts) {
+      this.name = name;
+      this.scene = SCENES[name];
+      this.scene.enter(opts || {});
+      document.body.classList.toggle('in-play', name === 'play' || name === 'pause');
+    },
+
+    update() {
+      if (this.fadeDir) {
+        this.fade += this.fadeDir * 0.07;
+        if (this.fade >= 1 && this.fadeDir > 0) {
+          this.fade = 1; this.fadeDir = -1;
+          BB.Particles.clear();
+          this.set(this.next.name, this.next.opts);
+          this.next = null;
+        } else if (this.fade <= 0 && this.fadeDir < 0) { this.fade = 0; this.fadeDir = 0; }
+        if (this.fadeDir > 0) return; // freeze the old scene while fading out
+      }
+      this.scene.update();
+    },
+
+    draw() {
+      G.begin();
+      const c = G.ctx;
+      c.save();
+      this.scene.draw(c);
+      c.restore();
+      if (this.fade > 0) {
+        c.fillStyle = `rgba(40,24,70,${this.fade})`;
+        c.fillRect(0, 0, G.W, G.H);
+      }
+    },
+  };
+
+  // ──── Loop ────
+  let acc = 0, last = performance.now();
+  function frame(now) {
+    acc += Math.min(100, now - last);
+    last = now;
+    let steps = 0;
+    while (acc >= C.STEP && steps < 6) {
+      BB.Input.poll();
+      if (BB.Input.any) BB.Audio.init();
+      if (BB.Audio.ctx && BB.Music.wanted && BB.Music.current !== BB.Music.wanted) BB.Music.play(BB.Music.wanted);
+      Main.update();
+      acc -= C.STEP;
+      steps++;
+    }
+    if (steps >= 6) acc = 0;
+    Main.draw();
+    requestAnimationFrame(frame);
+  }
+
+  // ──── Boot ────
+  function boot() {
+    BB.setupInputDom();
+    G.resize();
+    BB.onResize = () => G.resize();
+    BB.onScaleChange = () => { BB.Tiles.clear(); };
+    window.addEventListener('resize', () => G.resize());
+    window.addEventListener('orientationchange', () => setTimeout(() => G.resize(), 200));
+
+    // taps & clicks on the canvas → logical coordinates for the scenes
+    const cv = G.canvas;
+    const unlock = () => BB.Audio.init();
+    cv.addEventListener('pointerdown', e => {
+      unlock();
+      const p = G.toLogical(e.clientX, e.clientY);
+      BB.Input.pointers.push(p);
+      BB.Input.pointerDown = p;
+      e.preventDefault();
+    });
+    cv.addEventListener('pointermove', e => { if (BB.Input.pointerDown) BB.Input.pointerDown = G.toLogical(e.clientX, e.clientY); });
+    window.addEventListener('pointerup', () => { BB.Input.pointerDown = null; });
+    window.addEventListener('pointercancel', () => { BB.Input.pointerDown = null; });
+    window.addEventListener('keydown', unlock);
+    window.addEventListener('touchstart', unlock, { passive: true });
+
+    document.getElementById('pause-btn').addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      unlock();
+      if (Main.name === 'play' && !BB.Play.gift) Main.go('pause');
+      else if (Main.name === 'pause') { BB.Pause.leave(); Main.go('play-resume'); }
+    });
+    // stepping away from the tablet pauses the game
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && Main.name === 'play' && !BB.Play.gift) Main.go('pause');
+    });
+
+    BB.Save.load();
+    Main.set('title');
+    // Developer shortcut (never needed to play): index.html#play=pip&room=c4&ab=all
+    // jumps straight into a room, optionally with every power.
+    const h = location.hash;
+    const m = /play=(\w+)/.exec(h);
+    if (m) {
+      const room = /room=(\w+)/.exec(h), all = /ab=all/.test(h);
+      if (room || all) BB.Save.data = BB.Save.fresh();
+      if (all) Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
+      if (room) {
+        BB.World.build();
+        const r = BB.World.byId[room[1]];
+        const th = r && (r.things.find(t => t.ch === 'B') || r.things.find(t => 'RLUDf'.includes(t.ch)) || r.things[0]);
+        if (th) { BB.Save.data.x = th.tx * C.TILE + 6; BB.Save.data.y = th.ty * C.TILE + 8 - 24; }
+      }
+      Main.set('play', { cat: m[1] });
+    }
+    requestAnimationFrame(frame);
+  }
+
+  boot();
+})(window.BB);

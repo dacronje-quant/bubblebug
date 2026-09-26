@@ -80,9 +80,10 @@
   };
   G.drawGlow = function (x, y, r, color, alpha = 1, c = ctx) {
     const img = G.glow(color);
-    c.globalAlpha = alpha;
+    const prev = c.globalAlpha;
+    c.globalAlpha = prev * alpha;
     c.drawImage(img, x - r, y - r, r * 2, r * 2);
-    c.globalAlpha = 1;
+    c.globalAlpha = prev;
   };
 
   // ──── Shapes ────

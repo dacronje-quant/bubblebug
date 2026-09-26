@@ -67,7 +67,8 @@
             const ch = row[c];
             if (ENTITY_CHARS.includes(ch)) {
               room.things.push({ ch, tx: def.x + c, ty: def.y + r });
-              row[c] = '.';
+              // a treasure tucked between shy walls stays hidden behind them
+              row[c] = (line[c - 1] === 'H' || line[c + 1] === 'H') ? 'H' : '.';
             }
           }
           room.grid.push(row);
