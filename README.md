@@ -1,6 +1,6 @@
 # Bubblebug: The Whispering Kingdom 🫧🐾
 
-A cozy, non-violent platformer for little explorers (ages 3–7). Choose your kitten, then blow friendship bubbles to cheer up gloomy bugs across six hand-built biomes. There's no fail state, and nothing in the game needs to be read.
+A cozy, non-violent platformer for little explorers (ages 3–7). Choose your kitten, then blow friendship bubbles to cheer up gloomy animals (and a few bugs) across six hand-built biomes. There's no fail state, and nothing in the game needs to be read.
 
 ![Platform](https://img.shields.io/badge/Platform-Any%20modern%20browser-orange)
 ![Install](https://img.shields.io/badge/Install-None-brightgreen)
@@ -41,20 +41,33 @@ Both move the same way. They differ in voice (a synthesized *mew*), idle habits 
 
 | Zone | What happens there | Elder's gift |
 |---|---|---|
-| 🌼 **Sparkle Gardens** | Tutorial: hops, first gloomy ladybug, a harmless pond, a cozy bench, a secret inside a hill | – |
+| 🌼 **Sparkle Gardens** | Tutorial: hops, a gloomy bunny to cheer up, a harmless pond, a cozy bench, a secret inside a hill | – |
 | 🍄 **Mushroom Meadow** | Bouncy toadstools up to the glowing grove | 🦋 **Double Jump** |
 | 💎 **Crystal Caverns** | A gentle drop down the Old Well into cozy-dark caves | 🐌 **Sticky Paws** (wall climb) |
 | 🍯 **Honeycomb Hive** | Climb the golden tower | 🪲 **Glow** (wakes glow-petal bridges) |
 | 🌧 **Rainy Ruins** | Soft rain, broken towers, wide pools | 🌸 **Dandelion Float** (hold jump to drift) |
 | ☁ **Cloud Castles** | Breezy updrafts, sky bridges, and the grumpy Cloud King | 🌈 the Rainbow Party |
 
-The world has 27 interconnected rooms, 166 sparkles, 22 gloomy bugs and 6 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
+### 🐰 The gloomy critters
+
+| Zone | Who needs cheering up |
+|---|---|
+| Sparkle Gardens | bunny, hedgehog, bluebird, ladybug |
+| Mushroom Meadow | frog, mouse, caterpillar, beetle |
+| Crystal Caverns | mole (with a tiny miner's lamp), bat, pillbug, beetle |
+| Honeycomb Hive | bear cub (hugging a honey pot), bee, beetle |
+| Rainy Ruins | owl, turtle, duckling, spider, snail |
+| Cloud Castles | lamb, bluebird, moth, and the **Cloud King**: a lion cub with a cloud mane and a golden crown |
+
+Bunnies and frogs hop, birds, bats, owls and bees flutter, spiders dangle on silk, and everyone else waddles. Every friend you make comes to the rainbow party.
+
+The world has 27 interconnected rooms, 166 sparkles, 30 gloomy critters and 6 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
 
 ## 👶 Designed for little hands
 
 - **No reading, anywhere.** Arrows on signposts, fireflies that zip the right way, zone emblems, and an animated card for each new power. The card shows a tiny kitten doing the move while the matching button pulses in time.
-- **No fail states.** Falling into water or sky-mist makes dandelion fluff float you back to safe ground. Bumping a gloomy bug gives a silly *boing*, never damage.
-- **Friendship, not fighting.** A gloomy bug carries a little rain-cloud over its head. Each bubble shrinks the cloud and lifts its frown. The last bubble wraps the bug in a big bubble that pops into a rainbow, and the bug becomes a dancing friend.
+- **No fail states.** Falling into water or sky-mist makes dandelion fluff float you back to safe ground. Bumping a gloomy critter gives a silly *boing*, never damage.
+- **Friendship, not fighting.** A gloomy critter carries a little rain-cloud over its head. Each bubble shrinks the cloud and lifts its frown (a sad bunny's ears even perk back up). The last bubble wraps it in a big bubble that pops into a rainbow, and it becomes a dancing friend.
 - **Forgiving movement.** Coyote time, jump buffering, *ledge assist* (arrive a bit low and you're popped up), *corner slip* on head-bonks, variable jump height, and bubbles that gently home in on their target.
 - **Cozy benches.** Stop on one and your kitten curls up, purrs, and the music turns into a lullaby. The game also autosaves on every room change, so nothing is ever lost.
 
@@ -81,7 +94,7 @@ js/world/               zones.js (biome palettes) · world.js (room grid & tile 
 js/world/rooms/         gardens · meadow · caves · hive · ruins · clouds  (ASCII room maps)
 js/engine/              physics.js (pure movement) · camera.js · particles.js
 js/render/              gfx · kittens · critters · tiles · backdrops (parallax) · lighting · hud
-js/entities/            player · bubbles · bugs · things (sparkles, benches, elders, toys…)
+js/entities/            player · bubbles · bugs (all gloomy critters) · things (sparkles, benches, elders, toys…)
 js/scenes/              title · select · play · pause (+ map)
 js/main.js              fixed 60 Hz loop, scene switching, adaptive quality
 tools/                  verify-world.js + dev playtest/screenshot helpers (optional, need Node)
@@ -103,13 +116,13 @@ The verifier loads the real game modules and simulates hundreds of button patter
 1. each elder and the finale are reachable with the powers you'd have at that point;
 2. **from every reachable spot the next goal is still reachable** (the water rescue is modelled too);
 3. with all powers, every spot can travel back home (free backtracking);
-4. every sparkle, toy, bench, flower, firefly and bug can be reached, and every bud can be bubbled.
+4. every sparkle, toy, bench, flower, firefly and critter can be reached, and every bud can be bubbled.
 
 Current result: ✓ all five story stages pass with zero softlocks.
 
 ### Editing rooms
 
-Rooms are ASCII maps in `js/world/rooms/*.js` (see the legend at the top of `js/world/world.js`): `#` ground, `-` one-way ledge, `M` bouncy mushroom, `~` water/mist, `^` updraft, `:` glow-petal, `H` shy wall, `G` bud gate, plus `*` sparkle, `b`/`c` bugs, `B` bench, `E` elder, `f` firefly, `R L U D` signs, `T` toy, `n` music flower, `o` bud, `K` Cloud King, `F` finale, `S` start. Run the verifier after any change.
+Rooms are ASCII maps in `js/world/rooms/*.js` (see the legend at the top of `js/world/world.js`): `#` ground, `-` one-way ledge, `M` bouncy mushroom, `~` water/mist, `^` updraft, `:` glow-petal, `H` shy wall, `G` bud gate, plus `*` sparkle, `b`/`c` critters (each zone's `cast` in `js/world/zones.js` decides which animals they become), `B` bench, `E` elder, `f` firefly, `R L U D` signs, `T` toy, `n` music flower, `o` bud, `K` Cloud King, `F` finale, `S` start. Run the verifier after any change.
 
 Developer shortcut: `index.html#play=pip&room=c4&ab=all` jumps straight into a room with every power.
 

@@ -343,7 +343,7 @@ if (finalRes) {
       if ('*TBnfy'.includes(t.ch) && !touched(finalRes.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) {
         missing.push(`${t.ch} in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`);
       }
-      if ('bc'.includes(t.ch) && !touched(finalRes.cover, t.tx, t.ty, 4)) missing.push(`bug in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`);
+      if ('bc'.includes(t.ch) && !touched(finalRes.cover, t.tx, t.ty, 4)) missing.push(`critter in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`);
       if (t.ch === 'o' && !bubbleable(finalRes.nodes, t.tx, t.ty)) missing.push(`bud in ${room.id} at (${t.tx - room.x},${t.ty - room.y}) can't be bubbled`);
     }
   }
@@ -353,9 +353,9 @@ if (finalRes) {
   });
   if (unvisited.length) fail('rooms never entered: ' + unvisited.map(r => r.id).join(', '));
   if (missing.length) { fail(`${missing.length} collectible(s)/landmark(s) out of reach:`); missing.forEach(m => console.log('      ' + m)); }
-  else pass('every sparkle, toy, bench, flower, firefly and bug is reachable');
+  else pass('every sparkle, toy, bench, flower, firefly and critter is reachable');
   const total = W.findThings('*').length;
-  console.log(`  (${total} sparkles, ${W.findThings('b').length + W.findThings('c').length} gloomy bugs, ${W.findThings('T').length} toys, ${W.rooms.length} rooms)`);
+  console.log(`  (${total} sparkles, ${W.findThings('b').length + W.findThings('c').length} gloomy critters, ${W.findThings('T').length} toys, ${W.rooms.length} rooms)`);
 }
 
 // ──── Optional ASCII map of a room with coverage overlay ────

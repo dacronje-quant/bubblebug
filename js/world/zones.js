@@ -1,8 +1,9 @@
 // ════════════════════════════════════════════════════════════════
 //  ZONES — the six biomes of the Whispering Kingdom.
 //  Palettes drive the procedural tile art, parallax painter, ambient
-//  particles and lighting; `bugs` picks which gloomy critter a `b`/`c`
-//  map character becomes.
+//  particles and lighting. `cast` lists the gloomy critters who live in
+//  each zone: the `b` / `c` map characters take turns through their list,
+//  so every zone has a mix of animals (and a few bugs).
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -17,7 +18,7 @@
       ledge: '#8bd15a', ledgeDark: '#4e9a3a',
       accent: '#ffd1e8', light: '#fff2b3', water: '#6fd0f0',
       ambient: 'pollen', dark: 0,
-      bugs: { b: 'ladybug', c: 'beetle' },
+      cast: { b: ['bunny', 'ladybug', 'hedgehog'], c: ['bluebird', 'hedgehog'] },
     },
     { // 1 ─ Bioluminescent Mushroom Meadow
       key: 'meadow', name: 'Mushroom Meadow',
@@ -28,7 +29,7 @@
       ledge: '#e08ad0', ledgeDark: '#9a4c92',
       accent: '#7cf5d4', light: '#aaffee', water: '#7a8cff',
       ambient: 'spores', dark: 0.18,
-      bugs: { b: 'caterpillar', c: 'beetle' },
+      cast: { b: ['frog', 'mouse', 'caterpillar'], c: ['mouse', 'beetle'] },
     },
     { // 2 ─ Glimmering Crystal Caverns
       key: 'caves', name: 'Crystal Caverns',
@@ -39,7 +40,7 @@
       ledge: '#9fb8ff', ledgeDark: '#5a6fc0',
       accent: '#c9a6ff', light: '#b8e8ff', water: '#58c8ff',
       ambient: 'glints', dark: 0.5,
-      bugs: { b: 'pillbug', c: 'beetle' },
+      cast: { b: ['mole', 'bat', 'pillbug'], c: ['bat', 'beetle'] },
     },
     { // 3 ─ Amber Honeycomb Hive
       key: 'hive', name: 'Honeycomb Hive',
@@ -50,7 +51,7 @@
       ledge: '#f7c948', ledgeDark: '#c38a1e',
       accent: '#fff3c4', light: '#ffe09a', water: '#ffc34a',
       ambient: 'honey', dark: 0.3,
-      bugs: { b: 'bee', c: 'beetle' },
+      cast: { b: ['bee', 'bearcub'], c: ['beetle'] },
     },
     { // 4 ─ Serene Rainy Ruins
       key: 'ruins', name: 'Rainy Ruins',
@@ -61,7 +62,7 @@
       ledge: '#9c7a5a', ledgeDark: '#6e523a',
       accent: '#bfe7ff', light: '#d8f0ff', water: '#5fb3d6',
       ambient: 'rain', dark: 0.12,
-      bugs: { b: 'spider', c: 'snailet' },
+      cast: { b: ['spider', 'owl'], c: ['turtle', 'duckling', 'snailet'] },
     },
     { // 5 ─ Dreamy Cloud Castles
       key: 'clouds', name: 'Cloud Castles',
@@ -72,7 +73,7 @@
       ledge: '#ffffff', ledgeDark: '#cdbff5',
       accent: '#ffe27a', light: '#fff6d8', water: '#e8f0ff',
       ambient: 'wisps', dark: 0,
-      bugs: { b: 'moth', c: 'bee' },
+      cast: { b: ['bluebird', 'moth'], c: ['lamb'] },
     },
   ];
 })(window.BB);

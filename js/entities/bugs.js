@@ -1,7 +1,8 @@
 // ════════════════════════════════════════════════════════════════
-//  BUGS — gloomy critters and the Cloud King.
+//  CRITTERS — gloomy animals, bugs and the Cloud King.
+//  (The module keeps its original name, BB.Bugs.)
 //
-//  A gloomy bug wanders, sighs, and gives a silly "hmph" boing if you
+//  A gloomy critter wanders, hops or flutters about, sighs, and gives a silly "hmph" boing if you
 //  bump into it (a soft push — never damage). Each friendship bubble
 //  shrinks its rain-cloud; the last one wraps it in a big bubble that
 //  floats up and pops into a rainbow — and a new friend who dances,
@@ -17,17 +18,32 @@
 
   const BEHAVIOR = {
     ladybug: 'walk', beetle: 'walk', caterpillar: 'walk', pillbug: 'walk', snailet: 'walk',
-    bee: 'hover', moth: 'hover', spider: 'dangle',
+    hedgehog: 'walk', mouse: 'walk', mole: 'walk', bearcub: 'walk', turtle: 'walk', duckling: 'walk', lamb: 'walk',
+    bunny: 'hop', frog: 'hop',
+    bee: 'hover', moth: 'hover', bluebird: 'hover', bat: 'hover', owl: 'hover',
+    spider: 'dangle',
   };
-  const SPEED = { ladybug: 0.5, beetle: 0.55, caterpillar: 0.3, pillbug: 0.45, snailet: 0.22 };
+  const SPEED = {
+    ladybug: 0.5, beetle: 0.55, caterpillar: 0.3, pillbug: 0.45, snailet: 0.22,
+    hedgehog: 0.45, mouse: 0.7, mole: 0.4, bearcub: 0.45, turtle: 0.2, duckling: 0.55, lamb: 0.4,
+    bunny: 1.3, frog: 1.1,
+  };
+  // how far the body centre sits above the ground, and the hit radius
+  const LIFT = { bearcub: 14, lamb: 12, bunny: 12, hedgehog: 11, duckling: 11, mouse: 10, mole: 10, turtle: 9, frog: 10 };
+  const RADIUS = { bearcub: 19, owl: 17, lamb: 17, bat: 17, bunny: 16 };
+  const LOOK = 1.3;      // critters are drawn a little larger than life so small eyes can read their faces
+  const KING_LOOK = 1.4;
 
   function landable(tx, ty) { const k = BB.Physics.landKind(W().tile(tx, ty), { glow: true }); return k === 1 || k === 2 || k === 3; }
 
-  function create(thing, room, save) {
+  // `n` = how many critters of this map character came before in the zone,
+  // so each zone's cast takes turns
+  function create(thing, room, save, n = 0) {
     const Z = BB.ZONES[room.zone];
     const key = thing.tx + ',' + thing.ty;
     const isKing = thing.ch === 'K';
-    const kind = isKing ? 'king' : Z.bugs[thing.ch];
+    const list = Z.cast[thing.ch];
+    const kind = isKing ? 'king' : list[n % list.length];
     const friend = !!save.friends[key];
     const b = {
       type: 'bug', kind, key, room: room.id, king: isKing,
@@ -40,14 +56,15 @@
       state: friend ? 'happy' : 'gloomy',
       t: Math.floor(Math.random() * 1000), pauseT: 0, shake: 0, bumpCd: 0,
       hop: 0, hopV: 0, rainbow: 0, danceT: 0, bubbledT: 0, blink: 0, blinkT: 60,
-      r: isKing ? 34 : 15,
+      r: isKing ? 40 : (RADIUS[kind] || 15) * 1.15,
     };
     if (b.behavior === 'walk') {
       // settle onto the floor below the placement tile
       let ty = thing.ty;
       while (ty < thing.ty + 20 && !landable(thing.tx, ty + 1)) ty++;
-      b.y = b.homeY = (ty + 1) * T - 9;
+      b.y = b.homeY = (ty + 1) * T - (LIFT[kind] || 9) * LOOK;
     }
+    if (b.behavior === 'hover' && landable(thing.tx, thing.ty + 1)) b.homeY -= 26; // flyers keep off the ground
     if (b.behavior === 'dangle') {
       let ty = thing.ty;
       while (ty > thing.ty - 12 && !BB.Physics.solidSide(W().tile(thing.tx, ty - 1))) ty--;
@@ -77,7 +94,21 @@
     }
 
     // ── movement ──
-    if (b.behavior === 'walk') {
+    if (b.behavior === 'hop') {
+      // bunnies and frogs travel in happy little bounces
+      if (b.pauseT > 0) b.pauseT--;
+      else if (b.hop === 0 && b.hopV === 0) {
+        const aheadX = Math.floor((b.x + b.facing * 30) / T);
+        if (BB.Physics.solidSide(W().tile(aheadX, Math.floor(b.y / T))) || !landable(aheadX, Math.floor((b.y + 14) / T)) || Math.abs(b.x - b.homeX) > 140) b.facing *= -1;
+        b.hopV = happy ? -4 : -3;
+      }
+      if (b.hopV || b.hop < 0) {
+        b.x += b.facing * (SPEED[b.kind] || 1) * (happy ? 1.2 : 1);
+        b.hop += b.hopV; b.hopV += 0.3;
+        if (b.hop >= 0) { b.hop = 0; b.hopV = 0; b.pauseT = (happy ? 15 : 35) + Math.random() * 40; }
+      }
+      if (happy && dist < 110 && b.hop === 0) b.facing = dx > 0 ? 1 : -1;
+    } else if (b.behavior === 'walk') {
       if (b.pauseT > 0) b.pauseT--;
       else {
         const sp = (SPEED[b.kind] || 0.4) * (happy ? 1.3 : 1);
@@ -180,18 +211,19 @@
     const st = {
       t: b.t, mood: b.mood, facing: b.facing, blink: b.blink, joy: b.state === 'happy' && (b.danceT > 0 || b.t % 200 < 40),
       shake: b.shake ? Math.sin(b.shake * 2) * 2.5 : 0, walk: b.behavior === 'walk' && !b.pauseT, spin: dance,
-      rainbow: b.rainbow > 0 ? Math.min(1, b.rainbow / 40) : 0, squash: b.hopV < 0 ? 1.12 : 1,
+      rainbow: b.rainbow > 0 ? Math.min(1, b.rainbow / 40) : 0, squash: b.hopV < 0 ? 1.12 : b.hop < 0 ? 1.05 : 1,
       lookX: BB.clamp(((b.lookAt || 0) - b.x) / 100, -1, 1),
     };
     if (b.king) {
-      st.scale = 1;
+      st.scale = KING_LOOK;
       BB.Critters.drawKing(c, x, y, st);
     } else {
+      st.scale = LOOK;
       BB.Critters.drawBug(c, b.kind, x, y, st);
     }
     if (b.state === 'bubbled') {
       const k = b.bubbledT / 50;
-      BB.G.bubble(x, y, (b.king ? 48 : 22) * (0.8 + k * 0.3), '#d8b8ff', 0.9, c);
+      BB.G.bubble(x, y, (b.king ? 64 : 28) * (0.8 + k * 0.3), '#d8b8ff', 0.9, c);
     }
   }
 

@@ -1,13 +1,15 @@
 // ════════════════════════════════════════════════════════════════
-//  CRITTERS — every bug, elder and the Cloud King, in vector.
+//  CRITTERS — every animal, bug, elder and the Cloud King, in vector.
 //
-//  Nobody here is a villain: gloomy bugs are just having a rainy day.
+//  Nobody here is a villain: gloomy critters — bunnies, hedgehogs, frogs,
+//  mice, bats, moles, bear cubs, owls, turtles, ducklings, lambs, birds
+//  and plenty of bugs — are just having a rainy day.
 //  Their `mood` (1 = very gloomy … 0 = happy) is shown without numbers:
 //    • a little personal rain-cloud over their head that shrinks with
 //      every friendship bubble
 //    • droopy eyelids and a wobbly frown that slowly turn upward
 //    • colours that brighten from grey-ish to full and cheerful
-//  When a bug is befriended the cloud becomes a tiny rainbow.
+//  When a critter is befriended the cloud becomes a tiny rainbow.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -242,6 +244,190 @@
     },
   };
 
+  // ──── Animals ────  (same conventions: centre of body, facing right)
+  const FUR_OUT = '#4a3440';
+  function ear(c, x, y, rx, ry, rot, col, inner) {
+    c.save(); c.translate(x, y); c.rotate(rot);
+    c.fillStyle = col; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+    G.ellipse(0, 0, rx, ry, 0, c); c.fill(); c.stroke();
+    if (inner) { c.fillStyle = inner; G.ellipse(0, ry * 0.15, rx * 0.5, ry * 0.65, 0, c); c.fill(); }
+    c.restore();
+  }
+  function feet(c, xs, y, col, t, walk) {
+    c.fillStyle = col; c.strokeStyle = FUR_OUT; c.lineWidth = 1;
+    xs.forEach((x, i) => { const k = walk ? Math.sin(t * 0.3 + i * 2) * 1.5 : 0; G.ellipse(x + k, y, 3.2, 2.2, 0, c); c.fill(); c.stroke(); });
+  }
+  function nose(c, x, y, col = '#ff8fa8', r = 1.6) { c.fillStyle = col; G.ellipse(x, y, r * 1.2, r, 0, c); c.fill(); }
+
+  Object.assign(BUGS, {
+    bunny(c, st, mood) {
+      const t = st.t, fur = tone('#f6efe8', mood);
+      const droop = mood * 0.9; // gloomy bunnies' ears flop down
+      ear(c, 3, -18 + droop * 4, 2.8, 8, -0.15 - droop * 0.9, fur, '#ffb3c8');
+      c.fillStyle = tone('#ffffff', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      G.circle(-11, 0, 4, c); c.fill(); c.stroke();
+      c.fillStyle = fur; G.ellipse(-2, 2, 11, 8, 0, c); c.fill(); c.stroke();
+      feet(c, [-7, 4], 9, fur, t, st.walk);
+      G.circle(8, -6, 7.8, c); c.fillStyle = fur; c.fill(); c.stroke();
+      ear(c, 9, -18 + droop * 4, 2.8, 8, 0.2 + droop * 0.9, fur, '#ffb3c8');
+      nose(c, 14.5, -4.5);
+      face(c, 8.5, -6.5, 0.6, mood, Object.assign({ lid: '#e8dcd0' }, st));
+    },
+    hedgehog(c, st, mood) {
+      const t = st.t;
+      feet(c, [-6, 5], 9, tone('#e8c9a0', mood), t, st.walk);
+      // spiky coat
+      c.fillStyle = tone('#8a6448', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.beginPath();
+      for (let i = 0; i <= 12; i++) {
+        const a = Math.PI + (i / 12) * Math.PI * 1.05, r = i % 2 ? 11 : 15;
+        c.lineTo(-2 + Math.cos(a) * r, 6 + Math.sin(a) * r * 0.95);
+      }
+      c.lineTo(8, 8); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = tone('#f0d6b0', mood);
+      c.beginPath(); c.ellipse(8, 1, 8, 7, 0, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(13, -1); c.quadraticCurveTo(20, 1, 15, 5); c.closePath(); c.fill();
+      nose(c, 18.5, 2, '#3a2a3a', 1.7);
+      face(c, 8, 0, 0.58, mood, Object.assign({ lid: '#d8bc94' }, st));
+    },
+    bluebird(c, st, mood) {
+      const t = st.t, flap = Math.sin(t * 0.5) * 0.7;
+      c.fillStyle = tone('#5aa8f0', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(-10, 0); c.lineTo(-18, -4); c.lineTo(-17, 4); c.closePath(); c.fill(); c.stroke();
+      G.circle(0, 0, 10, c); c.fill(); c.stroke();
+      c.fillStyle = tone('#ffe6c9', mood); G.ellipse(3, 4, 6.5, 5.5, 0, c); c.fill();
+      c.save(); c.translate(-2, -1); c.rotate(-0.4 + flap);
+      c.fillStyle = tone('#3f86d4', mood); G.ellipse(-5, 0, 7, 4, 0, c); c.fill(); c.stroke();
+      c.restore();
+      c.fillStyle = '#ffb347'; c.beginPath(); c.moveTo(9, 0); c.lineTo(14, 1.5); c.lineTo(9, 3); c.closePath(); c.fill();
+      face(c, 3.5, -2.5, 0.55, mood, Object.assign({ lid: '#4a90d8' }, st));
+    },
+    frog(c, st, mood) {
+      const t = st.t, col = tone('#7ed26a', mood);
+      c.fillStyle = col; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      G.ellipse(-8, 6, 5.5, 3.5, 0, c); c.fill(); c.stroke();
+      G.ellipse(1, 2, 13, 8.5, 0, c); c.fill(); c.stroke();
+      c.fillStyle = tone('#d9f5b8', mood); G.ellipse(3, 5, 8, 4.5, 0, c); c.fill();
+      c.fillStyle = col;
+      for (const ex of [-2.8, 5.6]) { G.circle(1 + ex, -6, 5, c); c.fill(); c.stroke(); }
+      feet(c, [7, 11], 9, col, t, false);
+      face(c, 2.4, -6.2, 0.95, mood, Object.assign({ lid: '#5cb04a' }, st));
+    },
+    mouse(c, st, mood) {
+      const t = st.t, fur = tone('#c9b5a8', mood);
+      c.strokeStyle = tone('#f0a6b8', mood); c.lineWidth = 1.6; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-11, 4); c.quadraticCurveTo(-20, 6 + Math.sin(t * 0.1) * 3, -22, -4); c.stroke();
+      ear(c, -1, -10, 5, 5.5, 0, fur, '#ffc0cf');
+      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.beginPath(); c.ellipse(-1, 1, 11, 8, 0, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(4, -6); c.quadraticCurveTo(17, -2, 16, 3); c.quadraticCurveTo(10, 7, 4, 6); c.closePath(); c.fill(); c.stroke();
+      ear(c, 7, -10, 5, 5.5, 0.3, fur, '#ffc0cf');
+      feet(c, [-5, 4], 9, tone('#f0d8d0', mood), t, st.walk);
+      nose(c, 16, 1);
+      face(c, 8, -2, 0.55, mood, Object.assign({ lid: '#b0a094' }, st));
+    },
+    bat(c, st, mood) {
+      const t = st.t, flap = Math.sin(t * 0.35);
+      c.fillStyle = tone('#8a76c0', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      for (const side of [-1, 1]) {
+        c.save(); c.scale(side, 1); c.rotate(flap * 0.35);
+        c.beginPath(); c.moveTo(6, -3);
+        c.quadraticCurveTo(14, -12, 22, -6); c.quadraticCurveTo(19, -1, 20, 3);
+        c.quadraticCurveTo(16, 0, 14, 4); c.quadraticCurveTo(10, 1, 7, 5); c.closePath(); c.fill(); c.stroke();
+        c.restore();
+      }
+      c.fillStyle = tone('#a894d8', mood);
+      for (const side of [-1, 1]) { c.beginPath(); c.moveTo(side * 3, -8); c.lineTo(side * 7, -15); c.lineTo(side * 8, -6); c.closePath(); c.fill(); c.stroke(); }
+      G.circle(0, 0, 9, c); c.fill(); c.stroke();
+      face(c, 0, -1, 0.75, mood, Object.assign({ lid: '#7a66b0' }, st));
+      c.fillStyle = '#fff'; c.beginPath(); c.moveTo(1, 3.6); c.lineTo(2, 5.6); c.lineTo(3, 3.6); c.fill();
+    },
+    mole(c, st, mood) {
+      const t = st.t, fur = tone('#6b5670', mood);
+      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      G.ellipse(0, 1, 13, 9, 0, c); c.fill(); c.stroke();
+      c.fillStyle = tone('#ffb3c8', mood);
+      for (const px of [-8, 9]) { G.ellipse(px, 8, 4.5, 3, 0, c); c.fill(); c.stroke(); }
+      // little miner's lamp for the caves
+      c.fillStyle = '#ffd34d'; G.rrect(-3, -11, 7, 4, 2, c); c.fill();
+      G.drawGlow(0.5, -10, 12, '#fff3a0', 0.6, c);
+      c.fillStyle = tone('#ff9fbf', mood);
+      for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; G.circle(12 + Math.cos(a) * 2, 2 + Math.sin(a) * 2, 1.4, c); c.fill(); }
+      face(c, 5, -1, 0.55, mood, Object.assign({ lid: '#5a4560' }, st));
+    },
+    bearcub(c, st, mood) {
+      const t = st.t, fur = tone('#b57a48', mood), light = tone('#f0cfa0', mood);
+      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
+      G.ellipse(-3, 4, 12, 10, 0, c); c.fill(); c.stroke();
+      c.fillStyle = light; G.ellipse(0, 6, 6, 6, 0, c); c.fill();
+      feet(c, [-9, 3], 13, fur, t, st.walk);
+      ear(c, 1, -17, 4, 4, 0, fur, light);
+      ear(c, 13, -16, 4, 4, 0, fur, light);
+      c.fillStyle = fur; G.circle(7, -8, 9.5, c); c.fill(); c.stroke();
+      c.fillStyle = light; G.ellipse(10, -4, 5, 3.8, 0, c); c.fill();
+      nose(c, 12.5, -5.5, '#3a2a3a', 1.8);
+      // a tiny honey pot hugged close
+      c.fillStyle = '#ffc93d'; c.strokeStyle = '#a8661a'; c.lineWidth = 1;
+      G.rrect(-6, 2, 8, 8, 2, c); c.fill(); c.stroke();
+      face(c, 7, -9, 0.62, mood, Object.assign({ lid: '#9c6a3e' }, st));
+    },
+    owl(c, st, mood) {
+      const t = st.t, flap = Math.sin(t * 0.3) * 0.4;
+      c.fillStyle = tone('#a88a6c', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      for (const side of [-1, 1]) { c.save(); c.scale(side, 1); c.rotate(-flap); G.ellipse(10, 2, 5, 9, 0.3, c); c.fill(); c.stroke(); c.restore(); }
+      G.ellipse(0, 0, 11, 13, 0, c); c.fill(); c.stroke();
+      for (const side of [-1, 1]) { c.beginPath(); c.moveTo(side * 4, -11); c.lineTo(side * 9, -18); c.lineTo(side * 10, -9); c.closePath(); c.fill(); c.stroke(); }
+      c.fillStyle = tone('#f2e2c8', mood); G.ellipse(0, 5, 7, 7, 0, c); c.fill();
+      c.strokeStyle = tone('#c9a888', mood); c.lineWidth = 1;
+      for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(-2 + i * 2.5, 3 + (i % 2) * 3, 1.6, 0.2, Math.PI - 0.2); c.stroke(); }
+      c.fillStyle = tone('#e8d4b8', mood);
+      G.circle(-4, -4, 5, c); c.fill(); G.circle(4, -4, 5, c); c.fill();
+      face(c, 0, -4, 1.05, mood, Object.assign({ lid: '#b8997a' }, st));
+      c.fillStyle = '#ffb347'; c.beginPath(); c.moveTo(-1.5, -1); c.lineTo(1.5, -1); c.lineTo(0, 2); c.closePath(); c.fill();
+    },
+    turtle(c, st, mood) {
+      const t = st.t, skin = tone('#a8d88a', mood);
+      feet(c, [-8, 6], 8, skin, t, st.walk);
+      c.fillStyle = skin; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      G.circle(13, -1, 5.8, c); c.fill(); c.stroke();
+      c.fillStyle = tone('#5fa06a', mood);
+      c.beginPath(); c.ellipse(-1, 4, 13, 12, 0, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+      c.strokeStyle = tone('#3f7a4a', mood); c.lineWidth = 1.1;
+      for (const [hx, hy] of [[-6, -1], [1, -4], [5, 1], [-2, 2]]) {
+        c.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; c.lineTo(hx + Math.cos(a) * 3, hy + Math.sin(a) * 3); } c.closePath(); c.stroke();
+      }
+      c.fillStyle = tone('#e8d49a', mood); c.fillRect(-14, 3, 26, 2.5);
+      face(c, 13.5, -1.5, 0.5, mood, Object.assign({ lid: '#8ac06c' }, st));
+    },
+    duckling(c, st, mood) {
+      const t = st.t, fluff = tone('#ffe066', mood);
+      feet(c, [-3, 4], 9, '#ffa24a', t, st.walk);
+      c.fillStyle = fluff; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(-10, -1); c.lineTo(-15, -5); c.lineTo(-12, 3); c.closePath(); c.fill(); c.stroke();
+      G.ellipse(-1, 2, 11, 8, 0, c); c.fill(); c.stroke();
+      c.fillStyle = tone('#ffd23a', mood); G.ellipse(-3, 1, 5, 3.5, -0.3, c); c.fill();
+      c.fillStyle = fluff; G.circle(7, -8, 7, c); c.fill(); c.stroke();
+      c.fillStyle = fluff; c.beginPath(); c.moveTo(6, -15); c.lineTo(7, -19); c.lineTo(9, -15); c.fill();
+      c.fillStyle = '#ff9a3c'; c.beginPath(); c.ellipse(14, -6, 4, 2, 0.1, 0, TAU); c.fill();
+      face(c, 7, -9, 0.52, mood, Object.assign({ lid: '#e8c850' }, st));
+    },
+    lamb(c, st, mood) {
+      const t = st.t, wool = tone('#ffffff', mood * 0.8);
+      feet(c, [-7, 4], 10, '#5a4a5a', t, st.walk);
+      c.fillStyle = BB.mix('#d8ccf0', '#9a94a8', mood * 0.4);
+      for (let i = 0; i < 9; i++) { const a = i / 9 * TAU; G.circle(-2 + Math.cos(a) * 9, 1 + Math.sin(a) * 6, 5.2, c); c.fill(); }
+      c.fillStyle = wool;
+      for (let i = 0; i < 9; i++) { const a = i / 9 * TAU; G.circle(-2 + Math.cos(a) * 8.5, 0 + Math.sin(a) * 5.5, 5, c); c.fill(); }
+      G.ellipse(-2, 0, 9, 6, 0, c); c.fill();
+      ear(c, 5, -7, 4, 2.2, -0.6, tone('#6a5a6a', mood), null);
+      c.fillStyle = tone('#6a5a6a', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.1;
+      G.ellipse(10, -3, 6.5, 7.5, 0, c); c.fill(); c.stroke();
+      c.fillStyle = wool; G.circle(9, -10, 4, c); c.fill(); G.circle(12, -10, 3.5, c); c.fill();
+      ear(c, 15, -6, 4, 2.2, 0.6, tone('#6a5a6a', mood), null);
+      face(c, 10, -3, 0.55, mood, Object.assign({ lid: '#4a3a4a' }, st));
+    },
+  });
+
   function antennae(c, x, y, t, col) {
     c.strokeStyle = col; c.lineWidth = 1.1; c.lineCap = 'round';
     for (const d of [-1, 1]) {
@@ -266,47 +452,53 @@
     if (st.rainbow) rainbow(c, x, y - 22 * (st.scale || 1), st.rainbow);
   }
 
-  // ──── The Cloud King (a big, fluffy, crowned cloud-moth) ────
+  // ──── The Cloud King (a lion cub with a mane of cloud and a golden crown) ────
   function drawKing(c, x, y, st) {
     const mood = BB.clamp(st.mood == null ? 1 : st.mood, 0, 1);
     const t = st.t;
     const s = st.scale || 1;
     c.save();
     c.translate(x + (st.shake || 0), y);
-    c.scale(s, s);
-    // cape of cloud
-    const flap = Math.sin(t * 0.08) * 0.25;
-    c.fillStyle = tone('#f4efff', mood); c.strokeStyle = 'rgba(120,100,170,0.6)'; c.lineWidth = 1.4;
-    for (const side of [-1, 1]) {
-      c.save(); c.scale(side, 1); c.rotate(flap);
-      c.beginPath();
-      c.arc(20, -8, 16, 0, TAU); c.arc(30, 6, 12, 0, TAU); c.arc(16, 12, 10, 0, TAU);
-      c.fill(); c.stroke();
-      c.fillStyle = tone('#ffd6f0', mood); G.circle(22, -6, 5, c); c.fill();
-      c.fillStyle = tone('#f4efff', mood);
-      c.restore();
+    c.scale((st.facing || 1) * s, s);
+    // his little floating cloud-throne
+    c.fillStyle = '#ffffff'; c.strokeStyle = 'rgba(150,130,210,0.7)'; c.lineWidth = 1.4;
+    for (const [px, py, r] of [[-16, 26, 12.4], [0, 29, 14.4], [16, 26, 12.4]]) { c.fillStyle = 'rgba(150,130,210,0.7)'; G.circle(px, py, r, c); c.fill(); }
+    c.fillStyle = '#ffffff';
+    for (const [px, py, r] of [[-16, 26, 11], [0, 29, 13], [16, 26, 11]]) { G.circle(px, py, r, c); c.fill(); }
+    // body + paws + tail with a fluffy tip
+    const gold = tone('#f2c46b', mood), cream = tone('#fff0cc', mood);
+    c.strokeStyle = OUT; c.lineWidth = 1.6; c.lineCap = 'round';
+    const sw = Math.sin(t * 0.06) * 4;
+    c.strokeStyle = gold; c.lineWidth = 4;
+    c.beginPath(); c.moveTo(-10, 16); c.quadraticCurveTo(-26, 16, -24 + sw * 0.5, 2); c.stroke();
+    c.fillStyle = tone('#ffffff', mood * 0.5); G.circle(-24 + sw * 0.5, 0, 5, c); c.fill();
+    c.fillStyle = gold; c.strokeStyle = OUT; c.lineWidth = 1.5;
+    G.ellipse(0, 12, 13, 11, 0, c); c.fill(); c.stroke();
+    c.fillStyle = cream; G.ellipse(0, 15, 7, 7, 0, c); c.fill();
+    for (const px of [-7, 7]) { c.fillStyle = cream; G.ellipse(px, 22, 5, 3.5, 0, c); c.fill(); c.stroke(); }
+    // cloud mane
+    const puff = tone('#ffffff', mood * 0.5), puffShade = BB.mix('#e3dbff', '#a8a2bc', mood * 0.5);
+    for (const [col, grow] of [[puffShade, 1.5], [puff, 0]]) {
+      c.fillStyle = col;
+      for (let i = 0; i < 12; i++) {
+        const a = i / 12 * TAU + Math.sin(t * 0.03) * 0.05;
+        G.circle(Math.cos(a) * 17, -10 + Math.sin(a) * 16, 7.5 + grow, c); c.fill();
+      }
     }
-    // body
-    const g = c.createRadialGradient(-4, -6, 2, 0, 0, 22);
-    g.addColorStop(0, '#ffffff'); g.addColorStop(1, tone('#dcd2ff', mood));
-    c.fillStyle = g; c.strokeStyle = OUT; c.lineWidth = 1.6;
-    c.beginPath();
-    for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; c.arc(Math.cos(a) * 15, Math.sin(a) * 13, 6.5, 0, TAU); }
-    c.fill();
-    G.ellipse(0, 0, 18, 16, 0, c); c.fill();
+    // face
+    c.fillStyle = gold; c.strokeStyle = OUT; c.lineWidth = 1.5;
+    G.circle(0, -10, 14, c); c.fill(); c.stroke();
+    for (const side of [-1, 1]) { c.fillStyle = gold; G.circle(side * 11, -22, 4.5, c); c.fill(); c.stroke(); c.fillStyle = '#ffc0a8'; G.circle(side * 11, -22, 2.2, c); c.fill(); }
+    c.fillStyle = cream; G.ellipse(0, -4, 8, 6, 0, c); c.fill();
+    c.fillStyle = '#b8605a'; c.beginPath(); c.moveTo(-2.5, -7); c.lineTo(2.5, -7); c.lineTo(0, -4.5); c.closePath(); c.fill();
     // crown
     c.fillStyle = '#ffd34d'; c.strokeStyle = '#c28a14'; c.lineWidth = 1.2;
-    c.beginPath(); c.moveTo(-10, -14); c.lineTo(-12, -26); c.lineTo(-5, -20); c.lineTo(0, -29); c.lineTo(5, -20); c.lineTo(12, -26); c.lineTo(10, -14); c.closePath(); c.fill(); c.stroke();
-    for (const [gx, gy, col] of [[-12, -26, '#ff7b9c'], [0, -29, '#7cc8ff'], [12, -26, '#8fe388']]) { c.fillStyle = col; G.circle(gx, gy, 2, c); c.fill(); }
-    // feathery antennae
-    c.strokeStyle = OUT; c.lineWidth = 1.2;
-    for (const side of [-1, 1]) {
-      c.beginPath(); c.moveTo(side * 6, -14); c.quadraticCurveTo(side * 14, -30, side * 20, -26); c.stroke();
-    }
-    face(c, 0, -1, 1.25, mood, Object.assign({ lid: '#cfc3f5' }, st));
+    c.beginPath(); c.moveTo(-9, -24); c.lineTo(-11, -35); c.lineTo(-4, -29); c.lineTo(0, -38); c.lineTo(4, -29); c.lineTo(11, -35); c.lineTo(9, -24); c.closePath(); c.fill(); c.stroke();
+    for (const [gx, gy, col] of [[-11, -35, '#ff7b9c'], [0, -38, '#7cc8ff'], [11, -35, '#8fe388']]) { c.fillStyle = col; G.circle(gx, gy, 2, c); c.fill(); }
+    face(c, 0, -12, 1.05, mood, Object.assign({ lid: '#d8a850' }, st));
     c.restore();
-    if (mood > 0.02) moodCloud(c, x, y - 52 * s, mood, st.t, 1.8);
-    if (st.rainbow) rainbow(c, x, y - 48 * s, st.rainbow, 2);
+    if (mood > 0.02) moodCloud(c, x, y - 62 * s, mood, st.t, 1.8);
+    if (st.rainbow) rainbow(c, x, y - 58 * s, st.rainbow, 2);
   }
 
   // ──── Elders ────  st: { t, awake (0..1), glow }

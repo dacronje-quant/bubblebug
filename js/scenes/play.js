@@ -40,10 +40,15 @@
       }
       // create every room's residents
       this.ents = {};
+      const turns = {}; // zone+char → how many critters placed so far (cast rotation)
       for (const room of W().rooms) {
         const e = { things: [], bugs: [] };
         for (const th of room.things) {
-          if (th.ch === 'b' || th.ch === 'c' || th.ch === 'K') e.bugs.push(BB.Bugs.create(th, room, save));
+          if (th.ch === 'b' || th.ch === 'c' || th.ch === 'K') {
+            const k = room.zone + th.ch;
+            turns[k] = (turns[k] || 0) + 1;
+            e.bugs.push(BB.Bugs.create(th, room, save, turns[k] - 1));
+          }
           else { const x = BB.Things.create(th, room, save); if (x) e.things.push(x); }
         }
         this.ents[room.id] = e;
@@ -400,7 +405,7 @@
     drawGuests(c, cam) {
       for (const g of this.party.guests) {
         const hop = Math.abs(Math.sin(g.t * 0.12)) * -10;
-        BB.Critters.drawBug(c, g.kind, g.x - cam.x, g.y - cam.y + hop, { t: g.t, mood: 0, facing: g.facing, joy: true, spin: Math.sin(g.t * 0.1) * 0.2 });
+        BB.Critters.drawBug(c, g.kind, g.x - cam.x, g.y - cam.y + hop - 4, { t: g.t, mood: 0, facing: g.facing, joy: true, spin: Math.sin(g.t * 0.1) * 0.2, scale: 1.3 });
         if (g.t % 70 === 0) PT().heart(g.x, g.y - 20);
       }
     },
