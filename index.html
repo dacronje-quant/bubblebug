@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <title>Bubblebug: Tiny Kingdom 🫧</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <!-- Mobile / Tablet On-Screen Touch Controls -->
+  <div id="touch">
+    <div class="tb" id="tl" aria-label="Left">◀</div>
+    <div class="tb" id="tr" aria-label="Right">▶</div>
+    <div class="tb" id="tj" aria-label="Jump">⬆</div>
+    <div class="tb" id="ta" aria-label="Blow Bubble">🫧</div>
+  </div>
+
+  <!-- Title Screen -->
+  <div id="title-screen">
+    <div class="ts-knight">🫧</div>
+    <h1 class="ts-title">Bubblebug</h1>
+    <div class="ts-badge">Tiny Kingdom</div>
+    <div class="ts-sub">Tap anywhere to play!</div>
+  </div>
+
+  <!-- Audio Toggle -->
+  <button id="mute-btn" onclick="Audio.toggle()" aria-label="Toggle Sound">🔊</button>
+
+  <!-- Modular Scripts (Loaded in dependency order) -->
+  <script src="js/constants.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/rooms.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
