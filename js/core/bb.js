@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════════════
-//  BB — the Bubblebug namespace
+//  BB — the Bubble Paws namespace
 //  Every module attaches itself to this single global object. Plain
 //  classic scripts (not ES modules) are used on purpose: browsers block
 //  ES-module imports from file:// URLs, and the game must run by simply

@@ -63,6 +63,17 @@
     BUG_MOOD: 3,            // bubbles to cheer up a regular bug
     KING_MOOD: 6,
 
+    // ── Feelings (a gentle kind of danger) ──
+    MOOD_MAX: 4,            // happy suns; a gloomy bump or a tumble costs one
+    HURT_INVULN: 100,       // ticks of blinking safety after a bump
+    RESPAWN_INVULN: 150,
+    SAD_TIME: 84,           // the too-sad sniffle before floating home
+    IRIS_TIME: 26,
+
+    // ── Bosses ──
+    BOSS_WAKE: 7,           // tiles into the arena before the boss notices you
+    BOSS_SNIFFLE: 250,      // ticks the boss sits sniffling (bubble now!)
+
     // ── Presentation ──
     ROOM_SLIDE: 26,         // ticks for the camera to glide between rooms
     RESCUE_TIME: 80,        // ticks of the dandelion float back to safety

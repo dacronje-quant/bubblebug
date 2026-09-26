@@ -2,8 +2,9 @@
 //  CRITTERS — gloomy animals, bugs and the Cloud King.
 //  (The module keeps its original name, BB.Bugs.)
 //
-//  A gloomy critter wanders, hops or flutters about, sighs, and gives a silly "hmph" boing if you
-//  bump into it (a soft push — never damage). Each friendship bubble
+//  A gloomy critter wanders, hops or flutters about and sighs. Bumping
+//  into one makes the kitten a little sadder (one happy sun) and gives a
+//  soft push — so hop over them, or better, cheer them up! Each friendship bubble
 //  shrinks its rain-cloud; the last one wraps it in a big bubble that
 //  floats up and pops into a rainbow — and a new friend who dances,
 //  hops when you pass by and sends little hearts your way.
@@ -156,14 +157,14 @@
       b.facing = dx > 0 ? 1 : -1;
     }
 
-    // ── gentle bump (gloomy only) ──
-    if (!happy && ctx.pl.state === 'play' && b.bumpCd <= 0 && Math.abs(dx) < b.r + 8 && Math.abs(dy) < b.r + 10) {
-      b.bumpCd = 45;
-      pb.vx = (dx >= 0 ? 1 : -1) * 3.4;
-      pb.vy = Math.min(pb.vy, -3.8);
-      S().hmph();
-      b.shake = 10;
-      PT().burst('dot', b.x, b.y - 12, 5, { color: '#d8dce8', speed: 1, life: 24, size: 3, up: 0.6 });
+    // ── a gloomy bump makes the kitten sadder (gloomy only) ──
+    if (!happy && ctx.pl.state === 'play' && b.bumpCd <= 0 && Math.abs(dx) < b.r * 0.85 + 6 && Math.abs(dy) < b.r * 0.85 + 8) {
+      if (ctx.hurt(b.x)) {
+        b.bumpCd = 45;
+        S().hmph();
+        b.shake = 10;
+        PT().burst('dot', b.x, b.y - 12, 5, { color: '#d8dce8', speed: 1, life: 24, size: 3, up: 0.6 });
+      }
     }
 
     // ── friends share the love ──

@@ -5,13 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#1b1433">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Bubblebug: The Whispering Kingdom</title>
+  <meta name="application-name" content="Bubble Paws">
+  <meta name="apple-mobile-web-app-title" content="Bubble Paws">
+  <title>Bubble Paws: The Rainbow Kingdom</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <canvas id="game" aria-label="Bubblebug game"></canvas>
+  <canvas id="game" aria-label="Bubble Paws game"></canvas>
 
   <!-- Big chunky touch buttons (shown automatically on touchscreens) -->
   <div id="touch" aria-hidden="true">
@@ -65,12 +68,16 @@
   <script src="js/render/lighting.js"></script>
   <script src="js/render/hud.js"></script>
   <script src="js/render/mapview.js"></script>
+  <script src="js/render/bossart.js"></script>
+  <script src="js/render/fx.js"></script>
 
   <!-- Things that live in the world -->
   <script src="js/entities/player.js"></script>
   <script src="js/entities/bubbles.js"></script>
   <script src="js/entities/bugs.js"></script>
   <script src="js/entities/things.js"></script>
+  <script src="js/entities/puzzles.js"></script>
+  <script src="js/entities/bosses.js"></script>
 
   <!-- Scenes -->
   <script src="js/scenes/title.js"></script>

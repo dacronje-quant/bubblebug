@@ -48,18 +48,37 @@
       c.save();
       c.translate(cx, y + wob);
       c.rotate(Math.sin(t * 0.02) * 0.015);
-      c.font = `900 96px ${G().FONT}`;
+      const NAME = 'Bubble Paws';
+      c.font = `900 92px ${G().FONT}`;
       c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
-      c.lineWidth = 22; c.strokeStyle = '#4a2a6a'; c.strokeText('Bubblebug', 0, 0);
-      c.lineWidth = 10; c.strokeStyle = '#ffffff'; c.strokeText('Bubblebug', 0, 0);
+      const half = c.measureText(NAME).width / 2;
+      c.lineWidth = 22; c.strokeStyle = '#4a2a6a'; c.strokeText(NAME, 0, 0);
+      c.lineWidth = 10; c.strokeStyle = '#ffffff'; c.strokeText(NAME, 0, 0);
       const g = c.createLinearGradient(0, -45, 0, 45);
       g.addColorStop(0, '#ffd6f0'); g.addColorStop(0.5, '#c9a6ff'); g.addColorStop(1, '#7cc8ff');
-      c.fillStyle = g; c.fillText('Bubblebug', 0, 0);
-      c.fillStyle = 'rgba(255,255,255,0.6)';
-      G().bubble(-250, -38, 16, '#ffffff', 0.9, c);
-      G().bubble(262, 30, 11, '#ffffff', 0.9, c);
+      c.fillStyle = g; c.fillText(NAME, 0, 0);
+      // a bubble floating off the B, and a little paw print by the s
+      G().bubble(-half - 22, -38, 16, '#ffffff', 0.9, c);
+      G().bubble(-half - 4, -64 - Math.abs(Math.sin(t * 0.04)) * 6, 8, '#ffffff', 0.9, c);
+      UI.paw(c, half + 34, 26, 1.25, Math.sin(t * 0.05) * 0.15);
       c.restore();
-      G().text('The Whispering Kingdom', cx, y + 70 + wob * 0.5, 30, '#fff8e8', 'rgba(74,42,106,0.85)');
+      // the subtitle sits on a tiny rainbow
+      const sy = y + 72 + wob * 0.5;
+      c.save(); c.lineWidth = 5; c.globalAlpha = 0.75;
+      ['#ff7b9c', '#ffcf5c', '#8fe388', '#7cc8ff', '#b99cff'].forEach((col, i) => {
+        c.strokeStyle = col; c.beginPath(); c.arc(cx, sy + 330, 342 - i * 5, Math.PI * 1.35, Math.PI * 1.65); c.stroke();
+      });
+      c.restore();
+      G().text('The Rainbow Kingdom', cx, sy, 30, '#fff8e8', 'rgba(74,42,106,0.85)');
+    },
+    // a chubby pink paw print (toe beans!)
+    paw(c, x, y, s, rot = 0) {
+      c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s);
+      c.fillStyle = '#ffb3cf'; c.strokeStyle = '#4a2a6a'; c.lineWidth = 3;
+      G().ellipse(0, 6, 13, 10.5, 0, c); c.fill(); c.stroke();
+      for (const [tx, ty, r] of [[-13, -7, 5.2], [-5, -15, 5.6], [5, -15, 5.6], [13, -7, 5.2]]) { G().circle(tx, ty, r, c); c.fill(); c.stroke(); }
+      c.fillStyle = 'rgba(255,255,255,0.7)'; G().ellipse(-4, 2, 4, 2.4, -0.3, c); c.fill();
+      c.restore();
     },
     playButton(c, x, y, r, t, lit) {
       const k = 1 + Math.sin(t * 0.08) * 0.06 + (lit ? 0.1 : 0);

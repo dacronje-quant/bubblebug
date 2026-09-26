@@ -98,6 +98,12 @@
       melody: line(`C6 . A5 . F5 . A5 B5   D6 . B5 . G5 . B5 D6   E6 . . B5 G5 . E5 .   A5 . . . C6 . . .
                     F6 . E6 . C6 . A5 .   B5 . D6 . G6 . D6 .   E6 . D6 . C6 . G5 .   C6 . . . . . . .`),
     },
+    boss: { // a playful "uh-oh, someone's grumpy" tune for the arenas
+      bpm: 112, lead: 'marimba', arp: 'bell', perc: 'shaker', padBright: 1300,
+      chords: ['A2 C3 E3', 'F2 A2 C3', 'G2 B2 D3', 'E2 G#2 B2', 'A2 C3 E3', 'F2 A2 C3', 'D3 F3 A3', 'E2 G#2 B2'].map(chord),
+      melody: line(`A5 . C6 . E6 . C6 .   F5 . A5 . C6 . A5 .   G5 . B5 . D6 . B5 .   G#5 . . . E5 . . .
+                    A5 C6 E6 . D6 C6 B5 .   A5 . C6 . F6 . E6 .   D6 . F6 . A5 . D6 .   B5 . G#5 . E5 . . .`),
+    },
     lullaby: { // title, select & finale-rest
       bpm: 70, lead: 'musicbox', arp: 'harp', perc: null, padBright: 700,
       chords: ['C3 G3 E4', 'A2 E3 C4', 'F2 C3 A3', 'G2 D3 B3', 'C3 G3 E4', 'A2 E3 C4', 'F2 C3 A3', 'G2 D3 G3'].map(chord),

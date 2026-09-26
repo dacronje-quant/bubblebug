@@ -244,21 +244,26 @@
     bounce.stars *= 0.9; bounce.hearts *= 0.9;
 
     const pill = (x, w) => { c.fillStyle = 'rgba(30,20,50,0.38)'; G.rrect(x, 12, w, 38, 19, c); c.fill(); };
-    pill(12, 104);
-    const sb = 1 + bounce.stars * 0.5;
-    G.drawGlow(34, 31, 22, '#fff1a8', 0.6, c);
-    c.fillStyle = '#ffd84a'; c.strokeStyle = '#c28a14'; c.lineWidth = 1.5;
-    G.star(34, 31, 11 * sb, 5, 0.5, -Math.PI / 2 + Math.sin(t * 0.05) * 0.1, c); c.fill(); c.stroke();
-    G.text(String(s.stars), 78, 32, 22 * (1 + bounce.stars * 0.2), '#fff6d6', 'rgba(40,20,60,0.6)');
 
-    pill(124, 92);
+    // how happy the kitten feels: its own little face and a row of suns
+    if (s.mood != null) drawMood(c, s, t);
+
+    const X0 = 170;
+    pill(X0, 104);
+    const sb = 1 + bounce.stars * 0.5;
+    G.drawGlow(X0 + 22, 31, 22, '#fff1a8', 0.6, c);
+    c.fillStyle = '#ffd84a'; c.strokeStyle = '#c28a14'; c.lineWidth = 1.5;
+    G.star(X0 + 22, 31, 11 * sb, 5, 0.5, -Math.PI / 2 + Math.sin(t * 0.05) * 0.1, c); c.fill(); c.stroke();
+    G.text(String(s.stars), X0 + 66, 32, 22 * (1 + bounce.stars * 0.2), '#fff6d6', 'rgba(40,20,60,0.6)');
+
+    pill(X0 + 112, 92);
     const hb = 1 + bounce.hearts * 0.5;
     c.fillStyle = '#ff7eb6'; c.strokeStyle = '#b8407a';
-    G.heart(146, 33, 11 * hb, c); c.fill(); c.stroke();
-    G.text(String(s.hearts), 186, 32, 22 * (1 + bounce.hearts * 0.2), '#ffe3f0', 'rgba(40,20,60,0.6)');
+    G.heart(X0 + 134, 33, 11 * hb, c); c.fill(); c.stroke();
+    G.text(String(s.hearts), X0 + 174, 32, 22 * (1 + bounce.hearts * 0.2), '#ffe3f0', 'rgba(40,20,60,0.6)');
 
     // family found: a little cat face and a count
-    let x0 = 224;
+    const x0 = X0 + 212;
     const fam = s.family || 0;
     if (fam > 0) {
       if (last.family >= 0 && fam > last.family) bounce.family = 1;
@@ -267,11 +272,10 @@
       const fb = 1 + bounce.family * 0.5;
       BB.MapView.catFace(c, x0 + 22, 33, 1.25 * fb, '#fff1dc', '#9a7a64');
       G.text(String(fam), x0 + 58, 32, 22 * (1 + bounce.family * 0.2), '#fff1dc', 'rgba(40,20,60,0.6)');
-      x0 += 90;
     }
     last.family = fam;
 
-    // abilities
+    // abilities, then toys, along the second row
     let x = 26;
     for (const ab of ABILITIES) {
       if (!s.abilities[ab]) continue;
@@ -279,13 +283,99 @@
       abilityIcon(c, ab, x, 68, 0.95);
       x += 34;
     }
-    // toys, in a row along the top (clear of the map & pause buttons)
-    let tx = x0 + 18;
+    let tx = x + (x > 26 ? 12 : 0);
     for (const toy of TOYS) {
       if (!(s.toys || {})[toy]) continue;
-      toyIcon(c, toy, tx, 31, 0.85, t);
+      toyIcon(c, toy, tx, 68, 0.85, t);
       tx += 27;
     }
+  }
+
+  // ──── Happy suns (the kitten's feelings) ────
+  function drawMood(c, s, t) {
+    const max = s.moodMax || 4, mood = s.mood;
+    const shake = s.hurtT > 0 ? Math.sin(s.hurtT * 1.3) * (s.hurtT / 36) * 4 : 0;
+    c.save();
+    c.translate(shake, 0);
+    c.fillStyle = 'rgba(30,20,50,0.38)';
+    G.rrect(12, 12, 150, 38, 19, c); c.fill();
+    if (mood <= 1) { c.strokeStyle = `rgba(150,190,255,${0.5 + Math.sin(t * 0.12) * 0.3})`; c.lineWidth = 2; G.rrect(12, 12, 150, 38, 19, c); c.stroke(); }
+    // the kitten's face shows how it feels
+    const sad = mood <= 0 ? 1 : mood === 1 ? 0.9 : mood === 2 ? 0.4 : 0;
+    BB.Kittens.draw(c, s.cat || 'marshmallow', { mode: 'sit', t, happy: mood >= max, sad, cry: mood <= 1, blink: (t % 200) < 6 ? 1 : 0 }, 34, 47, 0.6, 1);
+    for (let i = 0; i < max; i++) {
+      const x = 62 + i * 24, y = 31;
+      const on = i < mood;
+      const fresh = on && i === mood - 1 && s.healT > 0 ? 1 + Math.sin((30 - s.healT) / 30 * Math.PI) * 0.45 : 1;
+      if (on) sun(c, x, y, fresh, t + i * 17);
+      else rainCloudIcon(c, x, y, t + i * 23, i === mood && s.hurtT > 0 ? s.hurtT / 36 : 0);
+    }
+    c.restore();
+  }
+
+  function sun(c, x, y, s, t) {
+    c.save(); c.translate(x, y); c.scale(s, s);
+    G.drawGlow(0, 0, 16, '#fff1a8', 0.5, c);
+    c.strokeStyle = '#ffc93d'; c.lineWidth = 2; c.lineCap = 'round';
+    for (let i = 0; i < 8; i++) {
+      const a = i / 8 * Math.PI * 2 + t * 0.01;
+      c.beginPath(); c.moveTo(Math.cos(a) * 8.5, Math.sin(a) * 8.5); c.lineTo(Math.cos(a) * 11, Math.sin(a) * 11); c.stroke();
+    }
+    c.fillStyle = '#ffe066'; c.strokeStyle = '#d99a14'; c.lineWidth = 1.2;
+    G.circle(0, 0, 7.5, c); c.fill(); c.stroke();
+    c.fillStyle = '#6a4a14';
+    G.circle(-2.4, -1, 0.9, c); c.fill(); G.circle(2.4, -1, 0.9, c); c.fill();
+    c.strokeStyle = '#6a4a14'; c.lineWidth = 1;
+    c.beginPath(); c.arc(0, 1, 2.4, 0.3, Math.PI - 0.3); c.stroke();
+    c.restore();
+  }
+
+  function rainCloudIcon(c, x, y, t, puff) {
+    c.save(); c.translate(x, y);
+    const k = 1 + puff * 0.4;
+    c.scale(k, k);
+    c.fillStyle = 'rgba(170,176,200,0.9)';
+    c.beginPath(); c.arc(-4, 1, 4.5, 0, Math.PI * 2); c.arc(1, -2, 6, 0, Math.PI * 2); c.arc(6, 1, 4.5, 0, Math.PI * 2); c.fill();
+    c.fillRect(-7, 0, 13, 5);
+    const ph = (t * 0.06) % 1;
+    c.fillStyle = `rgba(140,190,255,${1 - ph})`;
+    G.ellipse(0, 7 + ph * 7, 1.3, 2, 0, c); c.fill();
+    c.restore();
+  }
+
+  // ──── Boss picture card: "this friend is sad → bubbles → happy!" ────
+  function drawBossCard(c, b, t0, t) {
+    const a = t0 < 20 ? t0 / 20 : t0 > 170 ? Math.max(0, (200 - t0) / 30) : 1;
+    if (a <= 0) return;
+    c.save();
+    c.globalAlpha = a;
+    const cx = G.W / 2, cy = 150 - (1 - Math.min(1, t0 / 20)) * 30;
+    c.fillStyle = 'rgba(255,250,240,0.94)'; c.strokeStyle = '#b8a0e8'; c.lineWidth = 4;
+    G.rrect(cx - 200, cy - 58, 400, 116, 30, c); c.fill(); c.stroke();
+    // the gloomy boss…
+    c.save();
+    c.beginPath(); c.arc(cx - 128, cy + 4, 50, 0, Math.PI * 2); c.clip();
+    c.fillStyle = BB.mix(BB.ZONES[b.zone].sky[1], '#ffffff', 0.4); c.fillRect(cx - 180, cy - 50, 110, 110);
+    BB.BossArt.draw(c, b.kind, cx - 128, cy + 18, 1.05, { t, mood: 1, facing: 1, pose: 'sulk', blink: 0 });
+    c.restore();
+    BB.Critters.moodCloud(c, cx - 128, cy - 44, 1, t, 1.6);
+    // …+ bubbles…
+    arrow(c, cx - 58, cy + 4);
+    buttonIcon(c, 'bubble', cx, cy + 4, 1.25, 0.5 + 0.5 * Math.sin(t * 0.2));
+    arrow(c, cx + 50, cy + 4);
+    // …= a happy friend (with a rainbow)
+    c.save();
+    c.beginPath(); c.arc(cx + 128, cy + 4, 50, 0, Math.PI * 2); c.clip();
+    c.fillStyle = '#fff4d8'; c.fillRect(cx + 78, cy - 50, 110, 110);
+    BB.BossArt.draw(c, b.kind, cx + 128, cy + 18, 1.05, { t, mood: 0, facing: -1, pose: 'dance', blink: 0 });
+    c.restore();
+    BB.Critters.rainbow(c, cx + 128, cy - 44, 1, 2.2);
+    c.restore();
+  }
+
+  function arrow(c, x, y) {
+    c.strokeStyle = '#8a70c8'; c.lineWidth = 5; c.lineCap = 'round'; c.lineJoin = 'round';
+    c.beginPath(); c.moveTo(x - 12, y); c.lineTo(x + 10, y); c.moveTo(x + 2, y - 8); c.lineTo(x + 10, y); c.lineTo(x + 2, y + 8); c.stroke();
   }
   const ABILITIES = ['doubleJump', 'wallClimb', 'glow', 'float', 'swim', 'dig', 'spring', 'rings', 'bubbleBounce', 'wings'];
   const TOYS = ['yarn', 'feather', 'bell', 'mouse', 'boat', 'star', 'shell', 'bucket', 'mitten', 'kite', 'duck', 'rocket'];
@@ -452,5 +542,5 @@
     c.restore();
   }
 
-  BB.HUD = { drawHUD, drawZoneCard, drawAbilityCard, buttonIcon, abilityIcon, toyIcon, zoneIcon };
+  BB.HUD = { drawHUD, drawZoneCard, drawAbilityCard, drawBossCard, buttonIcon, abilityIcon, toyIcon, zoneIcon };
 })(window.BB);

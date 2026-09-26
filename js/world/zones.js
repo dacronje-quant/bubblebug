@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════════════
-//  ZONES — the twelve biomes of the Whispering Kingdom.
+//  ZONES — the twelve biomes of the Rainbow Kingdom.
 //  Palettes drive the procedural tile art, parallax painter, ambient
 //  particles and lighting. `cast` lists the gloomy critters who live in
 //  each zone: the `b` / `c` map characters take turns through their list,

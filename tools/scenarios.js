@@ -23,7 +23,16 @@ const out = process.argv[2] || '.';
     b.x = (r.x + tx) * 32 + 6; b.y = (r.y + ty + 1) * 32 - 24; b.vx = b.vy = 0;
     BB.Play.room = r; BB.Camera.snap(r, b);
   }, [room, tx, ty]);
-  const st = () => page.evaluate(() => ({ room: BB.Play.room.id, st: BB.Play.pl.state, ab: JSON.stringify(BB.Play.save.abilities), friends: Object.keys(BB.Play.save.friends).length, gift: !!BB.Play.gift, party: !!BB.Play.party }));
+  // stand on a world tile (feet on the first floor at or below row ty)
+  const tpTile = (tx, ty) => page.evaluate(([tx, ty]) => {
+    const b = BB.Play.pl.body, W = BB.World;
+    let fy = ty; while (!BB.Physics.landKind(W.tile(tx, fy + 1), { glow: true }) && fy < ty + 20) fy++;
+    b.x = tx * 32 + 6; b.y = (fy + 1) * 32 - 24; b.vx = b.vy = 0; b.grounded = true;
+    const r = W.roomAtPx(b.x + 10, b.y + 12);
+    if (r !== BB.Play.room) { BB.Play.leaveRoom(BB.Play.room); BB.Play.room = r; }
+    BB.Camera.snap(r, b);
+  }, [tx, ty]);
+  const st = () => page.evaluate(() => ({ room: BB.Play.room.id, st: BB.Play.pl.state, mood: BB.Play.mood, ab: JSON.stringify(BB.Play.save.abilities), friends: Object.keys(BB.Play.save.friends).length, bosses: Object.keys(BB.Play.save.bosses).join(','), gates: Object.keys(BB.Play.save.gates).join(','), gift: !!BB.Play.gift, party: !!BB.Play.party }));
 
   // 1. Butterfly Elder gift (no powers yet)
   await start('m3', false);
@@ -67,13 +76,27 @@ const out = process.argv[2] || '.';
   await start('h4', true); await tp('h4', 8, 13); await wait(300); await shot('petals');
   await start('h4', false); await tp('h4', 8, 13); await wait(300); await shot('petals_off');
 
-  // 7. Cloud King (his gate opens onto the Rainbow Bridge)
+  // 7. A boss: the Cloud King. Walk in to wake him, then bubble him each
+  //    time he sits down to sniffle (the kitten is kept blinking, so the
+  //    run never gets too sad). His gate opens onto the Rainbow Bridge.
   await start('k3', true);
-  await tp('k3', 8, 13);
+  await tp('k3', 3, 13);
+  await hold('ArrowRight', 900);
   await wait(300); await shot('king');
-  for (let i = 0; i < 40; i++) {
-    await page.evaluate(() => { const k = BB.Play.ents.k3.bugs[0]; const b = BB.Play.pl.body; b.x = k.x - 120; b.facing = 1; b.y = Math.min(b.y, k.y - 12); b.vy = 0; });
-    await kb.press('KeyX'); await wait(200);
+  let attackShot = false;
+  for (let i = 0; i < 600; i++) {
+    const k = await page.evaluate(() => {
+      BB.Play.invuln = 50;
+      const boss = BB.Play.ents.k3.bosses[0];
+      return { st: boss.state, x: boss.x, kx: BB.Play.pl.body.x };
+    });
+    if (k.st === 'happy') break;
+    if (k.st === 'attack' && !attackShot) { attackShot = true; await shot('king_attack'); }
+    if (k.st === 'sniffle') {
+      const dir = k.x > k.kx ? 'ArrowRight' : 'ArrowLeft';
+      await kb.down(dir); await wait(40); await kb.up(dir);
+      await kb.press('KeyX'); await wait(160);
+    } else await wait(200);
   }
   await wait(1500); await shot('king_happy');
   console.log('king', await st());
@@ -82,7 +105,15 @@ const out = process.argv[2] || '.';
   await wait(800);
   console.log('past the gate', await st());
 
-  // 8. The Rainbow Party, at the very top of the Starfall Shaft
+  // 8. A puzzle: step on both paw pads in Sparkle Gardens and its vine
+  //    gate opens
+  await start('g1', false);
+  const pads = await page.evaluate(() => BB.World.byId.g1.things.filter(t => t.ch === 'P').map(t => [t.tx, t.ty]));
+  for (const [tx, ty] of pads) { await tpTile(tx, ty); await wait(500); }
+  await wait(1500); await shot('pads');
+  console.log('pads', await st());
+
+  // 9. The Rainbow Party, at the very top of the Starfall Shaft
   await start('t5', true);
   await tp('t5', 10, 13);
   await hold('ArrowRight', 800);

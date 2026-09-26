@@ -1,0 +1,13 @@
+{
+  "name": "Bubble Paws: The Rainbow Kingdom",
+  "short_name": "Bubble Paws",
+  "description": "A cozy platformer for little explorers: blow friendship bubbles to cheer up gloomy animals.",
+  "start_url": "index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#1b1433",
+  "theme_color": "#1b1433",
+  "icons": [
+    { "src": "icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}

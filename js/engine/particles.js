@@ -41,6 +41,15 @@
       for (let i = 0; i < n; i++) spawn({ kind: 'dust', x: x + (Math.random() - 0.5) * 12, y, vx: (Math.random() - 0.5) * 1.6, vy: -Math.random() * 0.8, life: 22 + Math.random() * 12, size: 3 + Math.random() * 3, color, drag: 0.92 });
     },
     ring(x, y, color = '#ffffff', size = 10) { spawn({ kind: 'ring', x, y, life: 18, size, color }); },
+    // a little celebration firework (party time!)
+    firework(x, y) {
+      const col = BB.pick(['#ff7b9c', '#ffcf5c', '#8fe388', '#7cc8ff', '#b99cff', '#ffffff']);
+      for (let i = 0; i < 18; i++) {
+        const a = i / 18 * Math.PI * 2;
+        spawn({ kind: 'spark', x, y, vx: Math.cos(a) * 3.4, vy: Math.sin(a) * 3.4, life: 46, size: 3, color: col, drag: 0.95, g: 0.03 });
+      }
+      spawn({ kind: 'ring', x, y, life: 22, size: 30, color: col });
+    },
     heart(x, y, color = '#ff7eb6') { spawn({ kind: 'heart', x, y, vx: (Math.random() - 0.5) * 0.8, vy: -1.1 - Math.random() * 0.6, life: 60, size: 4 + Math.random() * 2, color, drag: 0.99 }); },
     seed(x, y) { spawn({ kind: 'seed', x, y, vx: (Math.random() - 0.5) * 1.2, vy: -0.4 - Math.random() * 0.6, life: 90, size: 4, color: '#ffffff', drag: 0.995, vr: (Math.random() - 0.5) * 0.05 }); },
     splash(x, y, color = '#bfe7ff') {

@@ -14,23 +14,31 @@
 //   -  one-way ledge                E  ancient elder    K  Cloud King
 //   M  bouncy mushroom              f  guide firefly    T  hidden toy
 //   ~  water / mist (dandelion      R L U D  arrow signposts
-//      rescue — never a fail)       y  yarn ball        n  music flower
+//      rescue, one sun sadder)      y  yarn ball        n  music flower
 //   H  shy wall (walk through!)     o  bloom bud (bubble it to open G)
 //   :  glow petal (solid w/ Glow)   F  finale party     S  start spot
 //   ^  breezy updraft
-//   G  bud gate (opens when every bud in the room blooms)
+//   G  vine gate (opens when every bud in the room blooms, its boss
+//      is cheered up, or its puzzle is solved)
 //   %  sky-mist (dandelion rescue, even for swimmers)
 //   I  ice / sugar-glass: solid, too slippery to climb
 //   X  sandstone: solid until the Tortoise's Mighty Paws crumble it
 //   1–9 fairy rings: each digit appears exactly twice in the world; with
 //      the Badger's gift, stepping into one pops you out at its twin
 //   &  a lost member of the kittens' family (hidden down a side passage)
+//   Q  a zone's big gloomy boss (the room's `boss:` says who) — cheer
+//      them up and the room's gate opens
+//   puzzles (each opens its room's G gate when solved):
+//   P  paw pad — step on every pad in the room
+//   d  lost baby — it follows you home; A  its mama (bring all her babies)
+//   k  golden key;  Z  the keyhole it opens
+//   V  song bell;  O  the singing stone that shows the tune to repeat
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
   const T = BB.CFG.TILE;
 
-  const ENTITY_CHARS = '*bcBEKfRLUDTynoFS&';
+  const ENTITY_CHARS = '*bcBEKfRLUDTynoFS&QPdAkZVO';
   const DEFS = [];
 
   // Rooms register themselves from js/world/rooms/*.js

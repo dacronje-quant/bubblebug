@@ -19,7 +19,8 @@
     return {
       body: BB.Physics.newBody(x, y),
       cat,
-      state: 'play',            // play | rescue | bench | gift | party
+      state: 'play',            // play | rescue | bench | gift | party | sad
+      sad: 0, invuln: 0, hurtT: 0, sadT: 0,
       t: 0,
       phase: 0, squash: 1, puff: 0,
       blink: 0, blinkT: 90, idleT: 0,
@@ -38,6 +39,7 @@
     pl.puff = Math.max(0, pl.puff - 0.08);
     pl.squash = BB.lerp(pl.squash, 1, 0.2);
     if (pl.happyT > 0) pl.happyT--;
+    if (pl.hurtT > 0) pl.hurtT--;
 
     // blinking
     if (--pl.blinkT <= 0) { pl.blinkT = 100 + Math.random() * 180; pl.blink = 1; }
@@ -170,6 +172,13 @@
       t: pl.t, blink: pl.blink, squash: pl.squash, puff: pl.puff, yawn: pl.yawn,
       ear: pl.ear, lick: pl.lick, happy: pl.happyT > 0, phase: pl.phase, vy: b.vy, tail: 0,
     };
+    p.sad = pl.happyT > 0 ? 0 : pl.sad || 0;
+    if (pl.state === 'sad') {
+      // too sad: sit down for a little cry
+      p.mode = b.grounded ? 'sit' : 'air'; p.vy = 2; p.sad = 1; p.cry = true; p.happy = false;
+      return p;
+    }
+    if (pl.hurtT > 12) { p.surprised = true; p.sad = Math.max(p.sad, 0.6); }
     if (pl.state === 'rescue') { p.mode = 'rescue'; p.surprised = pl.rescue.t < 30; p.happy = pl.rescue.t > 40; return p; }
     if (pl.state === 'bench') { p.mode = 'sleep'; return p; }
     if (pl.state === 'gift') { p.mode = 'sit'; p.happy = true; p.look = -1; return p; }
@@ -198,6 +207,8 @@
     const drawX = b.climbing ? x + b.climbing * 2 : x;
     // drawn a touch larger than the collision box so little eyes can find it
     const ps = pose(pl);
+    // blinking while safe after a bump
+    if (pl.invuln > 0 && pl.state === 'play' && Math.floor(pl.invuln / 5) % 2 === 0) c.globalAlpha = 0.35;
     // the Star Whale's star wings, fluttering whenever you're up in the air
     if (abilities.wings && pl.state === 'play' && !b.grounded && !b.inWater && !b.climbing) {
       const fl = b.vy < 0 ? Math.sin(pl.t * 0.6) * 0.5 : Math.sin(pl.t * 0.15) * 0.15;
@@ -211,6 +222,7 @@
     BB.Kittens.draw(c, pl.cat, ps, drawX, y + (pl.state === 'bench' ? -6 : 0), 1.2, face);
     // the Sea Turtle's shimmering bubble helmet
     if (ps.swim) G().bubble(drawX + face * 10, y - 23, 15, '#bff4ff', 0.75, c);
+    c.globalAlpha = 1;
   }
   const G = () => BB.G;
 

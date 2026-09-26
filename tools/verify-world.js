@@ -13,10 +13,15 @@
 //    1. the next elder (or, at the end, the Rainbow Party) is reachable, and
 //    2. from EVERY spot you can reach in that stage, the goal is still
 //       reachable (zero softlocks — falling in water or mist always floats
-//       you back to safety, and that rescue is modelled too).
+//       you back to safety, and that rescue is modelled too), and
+//    3. every boss and puzzle gate you can walk up to opens (the boss can
+//       be bubbled where it sniffles, every paw pad stepped on, every lost
+//       baby walked home, the key carried to its keyhole, every bell rung).
 //  With every power it also checks you can always travel home to the start
-//  (for backtracking to secrets), and that every collectible, critter and
-//  hidden family member is reachable.
+//  (for backtracking to secrets), that every gate can be opened, and that
+//  every collectible, critter, boss, puzzle piece and hidden family member
+//  is reachable. (A too-sad pop-back only returns the kitten to a spot it
+//  already stood on, so it can't create a softlock.)
 //
 //  Stages start at the previous elder, so they're independent and run in
 //  parallel worker threads (one per CPU core).
@@ -263,29 +268,27 @@ function bubbleable(nodes, tx, ty) {
 
 // Open gates whose buds are bubbleable / whose King is reachable, then
 // re-expand the spots in and around those rooms, until nothing changes.
-// Gates stay open once opened (the save remembers), so a stage that starts
-// in a later zone begins with every gate of the zones before it open —
-// earlier stages prove each of those gates can be opened on the way.
-function exploreWithGates(starts, ab, openBeforeZone = 0) {
+// Gates stay open once opened (the save remembers), so a stage begins with
+// every gate it had to pass to get there already open: all gates of the
+// zones before it, and those of its own zone that lie wholly west of the
+// start (the world runs west → east). The earlier stage proves each of
+// those gates can be opened on the way ("every … gate along the way opens").
+function exploreWithGates(starts, ab, startRoom = null) {
   W.build();
   P.setAbilities(ab);
   const st = newState();
   for (const s0 of starts) addNode(st, s0.x, s0.y, s0.x, s0.y);
   const opened = new Set();
+  const behind = room => startRoom && (room.zone < startRoom.zone || (room.zone === startRoom.zone && room.x + room.w <= startRoom.x));
   for (const room of W.rooms) {
-    if (room.zone < openBeforeZone && room.grid.some(r => r.includes('G'))) { W.openGates(room); opened.add(room.id); }
+    if (behind(room) && room.grid.some(r => r.includes('G'))) { W.openGates(room); opened.add(room.id); }
   }
   for (;;) {
     explore(st, ab);
     const now = [];
     for (const room of W.rooms) {
       if (opened.has(room.id) || !room.grid.some(r => r.includes('G'))) continue;
-      const buds = room.things.filter(t => t.ch === 'o');
-      const king = room.things.find(t => t.ch === 'K');
-      let ok;
-      if (king) ok = touched(st.cover, king.tx, king.ty, 6);
-      else ok = buds.length > 0 && buds.every(b => bubbleable(st.nodes, b.tx, b.ty));
-      if (ok) { W.openGates(room); opened.add(room.id); now.push(room); }
+      if (gateReady(room, st)) { W.openGates(room); opened.add(room.id); now.push(room); }
     }
     if (!now.length) break;
     for (const n of st.nodes.values()) {
@@ -294,6 +297,75 @@ function exploreWithGates(starts, ab, openBeforeZone = 0) {
     }
   }
   return st;
+}
+
+// ──── Gate conditions (everything the gate's picture-sign asks for) ────
+const zoneThings = (zone, ch) => {
+  const out = [];
+  for (const r of W.rooms) if (r.zone === zone) for (const t of r.things) if (t.ch === ch) out.push(t);
+  return out;
+};
+// standing spots whose body touches the tile area (± r tiles)
+function nodesNear(nodes, tx, ty, r) {
+  const x0 = (tx - r) * T, x1 = (tx + r + 1) * T, y0 = (ty - r) * T, y1 = (ty + r + 1) * T;
+  const out = [];
+  for (const n of nodes.values()) if (n.x + C.PW > x0 && n.x < x1 && n.y + C.PH > y0 && n.y < y1) out.push(n);
+  return out;
+}
+function forward(nodes, fromKeys) {
+  const seen = new Set(fromKeys), q = [...fromKeys];
+  while (q.length) {
+    const n = nodes.get(q.pop());
+    if (n) for (const e of n.edges) if (!seen.has(e)) { seen.add(e); q.push(e); }
+  }
+  return seen;
+}
+function floorRow(tx, ty) {
+  for (let y = ty; y < ty + 30; y++) if (P.landKind(W.tile(tx, y + 1), { glow: true }) && P.landKind(W.tile(tx, y + 1), { glow: true }) !== 0) return y + 1;
+  return ty + 1;
+}
+function gateReady(room, st) {
+  const nodes = st.nodes;
+  let any = false;
+  for (const th of room.things) {
+    if (th.ch === 'o') { any = true; if (!bubbleable(nodes, th.tx, th.ty)) return false; }
+    else if (th.ch === 'P') { any = true; if (!touched(st.cover, th.tx, th.ty, 0)) return false; }
+    else if (th.ch === 'K' || th.ch === 'Q') {
+      // a sniffling boss rests on the floor under its spot
+      any = true;
+      const fy = W.tile(th.tx, th.ty + 1) === '~' ? th.ty + 1 : floorRow(th.tx, th.ty);
+      if (!bubbleable(nodes, th.tx, fy - 1) && !touched(st.cover, th.tx, fy - 1, 2)) return false;
+    } else if (th.ch === 'Z') {
+      // the zone's key must be able to travel to this keyhole
+      any = true;
+      const key = zoneThings(room.zone, 'k')[0];
+      if (!key) return false;
+      const kn = nodesNear(nodes, key.tx, key.ty, 1), ln = nodesNear(nodes, th.tx, th.ty, 2);
+      if (!kn.length || !ln.length) return false;
+      const fw = forward(nodes, kn.map(n => n.k));
+      if (!ln.some(n => fw.has(n.k))) return false;
+    } else if (th.ch === 'A') {
+      // Mama: every lost baby of her zone can be fetched and walked home
+      any = true;
+      const mn = nodesNear(nodes, th.tx, th.ty, 2);
+      if (!mn.length) return false;
+      const fromMama = forward(nodes, mn.map(n => n.k));
+      for (const b of zoneThings(room.zone, 'd')) {
+        const bn = nodesNear(nodes, b.tx, b.ty, 1);
+        if (!bn.length || !bn.some(n => fromMama.has(n.k))) return false;
+        const fw = forward(nodes, bn.map(n => n.k));
+        if (!mn.some(n => fw.has(n.k))) return false;
+      }
+    }
+  }
+  if (room.things.some(t => t.ch === 'V')) {
+    // song bells: hear the stone's tune, then bubble every bell
+    any = true;
+    const stone = room.things.find(t => t.ch === 'O');
+    if (!stone || !touched(st.cover, stone.tx, stone.ty, 3)) return false;
+    for (const b of room.things.filter(t => t.ch === 'V')) if (!bubbleable(nodes, b.tx, b.ty)) return false;
+  }
+  return any;
 }
 
 function goalThing(goal) {
@@ -332,7 +404,7 @@ function runStage(stage, mapRoom) {
   if (!th) { fail(`goal "${stage.goal}" is not placed in the world`); return { out, failures }; }
 
   const startRoom = W.roomAtPx(start.x + 10, start.y + 12);
-  const res = exploreWithGates([start], ab, startRoom ? startRoom.zone : 0);
+  const res = exploreWithGates([start], ab, stage.i === 0 ? null : startRoom);
   out.push(`  explored ${res.nodes.size} standing spots (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
   const keys = [];
   for (const n of res.nodes.values()) {
@@ -353,6 +425,12 @@ function runStage(stage, mapRoom) {
     fail(`${stuck.length} softlock spot(s) — goal unreachable from:`);
     for (const n of stuck.slice(0, 12)) out.push('      ' + where(n));
   } else pass('no softlocks: every reachable spot can still reach the goal');
+
+  // Every puzzle / boss gate the kitten can walk up to (in this stage's zones) must open
+  const goalRoom = W.roomAtTile(th.tx, th.ty);
+  const stuckGates = W.rooms.filter(r => r.grid.some(row => row.includes('G')) && roomTouched(res.cover, r) && r.zone <= goalRoom.zone && (!startRoom || r.zone >= startRoom.zone));
+  if (stuckGates.length) fail('gate(s) reached but never opened: ' + stuckGates.map(r => r.id).join(', '));
+  else pass('every boss and puzzle gate along the way opens');
 
   // Gates: rooms marked `needs: <power>` must stay out of reach without it
   const leaks = W.rooms.filter(r => r.def.needs && !stage.have.includes(r.def.needs) && roomTouched(res.cover, r));
@@ -377,15 +455,21 @@ function runStage(stage, mapRoom) {
         const at = `in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`;
         if ('*TBnfy&'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
         if ('bc'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 4)) missing.push(`critter ${at}`);
+        if ('PdAkZVO'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 1)) missing.push(`puzzle piece ${t.ch} ${at}`);
+        if ('QK'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 3)) missing.push(`boss ${at}`);
         if (t.ch === 'o' && !bubbleable(res.nodes, t.tx, t.ty)) missing.push(`bud ${at} can't be bubbled`);
       }
     }
     const unvisited = W.rooms.filter(r => !roomTouched(res.cover, r));
     if (unvisited.length) fail('rooms never entered: ' + unvisited.map(r => r.id).join(', '));
     if (missing.length) { fail(`${missing.length} collectible(s)/landmark(s) out of reach:`); missing.forEach(m => out.push('      ' + m)); }
-    else pass('every sparkle, toy, bench, flower, firefly, critter and family member is reachable');
+    else pass('every sparkle, toy, bench, flower, firefly, critter, family member, boss and puzzle piece is reachable');
+    const shut = W.rooms.filter(r => r.grid.some(row => row.includes('G')));
+    if (shut.length) fail('gates that never opened: ' + shut.map(r => r.id).join(', '));
+    else pass('every gate can be opened (all bosses cheered up, all puzzles solvable)');
     out.push(`  (${W.rooms.length} rooms · ${W.findThings('*').length} sparkles · ${W.findThings('b').length + W.findThings('c').length} gloomy critters · ` +
-      `${W.findThings('T').length} toys · ${W.findThings('&').length} family members · ${W.findThings('B').length} benches)`);
+      `${W.findThings('T').length} toys · ${W.findThings('&').length} family members · ${W.findThings('B').length} benches · ` +
+      `${W.findThings('Q').length + W.findThings('K').length} bosses · ${W.rooms.filter(r => r.things.some(t => 'PAZV'.includes(t.ch))).length} puzzles)`);
 
     if (mapRoom) {
       const r = W.byId[mapRoom];

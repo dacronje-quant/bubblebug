@@ -8,7 +8,8 @@
 //                 centred on your kitten
 //  Pictures only: each room in its biome colour, a gold star when all its
 //  sparkles are found, a lantern dot for benches, the elder's gift badge,
-//  a cat face where you found family, a toy where you found a toy, dotted
+//  a cat face where you found family, a toy where you found a toy, each
+//  boss (under a rain-cloud until cheered up, then with a heart), dotted
 //  lines between fairy-ring twins, and your kitten's face where you are.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
@@ -28,6 +29,24 @@
     G().circle(-2.5, -1, 1.1, c); c.fill(); G().circle(2.5, -1, 1.1, c); c.fill();
     c.fillStyle = '#ff9fb0'; G().circle(0, 1.5, 0.9, c); c.fill();
     c.restore();
+  }
+
+  // A tiny boss portrait: grey under a rain-cloud until cheered up, then
+  // smiling with a heart
+  function bossMark(c, kind, x, y, s, happy, t) {
+    BB.BossArt.draw(c, kind, x, y, 0.42 * s, { t, mood: happy ? 0 : 1, facing: 1, pose: happy ? 'happy' : 'sulk', blink: 0 });
+    const hy = y - 22 * s;
+    if (happy) {
+      c.fillStyle = '#ff6f9f'; G().heart(x, hy + Math.sin(t * 0.08) * 1.5 * s, 7 * s, c); c.fill();
+    } else {
+      c.fillStyle = 'rgba(150,156,184,0.95)';
+      c.beginPath();
+      c.arc(x - 4 * s, hy + 1 * s, 3.6 * s, 0, TAU); c.arc(x, hy - 1.5 * s, 4.6 * s, 0, TAU); c.arc(x + 4 * s, hy + 1 * s, 3.6 * s, 0, TAU);
+      c.fill();
+      const k = (t * 0.05) % 1;
+      c.fillStyle = `rgba(140,190,255,${1 - k})`;
+      G().ellipse(x, hy + 5 * s + k * 5 * s, 1 * s, 1.6 * s, 0, c); c.fill();
+    }
   }
 
   function draw(c, mode, t) {
@@ -88,6 +107,8 @@
         catFace(c, x + w / 2 + (r.def.elder ? 14 * s : 0), y + h / 2, 0.9 * s, m ? m.fur : '#fff', m ? (m.pointDark || m.fur) : '#ccc');
       }
       if (r.def.toy && save.toys[r.def.toy]) BB.HUD.toyIcon(c, r.def.toy, x + 8 * s, y + 8 * s, 0.55 * s, t);
+      const boss = r.def.boss || (r.things.some(th => th.ch === 'K') ? 'king' : null);
+      if (boss) bossMark(c, boss, x + w / 2, y + h / 2 + 4 * s, s, !!(save.bosses && save.bosses[r.id]), t);
     }
 
     // dotted links between fairy-ring twins you've seen both ends of

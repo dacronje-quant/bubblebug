@@ -259,8 +259,10 @@
       c.beginPath(); c.moveTo(bx - 2.2, -4.2); c.lineTo(tipx + (ex - tipx) * 0.12, tipy + 3); c.lineTo(ex - 1.8, -5.6); c.closePath(); c.fill();
     };
     const twitch = Math.sin(earT * Math.PI) * 2.2;
-    ear(-5, -6.5, -15.5, 0.5, true);
-    ear(2.5, 7 + twitch * 0.4, -15.8 + twitch, 8.8, false);
+    // sad kittens' ears droop out to the sides
+    const sad = BB.clamp(pose.sad || 0, 0, 1);
+    ear(-5, -6.5 - sad * 4, -15.5 + sad * 6.5, 0.5, true);
+    ear(2.5, 7 + twitch * 0.4 + sad * 4, -15.8 + twitch + sad * 6.5, 8.8, false);
 
     // Head base
     c.fillStyle = cat.fur; c.strokeStyle = cat.outline; c.lineWidth = 1.3;
@@ -338,6 +340,36 @@
     };
     eye(-0.6, -0.6, 2.6, 3.3);
     eye(6.2, -0.6, 3.0, 3.7);
+    if (sad > 0.05 && !pose.happy && pose.mode !== 'sleep') {
+      // heavy, worried eyelids and brows
+      c.fillStyle = cat.pattern === 'points' ? BB.mix(cat.point, cat.fur, 0.3) : cat.fur;
+      for (const [ex, erx, ery, side] of [[-0.6, 2.6, 3.3, -1], [6.2, 3.0, 3.7, 1]]) {
+        c.save();
+        G.ellipse(ex + 0.25, -0.6, erx + 0.6, ery + 0.6, 0, c); c.clip();
+        c.beginPath();
+        c.moveTo(ex - erx - 1, -0.6 - ery - 1);
+        c.lineTo(ex + erx + 1, -0.6 - ery - 1);
+        c.lineTo(ex + erx + 1, -0.6 - ery + ery * 1.1 * sad + (side > 0 ? 1.2 : -0.4) * sad);
+        c.lineTo(ex - erx - 1, -0.6 - ery + ery * 1.1 * sad + (side > 0 ? -0.4 : 1.2) * sad);
+        c.closePath(); c.fill();
+        c.restore();
+        c.strokeStyle = cat.outline; c.lineWidth = 0.9; c.lineCap = 'round';
+        c.beginPath();
+        c.moveTo(ex - erx * 0.9, -0.6 - ery - 0.6 - (side > 0 ? 0 : sad * 1.2));
+        c.lineTo(ex + erx * 0.9, -0.6 - ery - 0.6 - (side > 0 ? sad * 1.2 : 0));
+        c.stroke();
+      }
+    }
+    if (pose.cry) {
+      // big wobbly tears rolling down
+      for (let i = 0; i < 2; i++) {
+        const k = ((t * 0.035 + i * 0.5) % 1);
+        c.fillStyle = `rgba(150,210,255,${0.95 - k * 0.6})`;
+        c.beginPath();
+        const tx = 6.8 + i * 1.2, ty = 2.5 + k * 9;
+        c.moveTo(tx, ty - 2.2); c.quadraticCurveTo(tx + 1.4, ty, tx, ty + 1.3); c.quadraticCurveTo(tx - 1.4, ty, tx, ty - 2.2); c.fill();
+      }
+    }
 
     // Blush
     c.fillStyle = BB.rgba(cat.blush, 0.45);
@@ -357,6 +389,12 @@
       c.fillStyle = '#b8405a'; G.circle(6.8, 5.6, 1.1, c); c.fill();
     } else if (pose.surprised) {
       c.fillStyle = '#b8405a'; G.ellipse(4.8, 6, 1.2, 1.5, 0, c); c.fill();
+    } else if (sad > 0.35 && !pose.happy) {
+      // a wobbly little frown
+      c.beginPath();
+      c.moveTo(4.8, 3.7); c.lineTo(4.8, 4.5);
+      c.moveTo(3.2, 6.2 + Math.sin(t * 0.3) * 0.2 * sad); c.quadraticCurveTo(4.8, 4.4, 6.4, 6.2);
+      c.stroke();
     } else {
       c.beginPath();
       c.moveTo(4.8, 3.7); c.lineTo(4.8, 4.6);

@@ -767,7 +767,7 @@
     for (const [gx, gy, col] of [[-11, -35, '#ff7b9c'], [0, -38, '#7cc8ff'], [11, -35, '#8fe388']]) { c.fillStyle = col; G.circle(gx, gy, 2, c); c.fill(); }
     face(c, 0, -12, 1.05, mood, Object.assign({ lid: '#d8a850' }, st));
     c.restore();
-    if (mood > 0.02) moodCloud(c, x, y - 62 * s, mood, st.t, 1.8);
+    if (mood > 0.02 && !st.noCloud) moodCloud(c, x, y - 62 * s, mood, st.t, 1.8);
     if (st.rainbow) rainbow(c, x, y - 58 * s, st.rainbow, 2);
   }
 

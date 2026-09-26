@@ -337,6 +337,117 @@
         inst.bell(midi(79 + PENTA[(i * 2) % 8]), t + i * 0.18 + 0.1, 0.06, sfxBus);
       }
     },
+
+    // ──── Feelings ────
+    // a gloomy bump: a small, sad little "mew" and a soft thump
+    ouch(cat) {
+      if (!ctx) return;
+      const base = (BB.CATS && BB.CATS[cat] && BB.CATS[cat].voice) || 560;
+      tone({ type: 'triangle', freq: base * 1.15, to: base * 0.7, glide: 0.24, dur: 0.3, vol: 0.12, vib: [11, 18] });
+      noise({ dur: 0.1, vol: 0.06, freq: 400, q: 0.8, ftype: 'lowpass' });
+    },
+    // a sun comes back: two bright rising notes
+    cheerUp() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [79, 84, 88].forEach((m, i) => inst.musicbox(midi(m), t + i * 0.06, 0.1, sfxBus));
+    },
+    // too sad: a gentle falling "aww", never a buzzer
+    tooSad(cat) {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [76, 72, 69, 64].forEach((m, i) => inst.musicbox(midi(m), t + 0.1 + i * 0.2, 0.11, sfxBus));
+      const base = (BB.CATS && BB.CATS[cat] && BB.CATS[cat].voice) || 560;
+      tone({ type: 'triangle', freq: base, to: base * 0.6, glide: 0.6, dur: 0.7, vol: 0.09, vib: [7, 14], delay: 0.05 });
+    },
+    // floating back to the save point
+    respawn() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [60, 64, 67, 72, 76].forEach((m, i) => inst.harp(midi(m), t + i * 0.07, 0.11, sfxBus));
+      noise({ dur: 0.6, vol: 0.03, freq: 3000, to: 9000, q: 0.5, verb: 0.5 });
+    },
+    checkpoint() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      inst.bell(midi(84), t, 0.05, sfxBus); inst.bell(midi(91), t + 0.08, 0.04, sfxBus);
+    },
+
+    // ──── Puzzles ────
+    padPress(n) {
+      noise({ dur: 0.06, vol: 0.07, freq: 900, q: 1.2 });
+      if (ctx) inst.bell(midi(72 + PENTA[Math.min(n, 8)]), ctx.currentTime + 0.03, 0.12, sfxBus);
+    },
+    gateDing() { if (ctx) inst.bell(midi(88), ctx.currentTime, 0.09, sfxBus); },
+    peep() { tone({ freq: 2100, to: 2700, glide: 0.05, dur: 0.07, vol: 0.05 }); tone({ freq: 2300, to: 2900, delay: 0.09, dur: 0.06, vol: 0.04 }); },
+    babyHome(n) {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [0, 1, 2].forEach(i => tone({ freq: 1800 + n * 200 + i * 180, to: 2400 + n * 200 + i * 180, at: t + i * 0.07, dur: 0.07, vol: 0.05 }));
+      inst.musicbox(midi(76 + PENTA[Math.min(n, 6)]), t + 0.2, 0.1, sfxBus);
+    },
+    keyGet() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [88, 91, 96].forEach((m, i) => inst.bell(midi(m), t + i * 0.05, 0.06, sfxBus));
+    },
+    unlockDoor() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      noise({ dur: 0.12, vol: 0.1, freq: 500, q: 1, ftype: 'lowpass' });
+      tone({ type: 'triangle', freq: 300, to: 200, delay: 0.08, dur: 0.1, vol: 0.08 });
+      [72, 76, 79, 84].forEach((m, i) => inst.bell(midi(m), t + 0.15 + i * 0.08, 0.1, sfxBus));
+    },
+    bell(m) { if (ctx) { inst.bell(midi(m), ctx.currentTime, 0.16, sfxBus, 0.7); inst.bell(midi(m + 12), ctx.currentTime, 0.04, sfxBus, 0.7); } },
+    birdSong() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [0, 0.1, 0.2].forEach((d, i) => tone({ freq: 2200 + i * 300, to: 2900 + i * 200, at: t + d, dur: 0.08, vol: 0.05, vib: [30, 60] }));
+    },
+    wobble() { tone({ type: 'triangle', freq: 330, to: 220, glide: 0.35, dur: 0.4, vol: 0.1, vib: [8, 30] }); },
+    songDone() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [72, 76, 79, 84, 88].forEach((m, i) => inst.bell(midi(m), t + i * 0.08, 0.1, sfxBus));
+    },
+
+    // ──── Bosses ────
+    bossGrumble() {
+      // a big grumpy "hrrmph" — silly, not scary
+      tone({ type: 'sawtooth', freq: 110, to: 80, glide: 0.5, dur: 0.6, vol: 0.08, vib: [9, 8], filter: { freq: 700 } });
+      tone({ type: 'triangle', freq: 165, to: 120, glide: 0.4, delay: 0.05, dur: 0.5, vol: 0.07 });
+    },
+    bossAttack() { noise({ dur: 0.3, vol: 0.05, freq: 500, to: 1800, q: 0.8 }); },
+    bossSniffle() {
+      noise({ dur: 0.08, vol: 0.05, freq: 5000, q: 2, ftype: 'highpass' });
+      noise({ dur: 0.08, vol: 0.05, freq: 5000, q: 2, ftype: 'highpass', delay: 0.16 });
+      tone({ type: 'triangle', freq: 520, to: 360, glide: 0.4, delay: 0.3, dur: 0.5, vol: 0.07, vib: [7, 16] });
+    },
+    sniff() { noise({ dur: 0.07, vol: 0.035, freq: 5500, q: 2, ftype: 'highpass' }); },
+    bossScrape() { noise({ dur: 0.1, vol: 0.05, freq: 900, q: 0.6 }); },
+    bossDash() { noise({ dur: 0.5, vol: 0.06, freq: 400, to: 1500, q: 0.7 }); tone({ type: 'triangle', freq: 180, to: 120, dur: 0.4, vol: 0.06 }); },
+    bossBonk() {
+      tone({ freq: 150, to: 55, glide: 0.12, dur: 0.22, vol: 0.14 });
+      tone({ type: 'triangle', freq: 260, to: 520, glide: 0.2, delay: 0.05, dur: 0.25, vol: 0.06, vib: [20, 30] });
+    },
+    bossHop() { tone({ freq: 150, to: 420, glide: 0.25, dur: 0.3, vol: 0.1, vib: [15, 20] }); },
+    bossWave() { noise({ dur: 0.4, vol: 0.05, freq: 900, to: 400, q: 0.7, verb: 0.2 }); },
+    bossLob() { tone({ freq: 400, to: 900, glide: 0.08, dur: 0.12, vol: 0.07 }); },
+    deflect() { tone({ type: 'triangle', freq: 700, to: 500, dur: 0.1, vol: 0.06 }); },
+    bossCloudPop() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      tone({ freq: 1600, to: 500, glide: 0.08, dur: 0.12, vol: 0.14 });
+      [72, 76, 79, 84].forEach(m => inst.bell(midi(m), t + 0.08, 0.08, sfxBus));
+      noise({ at: t + 0.05, dur: 0.8, vol: 0.04, freq: 5000, to: 11000, q: 0.5, verb: 0.5 });
+    },
+    bossHappy() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [60, 64, 67, 72, 76, 79, 84, 88].forEach((m, i) => inst.musicbox(midi(m), t + i * 0.08, 0.13, sfxBus));
+      inst.pad([midi(60), midi(67), midi(76), midi(84)], t + 0.3, 2.8, 0.1, sfxBus, 1800);
+      for (let i = 0; i < 5; i++) noise({ at: t + 0.7 + i * 0.2, dur: 0.25, vol: 0.05, freq: 3000, to: 8000, q: 0.5 });
+    },
   };
 
   BB.Audio = {
