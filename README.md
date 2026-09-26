@@ -11,7 +11,7 @@ A cozy, non-violent platformer for little explorers (ages 3–7). Choose your ki
 
 ## ▶ How to play
 
-**Windows:** double-click **`Play Bubblebug.bat`** (or double-click `index.html`).
+**Windows:** double-click **`Play Bubblebug.exe`** (or double-click `index.html`).
 **Mac / Linux / tablets:** open `index.html` in Chrome, Edge, Safari or Firefox.
 **Online:** enable GitHub Pages (Settings → Pages → deploy from `main`, `/ (root)`).
 
@@ -86,7 +86,8 @@ Plain HTML5 Canvas and Web Audio in classic `<script>` files. ES modules are avo
 
 ```
 index.html              entry point (script load order = dependency order)
-Play Bubblebug.bat      Windows one-click launcher
+Play Bubblebug.exe      Windows one-click launcher (with Marshmallow & Pip icon)
+icon.png                Game icon & web favicon
 css/style.css           letterboxing, touch buttons, pause button
 js/core/                bb.js (namespace & math) · config.js (all tuning) · input.js (keys/pads/touch)
                         audio.js (synth voices & SFX) · music.js (adaptive layered score) · save.js
