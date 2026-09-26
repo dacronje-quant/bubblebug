@@ -19,8 +19,8 @@
 //       baby walked home, the key carried to its keyhole, every bell rung).
 //  With every power it also checks you can always travel home to the start
 //  (for backtracking to secrets), that every gate can be opened, and that
-//  every collectible, critter, boss, puzzle piece, snack and hidden family
-//  member is reachable. (A too-sad pop-back only returns the kitten to a spot it
+//  every collectible, critter, boss, puzzle piece, snack, cat trick and
+//  hidden family member is reachable. (A too-sad pop-back only returns the kitten to a spot it
 //  already stood on, so it can't create a softlock.)
 //
 //  Stages start at the previous elder, so they're independent and run in
@@ -453,7 +453,7 @@ function runStage(stage, mapRoom) {
     for (const room of W.rooms) {
       for (const t of room.things) {
         const at = `in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`;
-        if ('*TBnfy&eW'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
+        if ('*TBnfy&eWj'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
         if ('bc'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 4)) missing.push(`critter ${at}`);
         if ('PdAkZVO'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 1)) missing.push(`puzzle piece ${t.ch} ${at}`);
         if ('QK'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 3)) missing.push(`boss ${at}`);
@@ -463,14 +463,14 @@ function runStage(stage, mapRoom) {
     const unvisited = W.rooms.filter(r => !roomTouched(res.cover, r));
     if (unvisited.length) fail('rooms never entered: ' + unvisited.map(r => r.id).join(', '));
     if (missing.length) { fail(`${missing.length} collectible(s)/landmark(s) out of reach:`); missing.forEach(m => out.push('      ' + m)); }
-    else pass('every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece and snack is reachable');
+    else pass('every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack and cat trick is reachable');
     const shut = W.rooms.filter(r => r.grid.some(row => row.includes('G')));
     if (shut.length) fail('gates that never opened: ' + shut.map(r => r.id).join(', '));
     else pass('every gate can be opened (all bosses cheered up, all puzzles solvable)');
     out.push(`  (${W.rooms.length} rooms · ${W.findThings('*').length} sparkles · ${W.findThings('b').length + W.findThings('c').length} gloomy critters · ` +
       `${W.findThings('T').length} toys · ${W.findThings('&').length} family members · ${W.findThings('B').length} benches · ` +
       `${W.findThings('Q').length + W.findThings('K').length} bosses · ${W.rooms.filter(r => r.things.some(t => 'PAZV'.includes(t.ch))).length} puzzles · ` +
-      `${W.findThings('e').length} treats · ${W.findThings('W').length} food bowls)`);
+      `${W.findThings('e').length} treats · ${W.findThings('W').length} food bowls · ${W.findThings('j').length} cat tricks)`);
 
     if (mapRoom) {
       const r = W.byId[mapRoom];

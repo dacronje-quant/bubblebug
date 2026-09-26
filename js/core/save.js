@@ -57,6 +57,7 @@
       babies: {},                           // lost baby key → 1 (home with mama)
       keys: {},                             // keyhole key → 1 (unlocked)
       songs: {},                            // room id → 1 (song bells played)
+      gestures: {},                         // cat trick id → 1 (learned)
       secrets: {},                          // shy-wall room → 1
       visited: {},                          // room id → 1
       finale: false,

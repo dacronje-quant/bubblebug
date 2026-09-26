@@ -389,6 +389,19 @@
       c.fillStyle = BB.rgba(cat.pattern === 'points' ? cat.fur : cat.belly, 0.95);
       c.lineWidth = 0.7;
       for (const cx of [1.8, 7.8]) { G.circle(cx, 4.6 + chew * 0.3, 1.9, c); c.fill(); c.stroke(); }
+    } else if (pose.blep > 0.05) {
+      // blep: the tip of a pink tongue poking out
+      c.beginPath();
+      c.moveTo(4.8, 3.7); c.lineTo(4.8, 4.6);
+      c.arc(3.8, 4.6, 1, 0, Math.PI * 0.9);
+      c.moveTo(4.8, 4.6); c.arc(5.8, 4.6, 1, Math.PI, Math.PI * 0.1, true);
+      c.stroke();
+      c.fillStyle = '#ff8fa8';
+      c.beginPath();
+      c.moveTo(3.7, 5.2); c.lineTo(5.9, 5.2);
+      c.quadraticCurveTo(6, 5.2 + pose.blep * 2.4, 4.8, 5.4 + pose.blep * 2.4);
+      c.quadraticCurveTo(3.6, 5.2 + pose.blep * 2.4, 3.7, 5.2);
+      c.fill(); c.stroke();
     } else if (munch > 0.02) {
       // …and a happy lick of the lips
       c.beginPath();
@@ -502,6 +515,7 @@
 
     if (mode === 'sit') drawSitting(c, cat, pose);
     else if (mode === 'sleep') drawSleeping(c, cat, pose);
+    else if (mode === 'loaf') drawLoaf(c, cat, pose);
     else drawStanding(c, cat, pose, mode);
 
     c.restore();
@@ -515,6 +529,8 @@
     let rot = 0;
     if (mode === 'air') rot = BB.clamp((pose.vy || 0) * 0.035, -0.3, 0.3);
     if (mode === 'float' || mode === 'rescue') rot = -0.1;
+    const stretch = pose.stretch || 0;
+    rot += stretch * 0.3;
     const wig = pose.wiggle ? Math.sin(t * 0.9) * 1.6 : 0; // Phoebe's pounce wiggle
 
     c.save();
@@ -535,6 +551,12 @@
     } else if (mode === 'float' || mode === 'rescue') {
       aBF = 0.15; aBN = -0.1; aFF = 3.0; aFN = 2.8; len = 8;
     } else { aBF = 0.06; aBN = -0.04; aFF = 0.04; aFN = -0.06; }
+    if (stretch > 0) {
+      // a long, lazy stretch: front paws reach way out, back legs push up tall
+      aFF = BB.lerp(aFF, -1.2, stretch); aFN = BB.lerp(aFN, -1.05, stretch);
+      aBF = BB.lerp(aBF, 0.2, stretch); aBN = BB.lerp(aBN, 0.1, stretch);
+      len += stretch * 1.8;
+    }
 
     // tail + far legs behind the body
     drawTail(c, cat, pose.tail, bx - 10 + wig * 0.4, by - 1, pose);
@@ -565,10 +587,15 @@
     drawBody(c, cat, -1, -11 + breathe, 8, 10.5, 0.15);
     // front legs + paws together (Phoebe's lifted paw for grooming)
     const legC = cat.belly;
-    const lick = pose.lick || 0;
-    limb(c, 1.5, -8, 7.5, 0.02, 4, legC, outline, cat.paw);
-    limb(c, 5, -8, 7.5 - lick * 3, -0.05 - lick * 2.3, 4.2, legC, outline, cat.paw);
+    const lick = pose.lick || 0, wave = pose.wave || 0, knead = pose.knead || 0;
+    // making biscuits: the two front paws take turns pressing down
+    const kn = Math.sin(t * 0.28);
+    const k1 = knead * Math.max(0, kn), k2 = knead * Math.max(0, -kn);
+    limb(c, 1.5, -8, 7.5 - k1 * 2.2, 0.02 - k1 * 0.6, 4, legC, outline, cat.paw);
+    if (wave <= 0) limb(c, 5, -8, 7.5 - lick * 3 - k2 * 2.2, -0.05 - lick * 2.3 - k2 * 0.6, 4.2, legC, outline, cat.paw);
     drawHead(c, cat, 3, -22 + breathe + lick * 1.5, pose);
+    // hello! the near paw comes up in front of the chin and waves side to side
+    if (wave > 0) limb(c, 5, -9, 7.5 + wave * 3.5, BB.lerp(-0.05, 2.25 + Math.sin(t * 0.45) * 0.35, wave), 4.2, legC, outline, cat.paw);
   }
 
   function drawSleeping(c, cat, pose) {
@@ -579,6 +606,18 @@
     c.fillStyle = cat.paw; c.strokeStyle = cat.outline; c.lineWidth = 0.9;
     G.ellipse(9, -1, 3, 2, 0, c); c.fill(); c.stroke();
     drawHead(c, cat, 8, -10.5, Object.assign({}, pose, { tilt: 0.25 }));
+  }
+
+  function drawLoaf(c, cat, pose) {
+    const t = pose.t || 0;
+    const breathe = Math.sin(t * 0.05) * 0.5;
+    drawTail(c, cat, pose.tail, -11, -3, pose);
+    drawBody(c, cat, 0, -7.2 - breathe * 0.4, 12, 7.4 + breathe * 0.3, 0);
+    // two tucked-in paw tips peeking out at the front
+    c.fillStyle = cat.paw; c.strokeStyle = cat.outline; c.lineWidth = 0.9;
+    G.ellipse(8.5, -0.8, 2.6, 1.6, 0, c); c.fill(); c.stroke();
+    G.ellipse(5, -0.6, 2.4, 1.5, 0, c); c.fill(); c.stroke();
+    drawHead(c, cat, 7, -15 + breathe * 0.5, pose);
   }
 
   // Dandelion parachute(s) for gliding and the gentle rescue float

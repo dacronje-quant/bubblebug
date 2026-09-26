@@ -35,12 +35,13 @@
 //   V  song bell;  O  the singing stone that shows the tune to repeat
 //   cat food (regrows; in Hard it cheers you back up):
 //   e  a fishy treat (+1 happy sun);  W  a full food bowl (every sun)
+//   j  a golden paw bubble: the zone's cat trick (do it with ▼)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
   const T = BB.CFG.TILE;
 
-  const ENTITY_CHARS = '*bcBEKfRLUDTynoFS&QPdAkZVOeW';
+  const ENTITY_CHARS = '*bcBEKfRLUDTynoFS&QPdAkZVOeWj';
   const DEFS = [];
 
   // Rooms register themselves from js/world/rooms/*.js

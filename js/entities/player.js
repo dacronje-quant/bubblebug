@@ -26,6 +26,7 @@
       blink: 0, blinkT: 90, idleT: 0,
       yawn: 0, yawnT: 0, ear: 0, earT: 0, lick: 0, lickT: 0, wiggleT: 0,
       happyT: 0, stepT: 0, munchT: 0, munchLen: 1,
+      gesture: null,            // a cat trick in progress { id, t, len }
       bubbleCd: 0,
       rescue: null,             // { fx, fy, tx, ty, t }
       benchT: 0,
@@ -51,6 +52,8 @@
 
     const inp = input.physicsInput();
     const anyInput = inp.left || inp.right || inp.jump || input.pressed.bubble;
+    // a cat trick in progress (any real input stops it)
+    if (pl.gesture) BB.Gestures.tick(pl, { left: inp.left, right: inp.right, jumpPressed: inp.jumpPressed, bubblePressed: input.pressed.bubble });
 
     if (pl.state === 'bench') {
       pl.benchT++;
@@ -185,6 +188,7 @@
     if (pl.state === 'bench') { p.mode = 'sleep'; return p; }
     if (pl.state === 'gift') { p.mode = 'sit'; p.happy = true; p.look = -1; return p; }
     if (pl.state === 'party') { p.mode = (pl.t % 60) < 30 ? 'stand' : 'air'; p.happy = true; return p; }
+    if (pl.gesture && BB.Gestures.pose(pl.gesture.id, pl.gesture.t, b.grounded, p)) return p;
     if (b.climbing) { p.mode = 'climb'; return p; }
     if (b.inWater) { p.mode = 'run'; p.swim = true; p.phase = pl.t * 0.15; return p; }
     if (!b.grounded) { p.mode = b.floating ? 'float' : 'air'; return p; }
@@ -205,7 +209,9 @@
       c.fillStyle = 'rgba(20,10,40,0.18)';
       G().ellipse(x, y + 1, 13, 3, 0, c); c.fill();
     }
-    const face = pl.state === 'bench' ? 1 : b.facing;
+    // tricks can spin the whole kitten (a roly-poly roll, chasing its tail)
+    const tf = pl.gesture && pl.state === 'play' ? BB.Gestures.transform(pl.gesture.id, pl.gesture.t) : null;
+    const face = (pl.state === 'bench' ? 1 : b.facing) * (tf ? tf.flip : 1);
     const drawX = b.climbing ? x + b.climbing * 2 : x;
     // drawn a touch larger than the collision box so little eyes can find it
     const ps = pose(pl);
@@ -221,7 +227,9 @@
         c.restore();
       }
     }
+    if (tf && tf.rot) { c.save(); c.translate(drawX, y - 11); c.rotate(tf.rot * face); c.translate(-drawX, -(y - 11)); }
     BB.Kittens.draw(c, pl.cat, ps, drawX, y + (pl.state === 'bench' ? -6 : 0), 1.2, face);
+    if (tf && tf.rot) c.restore();
     // the Sea Turtle's shimmering bubble helmet
     if (ps.swim) G().bubble(drawX + face * 10, y - 23, 15, '#bff4ff', 0.75, c);
     c.globalAlpha = 1;

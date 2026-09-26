@@ -14,7 +14,7 @@
   // ──── Button icons (match the touch buttons exactly) ────
   function buttonIcon(c, kind, x, y, s = 1, lit = 0) {
     c.save(); c.translate(x, y); c.scale(s, s);
-    const col = { jump: '#5fd48a', bubble: '#5fb8ff', left: '#9a8fc8', right: '#9a8fc8' }[kind];
+    const col = { jump: '#5fd48a', bubble: '#5fb8ff', left: '#9a8fc8', right: '#9a8fc8', trick: '#ffb347' }[kind];
     const r = 18 * (1 + lit * 0.18);
     G.drawGlow(0, 0, r * 2, col, 0.3 + lit * 0.5, c);
     c.fillStyle = BB.rgba(col, 0.9); c.strokeStyle = '#ffffff'; c.lineWidth = 3;
@@ -24,6 +24,7 @@
     else if (kind === 'bubble') { G.bubble(-2, 2, 8, '#ffffff', 1, c); G.bubble(7, -7, 4, '#ffffff', 1, c); }
     else if (kind === 'right') { c.beginPath(); c.moveTo(-4, -8); c.lineTo(5, 0); c.lineTo(-4, 8); c.stroke(); }
     else if (kind === 'left') { c.beginPath(); c.moveTo(4, -8); c.lineTo(-5, 0); c.lineTo(4, 8); c.stroke(); }
+    else if (kind === 'trick') BB.Gestures.drawPaw(c, 0, 1, 0.85, '#ffffff', '#ffffff');
     c.restore();
   }
 
@@ -235,7 +236,7 @@
 
   // ──── Main HUD ────
   const bounce = { stars: 0, hearts: 0 };
-  let last = { stars: -1, hearts: -1, family: -1 };
+  let last = { stars: -1, hearts: -1, family: -1, tricks: -1 };
 
   function drawHUD(c, s, t) {
     if (last.stars >= 0 && s.stars > last.stars) bounce.stars = 1;
@@ -274,6 +275,18 @@
       G.text(String(fam), x0 + 58, 32, 22 * (1 + bounce.family * 0.2), '#fff1dc', 'rgba(40,20,60,0.6)');
     }
     last.family = fam;
+
+    // cat tricks learned: a golden paw and a count
+    const tricks = s.tricks || 0;
+    if (tricks > 0) {
+      if (last.tricks >= 0 && tricks > last.tricks) bounce.tricks = 1;
+      bounce.tricks = (bounce.tricks || 0) * 0.9;
+      const px = x0 + (fam > 0 ? 90 : 0);
+      pill(px, 82);
+      BB.Gestures.drawPaw(c, px + 22, 32, 0.95 * (1 + bounce.tricks * 0.5), '#ffd84a', '#b8860b');
+      G.text(String(tricks), px + 58, 32, 22 * (1 + bounce.tricks * 0.2), '#fff4c2', 'rgba(40,20,60,0.6)');
+    }
+    last.tricks = tricks;
 
     // abilities, then toys, along the second row
     let x = 26;

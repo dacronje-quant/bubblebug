@@ -382,6 +382,29 @@
       if (big) [79, 84, 88].forEach((m, i) => inst.musicbox(midi(m), ctx.currentTime + 0.55 + i * 0.07, 0.08, sfxBus));
     },
 
+    // ──── Cat tricks ────
+    // a trick found: a sparkly little "ta-da!"
+    trick() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [76, 79, 83, 88].forEach((m, i) => inst.musicbox(midi(m), t + i * 0.08, 0.12, sfxBus));
+      inst.bell(midi(95), t + 0.36, 0.06, sfxBus);
+    },
+    // ah… ah… achoo! (a tiny kitten sneeze)
+    sneeze(cat) {
+      const hi = cat === 'marshmallow' ? 1.1 : 1;
+      noise({ dur: 0.16, vol: 0.09, freq: 3200 * hi, to: 1400, q: 1.2 });
+      tone({ type: 'triangle', freq: 900 * hi, to: 1500 * hi, glide: 0.05, dur: 0.08, vol: 0.06 });
+    },
+    // a soft little lick
+    lick() { noise({ dur: 0.05, vol: 0.035, freq: 2600, q: 3 }); },
+    // the happy "mrrrow" at the end of a big stretch
+    mrrow(cat) {
+      if (!ctx) return;
+      const base = (BB.CATS && BB.CATS[cat] && BB.CATS[cat].voice) || 560;
+      tone({ type: 'triangle', freq: base * 0.8, to: base * 1.15, glide: 0.35, dur: 0.5, vol: 0.09, vib: [7, 16] });
+    },
+
     // ──── Puzzles ────
     padPress(n) {
       noise({ dur: 0.06, vol: 0.07, freq: 900, q: 1.2 });

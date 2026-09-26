@@ -1,6 +1,6 @@
 # Bubble Paws: The Rainbow Kingdom 🫧🐾
 
-A cozy, non-violent platformer for little explorers (ages 3–7). Choose your kitten, then blow friendship bubbles to cheer up gloomy animals (and a few bugs) across twelve hand-built biomes. At the end of every zone waits a big, very sad boss: dodge their slow, simple "sad attacks", then bubble them happy to open the way on. Solve picture puzzles made for five-year-olds, snack on fishy treats, and find the kittens' twelve lost family members along the way. A grown-up picks how brave the adventure is: on **Easy**, bumping into sad things just boings the kitten back; on **Hard**, it makes the kitten a little sadder, and a kitten who gets too sad pops back at the latest save point. There's no game over, and nothing in the game needs to be read. A full adventure is a long one, so plan on an hour or more for a young player.
+A cozy, non-violent platformer for little explorers (ages 3–7). Choose your kitten, then blow friendship bubbles to cheer up gloomy animals (and a few bugs) across twelve hand-built biomes. At the end of every zone waits a big, very sad boss: dodge their slow, simple "sad attacks", then bubble them happy to open the way on. Solve picture puzzles made for five-year-olds, snack on fishy treats, learn twelve hidden cat tricks, and find the kittens' twelve lost family members along the way. A grown-up picks how brave the adventure is: on **Easy**, bumping into sad things just boings the kitten back; on **Hard**, it makes the kitten a little sadder, and a kitten who gets too sad pops back at the latest save point. There's no game over, and nothing in the game needs to be read. A full adventure is a long one, so plan on an hour or more for a young player.
 
 *Formerly called **Bubblebug**. Saves from the Bubblebug version carry over automatically.*
 
@@ -26,6 +26,7 @@ There's no install, no Node.js and no build step. Everything, sound included, is
 | Blow a bubble | X, Z, J, E, Shift | B / X / bumpers / triggers | blue bubble button |
 | See-through map (keep playing) | M or Tab | Select / Back | map button, top-right |
 | Pause / home | Esc or P | Start | round pause button, top-right |
+| Do a cat trick (once you've found one) | ▼ or S | D-pad down | orange paw button (appears after the first trick) |
 
 Touch buttons appear automatically on tablets and touchscreens.
 
@@ -110,7 +111,7 @@ Marshmallow's family are Birmans and Siamese-pointed cats in cream, lilac and ch
 
 Bunnies and frogs hop, birds, bats, owls and bees flutter, fish and jellyfish swim, spiders dangle on silk, and everyone else waddles. Every friend you make comes to the rainbow party.
 
-The world has 82 interconnected rooms, 686 sparkles, 65 gloomy critters, 12 bosses, 12 picture puzzles, 70 fishy treats, 12 food bowls, 24 cozy benches, 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
+The world has 82 interconnected rooms, 686 sparkles, 65 gloomy critters, 12 bosses, 12 picture puzzles, 12 cat tricks, 70 fishy treats, 12 food bowls, 24 cozy benches, 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
 
 ### ✨ Little touches
 
@@ -131,6 +132,21 @@ On Hard:
 - **Cheering back up:** a fishy treat or making a new friend gives a sun back. A food bowl, a nap on a cozy bench, finding a family member, getting an elder's gift or cheering up a boss fills every sun again.
 
 As the suns run out, your kitten shows it: ears droop, brows tilt and the smile turns into a wobbly frown, so even a non-reader can tell when it's time to be careful.
+
+## 🐾 Cat tricks
+
+Twelve cat tricks are hidden around the kingdom, one in each zone, each inside a **golden paw bubble**. Touch one and your kitten learns the trick: a little card shows it doing the trick next to the button that does it. After that, press **▼** (S, a gamepad's D-pad down, or the orange paw button on a touchscreen) and your kitten does a trick. Each press does the next trick it knows, round and round. The tricks are just for fun; moving, jumping or blowing a bubble stops one straight away, and a paw with a count at the top shows how many you've found. Press ▼ before finding any and your kitten wonders about it in a little "?" thought bubble.
+
+| Zone | Trick | Zone | Trick |
+|---|---|---|---|
+| Sparkle Gardens | 👋 a big paw wave (and a *mew*) | Coral Lagoon | 👅 a blep: just the tip of the tongue |
+| Mushroom Meadow | 🐾 wiggle wiggle… pounce! | Sunny Dunes | 🌀 chasing its own tail |
+| Crystal Caverns | 😌 a slow blink, the way cats say "I love you" | Frosty Peaks | 🍞 a cozy bread-loaf tuck |
+| Honeycomb Hive | 🍪 making biscuits (kneading, purring) | Autumn Woods | 🧼 a paw-lick face wash |
+| Rainy Ruins | 🤧 ah… ah… achoo! | Moonlit Springs | 🙆 a big stretch and a yawn |
+| Cloud Castles | 🔄 a roly-poly roll | Starlight Sky | 💃 a hoppy happy dance |
+
+The Sparkle Gardens trick waits right on the main path, so every young player learns ▼ early. The others are tucked up high, at the tops of shafts, towers and ledges, and some are only reachable with a later power, which is a good reason to go back.
 
 ## 🐟 Cat food
 
@@ -225,7 +241,7 @@ js/engine/              physics.js (pure movement) · camera.js · particles.js
 js/render/              gfx · kittens (+ family, sad & crying poses) · critters · bossart (the 12 bosses) · tiles
                         backdrops (parallax) · lighting · fx (grass, paw prints, ripples, light shafts) · hud · mapview
 js/entities/            player · bubbles · bugs (all gloomy critters) · bosses (sad attacks & cheering up)
-                        puzzles (paw pads, lost babies, keys, song bells) · food (treats & bowls)
+                        puzzles (paw pads, lost babies, keys, song bells) · food (treats & bowls) · gestures (cat tricks)
                         things (sparkles, benches, elders, toys…)
 js/scenes/              title (Continue / New Game) · select · play (suns, save points, bosses, party) · pause (+ map)
 js/main.js              fixed 60 Hz loop, scene switching, adaptive quality
@@ -253,7 +269,7 @@ The verifier loads the real game modules and simulates hundreds of button patter
 3. every boss and puzzle gate you can walk up to opens: the boss can be reached and bubbled where it sits to sniffle, every paw pad can be stepped on, every lost baby can be walked home to Mama, the key can be carried to its keyhole, and every bell can be bubbled. Gates open mid-search as their wishes come true, and the search carries on through them;
 4. every power gate holds: rooms marked `needs:` a power can't be reached before you have it;
 5. with all powers, every spot can travel back home (free backtracking) and every gate in the kingdom can be opened;
-6. every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece and snack can be reached, and every bud can be bubbled.
+6. every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack and cat trick can be reached, and every bud can be bubbled.
 
 Gates stay open once opened (the save remembers), so a stage that starts in a later zone begins with every gate behind it already open; the earlier stages prove each of those gates can be opened on the way.
 
@@ -263,7 +279,7 @@ Current result: ✓ all eleven story stages pass with zero softlocks (82 rooms �
 
 ### Editing rooms
 
-Rooms are ASCII maps in `js/world/rooms/*.js` (see the legend at the top of `js/world/world.js`). Terrain: `#` ground, `-` one-way ledge, `M` bouncy mushroom, `~` water, `%` sky-mist / steam / starry void, `^` updraft, `:` glow-petal, `H` shy wall, `G` vine gate (opens when the room's buds bloom, its boss is cheered up or its puzzle is solved), `I` ice (too slippery to climb), `X` cracked sandstone, `1`–`9` fairy rings (each digit appears exactly twice). Things: `*` sparkle, `b`/`c` critters (each zone's `cast` in `js/world/zones.js` decides which animals they become), `B` bench, `E` elder, `f` firefly, `R L U D` signs, `T` toy, `n` music flower, `o` bud, `K` Cloud King, `Q` boss (the room's `boss:` field says who), `&` family member, `F` the party, `S` start. Puzzle pieces: `P` paw pad, `d` lost baby and `A` its mama, `k` key and `Z` its keyhole, `V` song bell and `O` the singing stone. Cat food: `e` fishy treat, `W` food bowl. A room's `elder:`, `toy:`, `family:`, `boss:` and `needs:` fields say which power, toy, relative and boss live there and which power it takes to get in. Boss behaviour lives in `js/entities/bosses.js` (each boss is a short recipe of clouds, wind-up time and sad attacks) and puzzle logic in `js/entities/puzzles.js`. Zone palettes, ambience and casts live in `js/world/zones.js`. Run the verifier after any change.
+Rooms are ASCII maps in `js/world/rooms/*.js` (see the legend at the top of `js/world/world.js`). Terrain: `#` ground, `-` one-way ledge, `M` bouncy mushroom, `~` water, `%` sky-mist / steam / starry void, `^` updraft, `:` glow-petal, `H` shy wall, `G` vine gate (opens when the room's buds bloom, its boss is cheered up or its puzzle is solved), `I` ice (too slippery to climb), `X` cracked sandstone, `1`–`9` fairy rings (each digit appears exactly twice). Things: `*` sparkle, `b`/`c` critters (each zone's `cast` in `js/world/zones.js` decides which animals they become), `B` bench, `E` elder, `f` firefly, `R L U D` signs, `T` toy, `n` music flower, `o` bud, `K` Cloud King, `Q` boss (the room's `boss:` field says who), `&` family member, `F` the party, `S` start. Puzzle pieces: `P` paw pad, `d` lost baby and `A` its mama, `k` key and `Z` its keyhole, `V` song bell and `O` the singing stone. Cat food: `e` fishy treat, `W` food bowl. `j` is a golden paw bubble holding the zone's cat trick (the tricks and their animations live in `js/entities/gestures.js`). A room's `elder:`, `toy:`, `family:`, `boss:` and `needs:` fields say which power, toy, relative and boss live there and which power it takes to get in. Boss behaviour lives in `js/entities/bosses.js` (each boss is a short recipe of clouds, wind-up time and sad attacks) and puzzle logic in `js/entities/puzzles.js`. Zone palettes, ambience and casts live in `js/world/zones.js`. Run the verifier after any change.
 
 Developer shortcut: `index.html#play=phoebe&room=c4&ab=all` jumps straight into a room with every power.
 

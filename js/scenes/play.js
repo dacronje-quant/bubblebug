@@ -100,6 +100,8 @@
       this.lastZone = -1;
       // feelings, save point & friends that follow you
       this.mood = C.MOOD_MAX; this.invuln = 60; this.hurtT = 0; this.healT = 0; this.munchT = 0;
+      this.trickCard = null; this.trickHint = 0; this.nextTrick = null;
+      this.showTrickButton();
       BB.Food.clearDrops();
       this.checkpoint = { x, y };
       this.pendingCP = false;
@@ -145,12 +147,78 @@
       this.writeSave();
     },
 
+    // ──── Cat tricks: ▼ does the next one you know ────
+    doTrick() {
+      const pl = this.pl, b = pl.body;
+      if (pl.state === 'bench' && pl.benchT > 20) { pl.state = 'play'; pl.idleT = 0; pl.squash = 1.2; } // wake from a nap
+      if (pl.state !== 'play' || pl.gesture || this.gift || this.party) return;
+      const known = BB.Gestures.LIST.filter(g => this.save.gestures[g.id]);
+      if (!known.length) { this.trickHint = 80; return; }
+      if (!b.grounded || b.inWater || b.climbing) return;
+      let i = known.findIndex(g => g.id === this.nextTrick);
+      if (i < 0) i = 0;
+      BB.Gestures.start(pl, known[i].id);
+      this.nextTrick = known[(i + 1) % known.length].id;
+    },
+
+    showTrickButton() {
+      const n = BB.Save.count(this.save.gestures || {});
+      document.body.classList.toggle('has-tricks', n > 0);
+    },
+
+    // "A new trick!": the kitten doing it on a little card, with the ▼ / paw button
+    drawTrickCard(c, t) {
+      const tc = this.trickCard;
+      const a = tc.t < 16 ? tc.t / 16 : tc.t > 225 ? Math.max(0, (260 - tc.t) / 35) : 1;
+      if (a <= 0) return;
+      const g = BB.Gestures.BY[tc.id];
+      const cx = G().W / 2, cy = 150 - (1 - Math.min(1, tc.t / 16)) * 24;
+      c.save();
+      c.globalAlpha = a;
+      c.fillStyle = 'rgba(255,250,240,0.95)'; c.strokeStyle = '#ffc94a'; c.lineWidth = 4;
+      G().rrect(cx - 170, cy - 62, 340, 124, 30, c); c.fill(); c.stroke();
+      // the kitten doing the trick, over and over
+      const lt = (tc.t + 20) % (g.len + 30);
+      const p = { t: tc.t, blink: 0, squash: 1, tail: 0 };
+      const doing = lt < g.len;
+      if (!doing || !BB.Gestures.pose(tc.id, lt, true, p)) { p.mode = 'sit'; p.happy = true; }
+      const tf = doing ? BB.Gestures.transform(tc.id, lt) : null;
+      const kx = cx - 70, ky = cy + 40;
+      c.save();
+      c.beginPath(); c.rect(cx - 160, cy - 56, 190, 112); c.clip();
+      G().drawGlow(kx, ky - 28, 60, '#fff1c2', 0.7, c);
+      if (tf && tf.rot) { c.translate(kx, ky - 22); c.rotate(tf.rot); c.translate(-kx, -(ky - 22)); }
+      BB.Kittens.draw(c, this.pl.cat, p, kx, ky, 2.1, tf ? tf.flip : 1);
+      c.restore();
+      // …and the button that does it (▼, S, D-pad down, or the paw button)
+      const bx = cx + 90, by = cy - 4, pulse = (Math.sin(t * 0.15) + 1) / 2;
+      BB.HUD.buttonIcon(c, 'trick', bx, by, 1.25, pulse);
+      c.strokeStyle = '#9a7ac8'; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
+      c.beginPath(); c.moveTo(bx - 9, by + 36); c.lineTo(bx, by + 45); c.lineTo(bx + 9, by + 36); c.stroke();
+      c.restore();
+    },
+
+    // pressed ▼ before finding any trick: a thought bubble with a paw and a "?"
+    drawTrickHint(c, cam) {
+      const b = this.pl.body, a = Math.min(1, this.trickHint / 15);
+      const x = b.x + b.w / 2 - cam.x + 18, y = b.y - cam.y - 26 - (80 - this.trickHint) * 0.15;
+      c.save(); c.globalAlpha = a;
+      c.fillStyle = 'rgba(255,255,255,0.92)'; c.strokeStyle = '#b8a0e8'; c.lineWidth = 2;
+      G().circle(x - 10, y + 18, 3, c); c.fill(); c.stroke();
+      G().circle(x - 5, y + 11, 4.5, c); c.fill(); c.stroke();
+      G().circle(x + 8, y - 4, 16, c); c.fill(); c.stroke();
+      BB.Gestures.drawPaw(c, x + 3, y - 3, 0.6, '#ffd84a', '#b8860b');
+      G().text('?', x + 15, y - 8, 14, '#9a7ac8', null);
+      c.restore();
+    },
+
     // ──── Feelings ────
     // Hard: a bump costs a happy sun. Easy: just a knock-back and a boing.
     hurt(fromX) {
       const pl = this.pl, b = pl.body;
       if (pl.state !== 'play' || this.invuln > 0 || this.party || this.gift) return false;
       const hard = BB.Settings.hard;
+      pl.gesture = null;
       if (hard) {
         this.mood = Math.max(0, this.mood - 1);
         this.hurtT = 36;
@@ -183,6 +251,7 @@
 
     startSad() {
       const pl = this.pl;
+      pl.gesture = null;
       pl.state = 'sad'; pl.sadT = 0;
       pl.body.vx *= 0.3;
       S().tooSad(pl.cat);
@@ -393,6 +462,18 @@
           else for (let i = 0; i < (big ? 7 : 3); i++) PT().heart(th.x + (Math.random() - 0.5) * 34, th.y - 24 - Math.random() * 22);
         },
         dropFood: (x, y) => BB.Food.drop(x, y, self.pl.body.x + self.pl.body.w / 2, self.room),
+        // a golden paw bubble: a new cat trick to do with ▼
+        onTrick(th) {
+          self.save.gestures[th.gid] = 1;
+          self.nextTrick = th.gid;
+          self.trickCard = { id: th.gid, t: 0 };
+          self.pl.happyT = 60;
+          S().trick();
+          PT().burst('spark', th.x, th.y, 18, { color: '#ffe27a', speed: 3, life: 36 });
+          PT().ring(th.x, th.y, '#ffe27a', 30);
+          self.showTrickButton();
+          BB.Save.write();
+        },
         onFamily(th) {
           self.save.family[th.fam] = 1;
           self.pl.happyT = 120;
@@ -534,6 +615,9 @@
       const ab = this.save.abilities;
       const b = this.pl.body;
       let fx = 0;
+      if (I.pressed.down) this.doTrick();
+      if (this.trickCard && ++this.trickCard.t > 260) this.trickCard = null;
+      if (this.trickHint > 0) this.trickHint--;
       if (this.pl.state === 'sad') this.updateSad();
       else {
         fx = BB.Player.update(this.pl, I, ab, {
@@ -806,6 +890,7 @@
         family: BB.Save.count(this.save.family || {}),
         mood: this.mood, moodMax: C.MOOD_MAX, cat: this.pl.cat, hurtT: this.hurtT, healT: this.healT,
         hard: BB.Settings.hard, munchT: this.munchT,
+        tricks: BB.Save.count(this.save.gestures || {}),
       }, t);
       for (const f of this.healFx) {
         // a heart flies from a new friend up to your happy suns
@@ -816,6 +901,8 @@
       const boss = this.activeBoss;
       if (boss && boss.state !== 'happy' && boss.room === this.room.id) BB.Bosses.drawBossHUD(c, boss, t);
       if (this.bossCard) BB.HUD.drawBossCard(c, this.bossCard.b, this.bossCard.t, t);
+      if (this.trickCard) this.drawTrickCard(c, t);
+      if (this.trickHint > 0) this.drawTrickHint(c, cam);
       BB.HUD.drawZoneCard(c, this.cardZone, this.zoneCard / 40, t);
       if (this.gift && this.gift.card > 0) {
         c.fillStyle = `rgba(20,10,40,${0.35 * this.gift.card})`; c.fillRect(0, 0, G().W, G().H);

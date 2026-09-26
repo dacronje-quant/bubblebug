@@ -66,6 +66,17 @@ body.touch.in-play #touch { display: block; }
 #t-right { left: calc(max(18px, env(safe-area-inset-left)) + clamp(90px, 15vmin, 134px)); }
 #t-jump  { right: max(18px, env(safe-area-inset-right)); background: rgba(95, 212, 138, 0.45); width: clamp(88px, 15vmin, 132px); height: clamp(88px, 15vmin, 132px); }
 #t-bubble { right: calc(max(18px, env(safe-area-inset-right)) + clamp(104px, 17vmin, 150px)); background: rgba(95, 184, 255, 0.45); }
+/* the paw button for cat tricks: small, above the bubble button, once a trick is found */
+#t-trick {
+  display: none;
+  right: calc(max(18px, env(safe-area-inset-right)) + clamp(114px, 18.5vmin, 162px));
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + clamp(86px, 14.5vmin, 128px));
+  width: clamp(54px, 9vmin, 80px);
+  height: clamp(54px, 9vmin, 80px);
+  background: rgba(255, 179, 71, 0.5);
+}
+body.has-tricks #t-trick { display: block; }
+.tbtn .pad { fill: #fff; stroke: none; }
 
 /* ──── Map button (see-through map overlay) ──── */
 #map-btn {
