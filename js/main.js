@@ -131,7 +131,7 @@
 
     BB.Save.load();
     Main.set('title');
-    // Developer shortcut (never needed to play): index.html#play=pip&room=c4&ab=all
+    // Developer shortcut (never needed to play): index.html#play=phoebe&room=c4&ab=all
     // jumps straight into a room, optionally with every power.
     const h = location.hash;
     const m = /play=(\w+)/.exec(h);

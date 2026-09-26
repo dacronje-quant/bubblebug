@@ -36,7 +36,11 @@
         const raw = localStorage.getItem(KEY);
         if (raw) {
           const d = JSON.parse(raw);
-          if (d && d.v === 2) { this.data = Object.assign(fresh(), d); return true; }
+          if (d && d.v === 2) {
+            if (d.cat === 'pip') d.cat = 'phoebe'; // the tabby's early name
+            this.data = Object.assign(fresh(), d);
+            return true;
+          }
         }
       } catch (e) { /* corrupted or blocked — start fresh */ }
       this.data = fresh();

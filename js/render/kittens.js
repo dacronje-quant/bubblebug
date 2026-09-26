@@ -4,7 +4,7 @@
 //  MARSHMALLOW — a fluffy cream Birman kitten: warm taupe points on
 //    ears, mask and tail, a dark little nose, snowy "gloves" on every
 //    paw, and big, sparkling sapphire-blue eyes.
-//  PIP — a patchwork tortoiseshell-tabby: dark chocolate and ginger
+//  PHOEBE — a patchwork tortoiseshell-tabby: dark chocolate and ginger
 //    patches with tabby stripes, a white bib and white paws, a ginger
 //    cheek patch and bright green eyes.
 //
@@ -29,8 +29,8 @@
       outline: '#5b4a44', blush: '#ffb3c1',
       bubbleTint: '#d8b8ff', bubbleTint2: '#ffc6e6', trail: 'heart',
     },
-    pip: {
-      id: 'pip', name: 'Pip', pattern: 'torbie', fluffy: false,
+    phoebe: {
+      id: 'phoebe', name: 'Phoebe', pattern: 'torbie', fluffy: false,
       fur: '#47301f', furShade: '#33221a', belly: '#fffaf2',
       patch: '#d27a2e', patchLight: '#e9a45d', stripe: '#22150d', face: '#a86a36',
       earInner: '#eaa59a', nose: '#e59482', paw: '#ffffff',
@@ -313,7 +313,7 @@
     let rot = 0;
     if (mode === 'air') rot = BB.clamp((pose.vy || 0) * 0.035, -0.3, 0.3);
     if (mode === 'float' || mode === 'rescue') rot = -0.1;
-    const wig = pose.wiggle ? Math.sin(t * 0.9) * 1.6 : 0; // Pip's pounce wiggle
+    const wig = pose.wiggle ? Math.sin(t * 0.9) * 1.6 : 0; // Phoebe's pounce wiggle
 
     c.save();
     c.rotate(rot);
@@ -360,7 +360,7 @@
     if (cat.pattern === 'torbie') { c.fillStyle = cat.patch; G.ellipse(-7, -6, 4, 3, 0.4, c); c.fill(); }
     // upright body
     drawBody(c, cat, -1, -11 + breathe, 8, 10.5, 0.15);
-    // front legs + paws together (Pip's lifted paw for grooming)
+    // front legs + paws together (Phoebe's lifted paw for grooming)
     const legC = cat.belly;
     const lick = pose.lick || 0;
     limb(c, 1.5, -8, 7.5, 0.02, 4, legC, outline, cat.paw);

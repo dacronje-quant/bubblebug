@@ -4,7 +4,7 @@
 //  aren't precise, softly home in on anything nearby that would love a
 //  bubble (gloomy bugs, the Cloud King, sleepy buds, music flowers).
 //  Marshmallow's bubbles are lilac-pink with little hearts trailing;
-//  Pip's are honey-gold and mint with a sprinkle of stars.
+//  Phoebe's are honey-gold and mint with a sprinkle of stars.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';

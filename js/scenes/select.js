@@ -9,7 +9,7 @@
   const G = () => BB.G;
   const I = () => BB.Input;
   const S = () => BB.Audio.sfx;
-  const CATS = ['marshmallow', 'pip'];
+  const CATS = ['marshmallow', 'phoebe'];
 
   BB.Select = {
     t: 0, sel: 0, chosen: null, chosenT: 0, hopT: [0, 0], holdT: 0, resetFx: 0,
@@ -131,11 +131,11 @@
       // continuing an adventure? show its stars & hearts
       if (BB.Save.exists()) {
         const d = BB.Save.data;
-        c.fillStyle = 'rgba(30,20,50,0.4)'; G().rrect(G().W / 2 - 90, 150, 180, 40, 20, c); c.fill();
-        c.fillStyle = '#ffd84a'; G().star(G().W / 2 - 62, 170, 11, 5, 0.5, -Math.PI / 2, c); c.fill();
-        G().text(String(BB.Save.count(d.sparkles)), G().W / 2 - 28, 171, 20, '#fff6d6', null);
-        c.fillStyle = '#ff7eb6'; G().heart(G().W / 2 + 24, 172, 10, c); c.fill();
-        G().text(String(BB.Save.count(d.friends)), G().W / 2 + 58, 171, 20, '#ffe3f0', null);
+        c.fillStyle = 'rgba(30,20,50,0.4)'; G().rrect(G().W / 2 - 90, 222, 180, 40, 20, c); c.fill();
+        c.fillStyle = '#ffd84a'; G().star(G().W / 2 - 62, 242, 11, 5, 0.5, -Math.PI / 2, c); c.fill();
+        G().text(String(BB.Save.count(d.sparkles)), G().W / 2 - 28, 243, 20, '#fff6d6', null);
+        c.fillStyle = '#ff7eb6'; G().heart(G().W / 2 + 24, 244, 10, c); c.fill();
+        G().text(String(BB.Save.count(d.friends)), G().W / 2 + 58, 243, 20, '#ffe3f0', null);
         // sprout "fresh start" button (hold to use)
         const sp = this.sprout();
         c.fillStyle = 'rgba(30,20,50,0.35)'; G().circle(sp.x, sp.y, sp.r, c); c.fill();

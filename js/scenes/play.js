@@ -426,7 +426,7 @@
       // the two kittens, celebrating together
       const t = this.party.t;
       BB.Kittens.draw(c, 'marshmallow', { mode: t % 60 < 30 ? 'sit' : 'stand', happy: true, t }, cx - 60, cy + 20, 2.6, 1);
-      BB.Kittens.draw(c, 'pip', { mode: t % 60 >= 30 ? 'sit' : 'stand', happy: true, t }, cx + 60, cy + 20, 2.6, -1);
+      BB.Kittens.draw(c, 'phoebe', { mode: t % 60 >= 30 ? 'sit' : 'stand', happy: true, t }, cx + 60, cy + 20, 2.6, -1);
       // tallies: stars, hearts, toys
       const y = cy + 80;
       c.fillStyle = '#ffd84a'; c.strokeStyle = '#c28a14'; c.lineWidth = 2;

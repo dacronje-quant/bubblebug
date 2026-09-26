@@ -89,7 +89,7 @@
       UI.drawScenery(c, t, 0);
       // both kittens snoozing / sitting on the hill
       BB.Kittens.draw(c, 'marshmallow', { mode: 'sit', t, blink: (t % 240) < 8 ? 1 : 0, yawn: (t % 600) > 520 ? Math.sin(((t % 600) - 520) / 80 * Math.PI) : 0 }, G().W / 2 - 90, G().H - 95, 3.2, 1);
-      BB.Kittens.draw(c, 'pip', { mode: 'sit', t: t + 50, blink: ((t + 90) % 260) < 8 ? 1 : 0, ear: (t % 170) < 12 ? Math.sin((t % 170) / 12 * Math.PI * 2) : 0 }, G().W / 2 + 90, G().H - 95, 3.2, -1);
+      BB.Kittens.draw(c, 'phoebe', { mode: 'sit', t: t + 50, blink: ((t + 90) % 260) < 8 ? 1 : 0, ear: (t % 170) < 12 ? Math.sin((t % 170) / 12 * Math.PI * 2) : 0 }, G().W / 2 + 90, G().H - 95, 3.2, -1);
       UI.drawBubbles(c);
       UI.logo(c, t);
       UI.playButton(c, G().W / 2, G().H / 2 + 10, 44, t, false);

@@ -45,7 +45,7 @@ const [out = '.', scenario = 'intro'] = process.argv.slice(2);
     console.log(await state());
   } else {
     // scenario = room id: start there with all powers and wiggle about
-    await page.goto('file://' + process.cwd() + '/index.html#play=pip&room=' + scenario + '&ab=all');
+    await page.goto('file://' + process.cwd() + '/index.html#play=phoebe&room=' + scenario + '&ab=all');
     await page.waitForTimeout(800);
     await shot('a');
     await hold('ArrowRight', 1200); await hold('Space', 400); await kb.press('KeyX');

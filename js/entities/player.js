@@ -6,7 +6,7 @@
 //
 //  Idle personalities:
 //   Marshmallow — sits sooner, big sleepy yawns, slow plume-tail sway
-//   Pip         — twitchy ears, paw-licking, a wiggly pounce-crouch
+//   Phoebe      — twitchy ears, paw-licking, a wiggly pounce-crouch
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -112,13 +112,13 @@
       // yawns (Marshmallow loves a big yawn)
       if (--pl.yawnT <= 0) { pl.yawnT = isM ? 360 + Math.random() * 200 : 700 + Math.random() * 300; pl.yawnPlay = 70; }
       if (pl.yawnPlay > 0) { pl.yawnPlay--; pl.yawn = Math.sin((1 - pl.yawnPlay / 70) * Math.PI); } else pl.yawn = 0;
-      // paw licks (Pip)
+      // paw licks (Phoebe)
       if (!isM && !resting) {
         if (--pl.lickT <= 0) { pl.lickT = 300 + Math.random() * 240; pl.lickPlay = 80; }
         if (pl.lickPlay > 0) { pl.lickPlay--; pl.lick = Math.min(1, Math.sin((1 - pl.lickPlay / 80) * Math.PI) * 1.5) * (0.8 + Math.sin(pl.t * 0.5) * 0.2); } else pl.lick = 0;
       }
     }
-    // ear twitches (Pip twitches more)
+    // ear twitches (Phoebe twitches more)
     if (--pl.earT <= 0) { pl.earT = (isM ? 240 : 110) + Math.random() * 160; pl.earPlay = 12; }
     if (pl.earPlay > 0) { pl.earPlay--; pl.ear = Math.sin((1 - pl.earPlay / 12) * Math.PI * 2); } else pl.ear = 0;
   }
@@ -167,7 +167,7 @@
     const sitAt = pl.cat === 'marshmallow' ? 120 : 170;
     if (pl.idleT > sitAt) { p.mode = 'sit'; return p; }
     p.mode = 'stand';
-    if (pl.cat === 'pip' && pl.idleT > 60 && pl.idleT < 110) p.wiggle = true;
+    if (pl.cat === 'phoebe' && pl.idleT > 60 && pl.idleT < 110) p.wiggle = true;
     return p;
   }
 

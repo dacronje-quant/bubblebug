@@ -33,7 +33,7 @@ Touch buttons appear automatically on tablets and touchscreens.
 Both kittens are painted from photos of two real cats:
 
 - **Marshmallow**, a fluffy cream Birman kitten. She has warm taupe points on her ears, mask and plume tail, a dark little nose, snowy white "gloves", and sapphire-blue eyes. Her bubbles are lilac and pink with a trail of tiny hearts. She loves a big sleepy yawn.
-- **Pip**, a patchwork tortoiseshell-tabby. Pip has chocolate and ginger patches with tabby stripes, a white bib and paws, a ginger cheek and bright green eyes. Pip's bubbles are honey-gold and mint with a sprinkle of stars. Pip twitches an ear, licks a paw, and does a wiggly pounce-crouch.
+- **Phoebe**, a patchwork tortoiseshell-tabby. Phoebe has chocolate and ginger patches with tabby stripes, a white bib and paws, a ginger cheek and bright green eyes. Phoebe's bubbles are honey-gold and mint with a sprinkle of stars. Phoebe twitches an ear, licks a paw, and does a wiggly pounce-crouch.
 
 Both move the same way. They differ in voice (a synthesized *mew*), idle habits and bubble style.
 
@@ -124,7 +124,7 @@ Current result: ✓ all five story stages pass with zero softlocks.
 
 Rooms are ASCII maps in `js/world/rooms/*.js` (see the legend at the top of `js/world/world.js`): `#` ground, `-` one-way ledge, `M` bouncy mushroom, `~` water/mist, `^` updraft, `:` glow-petal, `H` shy wall, `G` bud gate, plus `*` sparkle, `b`/`c` critters (each zone's `cast` in `js/world/zones.js` decides which animals they become), `B` bench, `E` elder, `f` firefly, `R L U D` signs, `T` toy, `n` music flower, `o` bud, `K` Cloud King, `F` finale, `S` start. Run the verifier after any change.
 
-Developer shortcut: `index.html#play=pip&room=c4&ab=all` jumps straight into a room with every power.
+Developer shortcut: `index.html#play=phoebe&room=c4&ab=all` jumps straight into a room with every power.
 
 ## 📄 License
 

@@ -178,7 +178,7 @@
   // ──── Sound effects ────
   const sfx = {
     // Each kitten has its own voice: Marshmallow is higher and floatier,
-    // Pip is quicker and bouncier.
+    // Phoebe is quicker and bouncier.
     jump(cat) {
       const hi = cat === 'marshmallow' ? 1.12 : 1;
       tone({ freq: 360 * hi, to: 720 * hi, glide: 0.09, dur: 0.14, vol: 0.13 });
@@ -199,7 +199,7 @@
       tone({ freq: 700, to: 1100, delay: 0.08, dur: 0.18, vol: 0.05, verb: 0.3 });
     },
     bubble(cat) {
-      // Marshmallow: a soft sighing blow. Pip: a quick playful "blip".
+      // Marshmallow: a soft sighing blow. Phoebe: a quick playful "blip".
       if (cat === 'marshmallow') {
         tone({ freq: 500, to: 950, glide: 0.2, dur: 0.26, vol: 0.1, vib: [14, 25], verb: 0.3 });
         noise({ dur: 0.18, vol: 0.03, freq: 1200, q: 1 });
