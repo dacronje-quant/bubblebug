@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("Opens Bubble Paws: The Rainbow Kingdom in your web browser")]
 [assembly: AssemblyProduct("Bubble Paws: The Rainbow Kingdom")]
 [assembly: AssemblyCompany("Bubble Paws")]
-[assembly: AssemblyCopyright("MIT License")]
+[assembly: AssemblyCopyright("Copyright (c) 2026 Divan Cronje. All rights reserved.")]
 [assembly: AssemblyVersion("1.1.0.0")]
 [assembly: AssemblyFileVersion("1.1.0.0")]
 

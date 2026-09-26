@@ -286,4 +286,4 @@ Developer shortcut: `index.html#play=phoebe&room=c4&ab=all` jumps straight into 
 
 ## 📄 License
 
-MIT. Enjoy, share, and build on it for young explorers everywhere. 🫧
+Copyright © 2026 Divan Cronje. All rights reserved. The game, its code, art, sounds and characters may not be copied, shared, modified or sold without written permission. See [LICENSE](LICENSE). 🫧
