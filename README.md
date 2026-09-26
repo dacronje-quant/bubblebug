@@ -276,7 +276,7 @@ Gates stay open once opened (the save remembers), so a stage that starts in a la
 
 A too-sad pop-back only ever returns the kitten to a spot it has already stood on, which it left using its own moves, so the happy suns can't create a softlock either.
 
-Current result: ✓ all eleven story stages pass with zero softlocks (82 rooms · 686 sparkles · 65 gloomy critters · 12 toys · 12 family members · 24 benches · 12 bosses · 12 puzzles).
+Current result: ✓ all eleven story stages pass with zero softlocks (82 rooms · 686 sparkles · 65 gloomy critters · 12 toys · 12 family members · 24 benches · 12 bosses · 12 puzzles · 70 treats · 12 food bowls · 12 cat tricks).
 
 ### Editing rooms
 
