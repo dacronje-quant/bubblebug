@@ -3,6 +3,8 @@
 //  kingdom map 🗺 and home 🏠 (back to the title screen). The map shows
 //  every room you've visited in its biome colour, a star on rooms
 //  whose sparkles are all found, and your kitten's face where you are.
+//  It stays zoomed in; browse it with ◀ ▶ (▲ ▼) held down, by dragging, or
+//  with its arrow buttons, and close it with ✕ (or jump / bubble / Esc / M).
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -22,7 +24,7 @@
       BB.Audio.sfx.select();
       if (b === 'resume') { this.leave(); BB.Main.go('play-resume'); }
       else if (b === 'sound') BB.Audio.toggle();
-      else if (b === 'map') this.map = true;
+      else if (b === 'map') { this.map = true; this.t = 0; this.drag = null; this.holdT = 0; BB.MapView.openFull(); }
       else if (b === 'home') { this.leave(); BB.Play.writeSave(); BB.Main.go('title'); }
     },
 
@@ -31,10 +33,7 @@
       G().t++;
       const I = BB.Input;
       const taps = I.takePointers();
-      if (this.map) {
-        if ((I.any || taps.length) && this.t > 10) { this.map = false; this.t = 0; }
-        return;
-      }
+      if (this.map) return this.updateMap(I, taps);
       if (I.pressed.pause || I.pressed.back) { this.leave(); BB.Main.go('play-resume'); return; }
       if (I.pressed.left) { this.focus = (this.focus + 3) % 4; BB.Audio.sfx.select(); }
       if (I.pressed.right) { this.focus = (this.focus + 1) % 4; BB.Audio.sfx.select(); }
@@ -75,6 +74,31 @@
         }
         c.restore();
       }
+    },
+
+    // browsing the kingdom map
+    updateMap(I, taps) {
+      const M = BB.MapView;
+      const close = () => { this.map = false; this.t = 0; this.drag = null; BB.Audio.sfx.select(); };
+      M.tick();
+      // (▲ is also "jump" on the keyboard, so jump alone doesn't close the map)
+      if (this.t > 8 && (I.pressed.confirm || I.pressed.bubble || I.pressed.back || I.pressed.pause || I.pressed.map)) return close();
+      const sp = 10 / M.ZOOM;
+      if (I.held.left) M.pan(-sp, 0);
+      if (I.held.right) M.pan(sp, 0);
+      if (I.held.up) M.pan(0, -sp);
+      if (I.held.down) M.pan(0, sp);
+      for (const p of taps) if (M.tapFull(p) === 'close') return close();
+      // drag the map around, or hold an arrow button to keep scrolling
+      const pd = I.pointerDown;
+      const on = pd ? M.controlAt(pd) : null;
+      if (pd && (on === 'left' || on === 'right')) {
+        if (++this.holdT > 14) M.pan((on === 'left' ? -1 : 1) * sp * 1.5, 0);
+      } else this.holdT = 0;
+      if (pd && !on) {
+        if (this.drag) M.pan(-(pd.x - this.drag.x) / M.ZOOM, -(pd.y - this.drag.y) / M.ZOOM);
+        this.drag = { x: pd.x, y: pd.y };
+      } else this.drag = null;
     },
 
     drawMap(c) { BB.MapView.draw(c, 'full', this.t); },

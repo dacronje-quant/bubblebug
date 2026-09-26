@@ -215,7 +215,8 @@ Each zone has a little brain-teaser that opens a vine gate. The gate wears a pic
 ## 🧑 For grown-ups
 
 - **The map button** (top-right, next to pause; or M, Tab, or a gamepad's Select) floats a see-through map over the game while you keep playing. It's centred on your kitten and shows every visited room in its zone colour, benches, earned powers, a ★ on rooms with every sparkle found, a toy where you found one, a cat face where you found family, each boss (under a rain-cloud until cheered up, then with a heart), and dotted lines between fairy-ring twins. Press it again to hide it.
-- **Pause** (top-right button, Esc or Start) has four picture buttons: keep playing, sound on/off, the full **kingdom map** on parchment, and **home** (back to the title screen).
+- **Pause** (top-right button, Esc or Start) has four picture buttons: keep playing, sound on/off, the **kingdom map** on parchment, and **home** (back to the title screen).
+- **The kingdom map** always stays at the same comfortable zoom, which fits the kingdom's whole height, and opens centred on your kitten. Browse it side to side with ◀ ▶ held down (▲ ▼ too), by dragging it with a finger or the mouse, or with its big orange arrow buttons (tap to glide, hold to keep going). Every zone you've explored has a name tag, and a strip along the bottom shows the whole kingdom with a box around the part you're looking at; tap the strip to jump there. Close it with ✕, jump, bubble, Esc or M.
 - **Easy or Hard:** the little picker in the title screen's bottom-right corner (💗 Easy is the default). To switch mid-adventure: pause → home → pick → ▶ Continue.
 - **Start fresh:** choose 🌱 New Game on the title screen, then ✓.
 - **Old PCs:** if frames get slow, the game automatically lowers its render resolution.
