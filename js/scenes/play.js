@@ -87,7 +87,10 @@
       const stars = new Set(W().findThings('*').map(t => t.tx + ',' + t.ty));
       for (const k in save.sparkles) if (!stars.has(k)) delete save.sparkles[k];
       if (save.doorsFromVisited) {
-        for (const id in save.visited) { const r = W().byId[id]; if (r && !r.def.home) save.doors[r.zone] = 1; }
+        for (const id in save.visited) {
+          const r = W().byId[id];
+          if (r && !r.def.home) save.doors[r.zone] = Math.max(save.doors[r.zone] || 0, r.def.arena ? 2 : 1);
+        }
         delete save.doorsFromVisited;
       }
       // a save from before the bosses and puzzles existed: open their gates
@@ -133,6 +136,7 @@
     enterZone(z) {
       if (z === this.lastZone) return;
       this.lastZone = z;
+      if (z !== BB.HOME_ZONE && this.save) this.save.lastZone = z; // (its door sparkles at home)
       this.cardZone = z;
       this.zoneCard = 220;
       BB.Music.play(BB.ZONES[z].key);
@@ -539,7 +543,7 @@
         linkLocked: th => !!self.linkLock && Math.abs(th.x - self.linkLock.x) < 4 && Math.abs(th.y - self.linkLock.y) < 4,
         travel: (dest, kind, from) => self.travel(dest, kind, from),
         onFlapFound(th) {
-          self.save.doors[th.zone] = 1;
+          self.save.doors[th.zone] = Math.max(self.save.doors[th.zone] || 0, th.idx + 1);
           S().gateDing();
           PT().burst('spark', th.x, th.y - 30, 14, { color: '#fff4c2', speed: 2.4, life: 32 });
           PT().ring(th.x, th.y - 20, '#ffe9a0', 24);

@@ -269,17 +269,16 @@ function bubbleable(nodes, tx, ty) {
 
 // ──── Links: cat flaps, the Cat House doors, the Rainbow Lift and Slide ────
 // A flap takes you home (stand still in it); walking within 90px of a flap
-// lights its door up at home, and a lit door takes you back to the flap.
+// lights its door up at home, and a lit door takes you back to the furthest
+// flap of that zone found so far (only there — the old target is dropped).
 // The front door always leads out to the garden gate. The lift runs both
 // ways; the Rainbow Slide at the very end goes home through the skylight.
 function buildLinks() {
   const L = BB.Links, out = [];
-  for (const t of W.findThings('h')) {
-    const z = W.roomAtTile(t.tx, t.ty).zone;
-    out.push({ from: L.spot(t.tx, t.ty), to: L.doorSpot(z), flap: z });
-  }
+  for (let z = 0; z < 12; z++) L.flapTiles(z).forEach((t, idx) => out.push({ from: L.spot(t.tx, t.ty), to: L.doorSpot(z), flap: z, idx }));
+  // a door opens at the furthest flap found so far (its target is set in the search)
   const h = L.home();
-  for (const z of Object.keys((h && h.def.doors) || {}).map(Number)) out.push({ from: L.doorSpot(z), to: L.flapSpot(z), door: z });
+  for (const z of Object.keys((h && h.def.doors) || {}).map(Number)) out.push({ from: L.doorSpot(z), to: z === 0 ? L.flapSpot(0) : null, door: z });
   const u = W.findThings('u')[0], v = W.findThings('v')[0];
   if (u && v) {
     out.push({ from: L.spot(u.tx, u.ty), to: L.spot(v.tx, v.ty), lift: true });
@@ -323,18 +322,28 @@ function exploreWithGates(starts, ab, startRoom = null) {
     if (behind(room) && room.grid.some(r => r.includes('G'))) { W.openGates(room); opened.add(room.id); }
   }
   const links = buildLinks();
-  const doors = new Set([0]);
-  st.doors = doors;
+  const doors = new Map([[0, 1]]); // zone → flaps reached (the front door always leads out)
   for (;;) {
     explore(st, ab);
     let linked = false;
     for (const lk of links) {
-      if (lk.flap != null && !doors.has(lk.flap)) {
-        for (const n of st.nodes.values()) if (flapSeen(n, lk)) { doors.add(lk.flap); break; }
+      if (lk.flap != null && (doors.get(lk.flap) || 0) < lk.idx + 1) {
+        for (const n of st.nodes.values()) if (flapSeen(n, lk)) { doors.set(lk.flap, lk.idx + 1); break; }
       }
     }
+    // point each door at its zone's furthest flap, dropping the old way out
     for (const lk of links) {
-      if (!lk.to || (lk.door != null && !doors.has(lk.door))) continue;
+      if (lk.door == null || !doors.has(lk.door)) continue;
+      const to = BB.Links.flapSpot(lk.door, doors.get(lk.door) - 1);
+      if (lk.to && lk.to.x === to.x && lk.to.y === to.y) continue;
+      if (lk.to) {
+        const old = keyOf(lk.to.x - C.PW / 2, lk.to.y - C.PH);
+        for (const n of st.nodes.values()) if (enters(n, lk)) n.edges.delete(old);
+      }
+      lk.to = to;
+    }
+    for (const lk of links) {
+      if (!lk.to) continue;
       const tx = lk.to.x - C.PW / 2, ty = lk.to.y - C.PH;
       for (const n of [...st.nodes.values()]) {
         if (!enters(n, lk)) continue;

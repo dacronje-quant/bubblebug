@@ -83,8 +83,9 @@ The map isn't a single line. Side passages, high walkways, shy walls, underwater
 
 The adventure starts at home, and nobody's there. The kitten wakes on its bed, stretches, and wonders where everyone went (a thought bubble shows three grey "?" faces) while a big gloom cloud drifts past the window. Around the house are the empty cushions, twelve empty picture frames on the family wall, cat trees to climb and a door hall upstairs. The way out is always clear: the big front door glows, and glowing paw prints lead from the bed to it until you've been out once.
 
-- **Cat flaps.** Every zone has a cat flap (in Sparkle Gardens it's the garden gate). Walk past one and its door lights up in the Cat House's door hall; stand in a flap for a moment (a golden paw ring fills up) and you pop home, right next to that door. Stand in a lit door to go back out. So you can always nip home, and go back to any zone you've reached.
-- **The front door** always leads out to the garden gate in Sparkle Gardens.
+- **Cat flaps.** Every zone has two cat flaps: one near its start (in Sparkle Gardens it's the garden gate) and one in its boss arena, by the way on. Walk past one and that zone's door lights up in the Cat House's door hall; stand in a flap for a moment (a golden paw ring fills up) and you pop home, right next to that door. Stand in a lit door to go back out: it always takes you to the furthest flap you've reached in that zone, so after a boss fight you come straight back to the boss. So you can always nip home, and go back to any zone you've reached.
+- **The door hall.** Each zone's door is dressed as its zone: painted in its colours, trimmed with its flowers, crystals, honey, shells, icicles, leaves, lanterns or stars, with a round window onto its sky and its big emblem on a sign on top. Doors to zones you haven't reached yet are grey and shut. The door to the zone you were in last glows, sparkles and has a bouncing arrow over it.
+- **The front door** is Sparkle Gardens' door: it leads out to the garden gate (or, once you've reached it, the flap by the Grumpy Goose).
 - **Family come home.** Each family member you find hops off home. Their frame on the family wall fills in with their face, and next time you're home they're napping on their own cushion (and wake up for a cuddle when you come close). Your own Mama waits by the front door.
 - **The homecoming party.** Slide home down the Rainbow Slide and the party starts in the living room. Only the family you actually found come: they dance in a ring around your kitten (the grannies sway, the babies bounce). Every friend you made floats in on a little cloud, and every boss you cheered up waves from the landing upstairs. Then a big card fills in the family frames one by one and shows how many you found, like **9 / 12**. Find all twelve and the card turns rainbow, with extra fireworks. Afterwards you can keep playing and go back out for anyone you missed.
 - The house has its own gentle music-box tune. The party tune plays only while you're at the party; step out of the house and the music changes with you.
@@ -123,7 +124,7 @@ Marshmallow's family are Birmans and Siamese-pointed cats in cream, lilac and ch
 
 Bunnies and frogs hop, birds, bats, owls and bees flutter, fish and jellyfish swim, spiders dangle on silk, and everyone else waddles. Every friend you make comes to the rainbow party.
 
-The world has 83 interconnected rooms (the Cat House included), 680 sparkles, 65 gloomy critters, 12 bosses, 12 picture puzzles, 12 cat tricks, 70 fishy treats, 13 food bowls, 25 cozy benches (your own bed at home among them), 12 cat flaps, 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
+The world has 83 interconnected rooms (the Cat House included), 680 sparkles, 65 gloomy critters, 12 bosses, 12 picture puzzles, 12 cat tricks, 70 fishy treats, 13 food bowls, 25 cozy benches (your own bed at home among them), 24 cat flaps (two per zone), 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
 
 ### ✨ Little touches
 
@@ -277,7 +278,7 @@ node tools/verify-world.js --stage 10  # just one story stage (0 = start … 10 
 node tools/verify-world.js --map g3    # also print a room with reachable air marked •
 ```
 
-The verifier loads the real game modules and simulates hundreds of button patterns from every reachable standing spot using the game's own physics: walks, hops, run-ups, mid-air steering, double jumps, wall kicks, glides, deep-water swims (paddle up, then steer), bubble bounces, star-wing flapping, and fairy-ring hops. It also follows the links: every cat flap home, each Cat House door (only once its flap has been found in the same search), the front door, the Rainbow Lift both ways and the Rainbow Slide. The eleven story stages (no powers → Double Jump → … → Star Wings → the slide home) run in parallel on all CPU cores. It checks all of the following:
+The verifier loads the real game modules and simulates hundreds of button patterns from every reachable standing spot using the game's own physics: walks, hops, run-ups, mid-air steering, double jumps, wall kicks, glides, deep-water swims (paddle up, then steer), bubble bounces, star-wing flapping, and fairy-ring hops. It also follows the links: every cat flap home, each Cat House door (only once one of its zone's flaps has been found in the same search, and only to the furthest flap found), the front door, the Rainbow Lift both ways and the Rainbow Slide. The eleven story stages (no powers → Double Jump → … → Star Wings → the slide home) run in parallel on all CPU cores. It checks all of the following:
 
 1. each elder and the Rainbow Slide home are reachable with the powers you'd have at that point;
 2. **from every reachable spot the next goal is still reachable** (the gentle rescue from water, mist and steam is modelled too);
@@ -292,7 +293,7 @@ A too-sad pop-back only ever returns the kitten to a spot it has already stood o
 
 Before any of that, a quick map check makes sure every pool has a floor and walls, so once you can swim, water is safe everywhere (no pool may sit over mist or the edge of the world).
 
-Current result: ✓ all eleven story stages pass with zero softlocks (83 rooms · 680 sparkles · 65 gloomy critters · 12 toys · 12 family members · 25 benches · 12 bosses · 12 puzzles · 70 treats · 13 food bowls · 12 cat tricks · 12 cat flaps).
+Current result: ✓ all eleven story stages pass with zero softlocks (83 rooms · 680 sparkles · 65 gloomy critters · 12 toys · 12 family members · 25 benches · 12 bosses · 12 puzzles · 70 treats · 13 food bowls · 12 cat tricks · 24 cat flaps).
 
 ### Editing rooms
 

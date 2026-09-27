@@ -177,12 +177,12 @@
       const hx = ox + (hm.x + hm.w / 2) * sc, hy = oy + (hm.y + hm.h / 2) * sc;
       c.lineWidth = 2; c.setLineDash([4, 5]);
       for (let z = 0; z < 12; z++) {
-        if (!(save.doors || {})[z]) continue;
-        const f = L.flapTile(z);
-        if (!f) continue;
-        c.strokeStyle = BB.rgba(BB.ZONES[z].accent, 0.55);
-        c.beginPath(); c.moveTo(ox + (f.tx + 0.5) * sc, oy + (f.ty + 0.5) * sc); c.lineTo(hx, hy); c.stroke();
-        c.fillStyle = '#ffffff'; G().circle(ox + (f.tx + 0.5) * sc, oy + (f.ty + 0.5) * sc, 3, c); c.fill();
+        const n = (save.doors || {})[z] || 0;
+        L.flapTiles(z).slice(0, n).forEach(f => {
+          c.strokeStyle = BB.rgba(BB.ZONES[z].accent, 0.55);
+          c.beginPath(); c.moveTo(ox + (f.tx + 0.5) * sc, oy + (f.ty + 0.5) * sc); c.lineTo(hx, hy); c.stroke();
+          c.fillStyle = '#ffffff'; G().circle(ox + (f.tx + 0.5) * sc, oy + (f.ty + 0.5) * sc, 3, c); c.fill();
+        });
       }
       c.setLineDash([]);
     }

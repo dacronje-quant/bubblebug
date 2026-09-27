@@ -2,10 +2,11 @@
 //  LINKS — the ways between places that aren't just walking off a room's
 //  edge. The Cat House sits in the middle of the ring of zones:
 //
-//   h      a cat flap, one in every zone (in Sparkle Gardens it's the
-//          garden gate). Stand in it for a moment and you pop home, next
-//          to that zone's door. Just walking past a flap lights its door
-//          up at home.
+//   h      a cat flap: two in every zone, one near its start (in Sparkle
+//          Gardens it's the garden gate) and one by its boss. Stand in one
+//          for a moment and you pop home, next to that zone's door. Just
+//          walking past a flap lights its door up at home, and the door
+//          always opens at the furthest flap you've reached in that zone.
 //   doors  the door hall in the Cat House (its room's `doors`): one door
 //          per zone, glowing once its flap has been found. Stand in a lit
 //          door to go back to that zone's flap. Door 0 is the front door,
@@ -38,10 +39,21 @@
   // a doorway's standing spot, in world px (kitten centred on the tile)
   const spot = (tx, ty) => ({ x: tx * T + T / 2, y: floorBelow(tx, ty), tx, ty });
 
-  function flapTile(zone) {
-    for (const r of W().rooms) if (r.zone === zone) for (const t of r.things) if (t.ch === 'h') return t;
-    return null;
+  // a zone's cat flaps in the order you meet them (one near its start, one
+  // by its boss)
+  const FLAPS = {};
+  function flapTiles(zone) {
+    if (!FLAPS[zone]) {
+      const d = BB.zoneDir(zone), out = [];
+      for (const r of W().rooms) if (r.zone === zone) for (const t of r.things) if (t.ch === 'h') out.push(t);
+      FLAPS[zone] = out.sort((a, b) => (a.tx - b.tx) * d);
+    }
+    return FLAPS[zone];
   }
+  const flapTile = (zone, i = 0) => flapTiles(zone)[i] || null;
+  const flapIndex = (zone, t) => flapTiles(zone).findIndex(f => f.tx === t.tx && f.ty === t.ty);
+  // a zone's door opens at the furthest flap reached (save.doors[zone] = how many)
+  const doorFlap = (zone, save) => Math.max(0, Math.min(flapTiles(zone).length, ((save.doors || {})[zone] || 1)) - 1);
   function doorTile(zone) {
     const h = home();
     const d = h && h.def.doors && h.def.doors[zone];
@@ -56,7 +68,7 @@
   // ──── Entities ────
   function create(thing, room, save) {
     const s = spot(thing.tx, thing.ty);
-    if (thing.ch === 'h') return { type: 'flap', link: true, zone: room.zone, room: room.id, x: s.x, y: s.y, t: 0, hold: 0 };
+    if (thing.ch === 'h') return { type: 'flap', link: true, zone: room.zone, idx: Math.max(0, flapIndex(room.zone, thing)), room: room.id, x: s.x, y: s.y, t: 0, hold: 0 };
     if (thing.ch === 'u' || thing.ch === 'v') return { type: 'lift', link: true, end: thing.ch, zone: room.zone, room: room.id, x: s.x, y: s.y, t: 0 };
     return null;
   }
@@ -82,7 +94,7 @@
     const near = Math.hypot(b.x + b.w / 2 - th.x, b.y + b.h - th.y);
     const locked = ctx.linkLocked(th);
     if (th.type === 'flap') {
-      if (near < 90 && !(save.doors || {})[th.zone]) ctx.onFlapFound(th);
+      if (near < 90 && ((save.doors || {})[th.zone] || 0) < th.idx + 1) ctx.onFlapFound(th);
       const still = standingIn(th, pl, 18) && Math.abs(b.vx) < 0.3 && !locked;
       th.hold = still ? th.hold + 1 : Math.max(0, th.hold - 3);
       if (th.hold >= HOLD) { th.hold = 0; ctx.travel(doorSpot(th.zone), 'home', th); }
@@ -90,7 +102,7 @@
       const ok = unlocked(th, save);
       const still = ok && standingIn(th, pl, 18) && Math.abs(b.vx) < 0.3 && !locked;
       th.hold = still ? th.hold + 1 : Math.max(0, th.hold - 3);
-      if (th.hold >= HOLD) { th.hold = 0; ctx.travel(th.front ? flapSpot(0) : flapSpot(th.zone), th.front ? 'out' : 'door', th); }
+      if (th.hold >= HOLD) { th.hold = 0; ctx.travel(flapSpot(th.zone, doorFlap(th.zone, save)), th.front ? 'out' : 'door', th); }
     } else if (th.type === 'lift') {
       if (!locked && standingIn(th, pl, 22)) {
         const other = liftTile(th.end === 'u' ? 'v' : 'u');
@@ -99,7 +111,7 @@
     }
   }
   const doorSpot = z => { const d = doorTile(z); return d ? spot(d.tx, d.ty) : null; };
-  const flapSpot = z => { const f = flapTile(z); return f ? spot(f.tx, f.ty) : null; };
+  const flapSpot = (z, i = 0) => { const f = flapTile(z, i); return f ? spot(f.tx, f.ty) : null; };
 
   // ──── Drawing ────
   function holdRing(c, x, y, k) {
@@ -124,9 +136,118 @@
     BB.Gestures.drawPaw(c, x, y - h + w / 2 + 2, 0.5, 'rgba(255,255,255,0.85)', 'rgba(255,255,255,0.85)');
   }
 
+  // ──── The door hall: every door dressed as its own zone ────
+  // big emblem sign on top, the door painted in the zone's colours with its
+  // own trimmings, and a round window looking out onto that zone's sky
+  const TRIM = {
+    gardens(c, w, h, t) {
+      for (const [dx, dy, col] of [[-w / 2, -h * 0.5, '#ff9ec7'], [w / 2, -h * 0.35, '#ffe066'], [-w / 2, -h * 0.15, '#ffffff'], [w / 2, -h * 0.75, '#c9a6ff'], [-w / 2 + 2, -h * 0.85, '#ff8c6b']]) BB.Tiles.flower(c, dx, dy, col, 1.1);
+      c.fillStyle = '#6cc24a'; for (let i = -2; i <= 2; i++) { G().ellipse(i * 8, 1, 6, 3, 0, c); c.fill(); }
+    },
+    meadow(c, w, h, t) {
+      for (const [dx, dy] of [[-w / 2 - 2, -12], [w / 2 + 2, -18]]) {
+        c.fillStyle = '#f5ead0'; c.fillRect(dx - 2, dy, 4, 12);
+        c.fillStyle = '#c46ad8'; c.beginPath(); c.ellipse(dx, dy, 10, 7, 0, Math.PI, 0); c.fill();
+      }
+      for (let i = 0; i < 6; i++) { const a = Math.PI + i / 5 * Math.PI; G().drawGlow(Math.cos(a) * (w / 2 + 4), -h + w / 2 + Math.sin(a) * (w / 2 + 4), 8, '#7cf5d4', 0.6 + 0.3 * Math.sin(t * 0.08 + i), c); }
+    },
+    caves(c, w, h) { BB.Tiles.crystalCluster(c, -w / 2 - 2, 0, 0.3, 1.1); BB.Tiles.crystalCluster(c, w / 2 + 2, 0, 0.7, 0.9); },
+    hive(c, w, h, t) {
+      c.fillStyle = '#ffc34a';
+      c.beginPath(); c.moveTo(-w / 2 - 4, -h + w / 2);
+      for (let i = 0; i <= 6; i++) { const x = -w / 2 - 4 + i * (w + 8) / 6; c.lineTo(x, -h + w / 2 + 4 + (i % 2 ? 10 + Math.sin(t * 0.05 + i) * 3 : 0)); }
+      c.lineTo(w / 2 + 4, -h + w / 2); c.arc(0, -h + w / 2, w / 2 + 4, 0, Math.PI, true); c.fill();
+    },
+    ruins(c, w, h) {
+      c.strokeStyle = '#4f9e6c'; c.lineWidth = 2.5;
+      c.beginPath(); c.moveTo(-w / 2 - 3, -h + 10); c.quadraticCurveTo(-w / 2 - 8, -h / 2, -w / 2 - 2, 0); c.stroke();
+      c.fillStyle = '#6cc24a'; for (let i = 0; i < 4; i++) { G().heart(-w / 2 - 5 + (i % 2) * 5, -h + 16 + i * 14, 5, c); c.fill(); }
+    },
+    clouds(c, w, h) { BB.Backdrops.cloud(c, -w / 2 - 16, -6, 0.32, '#ffffff'); BB.Backdrops.cloud(c, w / 2 - 12, -h * 0.55, 0.26, '#ffffff'); },
+    lagoon(c, w, h) {
+      c.fillStyle = '#ff9a7a'; G().star(-w / 2 - 2, -h * 0.4, 7, 5, 0.45, -Math.PI / 2, c); c.fill();
+      c.fillStyle = '#ffd0dc'; c.beginPath(); c.arc(w / 2 + 2, -10, 7, Math.PI, 0); c.fill();
+      c.strokeStyle = '#c07a8a'; c.lineWidth = 1; for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(w / 2 + 2, -10); c.lineTo(w / 2 + 2 + i * 3, -16); c.stroke(); }
+    },
+    dunes(c, w, h) {
+      c.fillStyle = '#6fbf6a'; G().rrect(w / 2 + 2, -30, 7, 30, 3, c); c.fill(); G().rrect(w / 2 + 7, -24, 8, 5, 2, c); c.fill(); G().rrect(w / 2 + 12, -30, 5, 11, 2, c); c.fill();
+      c.fillStyle = '#f2c98a'; G().ellipse(0, 2, w * 0.7, 4, 0, c); c.fill();
+    },
+    frost(c, w, h) {
+      c.fillStyle = '#ffffff'; c.beginPath(); c.arc(0, -h + w / 2, w / 2 + 6, Math.PI, 0); c.lineTo(w / 2 + 6, -h + w / 2 + 5); c.lineTo(-w / 2 - 6, -h + w / 2 + 5); c.fill();
+      c.fillStyle = '#dff4ff'; for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(i * 9 - 3, -h + w / 2 + 5); c.lineTo(i * 9, -h + w / 2 + 14 + (i % 2) * 4); c.lineTo(i * 9 + 3, -h + w / 2 + 5); c.fill(); }
+    },
+    autumn(c, w, h) {
+      for (const [dx, dy, col, a] of [[-w / 2 - 3, -h * 0.7, '#e8783a', 0.4], [w / 2 + 3, -h * 0.45, '#ffb060', -0.6], [-w / 2 - 1, -h * 0.2, '#d8442a', 1.2], [w / 2 - 2, -4, '#e8783a', 2]]) {
+        c.save(); c.translate(dx, dy); c.rotate(a); c.fillStyle = col; c.beginPath(); c.moveTo(-7, 0); c.quadraticCurveTo(0, -6, 7, 0); c.quadraticCurveTo(0, 6, -7, 0); c.fill(); c.restore();
+      }
+    },
+    springs(c, w, h, t) {
+      for (const dx of [-w / 2 - 8, w / 2 + 8]) {
+        c.strokeStyle = '#6a2a2a'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(dx, -h - 4); c.lineTo(dx, -h + 8); c.stroke();
+        G().drawGlow(dx, -h + 16, 16, '#ffb070', 0.5 + 0.2 * Math.sin(t * 0.1), c);
+        c.fillStyle = '#ff9a5a'; G().ellipse(dx, -h + 16, 6, 8, 0, c); c.fill();
+      }
+    },
+    starlight(c, w, h, t) {
+      for (let i = 0; i < 5; i++) {
+        const a = Math.PI + (i + 0.5) / 5 * Math.PI;
+        c.fillStyle = '#ffe27a'; G().star(Math.cos(a) * (w / 2 + 6), -h + w / 2 + Math.sin(a) * (w / 2 + 6), 4 + Math.sin(t * 0.1 + i), 5, 0.45, -Math.PI / 2, c); c.fill();
+      }
+    },
+  };
+
+  function zoneDoor(c, th, x, y, t, ok, recent) {
+    const Z = BB.ZONES[th.zone], w = 40, h = 66;
+    c.save(); c.translate(x, y);
+    if (!ok) c.globalAlpha = 0.45;
+    if (recent && ok) {
+      // where you were last: a glow, sparkles and a bouncing arrow
+      G().drawGlow(0, -h / 2, 90, '#fff2b0', 0.55 + 0.2 * Math.sin(t * 0.1), c);
+      for (let i = 0; i < 3; i++) { const a = t * 0.04 + i * 2.1; c.fillStyle = '#fff6c2'; G().twinkle(Math.cos(a) * 34, -h / 2 + Math.sin(a) * 36, 3.5, c); c.fill(); }
+    } else if (ok) G().drawGlow(0, -h / 2, 60, Z.light, 0.3, c);
+    // frame and door, painted in the zone's colours
+    const arch = (pad) => { c.beginPath(); c.moveTo(-w / 2 - pad, 0); c.lineTo(-w / 2 - pad, -h + w / 2); c.arc(0, -h + w / 2, w / 2 + pad, Math.PI, 0); c.lineTo(w / 2 + pad, 0); c.closePath(); };
+    c.fillStyle = ok ? Z.groundDark : '#5a4e56'; c.strokeStyle = 'rgba(30,20,20,0.7)'; c.lineWidth = 2;
+    arch(5); c.fill(); c.stroke();
+    const g = c.createLinearGradient(0, -h, 0, 0);
+    g.addColorStop(0, ok ? Z.top : '#8a7f86'); g.addColorStop(1, ok ? Z.ground : '#6e646a');
+    c.fillStyle = g; arch(0); c.fill();
+    // a round window onto that zone's sky
+    const wy = -h + w / 2 + 2;
+    c.save(); c.beginPath(); c.arc(0, wy, 12, 0, TAU); c.clip();
+    const sg = c.createLinearGradient(0, wy - 12, 0, wy + 12);
+    sg.addColorStop(0, ok ? Z.sky[0] : '#3a3440'); sg.addColorStop(1, ok ? Z.sky[2] : '#4a4450');
+    c.fillStyle = sg; c.fillRect(-12, wy - 12, 24, 24);
+    if (ok) { c.fillStyle = Z.far; G().ellipse(0, wy + 12, 16, 7, 0, c); c.fill(); }
+    c.restore();
+    c.strokeStyle = ok ? Z.accent : '#9a9098'; c.lineWidth = 3; G().circle(0, wy, 12, c); c.stroke();
+    // a little paw on the door and a knob
+    BB.Gestures.drawPaw(c, 0, -20, 0.55, 'rgba(255,255,255,0.7)', 'rgba(255,255,255,0.7)');
+    c.fillStyle = '#ffd84a'; G().circle(w / 2 - 7, -h * 0.42, 2.6, c); c.fill();
+    if (ok && TRIM[Z.key]) TRIM[Z.key](c, w, h, t);
+    // the big emblem sign over the door
+    const sy = -h - 26 + (recent && ok ? Math.sin(t * 0.12) * 2 : 0);
+    c.fillStyle = ok ? '#fff8e8' : '#cfc6cc'; c.strokeStyle = ok ? Z.accent : '#9a9098'; c.lineWidth = 3;
+    G().circle(0, sy, 21, c); c.fill(); c.stroke();
+    BB.HUD.zoneIcon(c, th.zone, 0, sy, 0.95);
+    if (!ok) {
+      // not found yet: the door's shut tight
+      c.globalAlpha = 1;
+      c.strokeStyle = 'rgba(60,40,50,0.8)'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(-w / 2 + 6, -h * 0.55); c.lineTo(w / 2 - 6, -h * 0.55); c.moveTo(-w / 2 + 6, -h * 0.3); c.lineTo(w / 2 - 6, -h * 0.3); c.stroke();
+    }
+    if (recent && ok) {
+      const ay = sy - 34 + Math.sin(t * 0.15) * 4;
+      c.fillStyle = '#ffd84a'; c.strokeStyle = '#b8860b'; c.lineWidth = 1.5;
+      c.beginPath(); c.moveTo(-8, ay - 6); c.lineTo(8, ay - 6); c.lineTo(0, ay + 4); c.closePath(); c.fill(); c.stroke();
+    }
+    c.restore();
+  }
+
   function draw(c, th, cam, ctx) {
     const x = th.x - cam.x, y = th.y - cam.y;
-    if (x < -80 || x > G().W + 80 || y < -120 || y > G().H + 60) return;
+    if (x < -80 || x > G().W + 80 || y < -170 || y > G().H + 60) return;
     const t = th.t, save = ctx.save;
     if (th.type === 'flap') {
       if (th.zone === 0) {
@@ -161,17 +282,8 @@
         c.fillStyle = '#ffd84a'; G().circle(x + 13, y - 34, 3, c); c.fill();
         // a little cat flap at the bottom
         c.fillStyle = '#a9583a'; G().rrect(x - 9, y - 18, 18, 16, 6, c); c.fill();
-      } else {
-        const Z = BB.ZONES[th.zone];
-        catDoor(c, x, y, 26, 42, ok ? BB.mix(Z.sky[1], Z.accent, 0.4) : '#8a7a7a', ok, t);
-        if (!ok) { c.fillStyle = 'rgba(40,30,40,0.35)'; G().rrect(x - 13, y - 42, 26, 42, 10, c); c.fill(); }
-        // the zone's emblem above its door
-        c.save(); c.globalAlpha = ok ? 1 : 0.35;
-        c.fillStyle = 'rgba(255,248,232,0.95)'; G().circle(x, y - 58, 13, c); c.fill();
-        BB.HUD.zoneIcon(c, th.zone, x, y - 58, 0.4);
-        c.restore();
-      }
-      if (ok) holdRing(c, x, y - (th.front ? 96 : 82), th.hold / HOLD);
+      } else zoneDoor(c, th, x, y, t, ok, save.lastZone === th.zone);
+      if (ok) holdRing(c, x, y - (th.front ? 96 : 150), th.hold / HOLD);
     } else if (th.type === 'lift') {
       // a rainbow beam (bottom end) or a rainbow landing pool (top end)
       const cols = ['#ff7b9c', '#ffcf5c', '#fff27a', '#8fe388', '#7cc8ff', '#b99cff'];
@@ -189,5 +301,5 @@
     }
   }
 
-  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, HOLD };
+  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, doorFlap, HOLD };
 })(window.BB);
