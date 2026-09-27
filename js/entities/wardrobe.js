@@ -183,7 +183,7 @@
     save.wear = save.wear || {};
     const isNew = !save.outfits[a.id];
     save.outfits[a.id] = 1;
-    if (isNew && wearNow) save.wear[a.slot] = a.id;
+    if (isNew && wearNow) { save.wear[a.slot] = a.id; save.wardrobeNew = 1; } // (the mirror sparkles till you've looked)
     return isNew ? a : null;
   }
 

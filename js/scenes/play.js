@@ -851,6 +851,7 @@
       BB.Food.updateDrops(ctx);
       this.updateMirror();
       this.updateHomeToys();
+      this.updateFirstExit();
 
       // ── bubbles ──
       const targets = [];
@@ -983,9 +984,10 @@
         for (const th of e.things) if (th.type !== 'elder') BB.Things.draw(c, th, cam, ctx);
       }
       for (const r of visible) if (r.def.home) { BB.Home.drawToys(c, r, cam, t, this); BB.Home.drawFamily(c, r, cam, t, this); }
-      if (this.mirrorHold > 0) {
-        const mx = (room.x + BB.Home.MIRROR_COL) * T - cam.x, my = (room.y + 32) * T - cam.y;
-        BB.Links.holdRing(c, mx, my - 124, this.mirrorHold / BB.Links.HOLD);
+      if (room.def.home && !this.wardrobe) {
+        const mx = (room.x + BB.Home.MIRROR_COL) * T, my = (room.y + 32) * T, pb = this.pl.body;
+        if (this.mirrorHold > 0) BB.Links.holdRing(c, mx - cam.x, my - cam.y - 186, this.mirrorHold / BB.Links.HOLD);
+        else if (Math.abs(pb.x + pb.w / 2 - mx) < 80 && Math.abs(pb.y + pb.h - my) < 40) BB.Links.hintRing(c, mx - cam.x, my - cam.y - 186, t);
       }
       if (this.party) this.drawGuests(c, cam, true);
       for (const r of visible) {

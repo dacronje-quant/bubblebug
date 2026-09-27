@@ -68,6 +68,7 @@
       let sel = list.findIndex(a => wear[a.slot] === a.id);
       if (sel < 0) sel = Math.max(0, list.findIndex(a => (this.save.outfits || {})[a.id]));
       this.wardrobe = { sel, t: 0, wiggle: 0 };
+      this.save.wardrobeNew = 0;
       this.pl.state = 'wardrobe'; this.pl.body.vx = 0;
       BB.Input.takePointers();
       S().select();
@@ -152,6 +153,17 @@
       c.strokeStyle = '#ffffff'; c.lineWidth = 7; c.lineCap = 'round'; c.lineJoin = 'round';
       c.beginPath(); c.moveTo(DONE.x - 13, DONE.y + 1); c.lineTo(DONE.x - 3, DONE.y + 11); c.lineTo(DONE.x + 14, DONE.y - 10); c.stroke();
       c.restore();
+    },
+
+    // ──── Until the first trip out: a sparkle flies to the front door ────
+    updateFirstExit() {
+      const room = this.room, pl = this.pl, b = pl.body;
+      if (!room.def.home || this.save.leftHome || this.intro || this.traveling || pl.state !== 'play') return;
+      if (pl.idleT > 0 && pl.idleT % 150 === 90) {
+        const d = BB.Links.doorSpot(0);
+        this.orbs.push({ x0: b.x + b.w / 2, y0: b.y, x1: d.x, y1: d.y - 40, t: 0, dur: 70, col: '#ffe27a' });
+        S().firefly();
+      }
     },
 
     // ──── Batting the toys around the house ────

@@ -123,6 +123,52 @@
     BB.Gestures.drawPaw(c, x, y + 1, 0.42, '#ffd84a', '#b8860b');
   }
 
+  // "stand here!": an empty paw ring that pulses
+  function hintRing(c, x, y, t) {
+    const k = 0.5 + 0.5 * Math.sin(t * 0.12);
+    c.save();
+    c.globalAlpha = 0.55 + 0.35 * k;
+    c.strokeStyle = '#ffffff'; c.lineWidth = 5; c.setLineDash([6, 5]); c.lineDashOffset = -t * 0.4;
+    c.beginPath(); c.arc(x, y, 14 + k * 2, 0, TAU); c.stroke();
+    c.setLineDash([]);
+    BB.Gestures.drawPaw(c, x, y + 1, 0.45, '#ffd84a', '#b8860b');
+    c.restore();
+  }
+  // a big bouncing arrow pointing down at something (flip = pointing up)
+  function arrow(c, x, y, t, col = '#ffd84a', flip = false) {
+    const b = Math.abs(Math.sin(t * 0.12)) * -8;
+    c.save(); c.translate(x, y + b); if (flip) c.scale(1, -1);
+    c.fillStyle = col; c.strokeStyle = '#8a5a14'; c.lineWidth = 2.5; c.lineJoin = 'round';
+    c.beginPath(); c.moveTo(-9, -16); c.lineTo(9, -16); c.lineTo(9, -4); c.lineTo(16, -4); c.lineTo(0, 12); c.lineTo(-16, -4); c.lineTo(-9, -4); c.closePath(); c.fill(); c.stroke();
+    c.restore();
+  }
+  // a soft column of light with sparkles drifting up: "something's here!"
+  function beacon(c, x, y, h, col, t) {
+    const g = c.createLinearGradient(0, y, 0, y - h);
+    g.addColorStop(0, BB.rgba(col, 0.7)); g.addColorStop(0.6, BB.rgba(col, 0.25)); g.addColorStop(1, BB.rgba(col, 0));
+    c.fillStyle = g;
+    c.beginPath(); c.moveTo(x - 32, y); c.lineTo(x - 18, y - h); c.lineTo(x + 18, y - h); c.lineTo(x + 32, y); c.closePath(); c.fill();
+    G().drawGlow(x, y - 20, 60, col, 0.35 + 0.15 * Math.sin(t * 0.1), c);
+    for (let i = 0; i < 4; i++) {
+      const k = ((t * 0.012) + i / 4) % 1;
+      c.fillStyle = `rgba(255,255,240,${Math.sin(k * Math.PI)})`;
+      G().twinkle(x + Math.sin(i * 2.3 + t * 0.03) * 14, y - k * h, 2.5, c); c.fill();
+    }
+  }
+  // the round "home" sign that floats over every way home
+  function homeSign(c, x, y, t, s = 1) {
+    const b = Math.sin(t * 0.06) * 3;
+    c.save(); c.translate(x, y + b); c.scale(s, s);
+    c.fillStyle = '#fff8e8'; c.strokeStyle = '#ff9ec7'; c.lineWidth = 3;
+    G().circle(0, 0, 17, c); c.fill(); c.stroke();
+    BB.HUD.zoneIcon(c, BB.HOME_ZONE, 0, 1, 0.75);
+    c.restore();
+  }
+  const kittenNear = (th, ctx, r = 110) => {
+    const b = ctx.pl.body;
+    return Math.abs(b.x + b.w / 2 - th.x) < r && Math.abs(b.y + b.h - th.y) < 60;
+  };
+
   // a round-topped little door with a paw on it
   function catDoor(c, x, y, w, h, col, glow, t) {
     if (glow) G().drawGlow(x, y - h / 2, h * 1.2, '#fff2b0', 0.55 + Math.sin(t * 0.08) * 0.15, c);
@@ -247,43 +293,64 @@
 
   function draw(c, th, cam, ctx) {
     const x = th.x - cam.x, y = th.y - cam.y;
-    if (x < -80 || x > G().W + 80 || y < -170 || y > G().H + 60) return;
+    if (x < -80 || x > G().W + 80 || y < -200 || y > G().H + 60) return;
     const t = th.t, save = ctx.save;
     if (th.type === 'flap') {
-      if (th.zone === 0) {
-        // the garden gate home: a little picket gate with a heart
-        c.fillStyle = '#fff4e6'; c.strokeStyle = '#8a6a4a'; c.lineWidth = 1.6;
-        for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(x + i * 8 - 3, y); c.lineTo(x + i * 8 - 3, y - 30); c.lineTo(x + i * 8, y - 35); c.lineTo(x + i * 8 + 3, y - 30); c.lineTo(x + i * 8 + 3, y); c.closePath(); c.fill(); c.stroke(); }
-        c.fillRect(x - 22, y - 24, 44, 4); c.strokeRect(x - 22, y - 24, 44, 4);
-        c.fillStyle = '#ff7eb6'; G().heart(x, y - 40 + Math.sin(t * 0.08) * 2, 7, c); c.fill();
+      const Z = BB.ZONES[th.zone];
+      beacon(c, x, y, 150, th.zone === 0 && th.idx === 0 ? '#ffe9a0' : Z.accent, t);
+      if (th.zone === 0 && th.idx === 0) {
+        // the garden gate home: a picket gate under an arch of flowers
+        c.strokeStyle = '#6cc24a'; c.lineWidth = 5;
+        c.beginPath(); c.arc(x, y - 36, 30, Math.PI, 0); c.stroke();
+        ['#ff9ec7', '#ffe066', '#ffffff', '#c9a6ff', '#ff8c6b', '#ff9ec7', '#ffe066'].forEach((col, i) => {
+          const an = Math.PI + (i + 0.5) / 7 * Math.PI;
+          BB.Tiles.flower(c, x + Math.cos(an) * 30, y - 36 + Math.sin(an) * 30 + 4, col, 1.3);
+        });
+        c.fillStyle = '#fff4e6'; c.strokeStyle = '#8a6a4a'; c.lineWidth = 1.8;
+        for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(x + i * 10 - 4, y); c.lineTo(x + i * 10 - 4, y - 40); c.lineTo(x + i * 10, y - 46); c.lineTo(x + i * 10 + 4, y - 40); c.lineTo(x + i * 10 + 4, y); c.closePath(); c.fill(); c.stroke(); }
+        c.fillRect(x - 27, y - 30, 54, 5); c.strokeRect(x - 27, y - 30, 54, 5);
+        c.fillRect(x - 27, y - 12, 54, 5); c.strokeRect(x - 27, y - 12, 54, 5);
       } else {
-        const Z = BB.ZONES[th.zone];
-        catDoor(c, x, y, 24, 34, BB.mix(Z.accent, '#ffffff', 0.2), true, t);
-        // a tiny house above: "this way home"
-        c.save(); c.translate(x, y - 46 + Math.sin(t * 0.06) * 2);
-        c.fillStyle = '#fff4e6'; c.strokeStyle = '#8a5a34'; c.lineWidth = 1.5;
-        c.fillRect(-7, -4, 14, 10); c.strokeRect(-7, -4, 14, 10);
-        c.fillStyle = '#e8706a'; c.beginPath(); c.moveTo(-10, -3); c.lineTo(0, -11); c.lineTo(10, -3); c.closePath(); c.fill(); c.stroke();
-        c.fillStyle = '#ff7eb6'; G().heart(0, 2, 3.5, c); c.fill();
-        c.restore();
+        catDoor(c, x, y, 34, 50, BB.mix(Z.accent, '#ffffff', 0.2), true, t);
       }
-      holdRing(c, x, y - 58, th.hold / HOLD);
+      homeSign(c, x, y - 92, t, 1.15);
+      if (th.hold > 0) holdRing(c, x, y - 130, th.hold / HOLD);
+      else if (kittenNear(th, ctx)) hintRing(c, x, y - 130, t);
+      else if (((save.doors || {})[th.zone] || 0) < th.idx + 1) arrow(c, x, y - 136, t); // (not found yet: look here!)
     } else if (th.type === 'door') {
       const ok = unlocked(th, save);
       if (th.front) {
         // the big front door, glowing until you've gone out once
         const glow = !save.leftHome;
-        if (glow) G().drawGlow(x, y - 40, 110, '#fff2b0', 0.5 + Math.sin(t * 0.1) * 0.25, c);
+        if (glow) {
+          // the very first way out: rays, a big glow and a bouncing arrow
+          c.save(); c.globalAlpha = 0.25 + 0.1 * Math.sin(t * 0.08);
+          c.fillStyle = '#fff2b0';
+          for (let i = 0; i < 9; i++) {
+            const an = -Math.PI / 2 + (i - 4) * 0.28 + Math.sin(t * 0.01) * 0.05;
+            c.beginPath(); c.moveTo(x, y - 40); c.lineTo(x + Math.cos(an - 0.07) * 190, y - 40 + Math.sin(an - 0.07) * 190); c.lineTo(x + Math.cos(an + 0.07) * 190, y - 40 + Math.sin(an + 0.07) * 190); c.closePath(); c.fill();
+          }
+          c.restore();
+          G().drawGlow(x, y - 40, 150, '#fff2b0', 0.6 + Math.sin(t * 0.1) * 0.25, c);
+        }
         c.fillStyle = '#8a4e2c'; c.strokeStyle = '#4a2a14'; c.lineWidth = 3;
         G().rrect(x - 26, y - 78, 52, 78, 22, c); c.fill(); c.stroke();
         c.fillStyle = '#c96a4a'; G().rrect(x - 21, y - 73, 42, 73, 18, c); c.fill();
-        c.fillStyle = '#ffe9b0'; G().circle(x, y - 54, 9, c); c.fill();
-        c.fillStyle = '#ff7eb6'; G().heart(x, y - 53, 5, c); c.fill();
+        // a round window with the sunny garden outside
+        c.save(); c.beginPath(); c.arc(x, y - 54, 11, 0, TAU); c.clip();
+        c.fillStyle = '#9fdcff'; c.fillRect(x - 11, y - 65, 22, 22);
+        c.fillStyle = '#fff4b0'; G().circle(x + 5, y - 59, 3.5, c); c.fill();
+        c.fillStyle = '#6cc24a'; G().ellipse(x, y - 44, 14, 6, 0, c); c.fill();
+        c.restore();
+        c.strokeStyle = '#ffe9b0'; c.lineWidth = 2.5; G().circle(x, y - 54, 11, c); c.stroke();
         c.fillStyle = '#ffd84a'; G().circle(x + 13, y - 34, 3, c); c.fill();
         // a little cat flap at the bottom
         c.fillStyle = '#a9583a'; G().rrect(x - 9, y - 18, 18, 16, 6, c); c.fill();
+        if (!save.leftHome && th.hold <= 0) arrow(c, x, y - 128, t);
       } else zoneDoor(c, th, x, y, t, ok, save.lastZone === th.zone);
-      if (ok) holdRing(c, x, y - (th.front ? 96 : 150), th.hold / HOLD);
+      const ry = y - (th.front ? 96 : 150);
+      if (ok && th.hold > 0) holdRing(c, x, ry, th.hold / HOLD);
+      else if (ok && kittenNear(th, ctx, 70)) hintRing(c, x, ry, t);
     } else if (th.type === 'lift') {
       // a rainbow beam (bottom end) or a rainbow landing pool (top end)
       const cols = ['#ff7b9c', '#ffcf5c', '#fff27a', '#8fe388', '#7cc8ff', '#b99cff'];
@@ -298,8 +365,11 @@
         c.fillStyle = `rgba(255,255,255,${1 - k})`;
         G().twinkle(x + Math.sin(i * 2 + t * 0.05) * 10, y - k * tall, 3, c); c.fill();
       }
+      // which way it goes: up from the clouds, down from the lagoon
+      arrow(c, x, y - 150, t, '#ffffff', th.end === 'u');
+      if (kittenNear(th, ctx, 90)) hintRing(c, x, y - 60, t);
     }
   }
 
-  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, doorFlap, holdRing, HOLD };
+  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, doorFlap, holdRing, hintRing, arrow, HOLD };
 })(window.BB);

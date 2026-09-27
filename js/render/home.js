@@ -189,11 +189,12 @@
     });
     // glowing paw prints from the bed to the front door, until the first trip out
     if (!save.leftHome && !play.intro) {
-      for (let i = 0; i < 5; i++) {
-        const k = ((t * 0.03) - i * 0.18) % 1;
+      for (let i = 0; i < 6; i++) {
+        const k = ((t * 0.03) - i * 0.15) % 1;
         const a = k > 0 ? Math.sin(Math.min(1, k * 1.2) * Math.PI) : 0;
-        c.globalAlpha = 0.25 + a * 0.75;
-        BB.Gestures.drawPaw(c, X(7.4 - i * 0.9) , Y(32) - 5 - (i % 2) * 4, 0.45, '#ffd84a', '#b8860b');
+        c.globalAlpha = 0.45 + a * 0.55;
+        G().drawGlow(X(7.6 - i * 0.8), Y(32) - 7 - (i % 2) * 5, 14, '#ffe27a', 0.5 * a, c);
+        BB.Gestures.drawPaw(c, X(7.6 - i * 0.8), Y(32) - 7 - (i % 2) * 5, 0.7, '#ffd84a', '#b8860b');
       }
       c.globalAlpha = 1;
     }
@@ -240,25 +241,39 @@
   // the dressing-up mirror: stand still in front of it to try things on
   function drawMirror(c, room, cam, t, play) {
     const x = (room.x + MIRROR_COL) * T - cam.x, y = (room.y + 32) * T - cam.y;
-    if (x < -80 || x > G().W + 80) return;
-    c.fillStyle = '#8a5a34'; c.strokeStyle = '#4a2e18'; c.lineWidth = 2;
-    c.fillRect(x - 3, y - 30, 6, 30);
-    c.beginPath(); c.moveTo(x - 16, y); c.lineTo(x, y - 12); c.lineTo(x + 16, y); c.stroke();
-    G().ellipse(x, y - 58, 22, 32, 0, c); c.fill(); c.stroke();
-    const g = c.createLinearGradient(x - 18, y - 88, x + 18, y - 28);
-    g.addColorStop(0, '#e8f6ff'); g.addColorStop(0.5, '#bfe0f8'); g.addColorStop(1, '#dff0ff');
-    c.fillStyle = g; G().ellipse(x, y - 58, 17, 27, 0, c); c.fill();
-    c.fillStyle = 'rgba(255,255,255,0.7)';
-    c.beginPath(); c.ellipse(x - 7, y - 66, 3, 12, 0.3, 0, TAU); c.fill();
-    // a hat hanging on the corner says "dress up here"
-    const has = Object.keys(play.save.outfits || {}).length;
+    if (x < -120 || x > G().W + 120) return;
+    const save = play.save, has = Object.keys(save.outfits || {}).length;
+    const fresh = !!save.wardrobeNew;
+    // a warm glow (golden and pulsing when there's a new present to try on)
+    G().drawGlow(x, y - 70, fresh ? 110 : 70, fresh ? '#ffe27a' : '#ffe0f0', fresh ? 0.55 + 0.25 * Math.sin(t * 0.12) : 0.35, c);
+    c.fillStyle = '#8a5a34'; c.strokeStyle = '#4a2e18'; c.lineWidth = 2.5;
+    c.fillRect(x - 4, y - 36, 8, 36);
+    c.beginPath(); c.moveTo(x - 22, y); c.lineTo(x, y - 16); c.lineTo(x + 22, y); c.stroke();
+    // the frame: pink and gold, with little hearts
+    c.fillStyle = '#ff9ec7'; G().ellipse(x, y - 76, 31, 44, 0, c); c.fill(); c.stroke();
+    c.fillStyle = '#ffd84a'; G().ellipse(x, y - 76, 27, 40, 0, c); c.fill();
+    const g = c.createLinearGradient(x - 24, y - 116, x + 24, y - 36);
+    g.addColorStop(0, '#f2faff'); g.addColorStop(0.5, '#c4e2fa'); g.addColorStop(1, '#e6f4ff');
+    c.fillStyle = g; G().ellipse(x, y - 76, 23, 36, 0, c); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.75)';
+    c.beginPath(); c.ellipse(x - 9, y - 86, 4, 16, 0.3, 0, TAU); c.fill();
+    for (const [dx, dy] of [[-29, -76], [29, -76], [0, -121]]) { c.fillStyle = '#ff7eb6'; G().heart(x + dx, y + dy, 5, c); c.fill(); }
+    // a floating sign with a hat on it: "dress up here!"
+    const b = Math.sin(t * 0.06) * 3;
+    c.fillStyle = '#fff8e8'; c.strokeStyle = '#ff9ec7'; c.lineWidth = 3;
+    G().circle(x, y - 150 + b, 20, c); c.fill(); c.stroke();
     if (BB.Wardrobe) {
-      const id = (play.save.wear && play.save.wear.head) || 'sunhat';
-      c.save(); c.globalAlpha = has ? 1 : 0.5;
-      BB.Wardrobe.icon(c, id, x + 17, y - 90, 1.2, t);
+      const id = (save.wear && save.wear.head) || 'sunhat';
+      c.save(); c.globalAlpha = has ? 1 : 0.6;
+      BB.Wardrobe.icon(c, id, x, y - 150 + b, 1.5, t);
       c.restore();
     }
-    if (has) { c.fillStyle = 'rgba(255,250,220,0.9)'; G().twinkle(x + 8 + Math.sin(t * 0.05) * 4, y - 74, 3 + Math.sin(t * 0.1), c); c.fill(); }
+    for (let i = 0; i < 3; i++) {
+      const k = ((t * 0.015) + i / 3) % 1;
+      c.fillStyle = `rgba(255,250,220,${Math.sin(k * Math.PI)})`;
+      G().twinkle(x - 20 + i * 20, y - 40 - k * 90, 2.6, c); c.fill();
+    }
+    if (fresh && BB.Links.arrow) BB.Links.arrow(c, x, y - 192, t);
   }
 
   // the family members who are home, napping on their cushions
