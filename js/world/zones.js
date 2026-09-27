@@ -1,5 +1,8 @@
 // ════════════════════════════════════════════════════════════════
-//  ZONES — the twelve biomes of the Rainbow Kingdom.
+//  ZONES — the twelve biomes of the Rainbow Kingdom, plus the Cat House.
+//  Zones 0–5 run west → east along the bottom of the ring; zones 6–11
+//  (dir: -1) run back east → west along the top, and the Cat House sits
+//  in the middle.
 //  Palettes drive the procedural tile art, parallax painter, ambient
 //  particles and lighting. `cast` lists the gloomy critters who live in
 //  each zone: the `b` / `c` map characters take turns through their list,
@@ -76,7 +79,7 @@
       cast: { b: ['bluebird', 'moth'], c: ['lamb'] },
     },
     { // 6 ─ Coral Lagoon
-      key: 'lagoon', name: 'Coral Lagoon',
+      dir: -1, key: 'lagoon', name: 'Coral Lagoon',
       sky: ['#6fd0ff', '#bff0ff', '#fff1c9'],
       far: '#8fd6d8', mid: '#5fb8b0', near: '#2f8a86',
       ground: '#e8c88c', groundDark: '#c9a066', groundLight: '#f6e2b0',
@@ -87,7 +90,7 @@
       cast: { b: ['crab', 'seal', 'jellyfish'], c: ['fish', 'crab'] },
     },
     { // 7 ─ Sunny Dunes
-      key: 'dunes', name: 'Sunny Dunes',
+      dir: -1, key: 'dunes', name: 'Sunny Dunes',
       sky: ['#ffa860', '#ffd49a', '#fff0c8'],
       far: '#f0b27a', mid: '#d98d58', near: '#a85e32',
       ground: '#d98d58', groundDark: '#b06838', groundLight: '#f0b27a',
@@ -98,7 +101,7 @@
       cast: { b: ['fennec', 'meerkat', 'lizard'], c: ['scarab', 'meerkat'] },
     },
     { // 8 ─ Frosty Peaks
-      key: 'frost', name: 'Frosty Peaks',
+      dir: -1, key: 'frost', name: 'Frosty Peaks',
       sky: ['#4a66b0', '#a8c8f0', '#e8f4ff'],
       far: '#c8dcf5', mid: '#9ab8e0', near: '#5e7cb4',
       ground: '#8fa8d0', groundDark: '#647cae', groundLight: '#b8cce8',
@@ -109,7 +112,7 @@
       cast: { b: ['penguin', 'polarcub', 'arcticfox'], c: ['owl', 'penguin'] },
     },
     { // 9 ─ Autumn Woods
-      key: 'autumn', name: 'Autumn Woods',
+      dir: -1, key: 'autumn', name: 'Autumn Woods',
       sky: ['#f29a52', '#f8d4a0', '#fff0d8'],
       far: '#e8a070', mid: '#c8663a', near: '#7a3418',
       ground: '#6a4a34', groundDark: '#4a3022', groundLight: '#8a6448',
@@ -120,7 +123,7 @@
       cast: { b: ['squirrel', 'fawn', 'raccoon'], c: ['hedgehog'] },
     },
     { // 10 ─ Moonlit Hot Springs
-      key: 'springs', name: 'Moonlit Springs',
+      dir: -1, key: 'springs', name: 'Moonlit Springs',
       sky: ['#2e2452', '#7a5288', '#e898a6'],
       far: '#5e5082', mid: '#44405e', near: '#24243e',
       ground: '#6a6a7a', groundDark: '#4a4a5a', groundLight: '#8a8a9a',
@@ -131,7 +134,7 @@
       cast: { b: ['capybara', 'monkey'], c: ['koi'] },
     },
     { // 11 ─ Starlight Sky
-      key: 'starlight', name: 'Starlight Sky',
+      dir: -1, key: 'starlight', name: 'Starlight Sky',
       sky: ['#070722', '#241654', '#54347e'],
       far: '#2a2a6a', mid: '#3a2a7a', near: '#160e3a',
       ground: '#3a3a8a', groundDark: '#22225a', groundLight: '#5a5ab0',
@@ -141,5 +144,19 @@
       ambient: 'stars', dark: 0.15,
       cast: { b: ['dragon', 'unicorn', 'bunny'], c: ['lamb', 'bat'] },
     },
+    { // 12 ─ The Cat House (home, in the middle of the ring)
+      key: 'home', name: 'The Cat House',
+      sky: ['#f7dcc0', '#f2c9a4', '#e7b489'],
+      far: '#e9c29a', mid: '#d9a97c', near: '#c48c5c',
+      ground: '#b07a4a', groundDark: '#7a4e2c', groundLight: '#c9935f',
+      top: '#d9a066', topLight: '#f2c68e', topDark: '#9a6a3c',
+      ledge: '#c98a52', ledgeDark: '#7a4e2c',
+      accent: '#ffb3cf', light: '#fff2c2', water: '#8fd0ff',
+      ambient: 'motes', dark: 0,
+      cast: { b: [], c: [] },
+    },
   ];
+  // which way is onward in a zone: the return half of the ring runs west
+  BB.zoneDir = z => (BB.ZONES[z] && BB.ZONES[z].dir) || 1;
+  BB.HOME_ZONE = 12;
 })(window.BB);

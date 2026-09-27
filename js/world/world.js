@@ -16,7 +16,7 @@
 //   ~  water / mist (dandelion      R L U D  arrow signposts
 //      rescue, one sun sadder)      y  yarn ball        n  music flower
 //   H  shy wall (walk through!)     o  bloom bud (bubble it to open G)
-//   :  glow petal (solid w/ Glow)   F  finale party     S  start spot
+//   :  glow petal (solid w/ Glow)   F  rainbow slide    S  start spot
 //   ^  breezy updraft
 //   G  vine gate (opens when every bud in the room blooms, its boss
 //      is cheered up, or its puzzle is solved)
@@ -36,12 +36,16 @@
 //   cat food (regrows; in Hard it cheers you back up):
 //   e  a fishy treat (+1 happy sun);  W  a full food bowl (every sun)
 //   j  a golden paw bubble: the zone's cat trick (do it with ▼)
+//   links (see js/entities/links.js):
+//   h  a cat flap: stand in it to pop home (and it lights its door there)
+//   u / v  the two ends of the Rainbow Lift (Cloud Castles ⇄ Sky Lagoon)
+//   F  the Rainbow Slide home to the Cat House (the end of the adventure)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
   const T = BB.CFG.TILE;
 
-  const ENTITY_CHARS = '*bcBEKfRLUDTynoFS&QPdAkZVOeWj';
+  const ENTITY_CHARS = '*bcBEKfRLUDTynoFS&QPdAkZVOeWjhuv';
   const DEFS = [];
 
   // Rooms register themselves from js/world/rooms/*.js

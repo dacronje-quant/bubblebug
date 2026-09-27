@@ -45,6 +45,7 @@
     if (BB.Puzzles.TYPES[thing.ch]) return BB.Puzzles.create(thing, room, save);
     if (BB.Food.TYPES[thing.ch]) return BB.Food.create(thing, room);
     if (thing.ch === 'j') return BB.Gestures.create(thing, room, save);
+    if ('huv'.includes(thing.ch)) return BB.Links.create(thing, room, save);
     const type = TYPE[thing.ch];
     if (!type) return null;
     const key = thing.tx + ',' + thing.ty;
@@ -60,6 +61,7 @@
       case 'elder': th.ability = room.def.elder; th.awake = 0; break;
       case 'family':
         th.fam = room.def.family; th.found = !!save.family[th.fam];
+        if (th.found) return null; // already home on their cushion
         th.y = floorBelow(thing.tx, thing.ty); th.facing = 1; th.hop = 0; th.hopV = 0;
         break;
     }
@@ -70,13 +72,14 @@
   function guideDir(th) {
     const room = W().byId[th.room];
     const sign = room.things.find(s => DIR[s.ch]);
-    return sign ? DIR[sign.ch] : [1, 0];
+    return sign ? DIR[sign.ch] : [BB.zoneDir(room.zone), 0];
   }
 
   function update(th, ctx) {
     if (th.puzzle) return BB.Puzzles.update(th, ctx);
     if (th.food) return BB.Food.update(th, ctx);
     if (th.trick) return BB.Gestures.update(th, ctx);
+    if (th.link) return BB.Links.update(th, ctx);
     th.t++;
     const pb = ctx.pl.body;
     const pcx = pb.x + pb.w / 2, pcy = pb.y + pb.h / 2;
@@ -133,15 +136,24 @@
         break;
       }
       case 'finale':
-        if (dist < 90 && !ctx.partyStarted) ctx.onFinale(th);
+        // the Rainbow Slide: hop in and slide all the way home
+        if (dist < 56 && ctx.pl.state === 'play') ctx.onSlide(th);
         break;
       case 'family':
         th.facing = dx > 0 ? 1 : -1;
         if (!th.found && dist < 110 && ctx.pl.state === 'play') { th.found = true; th.hopV = -4; ctx.onFamily(th); }
         if (th.found) {
-          if (dist < 150 && th.t % 45 === 0) PT().heart(th.x + (Math.random() - 0.5) * 20, th.y - 50);
-          if (dist < 90 && th.hop === 0 && Math.random() < 0.02) th.hopV = -3;
+          // a happy hello, then off home to their own cushion
+          th.homeT = (th.homeT || 0) + 1;
+          if (th.t % 20 === 0) PT().heart(th.x + (Math.random() - 0.5) * 20, th.y - 50);
+          if (th.hop === 0 && th.homeT < 100 && Math.random() < 0.05) th.hopV = -3.5;
           if (th.hopV || th.hop < 0) { th.hop += th.hopV; th.hopV += 0.3; if (th.hop >= 0) { th.hop = 0; th.hopV = 0; } }
+          if (th.homeT === 110) {
+            th.dead = true;
+            PT().burst('spark', th.x, th.y - 20, 18, { color: '#fff4c2', speed: 3, life: 36 });
+            for (let i = 0; i < 8; i++) PT().heart(th.x + (Math.random() - 0.5) * 30, th.y - 20 - Math.random() * 30);
+            S().whoosh();
+          }
         }
         break;
     }
@@ -177,7 +189,7 @@
   // Bubble targets for this thing (or null)
   function target(th, ctx) {
     if (th.puzzle) return BB.Puzzles.target(th, ctx);
-    if (th.food || th.trick) return null;
+    if (th.food || th.trick || th.link) return null;
     switch (th.type) {
       case 'bud': return th.bloom ? null : { x: th.x, y: th.y, r: 14, homing: true, hit: () => { bloomBud(th, ctx); return true; } };
       case 'flower': return { x: th.x, y: th.y - 30, r: 16, homing: false, hit: () => { sing(th); return true; } };
@@ -203,6 +215,7 @@
     if (th.puzzle) return BB.Puzzles.draw(c, th, cam, ctx);
     if (th.food) return BB.Food.draw(c, th, cam);
     if (th.trick) return BB.Gestures.draw(c, th, cam);
+    if (th.link) return BB.Links.draw(c, th, cam, ctx);
     const x = th.x - cam.x, y = th.y - cam.y;
     if (x < -100 || x > G().W + 100 || y < -140 || y > G().H + 140) return;
     const t = th.t;
@@ -284,16 +297,29 @@
         break;
       }
       case 'finale': {
-        // a glowing rainbow arch over the party spot
+        // the Rainbow Slide: a rainbow arch, and a slide swooping down
+        // toward home (the Cat House is right below, in the middle)
         c.save();
         c.globalAlpha = 0.85;
         c.lineWidth = 9;
-        ['#ff7b9c', '#ffcf5c', '#fff27a', '#8fe388', '#7cc8ff', '#b99cff'].forEach((col, i) => {
+        const cols = ['#ff7b9c', '#ffcf5c', '#fff27a', '#8fe388', '#7cc8ff', '#b99cff'];
+        cols.forEach((col, i) => {
           c.strokeStyle = col;
-          c.beginPath(); c.arc(x, y + 16, 190 - i * 9, Math.PI, 0); c.stroke();
+          c.beginPath(); c.arc(x, y + 16, 120 - i * 9, Math.PI, 0); c.stroke();
+        });
+        c.lineWidth = 7;
+        cols.forEach((col, i) => {
+          c.strokeStyle = col;
+          c.beginPath(); c.moveTo(x - 30 + i * 7, y + 4); c.quadraticCurveTo(x - 10 + i * 7, y + 60, x + 60 + i * 7, y + 120); c.stroke();
         });
         c.restore();
-        G().drawGlow(x, y - 120, 160, '#fff4c2', 0.4, c);
+        G().drawGlow(x, y - 30, 120, '#fff4c2', 0.45 + Math.sin(t * 0.08) * 0.15, c);
+        // a tiny house with a heart: "home is this way"
+        const hy = y - 70 + Math.sin(t * 0.06) * 4;
+        c.fillStyle = '#fff4e6'; c.strokeStyle = '#8a5a34'; c.lineWidth = 2;
+        c.fillRect(x - 14, hy - 8, 28, 20); c.strokeRect(x - 14, hy - 8, 28, 20);
+        c.fillStyle = '#e8706a'; c.beginPath(); c.moveTo(x - 19, hy - 6); c.lineTo(x, hy - 22); c.lineTo(x + 19, hy - 6); c.closePath(); c.fill(); c.stroke();
+        c.fillStyle = '#ff7eb6'; G().heart(x, hy + 3, 6, c); c.fill();
         break;
       }
     }
@@ -301,6 +327,14 @@
 
   function drawBench(c, x, y, th, ctx) {
     const Z = BB.ZONES[th.zone];
+    if (Z.key === 'home') {
+      // the kitten's own round cat bed, with a soft pink cushion
+      c.fillStyle = '#9a5a8a'; c.strokeStyle = '#5a2a4a'; c.lineWidth = 2;
+      G().ellipse(x, y - 8, 30, 12, 0, c); c.fill(); c.stroke();
+      c.fillStyle = '#ffc6e0'; G().ellipse(x, y - 11, 23, 7, 0, c); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.45)'; G().ellipse(x - 7, y - 13, 10, 2.5, 0, c); c.fill();
+      return;
+    }
     // lantern post
     const lx = x + 30;
     c.strokeStyle = '#5a4030'; c.lineWidth = 3;

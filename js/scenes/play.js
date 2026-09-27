@@ -62,6 +62,7 @@
             if (x) { e.things.push(x); if (x.type === 'lock') this.locks[x.key] = x; }
           }
         }
+        if (room.def.home) e.things.push(...BB.Links.hallDoors(room));
         this.ents[room.id] = e;
       }
       // restore opened gates (and any gate whose puzzle was already solved)
@@ -97,6 +98,7 @@
       Cam().snap(this.room, this.pl.body);
       this.lastCam = { x: Cam().x, y: Cam().y };
       this.gift = null; this.party = null; this.partyStarted = false;
+      this.traveling = null; this.linkLock = null; this.intro = null;
       this.lastZone = -1;
       // feelings, save point & friends that follow you
       this.mood = C.MOOD_MAX; this.invuln = 60; this.hurtT = 0; this.healT = 0; this.munchT = 0;
@@ -113,6 +115,7 @@
       this.activeBoss = null; this.bossCard = null; this.bossMusic = false;
       this.signFade = {};
       this.enterZone(this.room.zone);
+      if (!save.introDone && this.room.def.home) this.startIntro();
       BB.Bubbles.clear(); PT().clear(); BB.Bosses.clear();
       this.t = 0;
       this.writeSave();
@@ -145,6 +148,79 @@
         S().checkpoint();
       }
       this.writeSave();
+    },
+
+    // ──── Going through a door, a cat flap, the lift or the slide ────
+    travel(dest, kind, from) {
+      if (!dest || this.traveling) return;
+      const pl = this.pl;
+      this.traveling = { dest, kind, from, t: 0 };
+      pl.state = 'travel'; pl.gesture = null;
+      pl.body.vx = 0; pl.body.vy = 0;
+      this.iris = { t: 0, close: true };
+      BB.Bubbles.clear();
+      if (kind === 'slide' || kind === 'liftUp' || kind === 'liftDown') { S().whoosh(); S().rescue(); }
+      else S().whoosh();
+    },
+
+    updateTravel() {
+      const tr = this.traveling, pl = this.pl, b = pl.body;
+      tr.t++;
+      if (tr.kind === 'slide' && tr.t % 3 === 0) PT().trail('star', b.x + b.w / 2, b.y + b.h / 2, '#fff4c2');
+      if (tr.t < C.IRIS_TIME) return;
+      // arrive
+      const d = tr.dest;
+      b.x = d.x - b.w / 2; b.y = d.y - b.h; b.vx = 0; b.vy = 0; b.grounded = true; b.climbing = 0;
+      b.lastSafe = { x: b.x, y: b.y };
+      const r = W().roomAtPx(b.x + b.w / 2, b.y + b.h / 2) || this.room;
+      if (r !== this.room) {
+        this.leaveRoom(this.room);
+        this.prevRoom = this.room;
+        this.room = r;
+        this.save.visited[r.id] = 1;
+        if (r.zone !== this.prevRoom.zone) this.enterZone(r.zone);
+      }
+      Cam().snap(r, b);
+      this.trail = [{ x: b.x + b.w / 2, y: b.y + b.h }];
+      for (const f of this.followers) { f.x = b.x + b.w / 2 - b.facing * 20; f.feetY = b.y + b.h; f.y = f.type === 'key' ? b.y - 20 : f.feetY; }
+      this.checkpoint = { x: b.x, y: b.y };
+      this.pendingCP = false;
+      this.linkLock = { x: d.x, y: d.y };
+      this.iris = { t: 0, close: false };
+      this.traveling = null;
+      pl.state = 'play'; pl.idleT = 0; pl.squash = 0.8; pl.happyT = 30;
+      PT().burst('spark', b.x + b.w / 2, b.y + b.h / 2, 14, { color: '#fff4c2', speed: 2.4, life: 30 });
+      if (tr.kind === 'out') this.save.leftHome = 1;
+      if (tr.kind === 'slide') this.homecoming();
+      this.writeSave();
+    },
+
+    // ──── A new adventure: waking up alone in the Cat House ────
+    startIntro() {
+      const pl = this.pl, b = pl.body, h = this.room;
+      const bed = h.things.find(t => t.ch === 'B');
+      if (bed) { b.x = bed.tx * T + T / 2 - b.w / 2; b.y = (bed.ty + 1) * T - b.h; }
+      pl.state = 'bench'; pl.benchT = 0;
+      this.intro = { t: 0 };
+    },
+    updateIntro() {
+      const it = this.intro, pl = this.pl;
+      it.t++;
+      if (it.t === 70 && pl.state === 'bench') { pl.state = 'play'; pl.idleT = 0; pl.squash = 1.2; BB.Gestures.start(pl, 'stretch'); S().meow(pl.cat); }
+      if (it.t > 260 || (it.t > 70 && pl.state === 'play' && (BB.Input.held.left || BB.Input.held.right || BB.Input.held.jump))) {
+        this.intro = null; this.save.introDone = 1; BB.Save.write();
+      }
+    },
+
+    // ──── Home at last ────
+    homecoming() {
+      if (!this.save.finale) this.startParty();
+      else {
+        // home again: the family comes running with hearts
+        const b = this.pl.body;
+        for (let i = 0; i < 12; i++) PT().heart(b.x + (Math.random() - 0.5) * 200, b.y - Math.random() * 60);
+        S().befriend();
+      }
     },
 
     // ──── Cat tricks: ▼ does the next one you know ────
@@ -378,6 +454,7 @@
 
     leaveRoom(room) {
       if (!room) return;
+      if (room.def.home && this.party) { this.party = null; this.partyStarted = false; }
       for (const bs of this.ents[room.id].bosses) BB.Bosses.reset(bs);
       BB.Bosses.clear();
       // snacks are back for next time; boss treats don't wait around
@@ -449,6 +526,20 @@
         },
         onElder(th) { self.startGift(th); },
         onFinale(th) { self.startParty(th); },
+        // links: doors, cat flaps, the Rainbow Lift and the Rainbow Slide
+        linkLocked: th => !!self.linkLock && Math.abs(th.x - self.linkLock.x) < 4 && Math.abs(th.y - self.linkLock.y) < 4,
+        travel: (dest, kind, from) => self.travel(dest, kind, from),
+        onFlapFound(th) {
+          self.save.doors[th.zone] = 1;
+          S().gateDing();
+          PT().burst('spark', th.x, th.y - 30, 14, { color: '#fff4c2', speed: 2.4, life: 32 });
+          PT().ring(th.x, th.y - 20, '#ffe9a0', 24);
+          BB.Save.write();
+        },
+        onSlide(th) {
+          const sk = BB.Links.skylightTile();
+          if (sk) self.travel(BB.Links.spot(sk.tx, sk.ty), 'slide', th);
+        },
         // nom nom: in Hard a treat brings a sun back (a bowl, all of them);
         // in Easy it's just yummy
         onEat(th) {
@@ -615,10 +706,13 @@
       const ab = this.save.abilities;
       const b = this.pl.body;
       let fx = 0;
-      if (I.pressed.down) this.doTrick();
+      if (this.intro) this.updateIntro();
+      if (this.linkLock && Math.hypot(b.x + b.w / 2 - this.linkLock.x, b.y + b.h - this.linkLock.y) > 40) this.linkLock = null;
+      if (I.pressed.down && !this.traveling) this.doTrick();
       if (this.trickCard && ++this.trickCard.t > 260) this.trickCard = null;
       if (this.trickHint > 0) this.trickHint--;
       if (this.pl.state === 'sad') this.updateSad();
+      else if (this.traveling) this.updateTravel();
       else {
         fx = BB.Player.update(this.pl, I, ab, {
           bubbleCount: BB.Bubbles.list.length,
