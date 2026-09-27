@@ -174,6 +174,9 @@
     BB.HUD.zoneIcon(c, BB.HOME_ZONE, 0, 1, 0.75);
     c.restore();
   }
+  // a link that's been used once needs no more arrows or "stand here" rings
+  const linkKey = th => th.type === 'flap' ? 'flap' + th.zone + '_' + th.idx : th.type === 'door' ? 'door' + th.zone : th.type === 'lift' ? 'lift' : null;
+  const used = (th, save) => !!(save.used || {})[linkKey(th)];
   const kittenNear = (th, ctx, r = 110) => {
     const b = ctx.pl.body;
     return Math.abs(b.x + b.w / 2 - th.x) < r && Math.abs(b.y + b.h - th.y) < 60;
@@ -293,7 +296,7 @@
       c.strokeStyle = 'rgba(60,40,50,0.8)'; c.lineWidth = 3;
       c.beginPath(); c.moveTo(-w / 2 + 6, -h * 0.55); c.lineTo(w / 2 - 6, -h * 0.55); c.moveTo(-w / 2 + 6, -h * 0.3); c.lineTo(w / 2 - 6, -h * 0.3); c.stroke();
     }
-    if (recent && ok) {
+    if (recent && ok && !used(th, BB.Play.save)) {
       const ay = sy - 34 + Math.sin(t * 0.15) * 4;
       c.fillStyle = '#ffd84a'; c.strokeStyle = '#b8860b'; c.lineWidth = 1.5;
       c.beginPath(); c.moveTo(-8, ay - 6); c.lineTo(8, ay - 6); c.lineTo(0, ay + 4); c.closePath(); c.fill(); c.stroke();
@@ -335,6 +338,7 @@
       }
       homeSign(c, x, y - 92, t, 1.15);
       if (th.hold > 0) holdRing(c, x, y - 130, th.hold / HOLD);
+      else if (used(th, save)) { /* (already used: no more hints) */ }
       else if (kittenNear(th, ctx)) hintRing(c, x, y - 130, t);
       else if (((save.doors || {})[th.zone] || 0) < th.idx + 1) arrow(c, x, y - 136, t); // (not found yet: look here!)
     } else if (th.type === 'door') {
@@ -370,7 +374,7 @@
       } else zoneDoor(c, th, x, y, t, ok, save.newDoor != null ? save.newDoor === th.zone : save.lastZone === th.zone);
       const ry = y - (th.front ? 96 : 150);
       if (ok && th.hold > 0) holdRing(c, x, ry, th.hold / HOLD);
-      else if (ok && kittenNear(th, ctx, 70)) hintRing(c, x, ry, t);
+      else if (ok && !used(th, save) && kittenNear(th, ctx, 70)) hintRing(c, x, ry, t);
     } else if (th.type === 'lift') {
       // a rainbow beam (bottom end) or a rainbow landing pool (top end)
       const cols = ['#ff7b9c', '#ffcf5c', '#fff27a', '#8fe388', '#7cc8ff', '#b99cff'];
@@ -386,10 +390,12 @@
         G().twinkle(x + Math.sin(i * 2 + t * 0.05) * 10, y - k * tall, 3, c); c.fill();
       }
       // which way it goes: up from the clouds, down from the lagoon
-      arrow(c, x, y - 150, t, '#ffffff', th.end === 'u');
-      if (kittenNear(th, ctx, 90)) hintRing(c, x, y - 60, t);
+      if (!used(th, save)) {
+        arrow(c, x, y - 150, t, '#ffffff', th.end === 'u');
+        if (kittenNear(th, ctx, 90)) hintRing(c, x, y - 60, t);
+      }
     }
   }
 
-  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, holdRing, hintRing, arrow, HOLD };
+  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, holdRing, hintRing, arrow, linkKey, HOLD };
 })(window.BB);

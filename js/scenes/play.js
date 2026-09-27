@@ -180,6 +180,9 @@
     // ──── Going through a door, a cat flap, the lift or the slide ────
     travel(dest, kind, from) {
       if (!dest || this.traveling) return;
+      // used once: its arrows and "stand here" rings can go now
+      const key = from && BB.Links.linkKey(from);
+      if (key) { this.save.used = this.save.used || {}; this.save.used[key] = 1; }
       const pl = this.pl;
       this.traveling = { dest, kind, from, t: 0 };
       pl.state = 'travel'; pl.gesture = null;
@@ -995,7 +998,7 @@
       if (room.def.home && !this.wardrobe) {
         const mx = (room.x + BB.Home.MIRROR_COL) * T, my = (room.y + 32) * T, pb = this.pl.body;
         if (this.mirrorHold > 0) BB.Links.holdRing(c, mx - cam.x, my - cam.y - 186, this.mirrorHold / BB.Links.HOLD);
-        else if (Math.abs(pb.x + pb.w / 2 - mx) < 80 && Math.abs(pb.y + pb.h - my) < 40) BB.Links.hintRing(c, mx - cam.x, my - cam.y - 186, t);
+        else if (!(this.save.used || {}).mirror && Math.abs(pb.x + pb.w / 2 - mx) < 80 && Math.abs(pb.y + pb.h - my) < 40) BB.Links.hintRing(c, mx - cam.x, my - cam.y - 186, t);
       }
       if (this.party) this.drawGuests(c, cam, true);
       for (const r of visible) {

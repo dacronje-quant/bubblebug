@@ -69,6 +69,7 @@
       if (sel < 0) sel = Math.max(0, list.findIndex(a => (this.save.outfits || {})[a.id]));
       this.wardrobe = { sel, t: 0, wiggle: 0 };
       this.save.wardrobeNew = 0;
+      this.save.used = this.save.used || {}; this.save.used.mirror = 1;
       this.pl.state = 'wardrobe'; this.pl.body.vx = 0;
       BB.Input.takePointers();
       S().select();
