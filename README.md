@@ -272,7 +272,7 @@ tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (
 ### Zero softlocks, proven
 
 ```
-node tools/verify-world.js             # ~31 minutes on 4 cores, exit code 0 = all good
+node tools/verify-world.js             # ~23 minutes on 4 cores, exit code 0 = all good
 node tools/verify-world.js --stage 10  # just one story stage (0 = start … 10 = the slide home)
 node tools/verify-world.js --map g3    # also print a room with reachable air marked •
 ```
