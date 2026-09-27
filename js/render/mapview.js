@@ -15,8 +15,8 @@
 //  sparkles are found, a lantern dot for benches, the elder's gift badge,
 //  a cat face where you found family, a toy where you found a toy, each
 //  boss (under a rain-cloud until cheered up, then with a heart), dotted
-//  lines between fairy-ring twins, dotted paths home from the cat flaps
-//  you've found, the Rainbow Lift, and your kitten's face where you are.
+//  lines between fairy-ring twins, a little house on each cat flap you've
+//  found, the Rainbow Lift, and your kitten's face where you are.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -171,21 +171,18 @@
       if (r.def.home) BB.HUD.zoneIcon(c, r.zone, x + w / 2, y + h / 2, 1.4 * s);
     }
 
-    // dotted paths home from every cat flap you've found, and the Rainbow Lift
-    const L = BB.Links, hm = L.home();
-    if (hm && save.visited[hm.id]) {
-      const hx = ox + (hm.x + hm.w / 2) * sc, hy = oy + (hm.y + hm.h / 2) * sc;
-      c.lineWidth = 2; c.setLineDash([4, 5]);
-      for (let z = 0; z < 12; z++) {
-        const n = (save.doors || {})[z] || 0;
-        L.flapTiles(z).slice(0, n).forEach(f => {
-          c.strokeStyle = BB.rgba(BB.ZONES[z].accent, 0.55);
-          c.beginPath(); c.moveTo(ox + (f.tx + 0.5) * sc, oy + (f.ty + 0.5) * sc); c.lineTo(hx, hy); c.stroke();
-          c.fillStyle = '#ffffff'; G().circle(ox + (f.tx + 0.5) * sc, oy + (f.ty + 0.5) * sc, 3, c); c.fill();
-        });
-      }
-      c.setLineDash([]);
+    // a little house on every cat flap you've found (a way home from there)
+    const L = BB.Links;
+    for (let z = 0; z < 12; z++) {
+      const n = (save.doors || {})[z] || 0;
+      L.flapTiles(z).slice(0, n).forEach(f => {
+        const fx = ox + (f.tx + 0.5) * sc, fy = oy + (f.ty + 0.5) * sc;
+        if (fx < -20 || fx > G().W + 20 || fy < -20 || fy > G().H + 20) return;
+        c.fillStyle = 'rgba(255,248,232,0.95)'; G().circle(fx, fy - 4, 9, c); c.fill();
+        BB.HUD.zoneIcon(c, BB.HOME_ZONE, fx, fy - 3, 0.42);
+      });
     }
+    // the Rainbow Lift
     const lu = W.findThings('u')[0], lv = W.findThings('v')[0];
     if (lu && lv && save.visited[W.roomAtTile(lu.tx, lu.ty).id] && save.visited[W.roomAtTile(lv.tx, lv.ty).id]) {
       c.lineWidth = 3;
