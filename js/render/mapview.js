@@ -175,7 +175,8 @@
     const L = BB.Links;
     for (let z = 0; z < 12; z++) {
       const n = (save.doors || {})[z] || 0;
-      L.flapTiles(z).slice(0, n).forEach(f => {
+      L.flapTiles(z).slice(0, n).forEach((f, i) => {
+        if (!L.flapOpen(z, i, save)) return;
         const fx = ox + (f.tx + 0.5) * sc, fy = oy + (f.ty + 0.5) * sc;
         if (fx < -20 || fx > G().W + 20 || fy < -20 || fy > G().H + 20) return;
         c.fillStyle = 'rgba(255,248,232,0.95)'; G().circle(fx, fy - 4, 9, c); c.fill();

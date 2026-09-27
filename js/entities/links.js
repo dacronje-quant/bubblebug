@@ -53,7 +53,13 @@
   const flapTile = (zone, i = 0) => flapTiles(zone)[i] || null;
   const flapIndex = (zone, t) => flapTiles(zone).findIndex(f => f.tx === t.tx && f.ty === t.ty);
   // a zone's door opens at the furthest flap reached (save.doors[zone] = how many)
-  const doorFlap = (zone, save) => Math.max(0, Math.min(flapTiles(zone).length, ((save.doors || {})[zone] || 1)) - 1);
+  // the flap in a boss arena only opens once that boss is happy again
+  const flapBossRoom = t => { const r = W().roomAtTile(t.tx, t.ty); return r && r.def.arena ? r.id : null; };
+  const flapOpen = (zone, i, save) => { const t = flapTiles(zone)[i]; if (!t) return false; const br = flapBossRoom(t); return !br || !!(save.bosses || {})[br]; };
+  function doorFlap(zone, save) {
+    for (let i = Math.min(flapTiles(zone).length, (save.doors || {})[zone] || 1) - 1; i > 0; i--) if (flapOpen(zone, i, save)) return i;
+    return 0;
+  }
   function doorTile(zone) {
     const h = home();
     const d = h && h.def.doors && h.def.doors[zone];
@@ -68,7 +74,7 @@
   // ──── Entities ────
   function create(thing, room, save) {
     const s = spot(thing.tx, thing.ty);
-    if (thing.ch === 'h') return { type: 'flap', link: true, zone: room.zone, idx: Math.max(0, flapIndex(room.zone, thing)), room: room.id, x: s.x, y: s.y, t: 0, hold: 0 };
+    if (thing.ch === 'h') return { type: 'flap', link: true, zone: room.zone, idx: Math.max(0, flapIndex(room.zone, thing)), room: room.id, bossRoom: room.def.arena ? room.id : null, x: s.x, y: s.y, t: 0, hold: 0 };
     if (thing.ch === 'u' || thing.ch === 'v') return { type: 'lift', link: true, end: thing.ch, zone: room.zone, room: room.id, x: s.x, y: s.y, t: 0 };
     return null;
   }
@@ -94,6 +100,10 @@
     const near = Math.hypot(b.x + b.w / 2 - th.x, b.y + b.h - th.y);
     const locked = ctx.linkLocked(th);
     if (th.type === 'flap') {
+      // (shut tight until the boss here is happy)
+      if (th.bossRoom && !(save.bosses || {})[th.bossRoom]) { th.hold = 0; th.shut = true; return; }
+      if (th.shut) { th.shut = false; th.opened = 40; }
+      if (th.opened > 0) th.opened--;
       if (near < 90 && ((save.doors || {})[th.zone] || 0) < th.idx + 1) ctx.onFlapFound(th);
       const still = standingIn(th, pl, 18) && Math.abs(b.vx) < 0.3 && !locked;
       th.hold = still ? th.hold + 1 : Math.max(0, th.hold - 3);
@@ -297,6 +307,16 @@
     const t = th.t, save = ctx.save;
     if (th.type === 'flap') {
       const Z = BB.ZONES[th.zone];
+      if (th.bossRoom && !(save.bosses || {})[th.bossRoom]) {
+        // not yet: a little grey flap, shut, with a vine across it
+        catDoor(c, x, y, 34, 50, '#9a9098', false, t);
+        c.strokeStyle = '#4e9a3a'; c.lineWidth = 3;
+        c.beginPath(); c.moveTo(x - 20, y - 38); c.quadraticCurveTo(x, y - 26, x + 20, y - 40); c.stroke();
+        c.beginPath(); c.moveTo(x - 20, y - 14); c.quadraticCurveTo(x, y - 24, x + 20, y - 12); c.stroke();
+        c.fillStyle = '#6cc24a'; for (const [lx, ly] of [[-10, -32], [8, -34], [-6, -18], [11, -16]]) { G().ellipse(x + lx, y + ly, 4, 2.4, 0.5, c); c.fill(); }
+        return;
+      }
+      if (th.opened > 0) { G().drawGlow(x, y - 30, 90, '#fff2b0', th.opened / 40, c); PT().burst('spark', th.x, th.y - 30, 2, { color: '#fff4c2', speed: 2, life: 24 }); }
       beacon(c, x, y, 150, th.zone === 0 && th.idx === 0 ? '#ffe9a0' : Z.accent, t);
       if (th.zone === 0 && th.idx === 0) {
         // the garden gate home: a picket gate under an arch of flowers
@@ -347,7 +367,7 @@
         // a little cat flap at the bottom
         c.fillStyle = '#a9583a'; G().rrect(x - 9, y - 18, 18, 16, 6, c); c.fill();
         if (!save.leftHome && th.hold <= 0) arrow(c, x, y - 128, t);
-      } else zoneDoor(c, th, x, y, t, ok, save.lastZone === th.zone);
+      } else zoneDoor(c, th, x, y, t, ok, save.newDoor != null ? save.newDoor === th.zone : save.lastZone === th.zone);
       const ry = y - (th.front ? 96 : 150);
       if (ok && th.hold > 0) holdRing(c, x, ry, th.hold / HOLD);
       else if (ok && kittenNear(th, ctx, 70)) hintRing(c, x, ry, t);
@@ -371,5 +391,5 @@
     }
   }
 
-  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, doorFlap, holdRing, hintRing, arrow, HOLD };
+  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, holdRing, hintRing, arrow, HOLD };
 })(window.BB);

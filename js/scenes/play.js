@@ -120,6 +120,8 @@
       if (save.wear && save.wear.head === 'rainhat') save.wear.head = 'horn';
       // presents from bosses cheered up before there were presents
       for (const r of W().rooms) if (save.bosses[r.id]) BB.Wardrobe.grant(save, r.def.boss || 'king', false);
+      // every boss cheered up has opened the door home to the zone after it
+      for (const r of W().rooms) if (save.bosses[r.id] && r.zone < 11) save.doors[r.zone + 1] = Math.max(save.doors[r.zone + 1] || 0, 1);
       this.lastZone = -1;
       // feelings, save point & friends that follow you
       this.mood = C.MOOD_MAX; this.invuln = 60; this.hurtT = 0; this.healT = 0; this.munchT = 0;
@@ -145,7 +147,10 @@
     enterZone(z) {
       if (z === this.lastZone) return;
       this.lastZone = z;
-      if (z !== BB.HOME_ZONE && this.save) this.save.lastZone = z; // (its door sparkles at home)
+      if (z !== BB.HOME_ZONE && this.save) {
+        this.save.lastZone = z; // (its door sparkles at home)
+        if (this.save.newDoor === z) delete this.save.newDoor;
+      }
       this.cardZone = z;
       this.zoneCard = 220;
       BB.Music.play(BB.ZONES[z].key);
@@ -464,6 +469,9 @@
 
     bossHappy(b) {
       this.save.bosses[b.room] = 1;
+      // the way home opens here, and so does the Cat House door to the next zone
+      const z = W().byId[b.room].zone;
+      if (z < 11) { this.save.doors[z + 1] = Math.max(this.save.doors[z + 1] || 0, 1); this.save.newDoor = z + 1; }
       this.activeBoss = null;
       this.joy = 1;
       this.pl.happyT = 150;

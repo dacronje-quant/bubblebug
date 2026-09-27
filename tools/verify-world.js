@@ -275,7 +275,11 @@ function bubbleable(nodes, tx, ty) {
 // ways; the Rainbow Slide at the very end goes home through the skylight.
 function buildLinks() {
   const L = BB.Links, out = [];
-  for (let z = 0; z < 12; z++) L.flapTiles(z).forEach((t, idx) => out.push({ from: L.spot(t.tx, t.ty), to: L.doorSpot(z), flap: z, idx }));
+  for (let z = 0; z < 12; z++) L.flapTiles(z).forEach((t, idx) => {
+    const r = W.roomAtTile(t.tx, t.ty);
+    // (a flap in a boss arena only opens once its boss is cheered up)
+    out.push({ from: L.spot(t.tx, t.ty), to: L.doorSpot(z), flap: z, idx, bossRoom: r.def.arena ? r.id : null });
+  });
   // a door opens at the furthest flap found so far (its target is set in the search)
   const h = L.home();
   for (const z of Object.keys((h && h.def.doors) || {}).map(Number)) out.push({ from: L.doorSpot(z), to: z === 0 ? L.flapSpot(0) : null, door: z });
@@ -323,18 +327,27 @@ function exploreWithGates(starts, ab, startRoom = null) {
   }
   const links = buildLinks();
   const doors = new Map([[0, 1]]); // zone → flaps reached (the front door always leads out)
+  const open = lk => !lk.bossRoom || opened.has(lk.bossRoom);
+  const isBoss = r => !!(r.def.boss || r.things.some(t => t.ch === 'K'));
   for (;;) {
     explore(st, ab);
     let linked = false;
+    // a cheered-up boss opens the Cat House door to the next zone
+    for (const id of opened) {
+      const r = W.byId[id];
+      if (isBoss(r) && r.zone < 11) doors.set(r.zone + 1, Math.max(doors.get(r.zone + 1) || 0, 1));
+    }
     for (const lk of links) {
-      if (lk.flap != null && (doors.get(lk.flap) || 0) < lk.idx + 1) {
+      if (lk.flap != null && open(lk) && (doors.get(lk.flap) || 0) < lk.idx + 1) {
         for (const n of st.nodes.values()) if (flapSeen(n, lk)) { doors.set(lk.flap, lk.idx + 1); break; }
       }
     }
     // point each door at its zone's furthest flap, dropping the old way out
     for (const lk of links) {
       if (lk.door == null || !doors.has(lk.door)) continue;
-      const to = BB.Links.flapSpot(lk.door, doors.get(lk.door) - 1);
+      let i = doors.get(lk.door) - 1;
+      while (i > 0 && !links.some(f => f.flap === lk.door && f.idx === i && open(f))) i--;
+      const to = BB.Links.flapSpot(lk.door, i);
       if (lk.to && lk.to.x === to.x && lk.to.y === to.y) continue;
       if (lk.to) {
         const old = keyOf(lk.to.x - C.PW / 2, lk.to.y - C.PH);
@@ -343,7 +356,7 @@ function exploreWithGates(starts, ab, startRoom = null) {
       lk.to = to;
     }
     for (const lk of links) {
-      if (!lk.to) continue;
+      if (!lk.to || (lk.flap != null && !open(lk))) continue;
       const tx = lk.to.x - C.PW / 2, ty = lk.to.y - C.PH;
       for (const n of [...st.nodes.values()]) {
         if (!enters(n, lk)) continue;
