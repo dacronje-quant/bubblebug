@@ -48,6 +48,7 @@ const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const roomFiles = [...html.matchAll(/src="(js\/world\/rooms\/[^"]+)"/g)].map(m => m[1]);
 roomFiles.forEach(load);
 load('js/engine/physics.js');
+load('js/entities/links.js');
 
 const BB = global.BB;
 const W = BB.World.build();
@@ -266,31 +267,87 @@ function bubbleable(nodes, tx, ty) {
   return false;
 }
 
+// ──── Links: cat flaps, the Cat House doors, the Rainbow Lift and Slide ────
+// A flap takes you home (stand still in it); walking within 90px of a flap
+// lights its door up at home, and a lit door takes you back to the flap.
+// The front door always leads out to the garden gate. The lift runs both
+// ways; the Rainbow Slide at the very end goes home through the skylight.
+function buildLinks() {
+  const L = BB.Links, out = [];
+  for (const t of W.findThings('h')) {
+    const z = W.roomAtTile(t.tx, t.ty).zone;
+    out.push({ from: L.spot(t.tx, t.ty), to: L.doorSpot(z), flap: z });
+  }
+  const h = L.home();
+  for (const z of Object.keys((h && h.def.doors) || {}).map(Number)) out.push({ from: L.doorSpot(z), to: L.flapSpot(z), door: z });
+  const u = W.findThings('u')[0], v = W.findThings('v')[0];
+  if (u && v) {
+    out.push({ from: L.spot(u.tx, u.ty), to: L.spot(v.tx, v.ty), lift: true });
+    out.push({ from: L.spot(v.tx, v.ty), to: L.spot(u.tx, u.ty), lift: true });
+  }
+  const f = W.findThings('F')[0], sk = L.skylightTile();
+  if (f && sk) out.push({ from: { x: f.tx * T + 16, y: f.ty * T + 16 }, to: L.spot(sk.tx, sk.ty), slide: true });
+  return out;
+}
+// standing in a doorway (a kid can always shuffle the last few pixels on flat floor)
+function enters(n, lk) {
+  const cx = n.x + C.PW / 2;
+  if (lk.slide) return Math.abs(cx - lk.from.x) < 56 && Math.abs(n.y + C.PH / 2 - lk.from.y) < 56;
+  return Math.abs(cx - lk.from.x) < 40 && Math.abs(n.y + C.PH - lk.from.y) < 6;
+}
+const flapSeen = (n, lk) => Math.hypot(n.x + C.PW / 2 - lk.from.x, n.y + C.PH - lk.from.y) < 90;
+// the zones in ring order (the Cat House comes first)
+const zoneOrder = z => z === BB.HOME_ZONE ? -1 : z;
+
 // Open gates whose buds are bubbleable / whose King is reachable, then
 // re-expand the spots in and around those rooms, until nothing changes.
 // Gates stay open once opened (the save remembers), so a stage begins with
 // every gate it had to pass to get there already open: all gates of the
-// zones before it, and those of its own zone that lie wholly west of the
-// start (the world runs west → east). The earlier stage proves each of
-// those gates can be opened on the way ("every … gate along the way opens").
+// zones before it, and those of its own zone that lie wholly behind the
+// start (the ring runs east along the bottom, then west along the top).
+// The earlier stage proves each of those gates can be opened on the way
+// ("every … gate along the way opens"). Cat House doors start shut and
+// light up as their flaps are found in this stage's own search.
 function exploreWithGates(starts, ab, startRoom = null) {
   W.build();
   P.setAbilities(ab);
   const st = newState();
   for (const s0 of starts) addNode(st, s0.x, s0.y, s0.x, s0.y);
   const opened = new Set();
-  const behind = room => startRoom && (room.zone < startRoom.zone || (room.zone === startRoom.zone && room.x + room.w <= startRoom.x));
+  const behind = room => {
+    if (!startRoom) return false;
+    if (zoneOrder(room.zone) !== zoneOrder(startRoom.zone)) return zoneOrder(room.zone) < zoneOrder(startRoom.zone);
+    return BB.zoneDir(room.zone) > 0 ? room.x + room.w <= startRoom.x : room.x >= startRoom.x + startRoom.w;
+  };
   for (const room of W.rooms) {
     if (behind(room) && room.grid.some(r => r.includes('G'))) { W.openGates(room); opened.add(room.id); }
   }
+  const links = buildLinks();
+  const doors = new Set([0]);
+  st.doors = doors;
   for (;;) {
     explore(st, ab);
+    let linked = false;
+    for (const lk of links) {
+      if (lk.flap != null && !doors.has(lk.flap)) {
+        for (const n of st.nodes.values()) if (flapSeen(n, lk)) { doors.add(lk.flap); break; }
+      }
+    }
+    for (const lk of links) {
+      if (!lk.to || (lk.door != null && !doors.has(lk.door))) continue;
+      const tx = lk.to.x - C.PW / 2, ty = lk.to.y - C.PH;
+      for (const n of [...st.nodes.values()]) {
+        if (!enters(n, lk)) continue;
+        const d = addNode(st, tx, ty, tx, ty);
+        if (!n.edges.has(d.k)) { n.edges.add(d.k); linked = true; }
+      }
+    }
     const now = [];
     for (const room of W.rooms) {
       if (opened.has(room.id) || !room.grid.some(r => r.includes('G'))) continue;
       if (gateReady(room, st)) { W.openGates(room); opened.add(room.id); now.push(room); }
     }
-    if (!now.length) break;
+    if (!now.length && !linked) break;
     for (const n of st.nodes.values()) {
       const cx = n.x + C.PW / 2, cy = n.y + C.PH / 2;
       if (now.some(r => cx > r.px - 320 && cx < r.px + r.pw + 320 && cy > r.py - 320 && cy < r.py + r.ph + 320)) st.queue.push(n);
@@ -428,7 +485,7 @@ function runStage(stage, mapRoom) {
 
   // Every puzzle / boss gate the kitten can walk up to (in this stage's zones) must open
   const goalRoom = W.roomAtTile(th.tx, th.ty);
-  const stuckGates = W.rooms.filter(r => r.grid.some(row => row.includes('G')) && roomTouched(res.cover, r) && r.zone <= goalRoom.zone && (!startRoom || r.zone >= startRoom.zone));
+  const stuckGates = W.rooms.filter(r => r.grid.some(row => row.includes('G')) && roomTouched(res.cover, r) && r.zone <= goalRoom.zone && (!startRoom || zoneOrder(r.zone) >= zoneOrder(startRoom.zone)));
   if (stuckGates.length) fail('gate(s) reached but never opened: ' + stuckGates.map(r => r.id).join(', '));
   else pass('every boss and puzzle gate along the way opens');
 
@@ -453,7 +510,7 @@ function runStage(stage, mapRoom) {
     for (const room of W.rooms) {
       for (const t of room.things) {
         const at = `in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`;
-        if ('*TBnfy&eWj'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
+        if ('*TBnfy&eWjhuv'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
         if ('bc'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 4)) missing.push(`critter ${at}`);
         if ('PdAkZVO'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 1)) missing.push(`puzzle piece ${t.ch} ${at}`);
         if ('QK'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 3)) missing.push(`boss ${at}`);

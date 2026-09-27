@@ -85,6 +85,36 @@
     c.beginPath(); c.moveTo(x + w / 2, y); c.lineTo(x + w / 2, y + h); c.moveTo(x, y + h / 2); c.lineTo(x + w, y + h / 2); c.stroke();
   }
 
+  function roundWindow(c, x, y, r, t, rainbow) {
+    c.fillStyle = '#7a4e2c'; G().circle(x, y, r + 8, c); c.fill();
+    const g = c.createLinearGradient(0, y - r, 0, y + r);
+    g.addColorStop(0, '#8fd3ff'); g.addColorStop(1, '#fff1d6');
+    c.fillStyle = g; G().circle(x, y, r, c); c.fill();
+    c.save(); G().circle(x, y, r, c); c.clip();
+    BB.Backdrops.cloud(c, x - r + ((t * 0.2) % (2 * r + 60)) - 30, y - r * 0.3, 0.3, 'rgba(255,255,255,0.9)');
+    if (rainbow) {
+      c.lineWidth = 7;
+      ['#ff7b9c', '#ffcf5c', '#8fe388', '#7cc8ff', '#b99cff'].forEach((col, i) => { c.strokeStyle = col; c.beginPath(); c.arc(x, y + r * 0.9, r * 0.9 - i * 7, Math.PI, 0); c.stroke(); });
+    }
+    c.fillStyle = '#9fd8c0'; c.beginPath(); c.ellipse(x, y + r, r * 1.2, r * 0.45, 0, Math.PI, 0); c.fill();
+    c.restore();
+    c.strokeStyle = '#7a4e2c'; c.lineWidth = 4;
+    c.beginPath(); c.moveTo(x - r, y); c.lineTo(x + r, y); c.moveTo(x, y - r); c.lineTo(x, y + r); c.stroke();
+  }
+
+  function bunting(c, x0, x1, y, z0) {
+    c.strokeStyle = '#8a6a4a'; c.lineWidth = 1.5;
+    const sag = 18, n = Math.floor((x1 - x0) / 26);
+    const at = k => ({ x: x0 + (x1 - x0) * k, y: y + Math.sin(k * Math.PI) * sag });
+    c.beginPath(); for (let i = 0; i <= 20; i++) { const p = at(i / 20); c.lineTo(p.x, p.y); } c.stroke();
+    for (let i = 0; i < n; i++) {
+      const p = at((i + 0.5) / n);
+      c.fillStyle = BB.ZONES[(z0 + i) % 12].accent;
+      c.beginPath(); c.moveTo(p.x - 9, p.y); c.lineTo(p.x + 9, p.y); c.lineTo(p.x, p.y + 16); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(0,0,0,0.12)'; c.stroke();
+    }
+  }
+
   function sofa(c, x, y, w) {
     c.fillStyle = '#c05a7a'; c.strokeStyle = '#7a2a4a'; c.lineWidth = 2;
     G().rrect(x, y - 58, w, 34, 14, c); c.fill(); c.stroke();
@@ -113,9 +143,20 @@
     for (let col = 2; col < 58; col += 3) c.fillRect(X(col), Y(28.5), 2, 3.5 * T);
     // windows upstairs (a gloom cloud sails past them in the opening scene)
     const gloom = play.intro && play.intro.t > 60 ? Math.min(1, (play.intro.t - 60) / 180) : 0;
-    for (const col of [5, 14, 41, 50]) windowView(c, X(col), Y(4), 3 * T, 3.4 * T, t, gloom);
+    for (const col of [5, 14, 41, 50]) windowView(c, X(col), Y(9), 3 * T, 3.4 * T, t, 0);
+    for (const col of [6, 47]) windowView(c, X(col), Y(22.4), 3.4 * T, 3.2 * T, t, gloom);
     // the big round window over the stairwell, where the skylight light falls
     G().drawGlow(X(30), Y(10), 220, save.finale ? '#fff0c8' : '#ffffff', 0.35, c);
+    roundWindow(c, X(30), Y(10.5), 2.6 * T, t, save.finale);
+    // bunting in the zones' colours, and two hanging lamps
+    bunting(c, X(3), X(26), Y(14.2), 0);
+    bunting(c, X(34), X(57), Y(14.2), 6);
+    for (const col of [10, 46]) {
+      c.strokeStyle = '#6a4a2a'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(X(col), Y(2)); c.lineTo(X(col), Y(6)); c.stroke();
+      G().drawGlow(X(col), Y(6.4), 60, '#ffe6a0', 0.55, c);
+      c.fillStyle = '#ffb3cf'; c.beginPath(); c.moveTo(X(col) - 16, Y(6.6)); c.lineTo(X(col) + 16, Y(6.6)); c.lineTo(X(col) + 8, Y(6)); c.lineTo(X(col) - 8, Y(6)); c.closePath(); c.fill();
+    }
     // cat-tree posts (the platforms themselves are the wooden ledges)
     catTreePost(c, X(22.5), Y(23), Y(32));
     catTreePost(c, X(37.5), Y(23), Y(32));
@@ -166,14 +207,19 @@
     (room.def.cushions || []).forEach((col, i) => {
       const id = fam[i];
       if (!id || !(save.family || {})[id]) return;
+      // the kitten's own Mama waits by the front door
+      const mama = id === play.mamaId();
+      if (mama) col = 5.5;
       const x = (room.x + col) * T + T / 2 - cam.x, y = (room.y + 32) * T - cam.y - 4;
       if (x < -60 || x > G().W + 60) return;
       const m = BB.CATS[id] || {};
       const b = play.pl.body, near = Math.abs(b.x - (x + cam.x)) < 120 && Math.abs(b.y - (y + cam.y)) < 100;
       const tt = t + i * 37;
-      const pose = near ? { mode: 'sit', happy: true, t: tt } : { mode: 'sleep', t: tt };
+      // (Mama stays awake, watching the door)
+      const pose = near || mama ? { mode: 'sit', happy: near, t: tt } : { mode: 'sleep', t: tt };
       BB.Kittens.draw(c, id, pose, x, y, m.size || 1.4, x < b.x - cam.x ? 1 : -1);
       if (near && tt % 60 === 0) BB.Particles.heart(x + cam.x, y + cam.y - 40);
+
     });
   }
 

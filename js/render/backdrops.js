@@ -194,6 +194,15 @@
       grassBlades(c, Z.near, rnd, 20, 160);
       for (let i = 0; i < 4; i++) { const x = rnd() * LW; wrap(xx => crystalPillar(c, xx, LH, 26 + rnd() * 20, 90 + rnd() * 90, Z.near, 0.5), x); }
     },
+    home(Z, L, rnd) {
+      // (the walls hide most of this) a garden seen from indoors
+      let c = L[0].ctx;
+      hills(c, LH - 230, 50, BB.mix(Z.far, Z.sky[1], 0.3), rnd, 3);
+      c = L[1].ctx;
+      for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => roundTree(c, xx, LH - 90 - rnd() * 40, 60 + rnd() * 30, '#8fcf8a', '#6a4a34', 220), x); }
+      c = L[2].ctx;
+      hills(c, LH - 40, 20, Z.near, rnd, 5);
+    },
   };
 
   // ──── shape helpers ────

@@ -1,14 +1,13 @@
 // ════════════════════════════════════════════════════════════════
 //  MAP VIEW — the kingdom map, drawn from the rooms you've visited.
 //
-//  Both maps use the same comfortable zoom, which fits the kingdom's whole
-//  height on screen:
+//  Both maps use the same comfortable zoom:
 //   • 'full'    — on parchment (pause menu). It opens centred on your
 //                 kitten; browse side to side with ◀ ▶ (▲ ▼ too) held down,
-//                 by dragging, or with the big arrow buttons. A strip along
-//                 the bottom shows the whole kingdom and where you're
-//                 looking (tap it to jump there); zone name tags float over
-//                 each zone you've explored.
+//                 by dragging, or with the big arrow buttons. A small map
+//                 of the whole ring at the bottom shows where you're looking
+//                 (tap it to jump there); zone name tags float over each
+//                 zone you've explored.
 //   • 'overlay' — a see-through map floating over the game while you keep
 //                 playing (map button, M / Tab, or a gamepad's Select),
 //                 centred on your kitten
@@ -16,7 +15,8 @@
 //  sparkles are found, a lantern dot for benches, the elder's gift badge,
 //  a cat face where you found family, a toy where you found a toy, each
 //  boss (under a rain-cloud until cheered up, then with a heart), dotted
-//  lines between fairy-ring twins, and your kitten's face where you are.
+//  lines between fairy-ring twins, dotted paths home from the cat flaps
+//  you've found, the Rainbow Lift, and your kitten's face where you are.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -26,7 +26,7 @@
 
   // ──── Layout of the browsable (pause) map ────
   const FRAME = () => ({ x: 56, y: 56, w: G().W - 112, h: G().H - 164 });  // the zoomed-in part
-  const STRIP = () => ({ x: 104, y: G().H - 96, w: G().W - 208, h: 30 });  // the whole kingdom, small
+  const STRIP = () => ({ x: G().W / 2 - 150, y: G().H - 104, w: 300, h: 56 }); // the whole kingdom, small (to scale)
   const ARROW = d => ({ x: d < 0 ? 88 : G().W - 88, y: 56 + (G().H - 164) / 2, r: 27, d });
   const CLOSE = () => ({ x: G().W - 70, y: 70, r: 22 });
   const view = { cx: 0, cy: 0, tx: 0, ty: 0 }; // centre (tiles) and where it's gliding to
@@ -74,7 +74,7 @@
   }
   // …or glide there (arrow buttons, the strip)
   function glideBy(dx) { view.tx += dx; clampView(); }
-  function glideTo(x) { view.tx = x; clampView(); }
+  function glideTo(x, y) { view.tx = x; if (y != null) view.ty = y; clampView(); }
   function tick() {
     view.cx = BB.lerp(view.cx, view.tx, 0.18);
     view.cy = BB.lerp(view.cy, view.ty, 0.18);
@@ -101,8 +101,8 @@
     const f = FRAME();
     if (hit === 'left' || hit === 'right') { glideBy((hit === 'left' ? -1 : 1) * f.w * 0.5 / ZOOM); BB.Audio.sfx.whoosh(); }
     else if (hit === 'strip') {
-      const L = limits(), s = STRIP();
-      if (L) glideTo(L.bd.x0 + (p.x - s.x) / s.w * (L.bd.x1 - L.bd.x0));
+      const L = limits();
+      if (L) { const m = stripFit(L.bd); glideTo(L.bd.x0 + (p.x - m.x) / m.k, L.bd.y0 + (p.y - m.y) / m.k); }
       BB.Audio.sfx.select();
     }
     return hit;
@@ -168,6 +168,31 @@
       if (r.def.toy && save.toys[r.def.toy]) BB.HUD.toyIcon(c, r.def.toy, x + 8 * s, y + 8 * s, 0.55 * s, t);
       const boss = r.def.boss || (r.things.some(th => th.ch === 'K') ? 'king' : null);
       if (boss) bossMark(c, boss, x + w / 2, y + h / 2 + 4 * s, s, !!(save.bosses && save.bosses[r.id]), t);
+      if (r.def.home) BB.HUD.zoneIcon(c, r.zone, x + w / 2, y + h / 2, 1.4 * s);
+    }
+
+    // dotted paths home from every cat flap you've found, and the Rainbow Lift
+    const L = BB.Links, hm = L.home();
+    if (hm && save.visited[hm.id]) {
+      const hx = ox + (hm.x + hm.w / 2) * sc, hy = oy + (hm.y + hm.h / 2) * sc;
+      c.lineWidth = 2; c.setLineDash([4, 5]);
+      for (let z = 0; z < 12; z++) {
+        if (!(save.doors || {})[z]) continue;
+        const f = L.flapTile(z);
+        if (!f) continue;
+        c.strokeStyle = BB.rgba(BB.ZONES[z].accent, 0.55);
+        c.beginPath(); c.moveTo(ox + (f.tx + 0.5) * sc, oy + (f.ty + 0.5) * sc); c.lineTo(hx, hy); c.stroke();
+        c.fillStyle = '#ffffff'; G().circle(ox + (f.tx + 0.5) * sc, oy + (f.ty + 0.5) * sc, 3, c); c.fill();
+      }
+      c.setLineDash([]);
+    }
+    const lu = W.findThings('u')[0], lv = W.findThings('v')[0];
+    if (lu && lv && save.visited[W.roomAtTile(lu.tx, lu.ty).id] && save.visited[W.roomAtTile(lv.tx, lv.ty).id]) {
+      c.lineWidth = 3;
+      ['#ff7b9c', '#ffcf5c', '#8fe388', '#7cc8ff'].forEach((col, i) => {
+        c.strokeStyle = col; c.beginPath();
+        c.moveTo(ox + (lu.tx + 0.5) * sc + (i - 1.5) * 3, oy + (lu.ty + 0.5) * sc); c.lineTo(ox + (lv.tx + 0.5) * sc + (i - 1.5) * 3, oy + (lv.ty + 0.5) * sc); c.stroke();
+      });
     }
 
     // dotted links between fairy-ring twins you've seen both ends of
@@ -229,24 +254,32 @@
     c.restore();
   }
 
+  // the overview's scale and placement: the explored kingdom, to scale,
+  // centred in the strip's box
+  function stripFit(bd) {
+    const s = STRIP();
+    const k = Math.min(s.w / (bd.x1 - bd.x0), s.h / (bd.y1 - bd.y0));
+    return { k, x: s.x + (s.w - (bd.x1 - bd.x0) * k) / 2, y: s.y + (s.h - (bd.y1 - bd.y0) * k) / 2 };
+  }
+
   // the whole kingdom, small, with a box around what the big map shows
   function drawStrip(c, seen, bd, t) {
-    const s = STRIP(), f = FRAME();
-    const sx = s.w / (bd.x1 - bd.x0), sy = s.h / (bd.y1 - bd.y0);
+    const s = STRIP(), f = FRAME(), m = stripFit(bd);
+    const X = tx => m.x + (tx - bd.x0) * m.k, Y = ty => m.y + (ty - bd.y0) * m.k;
     c.fillStyle = 'rgba(217,169,90,0.2)'; G().rrect(s.x - 8, s.y - 6, s.w + 16, s.h + 12, 10, c); c.fill();
     for (const r of seen) {
       const Z = BB.ZONES[r.zone];
       c.fillStyle = BB.mix(Z.sky[1], Z.top, 0.45);
-      c.fillRect(s.x + (r.x - bd.x0) * sx, s.y + (r.y - bd.y0) * sy, Math.max(1.5, r.w * sx), Math.max(1.5, r.h * sy));
+      c.fillRect(X(r.x), Y(r.y), Math.max(1.5, r.w * m.k), Math.max(1.5, r.h * m.k));
     }
     const hw = f.w / 2 / ZOOM, hh = f.h / 2 / ZOOM;
-    const vx0 = Math.max(s.x - 4, s.x + (view.cx - hw - bd.x0) * sx), vx1 = Math.min(s.x + s.w + 4, s.x + (view.cx + hw - bd.x0) * sx);
-    const vy0 = Math.max(s.y - 4, s.y + (view.cy - hh - bd.y0) * sy), vy1 = Math.min(s.y + s.h + 4, s.y + (view.cy + hh - bd.y0) * sy);
+    const vx0 = Math.max(s.x - 4, X(view.cx - hw)), vx1 = Math.min(s.x + s.w + 4, X(view.cx + hw));
+    const vy0 = Math.max(s.y - 4, Y(view.cy - hh)), vy1 = Math.min(s.y + s.h + 4, Y(view.cy + hh));
     c.strokeStyle = '#8a5a34'; c.lineWidth = 2.5;
     G().rrect(vx0, vy0, vx1 - vx0, vy1 - vy0, 4, c); c.stroke();
     // the kitten, as a little glowing dot
     const b = BB.Play.pl.body, T = BB.CFG.TILE;
-    const kx = s.x + (b.x / T - bd.x0) * sx, ky = s.y + (b.y / T - bd.y0) * sy;
+    const kx = X(b.x / T), ky = Y(b.y / T);
     G().drawGlow(kx, ky, 10, '#fff4c2', 0.9, c);
     c.fillStyle = '#ff7eb6'; G().circle(kx, ky, 3 + Math.sin(t * 0.15) * 0.8, c); c.fill();
   }

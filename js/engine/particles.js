@@ -117,7 +117,7 @@
     ambientUpdate(zoneKey, rainy, cam, lastCam) {
       const G = BB.G;
       const dx = cam.x - lastCam.x, dy = cam.y - lastCam.y;
-      const want = { pollen: 28, spores: 36, glints: 30, honey: 26, rain: 16, wisps: 20, bubbles: 22, sand: 30, snow: 60, leaves: 22, steam: 16, stars: 40 }[BB.ZONES.find(z => z.key === zoneKey).ambient] || 20;
+      const want = { pollen: 28, spores: 36, glints: 30, honey: 26, rain: 16, wisps: 20, bubbles: 22, sand: 30, snow: 60, leaves: 22, steam: 16, stars: 40, motes: 24 }[BB.ZONES.find(z => z.key === zoneKey).ambient] || 20;
       const kind = BB.ZONES.find(z => z.key === zoneKey).ambient;
       while (ambient.length < want) {
         ambient.push({ kind, x: Math.random() * G.W, y: Math.random() * G.H, ph: Math.random() * TAU, s: 0.5 + Math.random(), depth: 0.3 + Math.random() * 0.9 });
@@ -139,6 +139,7 @@
         else if (kind === 'leaves') { a.y += 0.4 * a.s; a.x += Math.sin(a.ph) * 0.8 + 0.2; }
         else if (kind === 'steam') { a.y -= 0.3 * a.s; a.x += Math.sin(a.ph) * 0.2; }
         else if (kind === 'stars') { a.y += 0.03; }
+        else if (kind === 'motes') { a.y -= 0.06 * a.s; a.x += Math.sin(a.ph) * 0.15; }
         if (a.x < -20) a.x += G.W + 40; if (a.x > G.W + 20) a.x -= G.W + 40;
         if (a.y < -20) a.y += G.H + 40; if (a.y > G.H + 20) a.y -= G.H + 40;
       }
@@ -178,6 +179,7 @@
           }
           case 'steam': G.drawGlow(a.x, a.y, 30 * a.s, '#fff0f5', 0.12 + tw * 0.1, c); break;
           case 'stars': c.fillStyle = `rgba(255,248,220,${tw * 0.9})`; G.twinkle(a.x, a.y, 2.2 * a.s, c); c.fill(); break;
+          case 'motes': c.fillStyle = `rgba(255,240,200,${0.2 + tw * 0.35})`; G.circle(a.x, a.y, 1.3 * a.s, c); c.fill(); break;
         }
       }
       if (rain.length) {

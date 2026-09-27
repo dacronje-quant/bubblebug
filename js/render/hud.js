@@ -230,6 +230,12 @@
       c.fillStyle = '#fff6d0';
       c.beginPath(); c.arc(-2, 0, 13, 0.6, TAU - 0.6); c.arc(5, -3, 10, TAU - 0.9, 0.9, true); c.closePath(); c.fill();
       c.fillStyle = '#ffe27a'; G.star(10, -8, 5, 5, 0.45, -Math.PI / 2, c); c.fill();
+    } else if (key === 'home') {
+      // a little house with a heart in the window
+      c.fillStyle = '#f2c68e'; c.strokeStyle = '#7a4e2c'; c.lineWidth = 2;
+      c.fillRect(-11, -2, 22, 16); c.strokeRect(-11, -2, 22, 16);
+      c.fillStyle = '#e0607e'; c.beginPath(); c.moveTo(-15, -1); c.lineTo(0, -15); c.lineTo(15, -1); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ff7eb6'; G.heart(0, 6, 5, c); c.fill();
     }
     c.restore();
   }

@@ -98,6 +98,12 @@
       melody: line(`C6 . A5 . F5 . A5 B5   D6 . B5 . G5 . B5 D6   E6 . . B5 G5 . E5 .   A5 . . . C6 . . .
                     F6 . E6 . C6 . A5 .   B5 . D6 . G6 . D6 .   E6 . D6 . C6 . G5 .   C6 . . . . . . .`),
     },
+    home: { // the Cat House: a slow, warm waltz-y music box
+      bpm: 84, lead: 'musicbox', arp: 'harp', perc: 'tick', padBright: 900,
+      chords: ['F3 A3 C4', 'D3 F3 A3', 'Bb2 D3 F3', 'C3 E3 G3', 'F3 A3 C4', 'A2 C3 E3', 'Bb2 D3 F3', 'C3 G3 E4'].map(chord),
+      melody: line(`C6 . A5 . F5 . A5 .   D6 . A5 . F5 . D5 .   D6 . Bb5 . F5 . D6 .   C6 . . . G5 . . .
+                    A5 . C6 . F6 . E6 D6   C6 . A5 . E5 . C6 .   Bb5 . D6 . F6 . D6 .   C6 . . . . . . .`),
+    },
     boss: { // a playful "uh-oh, someone's grumpy" tune for the arenas
       bpm: 112, lead: 'marimba', arp: 'bell', perc: 'shaker', padBright: 1300,
       chords: ['A2 C3 E3', 'F2 A2 C3', 'G2 B2 D3', 'E2 G#2 B2', 'A2 C3 E3', 'F2 A2 C3', 'D3 F3 A3', 'E2 G#2 B2'].map(chord),

@@ -36,9 +36,38 @@
     return d;
   }
 
+  // The kingdom became a ring (v3 → v4): the far half (zones 6–11, every
+  // tile from column 1125 on) was mirrored so it runs back east → west, and
+  // lifted 140 tiles up, with the Cat House in the middle
+  const T = 32, PW = 20;
+  const ringTile = (x, y) => x >= 1125 ? [2250 - x, y - 140] : [x, y];
+  function migrate3(d) {
+    const keys = obj => {
+      const o = {};
+      for (const [k, v] of Object.entries(obj || {})) {
+        const [x, y] = k.split(',').map(Number);
+        o[ringTile(x, y).join(',')] = v;
+      }
+      return o;
+    };
+    for (const f of ['sparkles', 'friends', 'buds', 'pads', 'babies', 'keys']) d[f] = keys(d[f]);
+    const pt = p => {
+      if (!p || p.x == null || Math.floor((p.x + PW / 2) / T) < 1125) return;
+      p.x = 2251 * T - p.x - PW; p.y -= 140 * T;
+    };
+    pt(d); pt(d.bench);
+    // an adventure already under way: the kitten has long since left home,
+    // and every zone it has been to has its door in the Cat House
+    d.introDone = 1; d.leftHome = 1;
+    d.doors = {};
+    d.v = 4;
+    d.doorsFromVisited = 1;
+    return d;
+  }
+
   function fresh() {
     return {
-      v: 3,
+      v: 4,
       cat: 'marshmallow',
       room: null, x: null, y: null,        // resume spot (world px)
       bench: null,                          // last bench rested at {x,y}
@@ -60,6 +89,9 @@
       gestures: {},                         // cat trick id → 1 (learned)
       secrets: {},                          // shy-wall room → 1
       visited: {},                          // room id → 1
+      doors: {},                            // zone → 1 once its cat flap is found (a door opens at home)
+      introDone: 0,                         // the wake-up scene has played
+      leftHome: 0,                          // been out of the front door
       finale: false,
       playTicks: 0,
     };
@@ -79,6 +111,9 @@
           if (d && d.v === 2) migrate2(d);
           if (d && d.v === 3) {
             if (d.cat === 'pip') d.cat = 'phoebe'; // the tabby's early name
+            migrate3(d);
+          }
+          if (d && d.v === 4) {
             this.data = Object.assign(fresh(), d);
             this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
             return true;

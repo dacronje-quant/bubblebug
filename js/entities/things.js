@@ -91,7 +91,7 @@
       case 'bench': {
         const near = Math.abs(dx) < 34 && Math.abs(pb.y + pb.h - th.y) < 8 && pb.grounded;
         if (near && !th.lit) { th.lit = true; ctx.onBench(th, false); }
-        if (near && ctx.pl.state === 'play' && ctx.pl.idleT > 45) {
+        if (near && ctx.pl.state === 'play' && ctx.pl.idleT > (th.zone === BB.HOME_ZONE ? 300 : 45)) { // (your own bed at home: only when you're really sleepy)
           ctx.pl.state = 'bench'; ctx.pl.benchT = 0;
           pb.x = th.x - pb.w / 2; pb.vx = 0;
           ctx.onBench(th, true);

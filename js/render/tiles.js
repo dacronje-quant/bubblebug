@@ -141,6 +141,16 @@
       }
       c.fillStyle = 'rgba(255,255,255,0.7)';
       for (let i = 0; i < 2; i++) { G.circle(x + h(30 + i) * T, y + h(32 + i) * T, 1.1, c); c.fill(); }
+    } else if (Z.key === 'home') {
+      // the house's timber walls and floorboards
+      c.strokeStyle = BB.rgba(Z.groundDark, 0.7); c.lineWidth = 1.2;
+      for (let row = 0; row < 4; row++) {
+        const by = y + row * 8;
+        c.beginPath(); c.moveTo(x, by + 0.5); c.lineTo(x + T, by + 0.5); c.stroke();
+        const j = x + ((tx * 13 + row * 7 + ty * 5) % 4) * 8 + 4;
+        c.beginPath(); c.moveTo(j + 0.5, by); c.lineTo(j + 0.5, by + 8); c.stroke();
+      }
+      if (h(9) < 0.2) { c.fillStyle = BB.rgba(Z.groundDark, 0.5); G.ellipse(x + h(10) * T, y + h(11) * T, 2.5, 1.5, 0, c); c.fill(); }
     } else {
       // soil / loam with pebbles
       for (let i = 0; i < 4; i++) {
@@ -173,6 +183,14 @@
       for (let i = 0; i < 3; i++) { G.circle(x + 5 + i * 11, y - 3 + h(i) * 2 - h(i + 3) * 3, 1.3, c); c.fill(); }
       c.fillStyle = BB.rgba(Z.accent, 0.5);
       if (h(8) < 0.3) { G.twinkle(x + h(9) * T, y - 3, 3, c); c.fill(); }
+      return;
+    }
+    if (Z.key === 'home') {
+      // a soft carpet runner along the floor
+      c.fillStyle = '#c85a7a'; c.fillRect(x + ext, y - 3, T - ext + ext2, 7);
+      c.fillStyle = '#e88aa8'; c.fillRect(x + ext, y - 3, T - ext + ext2, 3);
+      c.fillStyle = 'rgba(255,255,255,0.35)';
+      for (let i = 0; i < 4; i++) c.fillRect(x + 3 + i * 8, y + 1, 3, 1.5);
       return;
     }
     // base band
@@ -504,6 +522,15 @@
       return;
     }
     const x0 = x - (L ? 1 : -1), x1 = x + T + (R ? 1 : -1);
+    if (Z.key === 'home') {
+      // a cat-tree shelf: wood underneath, cosy carpet on top
+      c.fillStyle = Z.ledgeDark;
+      G.rrect(x0, y + 1, x1 - x0, 10, L && R ? 0 : 4, c); c.fill();
+      c.fillStyle = '#b8a0e8';
+      G.rrect(x0, y - 1, x1 - x0, 6, L && R ? 0 : 3, c); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(x0 + 2, y, x1 - x0 - 4, 1.5);
+      return;
+    }
     if (Z.key === 'frost') {
       // a shelf of blue ice with a cap of snow
       c.fillStyle = BB.rgba('#cdeeff', 0.92); c.strokeStyle = '#6a9ad0'; c.lineWidth = 1;

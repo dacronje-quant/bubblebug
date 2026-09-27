@@ -283,16 +283,20 @@
   }
 
   function gateSpot(room) {
-    // the top of the gate that's furthest right (the way onward)
+    // the top of the gate furthest along the way onward (east, or west on
+    // the return half of the ring)
+    const dir = BB.zoneDir(room.zone);
+    const isG = (r, c) => c >= 0 && c < room.w && (room.grid[r][c] === 'G' || room.grid[r][c] === 'g');
     let best = null;
     for (let r = 0; r < room.h; r++) for (let c = 0; c < room.w; c++) {
-      if (room.grid[r][c] !== 'G' && room.grid[r][c] !== 'g') continue;
-      if (!best || c > best.c || (c === best.c && r < best.r)) best = { r, c };
+      if (!isG(r, c)) continue;
+      if (!best || c * dir > best.c * dir || (c === best.c && r < best.r)) best = { r, c };
     }
     if (!best) return null;
     // centre over a two-wide gate
-    const two = best.c > 0 && (room.grid[best.r][best.c - 1] === 'G' || room.grid[best.r][best.c - 1] === 'g');
-    return { x: (room.x + best.c + (two ? 0 : 0.5)) * T, y: (room.y + best.r) * T - 22 };
+    const two = isG(best.r, best.c - dir);
+    const x = two ? (dir > 0 ? best.c : best.c + 1) : best.c + 0.5;
+    return { x: (room.x + x) * T, y: (room.y + best.r) * T - 22 };
   }
 
   function drawSign(c, room, save, cam, t, opened) {
