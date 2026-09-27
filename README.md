@@ -1,6 +1,6 @@
 # Bubble Paws: The Rainbow Kingdom 🫧🐾
 
-A cozy, non-violent platformer for little explorers (ages 3–7). Choose your kitten, then blow friendship bubbles to cheer up gloomy animals (and a few bugs) across twelve hand-built biomes. At the end of every zone waits a big, very sad boss: dodge their slow, simple "sad attacks", then bubble them happy to open the way on. Solve picture puzzles made for five-year-olds, snack on fishy treats, learn twelve hidden cat tricks, and find the kittens' twelve lost family members along the way. A grown-up picks how brave the adventure is: on **Easy**, bumping into sad things just boings the kitten back; on **Hard**, it makes the kitten a little sadder, and a kitten who gets too sad pops back at the latest save point. There's no game over, and nothing in the game needs to be read. A full adventure is a long one, so plan on an hour or more for a young player.
+A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wakes up alone in the Cat House: a big gloom cloud has sent the whole family wandering off. Head out of the front door and round a ring of twelve hand-built biomes, blowing friendship bubbles to cheer up gloomy animals (and a few bugs), and slide home at the end for a big homecoming party. At the end of every zone waits a big, very sad boss, each with its own silly animal moves and its own arena: dodge their slow, simple "sad attacks", then bubble them happy to open the way on. Solve picture puzzles made for five-year-olds, snack on fishy treats, learn twelve hidden cat tricks, and find the kittens' twelve lost family members along the way. A grown-up picks how brave the adventure is: on **Easy**, bumping into sad things just boings the kitten back; on **Hard**, it makes the kitten a little sadder, and a kitten who gets too sad pops back at the latest save point. There's no game over, and nothing in the game needs to be read. A full adventure is a long one, so plan on an hour or more for a young player.
 
 *Formerly called **Bubblebug**. Saves from the Bubblebug version carry over automatically.*
 
@@ -56,7 +56,9 @@ Both move the same way. They differ in voice (a synthesized *mew*), idle habits 
 
 ## 🗺 The Rainbow Kingdom
 
-Twelve zones, one after another. Every zone has about six rooms, gloomy critters, sparkles, a picture puzzle, a hidden toy, cozy benches and, at its far end, a boss to cheer up. Ten of the zones also have an elder with a new power. Each new power opens the way to the next zone, and many earlier corners too.
+The kingdom is a ring with the **Cat House** in the middle. Out of the front door, the first six zones run east along the bottom of the ring. At the far end, the **🌈 Rainbow Lift** in Cloud Castles carries you up to the Coral Lagoon, and the next six zones run back west along the top. At the very end, the **🌈 Rainbow Slide** at the top of Starlight Sky whooshes you all the way home through the Cat House skylight.
+
+Every zone has about six rooms, gloomy critters, sparkles, a picture puzzle, a hidden toy, cozy benches, a cat flap home and, at its far end, a boss to cheer up. Ten of the zones also have an elder with a new power. Each new power opens the way to the next zone, and many earlier corners too.
 
 | Zone | What happens there | Elder's gift |
 |---|---|---|
@@ -65,7 +67,7 @@ Twelve zones, one after another. Every zone has about six rooms, gloomy critters
 | 💎 **Crystal Caverns** | A gentle drop down the Old Well into cozy-dark caves | 🐌 **Sticky Paws** (wall climb) |
 | 🍯 **Honeycomb Hive** | Climb the golden tower | 🪲 **Glow** (wakes glow-petal bridges) |
 | 🌧 **Rainy Ruins** | Soft rain, broken towers, wide pools | 🌸 **Dandelion Float** (hold jump to drift) |
-| ☁ **Cloud Castles** | Breezy updrafts, sky bridges, and the grumpy Cloud King. Once he smiles, Rainbow Falls carries you down to the sea | – |
+| ☁ **Cloud Castles** | Breezy updrafts, sky bridges, and the grumpy Cloud King. Once he smiles, the Rainbow Lift carries you up to the lagoon | – |
 | 🐚 **Coral Lagoon** | Sunny beach, tide pools, a deep kelp forest and a sunken ship | 🐢 **Swim** (a bubble helmet: hold jump to paddle up, leap out like a dolphin) |
 | 🌵 **Sunny Dunes** | Sandstone canyons under a huge sun | 🐢 **Mighty Paws** (cracked sandstone crumbles at a touch) |
 | ❄ **Frosty Peaks** | Snowy pines and glassy ice walls too slippery to climb | 🐇 **Spring Paws** (a much bigger jump) |
@@ -73,13 +75,23 @@ Twelve zones, one after another. Every zone has about six rooms, gloomy critters
 | 🏮 **Moonlit Springs** | Bamboo, lanterns and steamy pools | 🦦 **Bubble Bounce** (press bubble in mid-air to spring off a bubble) |
 | 🌙 **Starlight Sky** | Crystal grass under the stars, and the tall Starfall Shaft | 🐋 **Star Wings** (keep tapping jump to flap higher and higher) |
 
-At the very top of the Starfall Shaft, just past the Moon Rabbit, is the **🌈 Rainbow Party**, the end of the adventure. Every friend you made floats in on a cloud, every boss you cheered up waves from the back, every family member you found comes to celebrate, and fireworks fill the sky.
+At the very top of the Starfall Shaft, just past the Moon Rabbit, is the **🌈 Rainbow Slide** home. That's the end of the adventure (see *The Cat House* below).
 
 The map isn't a single line. Side passages, high walkways, shy walls, underwater tunnels and fairy rings branch off the main path. Some can only be reached with a power from a later zone, so it's worth going back.
 
+### 🏠 The Cat House
+
+The adventure starts at home, and nobody's there. The kitten wakes on its bed, stretches, and wonders where everyone went (a thought bubble shows three grey "?" faces) while a big gloom cloud drifts past the window. Around the house are the empty cushions, twelve empty picture frames on the family wall, cat trees to climb and a door hall upstairs. The way out is always clear: the big front door glows, and glowing paw prints lead from the bed to it until you've been out once.
+
+- **Cat flaps.** Every zone has a cat flap (in Sparkle Gardens it's the garden gate). Walk past one and its door lights up in the Cat House's door hall; stand in a flap for a moment (a golden paw ring fills up) and you pop home, right next to that door. Stand in a lit door to go back out. So you can always nip home, and go back to any zone you've reached.
+- **The front door** always leads out to the garden gate in Sparkle Gardens.
+- **Family come home.** Each family member you find hops off home. Their frame on the family wall fills in with their face, and next time you're home they're napping on their own cushion (and wake up for a cuddle when you come close). Your own Mama waits by the front door.
+- **The homecoming party.** Slide home down the Rainbow Slide and the party starts in the living room. Only the family you actually found come: they dance in a ring around your kitten (the grannies sway, the babies bounce). Every friend you made floats in on a little cloud, and every boss you cheered up waves from the landing upstairs. Then a big card fills in the family frames one by one and shows how many you found, like **9 / 12**. Find all twelve and the card turns rainbow, with extra fireworks. Afterwards you can keep playing and go back out for anyone you missed.
+- The house has its own gentle music-box tune. The party tune plays only while you're at the party; step out of the house and the music changes with you.
+
 ### 👪 The kittens' family
 
-Twelve of Marshmallow's and Phoebe's relatives are hidden, one in each zone, down a secret side passage or walkway. Each one is napping on a cushion; come close and they wake with a happy mew and a shower of hearts, and they'll be at the party at the end. A cat face on the HUD counts how many you've found, and a cat face on the map marks where.
+Twelve of Marshmallow's and Phoebe's relatives are hidden, one in each zone, down a secret side passage or walkway. Each one is napping on a cushion; come close and they wake with a happy mew and a shower of hearts, then hop off home to the Cat House. A cat face on the HUD counts how many you've found, and a cat face on the map marks where.
 
 | Zone | Who's hiding there | Zone | Who's hiding there |
 |---|---|---|---|
@@ -159,30 +171,30 @@ Snacks always come back: a treat pops back after half a minute (or as soon as yo
 
 ## 🌧 The bosses: twelve big sad friends
 
-Every zone ends in an arena with a big animal having the saddest day ever. Nobody is mean; their sadness just spills out as slow, simple "sad attacks", and every one is shown before it happens. The rhythm is always the same, so little players learn it fast:
+Every zone ends in an arena with a big animal having the saddest day ever. Nobody is mean; their sadness just spills out as slow, silly "sad attacks" that suit the animal, and every one is shown before it happens. Each boss has its own arena too. The rhythm is always the same, so little players learn it fast:
 
 1. **Wake up.** Walk in and a picture card shows the plan: sad boss → bubbles → happy boss.
-2. **Dodge.** The boss winds up with a clear wiggle, then does one sad attack. Things fall (their shadows grow on the floor first), a ripple rolls along the ground (hop over it), something arcs over (a ring marks where it lands), sad balls bounce about or little rain-clouds drift after you (pop them with a bubble!), or the boss rolls, slides or trots across (hop up on a ledge).
-3. **Bubble!** Then the boss sits down to sniffle. That's the moment: a few bubbles pop one of the gloom clouds over its head, and the colour creeps back into its fur.
+2. **Dodge.** The boss winds up with a clear wiggle, then does one sad attack (see the table). Things that fall show a growing shadow first, hops and dives show a ring where they'll land, and the toad's tongue shows a dotted line.
+3. **Bubble!** Every attack ends with the boss stuck or sitting down to sniffle: slipped in the mud, dizzy, stuck in its own honey, antlers caught in a tree, dozing off… A **golden glow** around the boss means *now*. A few bubbles pop one of the gloom clouds over its head, and the colour creeps back into its fur.
 
 On Easy a sad attack only bumps the kitten back; on Hard it costs a happy sun (see above). Pop every cloud and the boss dances under a rainbow in a shower of confetti and hearts, the vine gate opens, and a brand-new friend will come to the party. A picture of the boss and its row of clouds sits at the top-right during the fight, so you can see how close you are.
 
-| Zone | Boss | Sad attacks to dodge |
-|---|---|---|
-| 🌼 Sparkle Gardens | the Grumpy Goose, in a blue bonnet with a daisy | drifting feathers · a honk that ripples along the ground |
-| 🍄 Mushroom Meadow | the Toadstool Toad, in a mushroom-cap hat | big belly-flop hops · bouncing spore balls |
-| 💎 Crystal Caverns | the Crystal Armadillo | a roll across the cave · falling crystals |
-| 🍯 Honeycomb Hive | the Queen Bee (her crown slips when she's sad) | honey drips · little drones that drift after you |
-| 🌧 Rainy Ruins | the Weepy Elephant | trunk sprays that arc over · a stomp that ripples both ways |
-| ☁ Cloud Castles | the Cloud King, a lion cub with a cloud mane and a golden crown | cloudlets that drift after you · a rain shower that follows you |
-| 🐚 Coral Lagoon | the Grumpy Octopus | ink clouds that drift after you · a splashy slap both ways |
-| 🌵 Sunny Dunes | the Sulky Camel | rolling sand waves · dusty sneezes that arc over |
-| ❄ Frosty Peaks | the Glum Walrus, in a red and white bobble hat | a belly slide across the ice · bouncing snowballs |
-| 🍁 Autumn Woods | the Mopey Moose, in a stripy scarf | a trotting charge · falling acorns |
-| 🏮 Moonlit Springs | the Sleepy Panda | a roly-poly roll · bamboo that arcs over |
-| 🌙 Starlight Sky | the Moon Rabbit on her crescent moon | falling stars · bouncing mochi · a moon-wave both ways |
+| Zone | Boss and arena | Sad attacks to dodge | When to bubble |
+|---|---|---|---|
+| 🌼 Sparkle Gardens | the Grumpy Goose, in a blue bonnet · *Pond Garden* | waddles after you, flapping (lead her past the mud puddle!) · drifting feathers · a honk that ripples along the ground | she slips in the mud, or sits down puffed out |
+| 🍄 Mushroom Meadow | the Toadstool Toad · *Mushroom Ring* (bouncy toadstools) | a tongue flick (a dotted line shows where) · belly-flops right where you're standing · bouncing spore balls | tongue tied in a bow |
+| 💎 Crystal Caverns | the Crystal Armadillo · *Crystal Bowl* | curls up and rolls round and round the bowl (wait it out on a ledge) · falling crystals | dizzy, with stars going round |
+| 🍯 Honeycomb Hive | the Queen Bee · *Honeycomb Tower* | hovers over you and dives (her shadow shows where) · little drones that drift after you · honey drips | stuck in her own honey |
+| 🌧 Rainy Ruins | the Weepy Elephant · *Rainy Courtyard* (stone pillars) | floods the courtyard (hop up on a pillar till it drains) · a stomp that ripples both ways · trunk sprays that arc over | sitting soaked in a puddle |
+| ☁ Cloud Castles | the Cloud King, a lion cub with a cloud mane · *Windy Cloud Top* | huffs and puffs a great gust that blows you back · cloudlets that drift after you · a rain shower that follows you | out of puff |
+| 🐚 Coral Lagoon | the Grumpy Octopus · *Shipwreck* | tentacles pop up through holes in the deck (bubbles fizz first) · ink clouds that drift after you · a splashy slap both ways | arms tied in a knot |
+| 🌵 Sunny Dunes | the Sulky Camel · *Oasis Dunes* | sandy spit that arcs over · a sandstorm that blows you back, with sand waves · bouncing on its humps | sulking with its back to you |
+| ❄ Frosty Peaks | the Glum Walrus, in a bobble hat · *Frozen Pond* | a belly slide across the ice… straight into the crack · bouncing snowballs | stuck halfway through the ice |
+| 🍁 Autumn Woods | the Mopey Moose, in a stripy scarf · *Great Oak Clearing* | charges the big oak (hop up on a branch) · falling acorns | antlers stuck in the tree |
+| 🏮 Moonlit Springs | the Sleepy Panda · *Bamboo Grove* | sleepwalks after you · floating snore bubbles (pop them!) · bamboo that arcs over | dozing off, snoring |
+| 🌙 Starlight Sky | the Moon Rabbit · *Moon Garden* (with the Earth in the sky) | huge floaty moon hops · bouncing mochi · slow falling stars | pounding mochi, puffed out |
 
-The first two bosses have only two clouds to pop. Later ones wind up a little quicker, and the Moon Rabbit, the last of all, has three sad attacks and needs an extra bubble per cloud. The music switches to a bouncy boss tune during every fight.
+The first two bosses have only two clouds to pop. Later ones wind up a little quicker, and the Moon Rabbit, the last of all, needs an extra bubble per cloud. The music switches to a bouncy boss tune during every fight.
 
 ## 🧩 Picture puzzles
 
@@ -206,7 +218,8 @@ Each zone has a little brain-teaser that opens a vine gate. The gate wears a pic
 
 - **No reading, anywhere.** Arrows on signposts, fireflies that zip the right way, zone emblems, and an animated card for each new power. The card shows a tiny kitten doing the move while the matching button pulses in time.
 - **Gentle danger, never a game over.** On Easy (the default) bumps are just a silly boing. On Hard, sad things cost a happy sun, and a kitten who gets too sad just pops back at the latest save point with every sun back (see *Easy or Hard*). Falling into water (before you can swim), sky-mist, hot-spring steam or the starry void makes dandelion fluff float you back to safe ground.
-- **Bosses teach a rhythm.** Every sad attack is slow and shown in advance (growing shadows, landing rings, a wind-up wiggle), and the "bubble now!" moment is always the same: when the boss sits down to sniffle.
+- **Bosses teach a rhythm.** Every sad attack is slow and shown in advance (growing shadows, landing rings, dotted lines, a wind-up wiggle), and the "bubble now!" moment is always the same: when the boss is stuck or sniffling and glows gold.
+- **A home to come back to.** The Cat House is safe, cosy and never far away: every zone has a cat flap home.
 - **Puzzles in pictures.** Every puzzle gate shows what it's waiting for and ticks it off as you go. No puzzle can get stuck: babies and keys follow you everywhere (even after a too-sad pop-back), and a wrong bell just replays the tune.
 - **Friendship, not fighting.** A gloomy critter carries a little rain-cloud over its head. Each bubble shrinks the cloud and lifts its frown (a sad bunny's ears even perk back up). The last bubble wraps it in a big bubble that pops into a rainbow, and it becomes a dancing friend.
 - **Forgiving movement.** Coyote time, jump buffering, *ledge assist* (arrive a bit low and you're popped up), *corner slip* on head-bonks, variable jump height, and bubbles that gently home in on their target.
@@ -214,9 +227,9 @@ Each zone has a little brain-teaser that opens a vine gate. The gate wears a pic
 
 ## 🧑 For grown-ups
 
-- **The map button** (top-right, next to pause; or M, Tab, or a gamepad's Select) floats a see-through map over the game while you keep playing. It's centred on your kitten and shows every visited room in its zone colour, benches, earned powers, a ★ on rooms with every sparkle found, a toy where you found one, a cat face where you found family, each boss (under a rain-cloud until cheered up, then with a heart), and dotted lines between fairy-ring twins. Press it again to hide it.
+- **The map button** (top-right, next to pause; or M, Tab, or a gamepad's Select) floats a see-through map over the game while you keep playing. It's centred on your kitten and shows every visited room in its zone colour, benches, earned powers, a ★ on rooms with every sparkle found, a toy where you found one, a cat face where you found family, each boss (under a rain-cloud until cheered up, then with a heart), dotted lines between fairy-ring twins, and a dotted path home from every cat flap you've found. Press it again to hide it.
 - **Pause** (top-right button, Esc or Start) has four picture buttons: keep playing, sound on/off, the **kingdom map** on parchment, and **home** (back to the title screen).
-- **The kingdom map** always stays at the same comfortable zoom, which fits the kingdom's whole height, and opens centred on your kitten. Browse it side to side with ◀ ▶ held down (▲ ▼ too), by dragging it with a finger or the mouse, or with its big orange arrow buttons (tap to glide, hold to keep going). Every zone you've explored has a name tag, and a strip along the bottom shows the whole kingdom with a box around the part you're looking at; tap the strip to jump there. Close it with ✕, Space, the bubble button, Esc or M.
+- **The kingdom map** always stays at the same comfortable zoom and opens centred on your kitten. Browse it with ◀ ▶ ▲ ▼ held down, by dragging it with a finger or the mouse, or with its big orange arrow buttons (tap to glide, hold to keep going). Every zone you've explored has a name tag, the Cat House sits in the middle with its paths home, and a small map of the whole ring at the bottom shows the part you're looking at; tap it to jump there. Close it with ✕, Space, the bubble button, Esc or M.
 - **Easy or Hard:** the little picker in the title screen's bottom-right corner (💗 Easy is the default). To switch mid-adventure: pause → home → pick → ▶ Continue.
 - **Start fresh:** choose 🌱 New Game on the title screen, then ✓.
 - **Old PCs:** if frames get slow, the game automatically lowers its render resolution.
@@ -236,15 +249,16 @@ css/style.css           letterboxing, touch buttons, map & pause buttons
 js/core/                bb.js (namespace & math) · config.js (all tuning) · input.js (keys/pads/touch)
                         audio.js (synth voices & SFX) · music.js (adaptive layered score) · save.js
 js/world/               zones.js (biome palettes) · world.js (room grid & tile queries)
-js/world/rooms/         gardens · meadow · caves · hive · ruins · clouds · lagoon · dunes · frost
-                        autumn · springs · starlight  (ASCII room maps)
+js/world/rooms/         home (the Cat House) · gardens · meadow · caves · hive · ruins · clouds · lagoon
+                        dunes · frost · autumn · springs · starlight  (ASCII room maps)
 js/engine/              physics.js (pure movement) · camera.js · particles.js
 js/render/              gfx · kittens (+ family, sad & crying poses) · critters · bossart (the 12 bosses) · tiles
                         backdrops (parallax) · lighting · fx (grass, paw prints, ripples, light shafts) · hud · mapview
+                        home (the Cat House) · arenas (each boss arena's scenery)
 js/entities/            player · bubbles · bugs (all gloomy critters) · bosses (sad attacks & cheering up)
                         puzzles (paw pads, lost babies, keys, song bells) · food (treats & bowls) · gestures (cat tricks)
-                        things (sparkles, benches, elders, toys…)
-js/scenes/              title (Continue / New Game) · select · play (suns, save points, bosses, party) · pause (+ map)
+                        links (cat flaps, Cat House doors, the Rainbow Lift) · things (sparkles, benches, elders, the slide…)
+js/scenes/              title (Continue / New Game) · select · play (suns, save points, travel, bosses, party) · pause (+ map)
 js/main.js              fixed 60 Hz loop, scene switching, adaptive quality
 tools/                  verify-world.js + dev playtest/screenshot helpers (optional, need Node)
 tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (see the note at the top of Launcher.cs)
@@ -253,7 +267,7 @@ tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (
 - **One continuous world grid.** Rooms are placed at world coordinates (Hollow-Knight style), so walking off any edge leads straight into the neighbouring room, and the camera glides across.
 - **Pure physics.** `BB.Physics.step(body, input, abilities)` has no side effects, so the same code runs in the game and in the verifier.
 - **Adaptive music.** Each biome has an 8-bar song in layers (pad, bass, lead, arpeggio, percussion, twinkles). Running swells the arps and percussion, benches fade to a music box, a new friend adds a twinkle layer, dark caves warm the mix, and boss arenas get their own bouncy tune.
-- **Saves.** Progress lives in the browser's local storage and is written on every room change, save point, friend and gate. The Easy/Hard choice and sound on/off are kept separately, as settings for the device. Saves from before the boss arenas were added are moved over automatically: nothing is lost, and any new boss or puzzle gate the kitten had already walked past starts open (those bosses are still there to cheer up).
+- **Saves.** Progress lives in the browser's local storage and is written on every room change, save point, friend and gate. The Easy/Hard choice and sound on/off are kept separately, as settings for the device. Older saves are moved over automatically: nothing is lost. From before the boss arenas, any new boss or puzzle gate the kitten had already walked past starts open (those bosses are still there to cheer up). From before the ring, everything collected is moved to its room's new place, and every zone already visited has its door in the Cat House.
 
 ### Zero softlocks, proven
 
@@ -263,16 +277,16 @@ node tools/verify-world.js --stage 10  # just one story stage (0 = start … 10 
 node tools/verify-world.js --map g3    # also print a room with reachable air marked •
 ```
 
-The verifier loads the real game modules and simulates hundreds of button patterns from every reachable standing spot using the game's own physics: walks, hops, run-ups, mid-air steering, double jumps, wall kicks, glides, deep-water swims (paddle up, then steer), bubble bounces, star-wing flapping, and fairy-ring hops. The eleven story stages (no powers → Double Jump → … → Star Wings → the party) run in parallel on all CPU cores. It checks all of the following:
+The verifier loads the real game modules and simulates hundreds of button patterns from every reachable standing spot using the game's own physics: walks, hops, run-ups, mid-air steering, double jumps, wall kicks, glides, deep-water swims (paddle up, then steer), bubble bounces, star-wing flapping, and fairy-ring hops. It also follows the links: every cat flap home, each Cat House door (only once its flap has been found in the same search), the front door, the Rainbow Lift both ways and the Rainbow Slide. The eleven story stages (no powers → Double Jump → … → Star Wings → the party) run in parallel on all CPU cores. It checks all of the following:
 
-1. each elder and the Rainbow Party are reachable with the powers you'd have at that point;
+1. each elder and the Rainbow Slide home are reachable with the powers you'd have at that point;
 2. **from every reachable spot the next goal is still reachable** (the gentle rescue from water, mist and steam is modelled too);
 3. every boss and puzzle gate you can walk up to opens: the boss can be reached and bubbled where it sits to sniffle, every paw pad can be stepped on, every lost baby can be walked home to Mama, the key can be carried to its keyhole, and every bell can be bubbled. Gates open mid-search as their wishes come true, and the search carries on through them;
 4. every power gate holds: rooms marked `needs:` a power can't be reached before you have it;
 5. with all powers, every spot can travel back home (free backtracking) and every gate in the kingdom can be opened;
-6. every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack and cat trick can be reached, and every bud can be bubbled.
+6. every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack, cat trick, cat flap and lift can be reached, and every bud can be bubbled.
 
-Gates stay open once opened (the save remembers), so a stage that starts in a later zone begins with every gate behind it already open; the earlier stages prove each of those gates can be opened on the way.
+Gates stay open once opened (the save remembers), so a stage that starts in a later zone begins with every gate behind it (along the ring) already open; the earlier stages prove each of those gates can be opened on the way. The boss moves themselves don't change the map, and every arena's way on is plain floor and ledges.
 
 A too-sad pop-back only ever returns the kitten to a spot it has already stood on, which it left using its own moves, so the happy suns can't create a softlock either.
 
@@ -280,7 +294,7 @@ Current result: ✓ all eleven story stages pass with zero softlocks (82 rooms �
 
 ### Editing rooms
 
-Rooms are ASCII maps in `js/world/rooms/*.js` (see the legend at the top of `js/world/world.js`). Terrain: `#` ground, `-` one-way ledge, `M` bouncy mushroom, `~` water, `%` sky-mist / steam / starry void, `^` updraft, `:` glow-petal, `H` shy wall, `G` vine gate (opens when the room's buds bloom, its boss is cheered up or its puzzle is solved), `I` ice (too slippery to climb), `X` cracked sandstone, `1`–`9` fairy rings (each digit appears exactly twice). Things: `*` sparkle, `b`/`c` critters (each zone's `cast` in `js/world/zones.js` decides which animals they become), `B` bench, `E` elder, `f` firefly, `R L U D` signs, `T` toy, `n` music flower, `o` bud, `K` Cloud King, `Q` boss (the room's `boss:` field says who), `&` family member, `F` the party, `S` start. Puzzle pieces: `P` paw pad, `d` lost baby and `A` its mama, `k` key and `Z` its keyhole, `V` song bell and `O` the singing stone. Cat food: `e` fishy treat, `W` food bowl. `j` is a golden paw bubble holding the zone's cat trick (the tricks and their animations live in `js/entities/gestures.js`). A room's `elder:`, `toy:`, `family:`, `boss:` and `needs:` fields say which power, toy, relative and boss live there and which power it takes to get in. Boss behaviour lives in `js/entities/bosses.js` (each boss is a short recipe of clouds, wind-up time and sad attacks) and puzzle logic in `js/entities/puzzles.js`. Zone palettes, ambience and casts live in `js/world/zones.js`. Run the verifier after any change.
+Rooms are ASCII maps in `js/world/rooms/*.js` (see the legend at the top of `js/world/world.js`). Terrain: `#` ground, `-` one-way ledge, `M` bouncy mushroom, `~` water, `%` sky-mist / steam / starry void, `^` updraft, `:` glow-petal, `H` shy wall, `G` vine gate (opens when the room's buds bloom, its boss is cheered up or its puzzle is solved), `I` ice (too slippery to climb), `X` cracked sandstone, `1`–`9` fairy rings (each digit appears exactly twice). Things: `*` sparkle, `b`/`c` critters (each zone's `cast` in `js/world/zones.js` decides which animals they become), `B` bench, `E` elder, `f` firefly, `R L U D` signs, `T` toy, `n` music flower, `o` bud, `K` Cloud King, `Q` boss (the room's `boss:` field says who), `&` family member, `F` the Rainbow Slide home, `S` start. Links: `h` a zone's cat flap, `u`/`v` the two ends of the Rainbow Lift (the Cat House's doors and skylight are listed in its room, `js/world/rooms/home.js`). Puzzle pieces: `P` paw pad, `d` lost baby and `A` its mama, `k` key and `Z` its keyhole, `V` song bell and `O` the singing stone. Cat food: `e` fishy treat, `W` food bowl. `j` is a golden paw bubble holding the zone's cat trick (the tricks and their animations live in `js/entities/gestures.js`). A room's `elder:`, `toy:`, `family:`, `boss:` and `needs:` fields say which power, toy, relative and boss live there and which power it takes to get in; a boss room's `arena:` names its scenery and the columns of anything its boss uses (the mud puddle, the deck holes, the thin ice, the big oak…). Boss behaviour lives in `js/entities/bosses.js` (each boss is a short recipe of clouds, wind-up time, sad attacks and how it looks when it's stuck) and puzzle logic in `js/entities/puzzles.js`. Zone palettes, ambience and casts live in `js/world/zones.js`. Run the verifier after any change.
 
 Developer shortcut: `index.html#play=phoebe&room=c4&ab=all` jumps straight into a room with every power.
 
