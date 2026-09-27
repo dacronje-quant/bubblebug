@@ -115,6 +115,9 @@
       this.gift = null; this.party = null; this.partyStarted = false;
       this.traveling = null; this.linkLock = null; this.intro = null;
       this.wardrobe = null; this.outfitCard = null; this.mirrorHold = 0; this.toyBounce = {}; this.toyNear = {};
+      // (the elephant's rain hat became a unicorn horn)
+      if (save.outfits && save.outfits.rainhat) { delete save.outfits.rainhat; save.outfits.horn = 1; }
+      if (save.wear && save.wear.head === 'rainhat') save.wear.head = 'horn';
       // presents from bosses cheered up before there were presents
       for (const r of W().rooms) if (save.bosses[r.id]) BB.Wardrobe.grant(save, r.def.boss || 'king', false);
       this.lastZone = -1;

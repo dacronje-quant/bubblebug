@@ -19,7 +19,7 @@
     { id: 'mushroom', boss: 'toad', slot: 'head', name: 'mushroom hat' },
     { id: 'tiara', boss: 'armadillo', slot: 'head', name: 'crystal tiara' },
     { id: 'crown', boss: 'queenbee', slot: 'head', name: 'honey crown' },
-    { id: 'rainhat', boss: 'elephant', slot: 'head', name: 'rain hat' },
+    { id: 'horn', boss: 'elephant', slot: 'head', name: 'unicorn horn' },
     { id: 'ruff', boss: 'king', slot: 'neck', name: 'cloud collar' },
     { id: 'sailor', boss: 'octopus', slot: 'head', name: 'sailor hat' },
     { id: 'sunhat', boss: 'camel', slot: 'head', name: 'sun hat' },
@@ -62,11 +62,24 @@
       c.fillStyle = '#ff7eb6'; G().circle(0.5, -9.5, 1.5, c); c.fill();
       c.fillStyle = '#ffffff'; for (const x of [-7.5, 0.5, 8.5]) { G().circle(x, x === 0.5 ? -16.5 : -15, 0.9, c); c.fill(); }
     },
-    rainhat(c) {
-      c.fillStyle = '#ffd34d'; c.strokeStyle = OUT; c.lineWidth = 0.9;
-      c.beginPath(); c.ellipse(0, -6.5, 13, 3, -0.08, 0, TAU); c.fill(); c.stroke();
-      c.beginPath(); c.ellipse(0, -8, 8, 7, 0, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
-      c.strokeStyle = '#c8a020'; c.lineWidth = 0.7; c.beginPath(); c.moveTo(0, -15); c.lineTo(0, -8); c.stroke();
+    // the elephant's present: a little tusk that turns the kitten into a unicorn
+    horn(c, t) {
+      c.save(); c.translate(3.5, -7.5); c.rotate(0.28);
+      const g = c.createLinearGradient(-3, 0, 3, -14);
+      g.addColorStop(0, '#fff6d0'); g.addColorStop(0.5, '#ffd9f0'); g.addColorStop(1, '#d8c8ff');
+      c.fillStyle = g; c.strokeStyle = '#b89a6a'; c.lineWidth = 0.8;
+      c.beginPath(); c.moveTo(-3.2, 0); c.quadraticCurveTo(-1.2, -8, 0, -15); c.quadraticCurveTo(1.2, -8, 3.2, 0); c.closePath(); c.fill(); c.stroke();
+      c.strokeStyle = 'rgba(200,150,120,0.8)'; c.lineWidth = 0.7;
+      for (let i = 1; i <= 4; i++) { const y = -i * 3, w = 3.2 * (1 - i / 5); c.beginPath(); c.moveTo(-w, y + 1); c.lineTo(w, y - 0.8); c.stroke(); }
+      const k = 0.5 + 0.5 * Math.sin(t * 0.12);
+      G().drawGlow(0, -15, 7, '#fff4c2', 0.5 + 0.4 * k, c);
+      c.fillStyle = 'rgba(255,255,255,0.95)'; G().twinkle(1.5, -16.5, 1.4 + k, c); c.fill();
+      c.restore();
+      // a little rainbow tuft of mane behind the ear
+      ['#ff9ec7', '#ffe066', '#9fe89a', '#8fd0ff'].forEach((col, i) => {
+        c.strokeStyle = col; c.lineWidth = 1.6; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(-6 + i * 1.2, -8); c.quadraticCurveTo(-11 + i, -6, -10 + i * 1.5, -1 + i); c.stroke();
+      });
     },
     ruff(c, t) {
       c.fillStyle = '#ffffff'; c.strokeStyle = '#b8b0d8'; c.lineWidth = 0.7;
