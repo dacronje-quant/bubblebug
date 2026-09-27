@@ -123,7 +123,7 @@ Marshmallow's family are Birmans and Siamese-pointed cats in cream, lilac and ch
 
 Bunnies and frogs hop, birds, bats, owls and bees flutter, fish and jellyfish swim, spiders dangle on silk, and everyone else waddles. Every friend you make comes to the rainbow party.
 
-The world has 82 interconnected rooms, 686 sparkles, 65 gloomy critters, 12 bosses, 12 picture puzzles, 12 cat tricks, 70 fishy treats, 12 food bowls, 24 cozy benches, 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
+The world has 83 interconnected rooms (the Cat House included), 680 sparkles, 65 gloomy critters, 12 bosses, 12 picture puzzles, 12 cat tricks, 70 fishy treats, 13 food bowls, 25 cozy benches (your own bed at home among them), 12 cat flaps, 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
 
 ### ✨ Little touches
 
@@ -272,12 +272,12 @@ tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (
 ### Zero softlocks, proven
 
 ```
-node tools/verify-world.js             # ~26 minutes on 4 cores, exit code 0 = all good
-node tools/verify-world.js --stage 10  # just one story stage (0 = start … 10 = the party)
+node tools/verify-world.js             # ~31 minutes on 4 cores, exit code 0 = all good
+node tools/verify-world.js --stage 10  # just one story stage (0 = start … 10 = the slide home)
 node tools/verify-world.js --map g3    # also print a room with reachable air marked •
 ```
 
-The verifier loads the real game modules and simulates hundreds of button patterns from every reachable standing spot using the game's own physics: walks, hops, run-ups, mid-air steering, double jumps, wall kicks, glides, deep-water swims (paddle up, then steer), bubble bounces, star-wing flapping, and fairy-ring hops. It also follows the links: every cat flap home, each Cat House door (only once its flap has been found in the same search), the front door, the Rainbow Lift both ways and the Rainbow Slide. The eleven story stages (no powers → Double Jump → … → Star Wings → the party) run in parallel on all CPU cores. It checks all of the following:
+The verifier loads the real game modules and simulates hundreds of button patterns from every reachable standing spot using the game's own physics: walks, hops, run-ups, mid-air steering, double jumps, wall kicks, glides, deep-water swims (paddle up, then steer), bubble bounces, star-wing flapping, and fairy-ring hops. It also follows the links: every cat flap home, each Cat House door (only once its flap has been found in the same search), the front door, the Rainbow Lift both ways and the Rainbow Slide. The eleven story stages (no powers → Double Jump → … → Star Wings → the slide home) run in parallel on all CPU cores. It checks all of the following:
 
 1. each elder and the Rainbow Slide home are reachable with the powers you'd have at that point;
 2. **from every reachable spot the next goal is still reachable** (the gentle rescue from water, mist and steam is modelled too);
@@ -290,7 +290,9 @@ Gates stay open once opened (the save remembers), so a stage that starts in a la
 
 A too-sad pop-back only ever returns the kitten to a spot it has already stood on, which it left using its own moves, so the happy suns can't create a softlock either.
 
-Current result: ✓ all eleven story stages pass with zero softlocks (82 rooms · 686 sparkles · 65 gloomy critters · 12 toys · 12 family members · 24 benches · 12 bosses · 12 puzzles · 70 treats · 12 food bowls · 12 cat tricks).
+Before any of that, a quick map check makes sure every pool has a floor and walls, so once you can swim, water is safe everywhere (no pool may sit over mist or the edge of the world).
+
+Current result: ✓ all eleven story stages pass with zero softlocks (83 rooms · 680 sparkles · 65 gloomy critters · 12 toys · 12 family members · 25 benches · 12 bosses · 12 puzzles · 70 treats · 13 food bowls · 12 cat tricks · 12 cat flaps).
 
 ### Editing rooms
 

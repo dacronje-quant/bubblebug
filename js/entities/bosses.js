@@ -365,7 +365,7 @@
         hover(b, A, 0.5);
         if (s.n < a.n && s.t % 22 === 1) {
           const off = (s.n - (a.n - 1) / 2) * 120;
-          spawnLob(a, b, clampX(pcx + off), A);
+          spawnLob(a, b, clampX(pcx + off), A, pb.y + pb.h);
           s.n++; b.open = 1; b.squash = 1.15;
         }
         return s.n >= a.n && !hazards.some(h => h.kind === 'lob' && h.owner === a) && s.t > 30;
@@ -675,13 +675,17 @@
   }
 
   function spawnWave(a, x, dir, b, owner, y) {
-    hazards.push({ kind: 'wave', sprite: a.sprite, owner: owner || a, x, y: y != null ? y : groundAt(b, x), dir, speed: a.speed, w: 34, h: a.sprite === 'sand' ? 30 : 24, t: 0, life: 700 });
+    const r = W().byId[b.room];
+    hazards.push({ kind: 'wave', sprite: a.sprite, owner: owner || a, x, y: y != null ? y : groundAt(b, x), dir, x0: r.px, x1: r.px + r.pw, speed: a.speed, w: 34, h: a.sprite === 'sand' ? 30 : 24, t: 0, life: 700 });
     S().bossWave();
   }
 
-  function spawnLob(a, b, tx, A) {
+  function spawnLob(a, b, tx, A, feetY) {
     const x0 = b.x + b.facing * b.D.r * 0.5, y0 = b.y - b.D.lift * 0.3;
-    const gy = floorUnder(tx, skyAbove(tx, A) + 4);
+    // it arcs in from the side, so it lands down near the kitten's level —
+    // not on a ledge high overhead (a ledge right over your head still shelters you)
+    const from = Math.max(skyAbove(tx, A) + 4, Math.min(feetY, b.floorY) - 2.5 * T);
+    const gy = floorUnder(tx, from);
     const n = 66, g = 0.22;
     hazards.push({
       kind: 'lob', sprite: a.sprite, owner: a, x: x0, y: y0, tx, gy, g,
@@ -715,7 +719,13 @@
           // follow the floor; stop at walls, gaps and the arena's edges
           const ahead = h.x + h.dir * (h.w / 2);
           const room = W().roomAtPx(h.x, h.y - 4);
-          if (!room || solidAt(ahead, h.y - 10) || !isFloor(Math.floor(h.x / T), Math.floor((h.y + 4) / T))) { poof(h); h.dead = true; break; }
+          // (it rolls up and down little one-tile steps — dunes, flowerbeds —
+          // but stops at anything taller)
+          const wx = Math.floor(h.x / T);
+          if (solidAt(h.x, h.y - 10) && !solidAt(h.x, h.y - T - 10)) h.y -= T;
+          else if (!isFloor(wx, Math.floor((h.y + 4) / T)) && isFloor(wx, Math.floor((h.y + T + 4) / T))) h.y += T;
+          const wall = solidAt(ahead, h.y - 10) && solidAt(ahead, h.y - T - 10);
+          if (!room || wall || h.x < h.x0 || h.x > h.x1 || !isFloor(wx, Math.floor((h.y + 4) / T))) { poof(h); h.dead = true; break; }
           hit = Math.abs(pcx - h.x) < h.w / 2 + pb.w / 2 - 6 && pb.y + pb.h > h.y - h.h + 6 && pb.y < h.y;
           break;
         }

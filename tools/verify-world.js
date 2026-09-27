@@ -10,7 +10,7 @@
 //
 //  For each story stage (no powers → +Double Jump → … → +Star Wings) it
 //  checks:
-//    1. the next elder (or, at the end, the Rainbow Party) is reachable, and
+//    1. the next elder (or, at the end, the Rainbow Slide home) is reachable, and
 //    2. from EVERY spot you can reach in that stage, the goal is still
 //       reachable (zero softlocks — falling in water or mist always floats
 //       you back to safety, and that rescue is modelled too), and
@@ -61,7 +61,7 @@ const NAMES = {
   doubleJump: 'Butterfly Elder (Double Jump)', wallClimb: 'Snail Elder (Sticky Paws)', glow: 'Firefly Elder (Glow)',
   float: 'Dandelion Elder (Float)', swim: 'Sea Turtle Elder (Swim)', dig: 'Tortoise Elder (Mighty Paws)',
   spring: 'Snow Hare Elder (Spring Paws)', rings: 'Badger Elder (Fairy Rings)', bubbleBounce: 'Otter Elder (Bubble Bounce)',
-  wings: 'Star Whale (Star Wings)', finale: 'the Rainbow Party',
+  wings: 'Star Whale (Star Wings)', finale: 'the Rainbow Slide home',
 };
 const STAGES = POWERS.map((goal, i) => ({ i, goal, have: POWERS.slice(0, i) }))
   .concat([{ i: POWERS.length, goal: 'finale', have: POWERS.slice() }]);
@@ -520,7 +520,7 @@ function runStage(stage, mapRoom) {
     const unvisited = W.rooms.filter(r => !roomTouched(res.cover, r));
     if (unvisited.length) fail('rooms never entered: ' + unvisited.map(r => r.id).join(', '));
     if (missing.length) { fail(`${missing.length} collectible(s)/landmark(s) out of reach:`); missing.forEach(m => out.push('      ' + m)); }
-    else pass('every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack and cat trick is reachable');
+    else pass('every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack, cat trick, cat flap and lift is reachable');
     const shut = W.rooms.filter(r => r.grid.some(row => row.includes('G')));
     if (shut.length) fail('gates that never opened: ' + shut.map(r => r.id).join(', '));
     else pass('every gate can be opened (all bosses cheered up, all puzzles solvable)');
@@ -569,8 +569,22 @@ if (isMainThread) {
       w.on('exit', () => { running--; if (next < todo.length) launch(); else if (running === 0) finish(); });
     }
   };
+  // Map checks that need no search: once you can swim, water must be safe
+  // everywhere, so no pool may have mist or the edge of the world under or
+  // beside it (sinking or paddling into that would float you away)
+  const lint = [];
+  for (const r of W.rooms) for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) {
+    if (W.tile(x, y) !== '~') continue;
+    for (const [dx, dy] of [[0, 1], [-1, 0], [1, 0]]) {
+      const t = W.tile(x + dx, y + dy);
+      if (t === null || t === '%') lint.push(`${r.id} (${x - r.x},${y - r.y}) has ${t === null ? 'the edge of the world' : 'mist'} ${dy ? 'under' : 'beside'} it`);
+    }
+  }
   const finish = () => {
     let failures = 0;
+    console.log('\n▶ Map checks');
+    if (lint.length) { failures += 1; console.log(`  ✗ ${lint.length} water tile(s) a swimmer could float away from:`); lint.slice(0, 12).forEach(l => console.log('      ' + l)); }
+    else console.log('  ✓ every pool has a floor and walls (swimming is always safe)');
     for (const s of todo) {
       const r = results[s.i];
       const have = s.have.length ? '+' + s.have[s.have.length - 1] : 'no powers';
