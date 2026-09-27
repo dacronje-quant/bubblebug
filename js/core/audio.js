@@ -473,6 +473,113 @@
       [72, 76, 79, 84].forEach(m => inst.bell(midi(m), t + 0.08, 0.08, sfxBus));
       noise({ at: t + 0.05, dur: 0.8, vol: 0.04, freq: 5000, to: 11000, q: 0.5, verb: 0.5 });
     },
+    // ──── Found you! A warm little reunion tune for a family member ────
+    familyFound() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [67, 72, 76, 79].forEach((m, i) => inst.harp(midi(m), t + i * 0.11, 0.13, sfxBus));
+      [84, 88].forEach((m, i) => inst.bell(midi(m), t + 0.5 + i * 0.16, 0.1, sfxBus));
+      inst.pad([midi(60), midi(64), midi(67), midi(72)], t + 0.35, 2.2, 0.09, sfxBus, 1500);
+    },
+
+    // ──── Each toy has its own sound (when found, and when batted at home) ────
+    toySound(toy) {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      switch (toy) {
+        case 'yarn': // a soft rolling boing
+          tone({ type: 'triangle', freq: 260, to: 520, glide: 0.18, dur: 0.3, vol: 0.12, vib: [12, 18] });
+          inst.marimba(midi(72), t + 0.12, 0.1, sfxBus);
+          break;
+        case 'feather': // swish-swish, tickly
+          noise({ dur: 0.25, vol: 0.06, freq: 3000, to: 7000, q: 1.2 });
+          noise({ at: t + 0.22, dur: 0.25, vol: 0.06, freq: 7000, to: 3000, q: 1.2 });
+          tone({ freq: 1800, to: 2600, delay: 0.1, dur: 0.3, vol: 0.03, vib: [18, 60] });
+          break;
+        case 'bell': // jingle jingle
+          for (let i = 0; i < 6; i++) tone({ freq: 2400 + (i % 3) * 420, at: t + i * 0.06, dur: 0.35, vol: 0.05, verb: 0.4 });
+          noise({ dur: 0.4, vol: 0.03, freq: 8000, q: 2, ftype: 'highpass' });
+          break;
+        case 'mouse': // squeak squeak!
+          tone({ freq: 2100, to: 2900, glide: 0.07, dur: 0.1, vol: 0.08 });
+          tone({ freq: 2300, to: 3100, glide: 0.07, delay: 0.16, dur: 0.1, vol: 0.08 });
+          break;
+        case 'boat': // toot toot
+          tone({ type: 'square', freq: 330, dur: 0.35, vol: 0.05, vib: [6, 4], filter: { freq: 1200 } });
+          tone({ type: 'square', freq: 330, delay: 0.45, dur: 0.5, vol: 0.05, vib: [6, 4], filter: { freq: 1200 } });
+          break;
+        case 'star': // twinkle twinkle
+          [84, 88, 91, 96].forEach((m, i) => inst.bell(midi(m), t + i * 0.09, 0.08, sfxBus));
+          break;
+        case 'shell': // the sea, whooshing
+          noise({ dur: 1.4, vol: 0.06, freq: 500, to: 1400, q: 0.5, attack: 0.5, verb: 0.5 });
+          break;
+        case 'bucket': // clonk, then a splash
+          tone({ type: 'triangle', freq: 220, to: 130, glide: 0.1, dur: 0.25, vol: 0.14 });
+          noise({ at: t + 0.12, dur: 0.4, vol: 0.06, freq: 1500, to: 600, q: 0.7 });
+          break;
+        case 'mitten': // pat pat, soft and woolly
+          noise({ dur: 0.08, vol: 0.09, freq: 500, q: 0.8, ftype: 'lowpass' });
+          noise({ at: t + 0.16, dur: 0.08, vol: 0.09, freq: 450, q: 0.8, ftype: 'lowpass' });
+          inst.musicbox(midi(79), t + 0.3, 0.06, sfxBus);
+          break;
+        case 'kite': // a breezy flutter up high
+          noise({ dur: 0.9, vol: 0.05, freq: 1200, to: 2600, q: 0.6 });
+          tone({ freq: 900, to: 1600, glide: 0.8, dur: 0.9, vol: 0.035, vib: [9, 30] });
+          break;
+        case 'duck': // squeaky quack quack
+          for (const d of [0, 0.2]) tone({ type: 'sawtooth', freq: 1100, to: 800, glide: 0.12, delay: d, dur: 0.14, vol: 0.05, filter: { type: 'bandpass', freq: 1600, q: 3 } });
+          break;
+        case 'rocket': // three, two, one… whoosh… pop!
+          tone({ type: 'triangle', freq: 180, to: 1600, glide: 0.7, dur: 0.75, vol: 0.08 });
+          noise({ dur: 0.8, vol: 0.06, freq: 400, to: 5000, q: 0.6 });
+          tone({ freq: 1400, to: 500, delay: 0.8, dur: 0.15, vol: 0.1 });
+          inst.bell(midi(91), t + 0.85, 0.08, sfxBus);
+          break;
+        default: sfx.toy();
+      }
+    },
+
+    // ──── A boss who's happy again says so, in its own animal voice ────
+    bossFriend(kind) {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      const call = (o, n, gap) => { for (let i = 0; i < n; i++) tone(Object.assign({}, o, { delay: (o.delay || 0) + i * gap })); };
+      switch (kind) {
+        case 'goose': call({ type: 'sawtooth', freq: 440, to: 390, dur: 0.18, vol: 0.07, filter: { type: 'bandpass', freq: 1000, q: 2 } }, 2, 0.24); break;
+        case 'toad': call({ type: 'square', freq: 170, to: 150, dur: 0.22, vol: 0.06, vib: [30, 25], filter: { freq: 900 } }, 2, 0.3); break;
+        case 'armadillo': call({ freq: 1300, to: 1700, dur: 0.08, vol: 0.07 }, 3, 0.12); break;
+        case 'queenbee':
+          tone({ type: 'sawtooth', freq: 220, dur: 0.6, vol: 0.05, vib: [40, 12], filter: { freq: 1400 } });
+          [79, 83, 86, 91].forEach((m, i) => inst.bell(midi(m), t + 0.4 + i * 0.07, 0.07, sfxBus));
+          break;
+        case 'elephant': // a happy trumpet
+          tone({ type: 'sawtooth', freq: 320, to: 640, glide: 0.25, dur: 0.9, vol: 0.07, vib: [7, 14], filter: { type: 'bandpass', freq: 1300, q: 1.5 } });
+          break;
+        case 'king': // a little lion-cub "rawr", then a purr
+          tone({ type: 'sawtooth', freq: 260, to: 170, dur: 0.45, vol: 0.07, vib: [22, 10], filter: { freq: 900 } });
+          sfx.purr();
+          break;
+        case 'octopus': call({ freq: 380, to: 950, glide: 0.1, dur: 0.14, vol: 0.09 }, 3, 0.16); break;
+        case 'camel': tone({ type: 'sawtooth', freq: 150, to: 200, dur: 0.8, vol: 0.06, vib: [5, 6], filter: { freq: 650 } }); break;
+        case 'walrus': call({ type: 'square', freq: 210, to: 160, dur: 0.2, vol: 0.05, filter: { freq: 700 } }, 2, 0.28); break;
+        case 'moose': tone({ type: 'sawtooth', freq: 190, to: 140, dur: 1.0, vol: 0.06, vib: [4, 5], filter: { freq: 700 } }); break;
+        case 'panda': tone({ type: 'triangle', freq: 620, to: 820, dur: 0.45, vol: 0.08, vib: [9, 30] }); break;
+        case 'moonbunny':
+          call({ freq: 1800, to: 2100, dur: 0.06, vol: 0.06 }, 4, 0.08);
+          [88, 91, 96].forEach((m, i) => inst.bell(midi(m), t + 0.4 + i * 0.1, 0.08, sfxBus));
+          break;
+      }
+    },
+
+    // ──── Something new to wear ────
+    outfit() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [72, 79, 84].forEach((m, i) => inst.musicbox(midi(m), t + i * 0.1, 0.12, sfxBus));
+      noise({ at: t + 0.25, dur: 0.5, vol: 0.04, freq: 6000, to: 10000, q: 0.6, verb: 0.5 });
+    },
+
     bossHappy() {
       if (!ctx) return;
       const t = ctx.currentTime;

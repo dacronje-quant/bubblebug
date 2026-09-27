@@ -301,5 +301,5 @@
     }
   }
 
-  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, doorFlap, HOLD };
+  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, doorFlap, holdRing, HOLD };
 })(window.BB);

@@ -88,6 +88,8 @@ The adventure starts at home, and nobody's there. The kitten wakes on its bed, s
 - **The front door** is Sparkle Gardens' door: it leads out to the garden gate (or, once you've reached it, the flap by the Grumpy Goose).
 - **Family come home.** Each family member you find hops off home. Their frame on the family wall fills in with their face, and next time you're home they're napping on their own cushion (and wake up for a cuddle when you come close). Your own Mama waits by the front door.
 - **The homecoming party.** Slide home down the Rainbow Slide and the party starts in the living room. Only the family you actually found come: they dance in a ring around your kitten (the grannies sway, the babies bounce). Every friend you made floats in on a little cloud, and every boss you cheered up waves from the landing upstairs. Then a big card fills in the family frames one by one and shows how many you found, like **9 / 12**. Find all twelve and the card turns rainbow, with extra fireworks. Afterwards you can keep playing and go back out for anyone you missed.
+- **Dressing up.** Every boss you cheer up gives your kitten a present to wear, and the newest one goes straight on: the goose's bonnet, a mushroom hat, a crystal tiara, a honey crown, a rain hat, a cloud collar, a sailor hat, a sun hat, a bobble hat, a stripy scarf, a sleepy nightcap and bunny ears. Stand still at the big mirror in the living room to try them all on (one hat and one neck thing at a time). Presents still to find show as grey "?" shapes.
+- **Toys come home too.** Every hidden toy you find turns up somewhere in the house: the yarn ball on the rug, the jingle bell hanging from a cat tree, the paper boat on the windowsill, the star cushion on the sofa… Walk into one to bat it about and hear its own sound. The spots for toys you haven't found yet show a faint outline.
 - The house has its own gentle music-box tune. The party tune plays only while you're at the party; step out of the house and the music changes with you.
 
 ### 👪 The kittens' family
@@ -170,6 +172,14 @@ Snacks are dotted all over the kingdom: **70 fishy treats** (golden fish biscuit
 
 Snacks always come back: a treat pops back after half a minute (or as soon as you leave the room), and an empty bowl slowly fills up again. In every boss fight, each gloom cloud you pop also bounces a treat out onto the floor, on your side of the arena. Every arena has two treats of its own as well.
 
+## 🔊 Sounds and a friendly voice
+
+The big moments have their own sounds, and a friendly voice says what happened, so nobody needs to read. It uses the device's own speech voice, works offline, and stays quiet when the sound is off.
+
+- **Family found:** a warm reunion tune, both cats mew, and the voice says *"You found Phoebe's Mama!"*.
+- **Toys:** every toy has its own sound, both when found and when batted at home: a jingling bell, a squeaky mouse, a tooting boat, a quacking duck, a whooshing rocket, the sea in a shell… The voice says *"A jingle bell!"*.
+- **Bosses:** a cheered-up boss says so in its own animal voice (a honk, a ribbit, a trumpet, a lion-cub rawr, moo, ork-ork…) over a happy fanfare, and the voice says *"Hooray! The goose is happy!"*. Then its present pops up: *"You got a goose bonnet!"*.
+
 ## 🌧 The bosses: twelve big sad friends
 
 Every zone ends in an arena with a big animal having the saddest day ever. Nobody is mean; their sadness just spills out as slow, silly "sad attacks" that suit the animal, and every one is shown before it happens. Each boss has its own arena too. The rhythm is always the same, so little players learn it fast:
@@ -248,7 +258,7 @@ icon.png                Game icon (Marshmallow & Phoebe in a bubble), web favico
 manifest.webmanifest    lets tablets "Add to Home Screen" as a full-screen app (when served online)
 css/style.css           letterboxing, touch buttons, map & pause buttons
 js/core/                bb.js (namespace & math) · config.js (all tuning) · input.js (keys/pads/touch)
-                        audio.js (synth voices & SFX) · music.js (adaptive layered score) · save.js
+                        audio.js (synth voices & SFX) · voice.js (spoken lines) · music.js (adaptive layered score) · save.js
 js/world/               zones.js (biome palettes) · world.js (room grid & tile queries)
 js/world/rooms/         home (the Cat House) · gardens · meadow · caves · hive · ruins · clouds · lagoon
                         dunes · frost · autumn · springs · starlight  (ASCII room maps)
@@ -258,8 +268,10 @@ js/render/              gfx · kittens (+ family, sad & crying poses) · critter
                         home (the Cat House) · arenas (each boss arena's scenery)
 js/entities/            player · bubbles · bugs (all gloomy critters) · bosses (sad attacks & cheering up)
                         puzzles (paw pads, lost babies, keys, song bells) · food (treats & bowls) · gestures (cat tricks)
+                        wardrobe (things to wear, from the bosses)
                         links (cat flaps, Cat House doors, the Rainbow Lift) · things (sparkles, benches, elders, the slide…)
-js/scenes/              title (Continue / New Game) · select · play (suns, save points, travel, bosses, party) · pause (+ map)
+js/scenes/              title (Continue / New Game) · select · play (suns, save points, travel, bosses, party)
+                        play-home (the dressing-up mirror, presents, toys at home) · pause (+ map)
 js/main.js              fixed 60 Hz loop, scene switching, adaptive quality
 tools/                  verify-world.js + dev playtest/screenshot helpers (optional, need Node)
 tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (see the note at the top of Launcher.cs)

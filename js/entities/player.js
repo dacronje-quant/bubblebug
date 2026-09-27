@@ -176,6 +176,7 @@
       t: pl.t, blink: pl.blink, squash: pl.squash, puff: pl.puff, yawn: pl.yawn,
       ear: pl.ear, lick: pl.lick, happy: pl.happyT > 0, phase: pl.phase, vy: b.vy, tail: 0,
       munch: pl.munchT > 0 ? pl.munchT / pl.munchLen : 0,
+      wear: BB.Play.save && BB.Play.save.wear,
     };
     p.sad = pl.happyT > 0 ? 0 : pl.sad || 0;
     if (pl.state === 'sad') {

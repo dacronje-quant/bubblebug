@@ -447,6 +447,8 @@
       c.beginPath(); c.moveTo(0, 4 + dy * 0.5); c.lineTo(-len + 1, 3 + dy * 1.5 - wig); c.stroke();
     }
     if (cat.acc) drawAccessories(c, cat);
+    // what the kitten is wearing (presents from the bosses)
+    if (pose.wear && BB.Wardrobe) BB.Wardrobe.drawOn(c, pose.wear, t);
     c.restore();
   }
 

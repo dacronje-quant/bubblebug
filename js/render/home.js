@@ -200,6 +200,67 @@
     c.restore();
   }
 
+  // ──── Found toys decorate the house (bat them to play!) ────
+  // [col, row the toy sits on (its bottom), hanging?]
+  const TOY_SPOTS = {
+    yarn: [27, 32], feather: [19.4, 32], bell: [37.5, 23.3, true], mouse: [41.4, 32],
+    boat: [7.7, 25.7], star: [48.5, 31.1], shell: [24.3, 20], bucket: [33.6, 20],
+    mitten: [21.1, 27.2], kite: [30, 15.2, true], duck: [33.2, 32], rocket: [22, 23],
+  };
+  const MIRROR_COL = 17;
+  function toySpot(room, toy) {
+    const s = TOY_SPOTS[toy];
+    return s ? { x: (room.x + s[0]) * T, y: (room.y + s[1]) * T, hang: !!s[2] } : null;
+  }
+  function drawToys(c, room, cam, t, play) {
+    const save = play.save;
+    for (const toy of Object.keys(TOY_SPOTS)) {
+      const sp = toySpot(room, toy), have = !!save.toys[toy];
+      const x = sp.x - cam.x, y = sp.y - cam.y;
+      if (x < -60 || x > G().W + 60 || y < -80 || y > G().H + 60) continue;
+      const bn = (play.toyBounce && play.toyBounce[toy]) || 0;
+      c.save();
+      if (!have) c.globalAlpha = 0.16;
+      if (sp.hang) {
+        // on a string: it swings when batted
+        const sw = Math.sin(t * 0.05 + x) * 0.08 + Math.sin(bn * 12) * bn * 0.6;
+        c.strokeStyle = 'rgba(90,60,40,0.7)'; c.lineWidth = 1.2;
+        c.translate(x, y); c.rotate(sw);
+        c.beginPath(); c.moveTo(0, 0); c.lineTo(0, toy === 'kite' ? 18 : 12); c.stroke();
+        BB.HUD.toyIcon(c, toy, 0, toy === 'kite' ? 30 : 22, 1.3, t);
+      } else {
+        const hop = -Math.abs(Math.sin(bn * 9)) * 16 * bn;
+        c.translate(x, y + hop); c.rotate(Math.sin(bn * 14) * bn * 0.5);
+        BB.HUD.toyIcon(c, toy, 0, -12, 1.3, t);
+      }
+      c.restore();
+    }
+  }
+
+  // the dressing-up mirror: stand still in front of it to try things on
+  function drawMirror(c, room, cam, t, play) {
+    const x = (room.x + MIRROR_COL) * T - cam.x, y = (room.y + 32) * T - cam.y;
+    if (x < -80 || x > G().W + 80) return;
+    c.fillStyle = '#8a5a34'; c.strokeStyle = '#4a2e18'; c.lineWidth = 2;
+    c.fillRect(x - 3, y - 30, 6, 30);
+    c.beginPath(); c.moveTo(x - 16, y); c.lineTo(x, y - 12); c.lineTo(x + 16, y); c.stroke();
+    G().ellipse(x, y - 58, 22, 32, 0, c); c.fill(); c.stroke();
+    const g = c.createLinearGradient(x - 18, y - 88, x + 18, y - 28);
+    g.addColorStop(0, '#e8f6ff'); g.addColorStop(0.5, '#bfe0f8'); g.addColorStop(1, '#dff0ff');
+    c.fillStyle = g; G().ellipse(x, y - 58, 17, 27, 0, c); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.7)';
+    c.beginPath(); c.ellipse(x - 7, y - 66, 3, 12, 0.3, 0, TAU); c.fill();
+    // a hat hanging on the corner says "dress up here"
+    const has = Object.keys(play.save.outfits || {}).length;
+    if (BB.Wardrobe) {
+      const id = (play.save.wear && play.save.wear.head) || 'sunhat';
+      c.save(); c.globalAlpha = has ? 1 : 0.5;
+      BB.Wardrobe.icon(c, id, x + 17, y - 90, 1.2, t);
+      c.restore();
+    }
+    if (has) { c.fillStyle = 'rgba(255,250,220,0.9)'; G().twinkle(x + 8 + Math.sin(t * 0.05) * 4, y - 74, 3 + Math.sin(t * 0.1), c); c.fill(); }
+  }
+
   // the family members who are home, napping on their cushions
   function drawFamily(c, room, cam, t, play) {
     if (play.party) return;
@@ -258,5 +319,5 @@
     c.restore();
   }
 
-  BB.Home = { familyOrder, drawBack, drawFamily, drawFront, drawIntro, faceOf };
+  BB.Home = { familyOrder, drawBack, drawFamily, drawFront, drawIntro, faceOf, drawToys, drawMirror, toySpot, TOY_SPOTS, MIRROR_COL };
 })(window.BB);

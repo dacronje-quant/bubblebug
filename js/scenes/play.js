@@ -24,6 +24,9 @@
   const S = () => BB.Audio.sfx;
   const Cam = () => BB.Camera;
   const FX = BB.FX;
+  // what the friendly voice calls things
+  const TOY_NAMES = { yarn: 'yarn ball', feather: 'feather wand', bell: 'jingle bell', mouse: 'toy mouse', boat: 'paper boat', star: 'star cushion', shell: 'seashell', bucket: 'sand bucket', mitten: 'mitten', kite: 'kite', duck: 'rubber duck', rocket: 'toy rocket' };
+  const BOSS_NAMES = { goose: 'goose', toad: 'toad', armadillo: 'armadillo', queenbee: 'queen bee', elephant: 'elephant', king: 'Cloud King', octopus: 'octopus', camel: 'camel', walrus: 'walrus', moose: 'moose', panda: 'panda', moonbunny: 'Moon Rabbit' };
   const NO_INPUT = { left: false, right: false, jump: false, jumpPressed: false, bubblePressed: false };
 
   const P = BB.Play = {
@@ -111,6 +114,9 @@
       this.lastCam = { x: Cam().x, y: Cam().y };
       this.gift = null; this.party = null; this.partyStarted = false;
       this.traveling = null; this.linkLock = null; this.intro = null;
+      this.wardrobe = null; this.outfitCard = null; this.mirrorHold = 0; this.toyBounce = {}; this.toyNear = {};
+      // presents from bosses cheered up before there were presents
+      for (const r of W().rooms) if (save.bosses[r.id]) BB.Wardrobe.grant(save, r.def.boss || 'king', false);
       this.lastZone = -1;
       // feelings, save point & friends that follow you
       this.mood = C.MOOD_MAX; this.invuln = 60; this.hurtT = 0; this.healT = 0; this.munchT = 0;
@@ -460,6 +466,9 @@
       this.pl.happyT = 150;
       this.heal(C.MOOD_MAX);
       S().bossHappy();
+      this.later(40, () => S().bossFriend(b.kind));
+      BB.Voice.say('Hooray! The ' + (BOSS_NAMES[b.kind] || 'friend') + ' is happy!', 700);
+      this.giveOutfit(b.kind);
       BB.Audio.duck(0.3, 4);
       this.later(200, () => { if (this.bossMusic) { BB.Music.play(BB.ZONES[this.room.zone].key); this.bossMusic = false; } });
       this.tryOpen(W().byId[b.room]);
@@ -533,6 +542,8 @@
         onToy(th) {
           self.save.toys[th.toy] = 1;
           S().toy();
+          setTimeout(() => S().toySound(th.toy), 450);
+          BB.Voice.say('A ' + (TOY_NAMES[th.toy] || 'toy') + '!', 700);
           self.pl.happyT = 90;
           PT().burst('confetti', th.x, th.y, 30, { speed: 4, g: 0.08, life: 70 });
           PT().burst('spark', th.x, th.y, 16, { color: '#ffffff', speed: 3, life: 40 });
@@ -582,9 +593,11 @@
           self.save.family[th.fam] = 1;
           self.pl.happyT = 120;
           self.heal(C.MOOD_MAX, th.x, th.y - 30);
+          S().familyFound();
           S().meow(self.pl.cat);
           setTimeout(() => S().meow(th.fam), 350);
-          S().befriend();
+          const m = BB.CATS[th.fam];
+          BB.Voice.say('You found ' + (m ? m.name : 'family') + '!', 600);
           for (let i = 0; i < 14; i++) PT().heart(th.x + (Math.random() - 0.5) * 50, th.y - 20 - Math.random() * 30);
           PT().burst('confetti', th.x, th.y - 30, 24, { speed: 3.5, g: 0.08, life: 70 });
           BB.Save.write();
@@ -705,6 +718,7 @@
       this.t++;
       G().t++;
       const I = BB.Input;
+      if (this.wardrobe) { this.updateWardrobe(); PT().update(); return; }
       if (I.pressed.pause && !this.gift && this.pl.state !== 'sad') { BB.Main.go('pause'); return; }
       if (I.pressed.map) this.toggleMap();
 
@@ -745,6 +759,7 @@
       if (this.linkLock && Math.hypot(b.x + b.w / 2 - this.linkLock.x, b.y + b.h - this.linkLock.y) > 40) this.linkLock = null;
       if (I.pressed.down && !this.traveling) this.doTrick();
       if (this.trickCard && ++this.trickCard.t > 260) this.trickCard = null;
+      if (this.outfitCard && ++this.outfitCard.t > 280) this.outfitCard = null;
       if (this.trickHint > 0) this.trickHint--;
       if (this.pl.state === 'sad') this.updateSad();
       else if (this.traveling) this.updateTravel();
@@ -831,6 +846,8 @@
       for (const f of this.followers.slice()) BB.Things.update(f, ctx);
       BB.Bosses.updateHazards(ctx);
       BB.Food.updateDrops(ctx);
+      this.updateMirror();
+      this.updateHomeToys();
 
       // ── bubbles ──
       const targets = [];
@@ -939,7 +956,7 @@
 
       const visible = W().roomsInRect(cam.x - 64, cam.y - 64, G().W + 128, G().H + 128);
       const env = { glow: this.save.abilities.glow, rings: this.save.abilities.rings, dig: this.save.abilities.dig, px: this.pl.body.x + 10, py: this.pl.body.y + 12 };
-      for (const r of visible) if (r.def.home) BB.Home.drawBack(c, r, cam, t, this);
+      for (const r of visible) if (r.def.home) { BB.Home.drawBack(c, r, cam, t, this); BB.Home.drawMirror(c, r, cam, t, this); }
       for (const r of visible) if (r.def.arena) BB.Arenas.drawBack(c, r, cam, t, this);
       for (const r of visible) BB.Tiles.drawStatic(c, r, cam, 0);
       for (const r of visible) BB.Tiles.drawLive(c, r, cam, t, env);
@@ -962,7 +979,11 @@
         const e = this.ents[r.id];
         for (const th of e.things) if (th.type !== 'elder') BB.Things.draw(c, th, cam, ctx);
       }
-      for (const r of visible) if (r.def.home) BB.Home.drawFamily(c, r, cam, t, this);
+      for (const r of visible) if (r.def.home) { BB.Home.drawToys(c, r, cam, t, this); BB.Home.drawFamily(c, r, cam, t, this); }
+      if (this.mirrorHold > 0) {
+        const mx = (room.x + BB.Home.MIRROR_COL) * T - cam.x, my = (room.y + 32) * T - cam.y;
+        BB.Links.holdRing(c, mx, my - 124, this.mirrorHold / BB.Links.HOLD);
+      }
       if (this.party) this.drawGuests(c, cam, true);
       for (const r of visible) {
         const e = this.ents[r.id];
@@ -1038,6 +1059,7 @@
       if (boss && boss.state !== 'happy' && boss.room === this.room.id) BB.Bosses.drawBossHUD(c, boss, t);
       if (this.bossCard) BB.HUD.drawBossCard(c, this.bossCard.b, this.bossCard.t, t);
       if (this.trickCard) this.drawTrickCard(c, t);
+      if (this.outfitCard) this.drawOutfitCard(c, t);
       if (this.trickHint > 0) this.drawTrickHint(c, cam);
       BB.HUD.drawZoneCard(c, this.cardZone, this.zoneCard / 40, t);
       if (this.gift && this.gift.card > 0) {
@@ -1047,6 +1069,7 @@
       if (this.party && this.party.card > 0) this.drawPartyCard(c, this.party.card);
       if (this.flash > 0) { c.fillStyle = `rgba(255,248,220,${this.flash / 20})`; c.fillRect(0, 0, G().W, G().H); this.flash--; }
       if (this.mapOn && !(this.gift && this.gift.card > 0)) BB.MapView.draw(c, 'overlay', t);
+      if (this.wardrobe) this.drawWardrobe(c, t);
       this.drawIris(c, cam);
     },
 

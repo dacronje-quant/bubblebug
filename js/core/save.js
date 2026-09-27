@@ -89,6 +89,8 @@
       gestures: {},                         // cat trick id → 1 (learned)
       secrets: {},                          // shy-wall room → 1
       visited: {},                          // room id → 1
+      outfits: {},                          // things to wear, from the bosses: id → 1
+      wear: { head: null, neck: null },     // what the kitten has on
       doors: {},                            // zone → 1 once its cat flap is found (a door opens at home)
       introDone: 0,                         // the wake-up scene has played
       leftHome: 0,                          // been out of the front door

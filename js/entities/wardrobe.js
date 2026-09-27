@@ -1,0 +1,178 @@
+// ════════════════════════════════════════════════════════════════
+//  WARDROBE — things for the kitten to wear.
+//  Every boss you cheer up gives the kitten a present to wear (the goose's
+//  bonnet, the walrus's bobble hat, the moose's stripy scarf…). The newest
+//  one goes straight on; at home, stand still at the big mirror to try
+//  them all on: one hat and one neck thing at a time.
+//
+//  Everything is drawn in the kitten's head space (the head is an ellipse
+//  about 9.6 × 8.8 around 0,0, looking right; ears poke up to y ≈ −15).
+// ════════════════════════════════════════════════════════════════
+(function (BB) {
+  'use strict';
+  const TAU = Math.PI * 2;
+  const G = () => BB.G;
+  const OUT = '#3a2a3a';
+
+  const LIST = [
+    { id: 'bonnet', boss: 'goose', slot: 'head', name: 'goose bonnet' },
+    { id: 'mushroom', boss: 'toad', slot: 'head', name: 'mushroom hat' },
+    { id: 'tiara', boss: 'armadillo', slot: 'head', name: 'crystal tiara' },
+    { id: 'crown', boss: 'queenbee', slot: 'head', name: 'honey crown' },
+    { id: 'rainhat', boss: 'elephant', slot: 'head', name: 'rain hat' },
+    { id: 'ruff', boss: 'king', slot: 'neck', name: 'cloud collar' },
+    { id: 'sailor', boss: 'octopus', slot: 'head', name: 'sailor hat' },
+    { id: 'sunhat', boss: 'camel', slot: 'head', name: 'sun hat' },
+    { id: 'bobble', boss: 'walrus', slot: 'head', name: 'bobble hat' },
+    { id: 'scarf', boss: 'moose', slot: 'neck', name: 'stripy scarf' },
+    { id: 'nightcap', boss: 'panda', slot: 'head', name: 'sleepy nightcap' },
+    { id: 'ears', boss: 'moonbunny', slot: 'head', name: 'bunny ears' },
+  ];
+  const BY = Object.fromEntries(LIST.map(a => [a.id, a]));
+  const BY_BOSS = Object.fromEntries(LIST.map(a => [a.boss, a]));
+
+  // ──── Drawing each thing (head space) ────
+  const ART = {
+    bonnet(c, t) {
+      c.fillStyle = '#8fc8ff'; c.strokeStyle = OUT; c.lineWidth = 0.9;
+      c.beginPath(); c.moveTo(-10, 1); c.quadraticCurveTo(-11, -12, 0, -12.5); c.quadraticCurveTo(8, -12.5, 9.5, -6); c.quadraticCurveTo(0, -8.5, -7, 1); c.closePath(); c.fill(); c.stroke();
+      c.strokeStyle = '#ffffff'; c.lineWidth = 1; c.beginPath(); c.moveTo(-7, 1); c.quadraticCurveTo(0, -8.5, 9.5, -6); c.stroke();
+      flower(c, -2.5, -11, '#ffffff', 0.9);
+      c.strokeStyle = '#ff8fb8'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-8.5, 1); c.quadraticCurveTo(-6, 6, -3, 8); c.stroke();
+    },
+    mushroom(c) {
+      c.fillStyle = '#ff5d6c'; c.strokeStyle = OUT; c.lineWidth = 0.9;
+      c.beginPath(); c.ellipse(0.5, -7.5, 11, 7.5, 0, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ffffff';
+      for (const [x, y, r] of [[-5, -10, 1.8], [1.5, -13, 2.1], [6.5, -9.5, 1.5], [-1, -8.5, 1.1]]) { G().circle(x, y, r, c); c.fill(); }
+    },
+    tiara(c, t) {
+      c.fillStyle = '#ffd84a'; c.strokeStyle = '#a8740e'; c.lineWidth = 0.7;
+      c.beginPath(); c.ellipse(0.5, -7.5, 8, 2.2, 0, Math.PI, 0); c.lineTo(8.5, -7.5); c.stroke();
+      c.fillRect(-7.5, -8.3, 16, 1.6);
+      for (const [x, h] of [[-4, 4], [0.5, 6.5], [5, 4]]) {
+        c.fillStyle = 'rgba(190,230,255,0.95)'; c.strokeStyle = '#5a6fc0';
+        c.beginPath(); c.moveTo(x - 1.8, -8); c.lineTo(x, -8 - h); c.lineTo(x + 1.8, -8); c.closePath(); c.fill(); c.stroke();
+      }
+      G().drawGlow(0.5, -12, 6, '#bfe6ff', 0.5 + 0.3 * Math.sin(t * 0.1), c);
+    },
+    crown(c, t) {
+      c.fillStyle = '#ffcf3a'; c.strokeStyle = '#a8740e'; c.lineWidth = 0.8;
+      c.beginPath(); c.moveTo(-6.5, -7); c.lineTo(-7.5, -15); c.lineTo(-3.5, -11); c.lineTo(0.5, -16.5); c.lineTo(4.5, -11); c.lineTo(8.5, -15); c.lineTo(7.5, -7); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ff7eb6'; G().circle(0.5, -9.5, 1.5, c); c.fill();
+      c.fillStyle = '#ffffff'; for (const x of [-7.5, 0.5, 8.5]) { G().circle(x, x === 0.5 ? -16.5 : -15, 0.9, c); c.fill(); }
+    },
+    rainhat(c) {
+      c.fillStyle = '#ffd34d'; c.strokeStyle = OUT; c.lineWidth = 0.9;
+      c.beginPath(); c.ellipse(0, -6.5, 13, 3, -0.08, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.ellipse(0, -8, 8, 7, 0, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+      c.strokeStyle = '#c8a020'; c.lineWidth = 0.7; c.beginPath(); c.moveTo(0, -15); c.lineTo(0, -8); c.stroke();
+    },
+    ruff(c, t) {
+      c.fillStyle = '#ffffff'; c.strokeStyle = '#b8b0d8'; c.lineWidth = 0.7;
+      for (let i = 0; i < 6; i++) { G().circle(-6 + i * 3.4, 8.5 + (i % 2) * 1.2, 3, c); c.fill(); c.stroke(); }
+      c.fillStyle = '#ffe27a'; G().star(3, 9.5, 2, 5, 0.45, -Math.PI / 2, c); c.fill();
+    },
+    sailor(c) {
+      c.fillStyle = '#ffffff'; c.strokeStyle = OUT; c.lineWidth = 0.9;
+      c.beginPath(); c.ellipse(0.5, -7.5, 10, 2.6, 0, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(-6.5, -8); c.lineTo(-5.5, -13); c.quadraticCurveTo(0.5, -15, 6.5, -13); c.lineTo(7.5, -8); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#3f7fd0'; c.fillRect(-6.2, -10.2, 13.5, 2.2);
+      c.beginPath(); c.moveTo(-6, -9); c.lineTo(-10, -5); c.lineTo(-8, -4.5); c.closePath(); c.fill();
+    },
+    sunhat(c) {
+      c.fillStyle = '#f2d08a'; c.strokeStyle = '#9a7a3a'; c.lineWidth = 0.8;
+      c.beginPath(); c.ellipse(0.5, -7, 15, 3.6, -0.05, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.ellipse(0.5, -8, 7.5, 6.5, 0, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ff8fb8'; c.fillRect(-7, -10, 15, 2.2);
+      flower(c, 7, -10, '#ffe066', 0.7);
+    },
+    bobble(c) {
+      c.fillStyle = '#e84a5a'; c.strokeStyle = OUT; c.lineWidth = 0.9;
+      c.beginPath(); c.moveTo(-9, -5); c.quadraticCurveTo(-9, -16, 0.5, -16); c.quadraticCurveTo(10, -16, 10, -5); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ffffff'; c.fillRect(-9.2, -7.5, 19.4, 2.6);
+      c.fillRect(-7, -12.5, 15, 1.6);
+      G().circle(0.5, -17.5, 3.2, c); c.fill(); c.stroke();
+    },
+    scarf(c) {
+      const band = (x, y, w, h) => {
+        c.fillStyle = '#4fc3c8'; G().rrect(x, y, w, h, 2, c); c.fill();
+        c.fillStyle = '#ffd84a'; for (let i = 1; i < w / 3; i++) c.fillRect(x + i * 3, y, 1.4, h);
+      };
+      band(-7, 6.5, 17, 4.2);
+      c.save(); c.translate(-3, 9); c.rotate(0.35); band(-1.5, 0, 4.5, 9); c.restore();
+      c.strokeStyle = 'rgba(40,30,40,0.4)'; c.lineWidth = 0.6; G().rrect(-7, 6.5, 17, 4.2, 2, c); c.stroke();
+    },
+    nightcap(c, t) {
+      const sway = Math.sin(t * 0.05) * 1.2;
+      c.fillStyle = '#6a7ad8'; c.strokeStyle = OUT; c.lineWidth = 0.9;
+      c.beginPath(); c.moveTo(-9, -5); c.quadraticCurveTo(-6, -14, 2, -14); c.quadraticCurveTo(-8, -17, -15 + sway, -10); c.lineTo(-13 + sway, -8.5); c.quadraticCurveTo(-7, -12, 10, -5); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ffffff'; G().rrect(-9.5, -6.5, 20, 3, 1.5, c); c.fill();
+      G().circle(-14.5 + sway, -9, 2.6, c); c.fill(); c.stroke();
+      c.fillStyle = '#ffe27a'; G().star(-1, -10, 1.8, 5, 0.45, -Math.PI / 2, c); c.fill();
+    },
+    ears(c, t) {
+      const flop = Math.sin(t * 0.06) * 0.08;
+      c.strokeStyle = '#ff8fb8'; c.lineWidth = 1.6; c.beginPath(); c.ellipse(0.5, -6.5, 9, 3, 0, Math.PI, 0); c.stroke();
+      for (const [x, a] of [[-3.5, -0.25 - flop], [4.5, 0.2 + flop]]) {
+        c.save(); c.translate(x, -8); c.rotate(a);
+        c.fillStyle = '#ffffff'; c.strokeStyle = OUT; c.lineWidth = 0.8;
+        G().ellipse(0, -8, 3, 8, 0, c); c.fill(); c.stroke();
+        c.fillStyle = '#ffb3cf'; G().ellipse(0, -8, 1.5, 6, 0, c); c.fill();
+        c.restore();
+      }
+    },
+  };
+
+  function flower(c, x, y, col, s) {
+    c.save(); c.translate(x, y); c.scale(s, s);
+    c.fillStyle = col;
+    for (let i = 0; i < 5; i++) { const a = i / 5 * TAU; G().circle(Math.cos(a) * 2.2, Math.sin(a) * 2.2, 1.8, c); c.fill(); }
+    c.fillStyle = '#ffd34d'; G().circle(0, 0, 1.3, c); c.fill();
+    c.restore();
+  }
+
+  // on the kitten (called from the head drawing, in head space)
+  function drawOn(c, wear, t) {
+    if (!wear) return;
+    for (const slot of ['neck', 'head']) {
+      const id = wear[slot];
+      if (!id || !ART[id]) continue;
+      // (neck things sit a little lower, under the chin)
+      if (slot === 'neck') { c.save(); c.translate(-1, 2.5); ART[id](c, t || 0); c.restore(); }
+      else ART[id](c, t || 0);
+    }
+  }
+
+  // an item on its own, centred at x,y (for cards and the wardrobe)
+  function icon(c, id, x, y, s, t) {
+    const a = BY[id];
+    if (!a) return;
+    c.save(); c.translate(x, y); c.scale(s, s);
+    c.translate(-0.5, a.slot === 'neck' ? -9 : 10);
+    ART[id](c, t || 0);
+    c.restore();
+  }
+
+  // a grey "still to find" shape
+  function silhouette(c, id, x, y, s) {
+    c.save();
+    c.globalAlpha = 0.35; c.filter = 'grayscale(1) brightness(0.6)';
+    icon(c, id, x, y, s, 0);
+    c.restore();
+  }
+
+  // a boss was cheered up: its present goes on straight away
+  function grant(save, bossKind, wearNow) {
+    const a = BY_BOSS[bossKind];
+    if (!a) return null;
+    save.outfits = save.outfits || {};
+    save.wear = save.wear || {};
+    const isNew = !save.outfits[a.id];
+    save.outfits[a.id] = 1;
+    if (isNew && wearNow) save.wear[a.slot] = a.id;
+    return isNew ? a : null;
+  }
+
+  BB.Wardrobe = { LIST, BY, BY_BOSS, drawOn, icon, silhouette, grant };
+})(window.BB);
