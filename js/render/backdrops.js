@@ -572,5 +572,9 @@
     }
   }
 
-  BB.Backdrops = { draw, drawSky, layersFor, cloud, clear: () => cache.clear() };
+  BB.Backdrops = {
+    draw, drawSky, layersFor, cloud, clear: () => cache.clear(),
+    // painters the boss arenas borrow for their scenery
+    art: { giantMushroom, crystalPillar, honeyCurtain, combChunk, arch, ruinTower, palm, roundTree, bamboo, lantern, mountain, bigPine },
+  };
 })(window.BB);

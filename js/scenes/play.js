@@ -83,6 +83,9 @@
       this.room = W().roomAtPx(x + 10, y + 12);
       this.prevRoom = null;
       save.visited[this.room.id] = 1;
+      // sparkles that moved when the boss arenas were rebuilt don't count twice
+      const stars = new Set(W().findThings('*').map(t => t.tx + ',' + t.ty));
+      for (const k in save.sparkles) if (!stars.has(k)) delete save.sparkles[k];
       if (save.doorsFromVisited) {
         for (const id in save.visited) { const r = W().byId[id]; if (r && !r.def.home) save.doors[r.zone] = 1; }
         delete save.doorsFromVisited;
@@ -933,8 +936,10 @@
       const visible = W().roomsInRect(cam.x - 64, cam.y - 64, G().W + 128, G().H + 128);
       const env = { glow: this.save.abilities.glow, rings: this.save.abilities.rings, dig: this.save.abilities.dig, px: this.pl.body.x + 10, py: this.pl.body.y + 12 };
       for (const r of visible) if (r.def.home) BB.Home.drawBack(c, r, cam, t, this);
+      for (const r of visible) if (r.def.arena) BB.Arenas.drawBack(c, r, cam, t, this);
       for (const r of visible) BB.Tiles.drawStatic(c, r, cam, 0);
       for (const r of visible) BB.Tiles.drawLive(c, r, cam, t, env);
+      for (const r of visible) if (r.def.arena) BB.Arenas.drawFront(c, r, cam, t);
       BB.Fx.drawGround(c, visible, cam, t, this.pl.body);
 
       const ctx = this.ctx();

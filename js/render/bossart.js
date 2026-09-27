@@ -38,7 +38,7 @@
       c.fillStyle = '#6a2a3a';
       G.ellipse(x, y + 5 * s, 2 * s, 1.8 * s * st.open, 0, c); c.fill();
     }
-    if (st.pose === 'sniffle' || st.pose === 'pop') tears(c, x, y, s, st.t);
+    if ((st.pose === 'sniffle' && st.tears !== false) || st.pose === 'pop') tears(c, x, y, s, st.t);
     if (st.pose === 'tele' && !happy) {
       // a grumpy puff of steam
       c.fillStyle = 'rgba(200,205,220,0.7)';
@@ -271,7 +271,7 @@
         t: st.t, mood: isHappy(st) ? 0 : Math.max(0.25, st.mood), facing: 1, scale: 1, blink: st.blink,
         joy: isHappy(st), noCloud: true, lookX: 0.4,
       });
-      if (st.pose === 'sniffle' || st.pose === 'pop') tears(c, 0, -16, 1.05, st.t);
+      if ((st.pose === 'sniffle' && st.tears !== false) || st.pose === 'pop') tears(c, 0, -16, 1.05, st.t);
     },
 
     // ── Coral Lagoon: the Grumpy Octopus ──
