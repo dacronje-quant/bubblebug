@@ -202,8 +202,10 @@
     b.rainbow = 200;
     b.danceT = 90;
     b.homeX = b.x;
-    if (b.behavior !== 'walk') b.homeY = b.y;
-    else b.y = b.homeY;
+    // ground critters drop back to their floor (the bubble lifted them);
+    // flyers and danglers just stay where the bubble popped
+    if (b.behavior === 'walk' || b.behavior === 'hop') b.y = b.homeY;
+    else b.homeY = b.y;
     S().befriend();
     PT().ring(b.x, b.y, '#ffffff', 30);
     PT().burst('confetti', b.x, b.y, 24, { speed: 4, life: 60, g: 0.08, size: 3 });
