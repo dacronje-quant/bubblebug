@@ -1,8 +1,8 @@
 // ════════════════════════════════════════════════════════════════
 //  ZONES — the twelve biomes of the Rainbow Kingdom, plus the Cat House.
 //  Zones 0–5 run west → east along the bottom of the ring; zones 6–11
-//  (dir: -1) run back east → west along the top, and the Cat House sits
-//  in the middle.
+//  (dir: -1) run back east → west along the top. The Cat House and its
+//  neighbourhood sit beside the western Sparkle Gardens.
 //  Palettes drive the procedural tile art, parallax painter, ambient
 //  particles and lighting. `cast` lists the gloomy critters who live in
 //  each zone: the `b` / `c` map characters take turns through their list,
@@ -144,7 +144,7 @@
       ambient: 'stars', dark: 0.15,
       cast: { b: ['dragon', 'unicorn', 'bunny'], c: ['lamb', 'bat'] },
     },
-    { // 12 ─ The Cat House (home, in the middle of the ring)
+    { // 12 ─ The Cat House (beside the western Sparkle Gardens)
       key: 'home', name: 'The Cat House',
       sky: ['#f7dcc0', '#f2c9a4', '#e7b489'],
       far: '#e9c29a', mid: '#d9a97c', near: '#c48c5c',

@@ -61,7 +61,7 @@
       else { idleAnims(pl, true); return 0; }
     }
 
-    const fx = BB.Physics.step(b, inp, abilities);
+    const fx = BB.Physics.step(b, inp, abilities, BB.Settings.assists);
     const cx = b.x + b.w / 2, feet = b.y + b.h;
 
     // ── reactions ──
@@ -107,7 +107,9 @@
     if (running) {
       pl.phase += Math.abs(b.vx) * 0.12;
       if (++pl.stepT > 14) { pl.stepT = 0; A().step(); if (Math.random() < 0.5) PT().dust(cx - b.facing * 6, feet, 1); }
+      if (BB.Play.save.wear.neck === 'jingle' && pl.t % 42 === 0) A().toySound('bell');
     } else if (b.climbing) pl.phase += 0.25;
+    if (Math.abs(b.vx) > 0.8 && pl.t % 6 === 0) BB.Cosmetics.trail(BB.Play.save, cx - b.facing * 7, feet - 3, pl.t);
     pl.lastVy = b.vy;
 
     // idle timer (sitting, habits)

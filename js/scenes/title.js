@@ -6,7 +6,8 @@
 //    🌱 NEW GAME — pick a kitten and start fresh; if an adventure is
 //                  saved, a picture "erase it?" check (✓ / ✗) comes first
 //  and, in the corner, a grown-up picker for how brave the adventure is:
-//    💗 EASY — bumps only knock the kitten back; nobody gets too sad
+//    💗 EASY — harmless bumps with extra help jumping and landing
+//    💗 MEDIUM — the former Easy, with the original movement
 //    ☀ HARD — bumps and boss sad attacks cost happy suns, and a kitten
 //             with none left floats back to its save point
 //  Keyboard / gamepad: ◀ ▶ to choose, jump to press, ▼ for the picker.
@@ -99,6 +100,7 @@
 
   const G_ = () => BB.G;
   const S = () => BB.Audio.sfx;
+  const MODES = ['easy', 'medium', 'hard'];
 
   BB.Title = {
     t: 0, focus: 0, lastFocus: 1, confirm: null, hasSave: false, summary: null, modeT: 99,
@@ -108,8 +110,8 @@
       this.hasSave = BB.Save.exists() && BB.Save.load();
       this.summary = this.hasSave ? {
         cat: BB.Save.data.cat,
-        stars: BB.Save.count(BB.Save.data.sparkles),
-        hearts: BB.Save.count(BB.Save.data.friends),
+        stars: BB.Economy.balance(BB.Save.data, 'stars'),
+        hearts: BB.Economy.balance(BB.Save.data, 'hearts'),
         family: BB.Save.count(BB.Save.data.family || {}),
       } : null;
       this.focus = this.hasSave ? 0 : 1;
@@ -118,7 +120,7 @@
 
     // button layout (logical px)
     btn(i) { return { x: G_().W / 2 + (i === 0 ? -120 : 120), y: 330, r: 62 }; },
-    mbtn(i) { return { x: G_().W - 170 + i * 78, y: 466, r: 25 }; }, // mode: 0 = easy, 1 = hard
+    mbtn(i) { return { x: G_().W - 248 + i * 78, y: 466, r: 25 }; }, // Easy / Medium / Hard
     cbtn(i) { return { x: G_().W / 2 + (i === 0 ? -95 : 95), y: 372, r: 46 }; }, // confirm: 0 = ✓ erase, 1 = ✗ keep
 
     choose(i) {
@@ -135,11 +137,11 @@
       }
     },
 
-    setMode(hard) {
-      if (BB.Settings.hard === hard) return;
-      BB.Settings.setHard(hard);
+    setMode(mode) {
+      if (BB.Settings.difficulty === mode) return;
+      BB.Settings.setDifficulty(mode);
       this.modeT = 0;
-      if (hard) S().bossGrumble(); else S().cheerUp();
+      if (mode === 'hard') S().bossGrumble(); else S().cheerUp();
     },
 
     startFresh() {
@@ -181,11 +183,12 @@
       }
 
       if (this.focus === 2) {
-        // the Easy / Hard picker (↑ goes back; ↑ is also "jump", so check it first)
+        // ↑ goes back; it is also "jump", so check it first.
+        const mode = MODES.indexOf(BB.Settings.difficulty);
         if (I.pressed.up) { this.focus = this.lastFocus; S().select(); }
-        else if (I.pressed.left) this.setMode(false);
-        else if (I.pressed.right) this.setMode(true);
-        else if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) this.setMode(!BB.Settings.hard);
+        else if (I.pressed.left) this.setMode(MODES[Math.max(0, mode - 1)]);
+        else if (I.pressed.right) this.setMode(MODES[Math.min(2, mode + 1)]);
+        else if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) this.setMode(MODES[(mode + 1) % 3]);
       } else if (I.pressed.down) {
         this.lastFocus = this.focus; this.focus = 2; S().select();
       } else {
@@ -194,9 +197,9 @@
         if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) this.choose(this.focus);
       }
       for (const p of taps) {
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 3; i++) {
           const m = this.mbtn(i);
-          if (Math.hypot(p.x - m.x, p.y - m.y) < m.r + 12) { this.focus = 2; this.setMode(i === 1); return; }
+          if (Math.hypot(p.x - m.x, p.y - m.y) < m.r + 12) { this.focus = 2; this.setMode(MODES[i]); return; }
         }
         for (let i = 0; i < 2; i++) {
           const b = this.btn(i);
@@ -219,10 +222,10 @@
       if (this.confirm) this.drawConfirm(c, t);
     },
 
-    // 💗 Easy / ☀ Hard: two picture buttons on a little cloud-pill
+    // Three picture buttons on a little cloud-pill; words are for parents.
     drawMode(c, t) {
-      const G = G_(), hard = BB.Settings.hard;
-      const a = this.mbtn(0), b = this.mbtn(1);
+      const G = G_(), mode = BB.Settings.difficulty;
+      const a = this.mbtn(0), b = this.mbtn(2);
       const px = a.x - a.r - 18, pw = b.x - a.x + (a.r + 18) * 2, py = a.y - a.r - 12, ph = a.r * 2 + 46;
       c.save();
       c.fillStyle = 'rgba(30,20,50,0.42)'; G.rrect(px, py, pw, ph, 26, c); c.fill();
@@ -231,8 +234,8 @@
         G.rrect(px, py, pw, ph, 26, c); c.stroke();
       }
       const pop = this.modeT < 16 ? Math.sin(this.modeT / 16 * Math.PI) * 0.18 : 0;
-      [[a, false, '#ff9ec7', 'Easy'], [b, true, '#ffb347', 'Hard']].forEach(([m, isHard, col, label]) => {
-        const on = hard === isHard;
+      [[a, 'easy', '#9ee4ff', 'Easy'], [this.mbtn(1), 'medium', '#ff9ec7', 'Medium'], [b, 'hard', '#ffb347', 'Hard']].forEach(([m, id, col, label]) => {
+        const on = mode === id;
         const k = on ? 1.06 + pop + Math.sin(t * 0.08) * 0.03 : 0.9;
         c.save();
         c.globalAlpha = on ? 1 : 0.55;
@@ -240,10 +243,18 @@
         c.translate(m.x, m.y); c.scale(k, k);
         c.fillStyle = on ? col : '#b8b2c4'; c.strokeStyle = '#ffffff'; c.lineWidth = 4;
         G.circle(0, 0, m.r, c); c.fill(); c.stroke();
-        if (!isHard) {
+        if (id !== 'hard') {
           // a heart safe inside a bubble
           G.bubble(0, 0, 15, '#ffffff', 0.9, c);
           c.fillStyle = '#ff5f93'; G.heart(0, 2, 9, c); c.fill();
+          if (id === 'easy') {
+            // Little wings show the extra jumping help.
+            c.fillStyle = '#ffffff';
+            for (const d of [-1, 1]) {
+              G.ellipse(d * 17, 0, 7, 3.2, -d * 0.5, c); c.fill();
+              G.ellipse(d * 17, 5, 5.5, 2.7, -d * 0.3, c); c.fill();
+            }
+          }
         } else {
           // a happy sun with a little rain-cloud creeping up on it
           c.strokeStyle = '#fff1a8'; c.lineWidth = 2.4; c.lineCap = 'round';

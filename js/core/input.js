@@ -26,6 +26,7 @@
   const blank = () => Object.fromEntries(ACTIONS.map(a => [a, false]));
 
   const kbHeld = blank();
+  const kbCodes = new Set();
   const kbLatch = blank();
   const touchHeld = blank();
   const touchLatch = blank();
@@ -70,6 +71,7 @@
     takePointers() { const p = this.pointers; this.pointers = []; return p; },
 
     clearAll() {
+      kbCodes.clear();
       for (const a of ACTIONS) { kbHeld[a] = kbLatch[a] = touchHeld[a] = touchLatch[a] = false; }
     },
   };
@@ -82,6 +84,7 @@
       if (Input.device === 'touch') document.body.classList.remove('touch');
       Input.device = 'keyboard';
       if (e.repeat) return;
+      kbCodes.add(e.code);
       for (const a of acts) { kbHeld[a] = true; kbLatch[a] = true; }
     } else if (!e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
       Input._anyKey = true; // wakes the title screen for mashing toddlers
@@ -89,7 +92,8 @@
   });
   window.addEventListener('keyup', e => {
     const acts = KEYMAP[e.code];
-    if (acts) for (const a of acts) kbHeld[a] = false;
+    kbCodes.delete(e.code);
+    if (acts) for (const a of acts) kbHeld[a] = [...kbCodes].some(code => KEYMAP[code].includes(a));
   });
   window.addEventListener('blur', () => Input.clearAll());
 

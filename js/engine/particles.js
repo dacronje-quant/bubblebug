@@ -76,6 +76,12 @@
         const k = p.life / p.max;
         c.globalAlpha = Math.min(1, k * 1.6);
         switch (p.kind) {
+          case 'paw':
+            BB.Gestures.drawPaw(c, x, y, p.size * 0.28, p.color, p.color);
+            break;
+          case 'flower':
+            BB.Cosmetics.flower(c, x, y, p.size, p.color);
+            break;
           case 'spark':
             c.fillStyle = p.color; G.twinkle(x, y, p.size * (0.5 + k), c); c.fill();
             break;

@@ -1,0 +1,104 @@
+// A shared fence, stream and root canopy tie the walk outside home
+// together. These are scenery; the room grids own every landing surface.
+(function (BB) {
+  'use strict';
+  const T = BB.CFG.TILE;
+  const G = () => BB.G;
+  const TAU = Math.PI * 2;
+
+  function tree(c, x, floor, top, apples, t) {
+    c.fillStyle = '#8a5a37';
+    G().rrect(x - 14, top + 35, 28, floor - top - 35, 12, c); c.fill();
+    c.strokeStyle = '#ad7745'; c.lineWidth = 14; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(x, top + 100); c.lineTo(x - 64, top + 53);
+    c.moveTo(x, top + 94); c.lineTo(x + 64, top + 42); c.stroke();
+    for (let i = 0; i < 5; i++) {
+      c.fillStyle = ['#4f9e6c', '#6fbf72', '#83cd7c'][i % 3];
+      G().ellipse(x + (i - 2) * 35, top + Math.abs(i - 2) * 12, 57, 46, 0, c); c.fill();
+    }
+    if (apples) for (let i = 0; i < 4; i++) {
+      const ax = x + (i - 1.5) * 33, ay = top + 16 + Math.sin(t * 0.025 + i) * 2;
+      c.fillStyle = '#ed7b79'; G().ellipse(ax, ay, 8, 9, 0, c); c.fill();
+      c.fillStyle = '#c9e88a'; G().ellipse(ax + 3, ay - 10, 5, 2.5, -0.5, c); c.fill();
+    }
+  }
+
+  function drawBack(c, room, cam, t) {
+    const X = col => (room.x + col) * T - cam.x;
+    const Y = row => (room.y + row) * T - cam.y;
+    const kind = room.def.neighbourhood;
+    c.save();
+    // A single fence and flowering hedge continue across all three rooms.
+    c.strokeStyle = '#d8b589'; c.lineWidth = 6; c.lineCap = 'round';
+    const floor = kind === 'maze' ? 32 : 31;
+    for (let col = 1; col < 30; col += 2) {
+      c.beginPath(); c.moveTo(X(col), Y(floor)); c.lineTo(X(col), Y(floor - 1.5)); c.stroke();
+    }
+    c.beginPath(); c.moveTo(X(0), Y(floor - 1)); c.lineTo(X(30), Y(floor - 1)); c.stroke();
+    for (let col = 0; col <= 30; col += 3) {
+      c.fillStyle = '#77b77b'; G().ellipse(X(col), Y(floor - 0.2), 34, 13, 0, c); c.fill();
+    }
+    // The raised route reads as one long branch, not three disconnected
+    // rooms. The same tree roots continue across their shared boundaries.
+    if (kind !== 'maze') {
+      c.strokeStyle = '#8a5a37'; c.lineWidth = 15; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(X(kind === 'garden' ? 3 : 0), Y(16) + 9);
+      c.bezierCurveTo(X(10), Y(16) + 18, X(20), Y(16) + 2, X(30), Y(16) + 9); c.stroke();
+    }
+    tree(c, X(15), Y(31), Y(13.5), kind === 'roots', t);
+    if (kind === 'garden') {
+      // The porch belongs to the real house on this room's left edge.
+      c.fillStyle = '#d8b68c'; G().rrect(X(0), Y(27), 34, 4 * T, 6, c); c.fill();
+      c.fillStyle = '#c56d58';
+      c.beginPath(); c.moveTo(X(0) - 5, Y(27)); c.lineTo(X(0) + 17, Y(26)); c.lineTo(X(0) + 42, Y(27)); c.closePath(); c.fill();
+      G().drawGlow(X(0) + 17, Y(28.2), 38, '#fff2b0', 0.45, c);
+      c.fillStyle = '#fff2b0'; G().circle(X(0) + 17, Y(28.2), 5, c); c.fill();
+      for (const col of [18, 25]) {
+        c.fillStyle = '#c96a4a'; G().rrect(X(col) - 16, Y(31) - 17, 32, 17, 5, c); c.fill();
+        BB.Tiles.flower(c, X(col), Y(31) - 20, '#ff9ec7', 1.3);
+      }
+    } else if (kind === 'roots') {
+      // A root arch surrounds the sleepy-bud nook; the live gate remains
+      // visible so its two flower pictures explain how to open it.
+      c.strokeStyle = '#705039'; c.lineWidth = 18;
+      c.beginPath(); c.moveTo(X(29.4), Y(16)); c.lineTo(X(29.4), Y(12.5));
+      c.quadraticCurveTo(X(24), Y(10.8), X(19.2), Y(12.5)); c.stroke();
+    }
+    c.restore();
+  }
+
+  function drawFront(c, room, cam, t) {
+    const X = col => (room.x + col) * T - cam.x;
+    const Y = row => (room.y + row) * T - cam.y;
+    c.save();
+    if (room.def.neighbourhood === 'pond') {
+      // The bridge surface matches the solid row in the map. Water is
+      // below it, so the first walk outside never requires a jump.
+      const x = X(8), y = Y(31) + 8, w = 14 * T;
+      c.fillStyle = '#6fd0f0'; G().ellipse(x + w / 2, y + 26, w / 2, 34, 0, c); c.fill();
+      c.strokeStyle = '#d6f4ff'; c.lineWidth = 2;
+      for (let i = 0; i < 5; i++) {
+        const rx = x + 36 + i * 77 + Math.sin(t * 0.03 + i) * 8;
+        c.beginPath(); c.ellipse(rx, y + 20 + (i % 2) * 12, 14, 3, 0, 0, TAU); c.stroke();
+      }
+      c.fillStyle = '#ad7745'; c.fillRect(x, Y(31), w, 9);
+      c.strokeStyle = '#704b31'; c.lineWidth = 2;
+      for (let col = 8; col < 22; col++) {
+        c.beginPath(); c.moveTo(X(col), Y(31)); c.lineTo(X(col), Y(31) + 9); c.stroke();
+      }
+    }
+    // A few petals sit at the feet, clear of the kitten and touch buttons.
+    if (room.def.neighbourhood === 'maze') {
+      // The terraces read as trimmed hedges; the gaps and landing edges
+      // stay clear. A house picture always marks the open lower exit.
+      for (const [row, from, to] of [[11, 1, 24], [18, 5, 29], [25, 1, 24]]) for (let col = from; col < to; col++) {
+        c.fillStyle = '#70b574'; G().ellipse(X(col + 0.5), Y(row) + 12, 19, 7, 0, c); c.fill();
+      }
+      BB.HUD.zoneIcon(c, BB.HOME_ZONE, X(28), Y(30), 0.9);
+    }
+    for (const col of [3, 9, 17, 27]) BB.Tiles.flower(c, X(col), Y(room.def.neighbourhood === 'maze' ? 32 : 31) + 4, '#ffd1e8', 0.65);
+    c.restore();
+  }
+
+  BB.Neighbourhood = { drawBack, drawFront };
+})(window.BB);

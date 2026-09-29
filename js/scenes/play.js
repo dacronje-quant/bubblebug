@@ -115,6 +115,7 @@
       this.gift = null; this.party = null; this.partyStarted = false;
       this.traveling = null; this.linkLock = null; this.intro = null;
       this.wardrobe = null; this.outfitCard = null; this.mirrorHold = 0; this.toyBounce = {}; this.toyNear = {};
+      this.gardenChoice = null; this.gardenHold = 0; this.celebrationT = 0; this.gardenLock = null; this.fountainCd = 0; this.mirrorLock = false;
       // (the elephant's rain hat became a unicorn horn)
       if (save.outfits && save.outfits.rainhat) { delete save.outfits.rainhat; save.outfits.horn = 1; }
       if (save.wear && save.wear.head === 'rainhat') save.wear.head = 'horn';
@@ -136,6 +137,8 @@
       this.timers = []; this.orbs = []; this.hopHome = []; this.healFx = [];
       this.shakeT = 0; this.shakeAmp = 0;
       this.activeBoss = null; this.bossCard = null; this.bossMusic = false;
+      this.homeVisitors = [];
+      this.refreshHomeVisitors();
       this.signFade = {};
       this.enterZone(this.room.zone);
       if (!save.introDone && this.room.def.home) this.startIntro();
@@ -320,7 +323,7 @@
     },
 
     // ──── Feelings ────
-    // Hard: a bump costs a happy sun. Easy: just a knock-back and a boing.
+    // Hard: a bump costs a happy sun. Easy / Medium: knock-back and a boing.
     hurt(fromX) {
       const pl = this.pl, b = pl.body;
       if (pl.state !== 'play' || this.invuln > 0 || this.party || this.gift) return false;
@@ -369,7 +372,7 @@
     updateSad() {
       const pl = this.pl, b = pl.body;
       pl.sadT++;
-      if (!b.grounded) BB.Physics.step(b, NO_INPUT, this.save.abilities);
+      if (!b.grounded) BB.Physics.step(b, NO_INPUT, this.save.abilities, BB.Settings.assists);
       else b.vx *= 0.8;
       if (pl.sadT % 30 === 5) PT().burst('dot', b.x + b.w / 2 + 10, b.y + 6, 2, { color: '#9fd0ff', speed: 1, life: 26, size: 2.4, g: 0.15 });
       if (pl.sadT === C.SAD_TIME - C.IRIS_TIME) this.iris = { t: 0, close: true };
@@ -633,7 +636,7 @@
       const g = this.gift, b = this.pl.body;
       g.t++;
       // let the kitten settle onto the ground during the ceremony
-      if (!b.grounded) BB.Physics.step(b, NO_INPUT, this.save.abilities);
+      if (!b.grounded) BB.Physics.step(b, NO_INPUT, this.save.abilities, BB.Settings.assists);
       const ox = g.th.x, oy = g.th.y - 20, kx = b.x + b.w / 2, ky = b.y + b.h / 2;
       if (g.t < 70) {
         const k = BB.easeInOut(g.t / 70);
@@ -733,6 +736,7 @@
       G().t++;
       const I = BB.Input;
       if (this.wardrobe) { this.updateWardrobe(); PT().update(); return; }
+      if (this.gardenChoice) { this.updateGardenChoice(); PT().update(); return; }
       if (I.pressed.pause && !this.gift && this.pl.state !== 'sad') { BB.Main.go('pause'); return; }
       if (I.pressed.map) this.toggleMap();
 
@@ -780,7 +784,7 @@
       else {
         fx = BB.Player.update(this.pl, I, ab, {
           bubbleCount: BB.Bubbles.list.length,
-          blow: (x, y, dir, vx) => BB.Bubbles.blow(x, y, dir, vx, this.pl.cat),
+          blow: (x, y, dir, vx) => BB.Bubbles.blow(x, y, dir, vx, this.pl.cat, this.save.cosmetics.bubble),
         });
       }
       // feelings on the kitten itself (for drawing)
@@ -823,7 +827,9 @@
           this.prevRoom = this.room;
           this.room = r;
           this.save.visited[r.id] = 1;
-          cam.startSlide(r, b);
+          if (this.prevRoom.def.home && r.id === 'ng') this.save.leftHome = 1;
+          if (r.def.neighbourhood === 'garden') this.refreshHomeVisitors();
+          cam.startSlide(r, b, this.prevRoom);
           this.slideFrom = this.prevRoom.zone;
           if (r.zone !== this.prevRoom.zone) this.enterZone(r.zone);
           this.pendingCP = true;
@@ -863,6 +869,8 @@
       this.updateMirror();
       this.updateHomeToys();
       this.updateFirstExit();
+      this.updateHomeVisitors();
+      this.updateGarden();
 
       // ── bubbles ──
       const targets = [];
@@ -957,7 +965,7 @@
       const room = this.room;
 
       // backdrop (crossfade during a zone-changing slide)
-      let mix = 0, zoneA = room.zone, zoneB = null;
+      let mix = 0, zoneA = room.def.walkOut ? 0 : room.zone, zoneB = null;
       if (cam0.slide && this.prevRoom && this.prevRoom.zone !== room.zone) {
         zoneA = this.prevRoom.zone; zoneB = room.zone;
         mix = BB.easeInOut(cam0.slide.t / cam0.slide.dur);
@@ -971,6 +979,7 @@
 
       const visible = W().roomsInRect(cam.x - 64, cam.y - 64, G().W + 128, G().H + 128);
       const env = { glow: this.save.abilities.glow, rings: this.save.abilities.rings, dig: this.save.abilities.dig, px: this.pl.body.x + 10, py: this.pl.body.y + 12 };
+      for (const r of visible) if (r.def.neighbourhood) BB.Neighbourhood.drawBack(c, r, cam, t);
       for (const r of visible) if (r.def.home) { BB.Home.drawBack(c, r, cam, t, this); BB.Home.drawMirror(c, r, cam, t, this); }
       for (const r of visible) if (r.def.arena) BB.Arenas.drawBack(c, r, cam, t, this);
       for (const r of visible) BB.Tiles.drawStatic(c, r, cam, 0);
@@ -1007,6 +1016,8 @@
         for (const bs of e.bosses) BB.Bosses.draw(c, bs, cam, t);
         for (const bug of e.bugs) BB.Bugs.draw(c, bug, cam);
       }
+      this.drawHomeVisitors(c, cam, visible);
+      for (const r of visible) this.drawGarden(c, r, cam, t);
       for (const h of this.hopHome) this.drawHopHome(c, h, cam);
       for (const f of this.followers) BB.Things.draw(c, f, cam, ctx);
       BB.Food.drawDrops(c, cam);
@@ -1030,6 +1041,7 @@
       for (const r of visible) this.drawShy(c, r, cam);
       for (const r of visible) BB.Tiles.drawLive(c, r, cam, t, env, true);
       BB.Fx.drawWaterFront(c, visible, cam, t);
+      for (const r of visible) if (r.def.neighbourhood) BB.Neighbourhood.drawFront(c, r, cam, t);
       for (const r of visible) if (r.def.home) BB.Home.drawFront(c, r, cam, t, this);
       if (this.intro) BB.Home.drawIntro(c, cam, this);
 
@@ -1057,8 +1069,8 @@
 
       // HUD
       BB.HUD.drawHUD(c, {
-        stars: BB.Save.count(this.save.sparkles),
-        hearts: BB.Save.count(this.save.friends),
+        stars: BB.Economy.balance(this.save, 'stars'),
+        hearts: BB.Economy.balance(this.save, 'hearts'),
         abilities: this.save.abilities, toys: this.save.toys,
         family: BB.Save.count(this.save.family || {}),
         mood: this.mood, moodMax: C.MOOD_MAX, cat: this.pl.cat, hurtT: this.hurtT, healT: this.healT,
@@ -1086,6 +1098,7 @@
       if (this.flash > 0) { c.fillStyle = `rgba(255,248,220,${this.flash / 20})`; c.fillRect(0, 0, G().W, G().H); this.flash--; }
       if (this.mapOn && !(this.gift && this.gift.card > 0)) BB.MapView.draw(c, 'overlay', t);
       if (this.wardrobe) this.drawWardrobe(c, t);
+      if (this.gardenChoice) this.drawGardenChoice(c, t);
       this.drawIris(c, cam);
     },
 

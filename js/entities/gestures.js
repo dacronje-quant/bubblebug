@@ -28,6 +28,7 @@
     { id: 'wash', zone: 9, len: 150 },      // a paw-lick face wash
     { id: 'stretch', zone: 10, len: 140 },  // a big stretch and a yawn
     { id: 'dance', zone: 11, len: 160 },    // a hoppy happy dance
+    { id: 'twirl', zone: -1, len: 120 },    // optional heart-fountain celebration
   ];
   const BY = Object.fromEntries(LIST.map(g => [g.id, g]));
   const forZone = zone => LIST.find(g => g.zone === zone);
@@ -133,6 +134,10 @@
         if (g.t % 32 === 8 && b.grounded) { b.vy = -4.4; b.grounded = false; }
         if (g.t % 16 === 0) PT().burst('confetti', cx, top - 8, 3, { speed: 2, g: 0.06, life: 50 });
         break;
+      case 'twirl':
+        if (g.t === 2) S().outfit();
+        if (g.t % 20 === 0) PT().burst('confetti', cx, top - 8, 4, { speed: 2, g: 0.06, life: 45 });
+        break;
     }
     if (g.t >= g.len) { pl.gesture = null; pl.happyT = Math.max(pl.happyT, 30); }
   }
@@ -189,6 +194,7 @@
         if (!grounded) return false;
         p.mode = 'stand'; p.squash = 1 + Math.sin(t * 0.4) * 0.06;
         return true;
+      case 'twirl': p.mode = 'stand'; p.happy = true; p.squash = 1 + Math.sin(t * 0.3) * 0.06; return true;
     }
     return false;
   }
@@ -201,6 +207,7 @@
     if (id === 'roll') return { rot: BB.easeInOut(Math.min(1, t / g.len)) * TAU, flip: 1 };
     if (id === 'chase') return { rot: 0, flip: Math.floor(t / 9) % 2 ? -1 : 1 };
     if (id === 'dance') return { rot: Math.sin(t * 0.2) * 0.12, flip: Math.floor((t + 8) / 32) % 2 ? -1 : 1 };
+    if (id === 'twirl') return { rot: Math.sin(t * 0.2) * 0.18, flip: Math.floor(t / 18) % 2 ? -1 : 1 };
     return null;
   }
 

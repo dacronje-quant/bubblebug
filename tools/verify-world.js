@@ -26,7 +26,8 @@
 //  Stages start at the previous elder, so they're independent and run in
 //  parallel worker threads (one per CPU core).
 //
-//  Usage:  node tools/verify-world.js [--map ROOM_ID] [--stage N]
+//  Usage: node tools/verify-world.js [--easy] [--jobs N] [--map ID] [--stage N]
+//  Default: Medium / Hard's original movement. --easy uses Easy's assists.
 //  Exit code 0 = every check passed.
 // ════════════════════════════════════════════════════════════════
 'use strict';
@@ -54,6 +55,7 @@ const BB = global.BB;
 const W = BB.World.build();
 const C = BB.CFG, T = C.TILE;
 const P = BB.Physics, FX = BB.FX;
+const EASY = isMainThread ? process.argv.includes('--easy') : !!workerData.easy;
 
 // The order elders give their gifts in
 const POWERS = ['doubleJump', 'wallClimb', 'glow', 'float', 'swim', 'dig', 'spring', 'rings', 'bubbleBounce', 'wings'];
@@ -159,7 +161,7 @@ function simulate(node, pl, ab, cover) {
   // a long, slow swim through deep water may take a while longer
   for (let t = 0; t < maxT || (p.inWater && t < 1600); t++) {
     const inp = planInput(pl, t, st);
-    const fx = P.step(p, inp, ab);
+    const fx = P.step(p, inp, ab, EASY);
     if (cover) {
       const tx0 = Math.floor(p.x / T), tx1 = Math.floor((p.x + p.w - 1) / T);
       const ty0 = Math.floor(p.y / T), ty1 = Math.floor((p.y + p.h - 1) / T);
@@ -271,7 +273,7 @@ function bubbleable(nodes, tx, ty) {
 // A flap takes you home (stand still in it); walking within 90px of a flap
 // lights its door up at home, and a lit door takes you back to the furthest
 // flap of that zone found so far (only there — the old target is dropped).
-// The front door always leads out to the garden gate. The lift runs both
+// The front door is walked through; the other doors remain links. The lift runs both
 // ways; the Rainbow Slide at the very end goes home through the skylight.
 function buildLinks() {
   const L = BB.Links, out = [];
@@ -282,7 +284,10 @@ function buildLinks() {
   });
   // a door opens at the furthest flap found so far (its target is set in the search)
   const h = L.home();
-  for (const z of Object.keys((h && h.def.doors) || {}).map(Number)) out.push({ from: L.doorSpot(z), to: z === 0 ? L.flapSpot(0) : null, door: z });
+  for (const z of Object.keys((h && h.def.doors) || {}).map(Number)) {
+    if (z === 0 && h.def.walkOut) continue;
+    out.push({ from: L.doorSpot(z), to: z === 0 ? L.flapSpot(0) : null, door: z });
+  }
   const u = W.findThings('u')[0], v = W.findThings('v')[0];
   if (u && v) {
     out.push({ from: L.spot(u.tx, u.ty), to: L.spot(v.tx, v.ty), lift: true });
@@ -516,6 +521,14 @@ function runStage(stage, mapRoom) {
   if (leaks.length) fail('gated room(s) reachable too early: ' + leaks.map(r => `${r.id} (needs ${r.def.needs})`).join(', '));
   else if (W.rooms.some(r => r.def.needs && !stage.have.includes(r.def.needs))) pass('every power gate holds (no sneaking ahead)');
 
+  if (stage.i === 0) {
+    const missing = W.rooms.filter(r => r.def.neighbourhood).flatMap(r => r.things
+      .filter(t => t.ch === '*' && !touched(res.cover, t.tx, t.ty, 0))
+      .map(t => `${r.id} (${t.tx - r.x},${t.ty - r.y})`));
+    if (missing.length) fail('neighbourhood rewards unreachable without powers: ' + missing.join(', '));
+    else pass('every neighbourhood / maze reward is reachable without powers');
+  }
+
   if (stage.goal === 'finale') {
     // Backtracking: with every power, can every spot get back to the start?
     const s = W.findThings('S')[0], sp = spotFor(s.tx, s.ty);
@@ -576,16 +589,19 @@ if (isMainThread) {
   const t0 = Date.now();
   const results = new Array(STAGES.length);
   let next = 0, running = 0;
-  const cores = Math.max(1, Math.min(os.cpus().length, todo.length));
-  console.log(`Verifying ${W.rooms.length} rooms across ${todo.length} story stage(s) on ${cores} thread(s)…`);
+  const jobs = args.includes('--jobs') ? Number(args[args.indexOf('--jobs') + 1]) : os.cpus().length;
+  if (!Number.isInteger(jobs) || jobs < 1 || (only != null && !STAGES[only])) throw new Error('Use --jobs N (N > 0) and --stage 0…10');
+  const cores = Math.max(1, Math.min(jobs, todo.length));
+  console.log(`Verifying ${W.rooms.length} rooms in ${EASY ? 'Easy (assists)' : 'Medium / Hard (original movement)'} across ${todo.length} story stage(s) on ${cores} thread(s)…`);
   const launch = () => {
     while (running < cores && next < todo.length) {
       const stage = todo[next++];
       running++;
-      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom } });
+      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom, easy: EASY } });
       w.on('message', r => {
         results[stage.i] = r;
-        console.log(`  · finished: ${NAMES[stage.goal]} (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
+        console.log(`  · ${r.failures ? 'FAILED' : 'passed'}: ${NAMES[stage.goal]} (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
+        if (r.failures) console.log(r.out.filter(line => line.includes('✗')).join('\n'));
       });
       w.on('error', e => { results[stage.i] = { out: ['  ✗ worker crashed: ' + e.stack], failures: 1 }; });
       w.on('exit', () => { running--; if (next < todo.length) launch(); else if (running === 0) finish(); });

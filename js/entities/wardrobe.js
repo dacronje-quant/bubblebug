@@ -27,12 +27,59 @@
     { id: 'scarf', boss: 'moose', slot: 'neck', name: 'stripy scarf' },
     { id: 'nightcap', boss: 'panda', slot: 'head', name: 'sleepy nightcap' },
     { id: 'ears', boss: 'moonbunny', slot: 'head', name: 'bunny ears' },
+    { id: 'partyhat', slot: 'head', cost: 15 },
+    { id: 'flowers', slot: 'head', cost: 20 },
+    { id: 'wizard', slot: 'head', cost: 25 },
+    { id: 'pirate', slot: 'head', cost: 25 },
+    { id: 'chef', slot: 'head', cost: 20 },
+    { id: 'sparkly', slot: 'neck', cost: 20 },
+    { id: 'jingle', slot: 'neck', cost: 25 },
   ];
   const BY = Object.fromEntries(LIST.map(a => [a.id, a]));
-  const BY_BOSS = Object.fromEntries(LIST.map(a => [a.boss, a]));
+  const BY_BOSS = Object.fromEntries(LIST.filter(a => a.boss).map(a => [a.boss, a]));
 
   // ──── Drawing each thing (head space) ────
   const ART = {
+    partyhat(c) {
+      c.fillStyle = '#ff8fb8'; c.strokeStyle = OUT; c.lineWidth = 0.9;
+      c.beginPath(); c.moveTo(-8, -6); c.lineTo(1, -26); c.lineTo(10, -6); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ffe066';
+      for (const [x, y] of [[0, -19], [-3, -12], [5, -10]]) { G().circle(x, y, 1.5, c); c.fill(); }
+      G().circle(1, -26, 2.4, c); c.fill();
+    },
+    flowers(c) {
+      c.strokeStyle = '#6cbf78'; c.lineWidth = 2.5;
+      c.beginPath(); c.moveTo(-9, -7); c.quadraticCurveTo(0, -12, 10, -7); c.stroke();
+      for (const [x, y, col] of [[-7, -8, '#ff9ec7'], [0, -10, '#ffffff'], [7, -8, '#ffe066']]) flower(c, x, y, col, 1.25);
+    },
+    wizard(c, t) {
+      c.fillStyle = '#7975ce'; c.strokeStyle = OUT; c.lineWidth = 0.9;
+      c.beginPath(); c.moveTo(-9, -6); c.quadraticCurveTo(-1, -19, -1, -27); c.quadraticCurveTo(6, -23, 10, -6); c.closePath(); c.fill(); c.stroke();
+      G().ellipse(0.5, -6, 13, 2.4, 0, c); c.fill(); c.stroke();
+      c.fillStyle = '#ffe066'; G().star(2, -15, 3, 5, 0.5, t * 0.02, c); c.fill();
+    },
+    pirate(c) {
+      c.fillStyle = '#4c506a'; c.strokeStyle = OUT; c.lineWidth = 0.9;
+      c.beginPath(); c.moveTo(-13, -6); c.lineTo(-10, -15); c.quadraticCurveTo(0, -11, 11, -15); c.lineTo(14, -6); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ffe066'; G().star(0.5, -10, 3.6, 5, 0.5, -Math.PI / 2, c); c.fill();
+    },
+    chef(c) {
+      c.fillStyle = '#ffffff'; c.strokeStyle = '#9e8fa4'; c.lineWidth = 0.9;
+      for (const [x, y] of [[-6, -15], [1, -18], [8, -15]]) { G().circle(x, y, 6, c); c.fill(); c.stroke(); }
+      G().rrect(-8, -13, 18, 8, 2, c); c.fill(); c.stroke();
+    },
+    sparkly(c, t) {
+      c.fillStyle = '#d1a4f3'; c.strokeStyle = '#8560ac'; c.lineWidth = 0.8;
+      G().rrect(-7, 6, 17, 4, 2, c); c.fill(); c.stroke();
+      c.fillStyle = '#fff4c2';
+      for (const x of [-3, 3, 8]) { G().twinkle(x, 8, 1.3 + Math.sin(t * 0.08 + x) * 0.4, c); c.fill(); }
+    },
+    jingle(c, t) {
+      c.fillStyle = '#ff8fb8'; G().rrect(-7, 6, 17, 4, 2, c); c.fill();
+      c.fillStyle = '#ffd84a'; c.strokeStyle = '#a47a36'; c.lineWidth = 0.7;
+      G().circle(4, 12 + Math.sin(t * 0.1) * 0.5, 3, c); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(4, 12); c.lineTo(4, 14.5); c.stroke();
+    },
     bonnet(c, t) {
       c.fillStyle = '#8fc8ff'; c.strokeStyle = OUT; c.lineWidth = 0.9;
       c.beginPath(); c.moveTo(-10, 1); c.quadraticCurveTo(-11, -12, 0, -12.5); c.quadraticCurveTo(8, -12.5, 9.5, -6); c.quadraticCurveTo(0, -8.5, -7, 1); c.closePath(); c.fill(); c.stroke();

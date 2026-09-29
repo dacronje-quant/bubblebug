@@ -138,12 +138,24 @@
     BB.Save.load();
     Main.set('title');
     // Developer shortcut (never needed to play): index.html#play=phoebe&room=c4&ab=all
-    // jumps straight into a room, optionally with every power.
+    // jumps straight into a room, optionally with every power. demo=rewards
+    // seeds a save-free preview so a grown-up can try the optional extras.
     const h = location.hash;
     const m = /play=(\w+)/.exec(h);
     if (m) {
       const room = /room=(\w+)/.exec(h), all = /ab=all/.test(h);
-      if (room || all) BB.Save.data = BB.Save.fresh();
+      const demo = /(?:^#|&)demo=rewards(?:&|$)/.test(h);
+      if (room || all || demo) BB.Save.data = BB.Save.fresh();
+      if (demo) {
+        BB.Save.preview = true;
+        BB.World.build();
+        const s = BB.Save.data;
+        for (const th of BB.World.findThings('*').slice(0, 250)) s.sparkles[th.tx + ',' + th.ty] = 1;
+        for (const ch of ['b', 'c']) for (const th of BB.World.findThings(ch)) s.friends[th.tx + ',' + th.ty] = 1;
+        for (const r of BB.World.rooms) if (r.def.family) s.family[r.def.family] = 1;
+        for (const a of BB.Wardrobe.LIST) if (a.boss) s.outfits[a.id] = 1;
+        s.introDone = 1; s.leftHome = 1;
+      }
       if (all) Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
       if (room) {
         BB.World.build();

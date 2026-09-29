@@ -65,9 +65,25 @@
     return d;
   }
 
+  // v4 → v5: only the Cat House moved. Keep every existing world
+  // collectible key and room id; move resume / bench coordinates at home.
+  function migrate4(d) {
+    const old = { x: 480 * 32, y: -118 * 32, w: 60 * 32, h: 34 * 32 };
+    const move = p => {
+      if (!p || p.x == null || p.y == null) return;
+      if (p.x + 10 >= old.x && p.x + 10 < old.x + old.w &&
+          p.y + 12 >= old.y && p.y + 12 < old.y + old.h) {
+        p.x -= 630 * 32; p.y += 100 * 32;
+      }
+    };
+    move(d); move(d.bench);
+    d.v = 5;
+    return d;
+  }
+
   function fresh() {
     return {
-      v: 4,
+      v: 6,
       cat: 'marshmallow',
       room: null, x: null, y: null,        // resume spot (world px)
       bench: null,                          // last bench rested at {x,y}
@@ -91,6 +107,11 @@
       visited: {},                          // room id → 1
       outfits: {},                          // things to wear, from the bosses: id → 1
       wear: { head: null, neck: null },     // what the kitten has on
+      starsSpent: 0, heartsSpent: 0,        // collection totals stay untouched
+      purchases: {},                       // optional cosmetic id → 1
+      cosmetics: { bubble: 'classic', trail: 'classic' },
+      residents: {},                       // invited friend species → 1
+      fountainUses: 0,
       doors: {},                            // zone → 1 once its cat flap is found (a door opens at home)
       introDone: 0,                         // the wake-up scene has played
       leftHome: 0,                          // been out of the front door
@@ -100,12 +121,15 @@
   }
 
   BB.Save = {
+    preview: false, // explicit reward demo: keep the normal save untouched
     data: fresh(),
     fresh,
     exists() {
+      if (this.preview) return true;
       try { return !!localStorage.getItem(KEY); } catch (e) { return false; }
     },
     load() {
+      if (this.preview) return true;
       try {
         const raw = localStorage.getItem(KEY);
         if (raw) {
@@ -115,9 +139,14 @@
             if (d.cat === 'pip') d.cat = 'phoebe'; // the tabby's early name
             migrate3(d);
           }
-          if (d && d.v === 4) {
+          if (d && d.v === 4) migrate4(d);
+          if (d && d.v === 5) d.v = 6; // defaults give existing players their full collected balance
+          if (d && d.v === 6) {
             this.data = Object.assign(fresh(), d);
             this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
+            this.data.wear = Object.assign(fresh().wear, d.wear || {});
+            this.data.cosmetics = Object.assign(fresh().cosmetics, d.cosmetics || {});
+            for (const field of ['outfits', 'purchases', 'residents']) this.data[field] = Object.assign({}, d[field] || {});
             return true;
           }
         }
@@ -126,12 +155,14 @@
       return false;
     },
     write() {
+      if (this.preview) return;
       try { localStorage.setItem(KEY, JSON.stringify(this.data)); } catch (e) { /* storage full / blocked */ }
     },
     reset() {
       const cat = this.data.cat;
       this.data = fresh();
       this.data.cat = cat;
+      if (this.preview) return;
       try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
     },
     count(obj) { return Object.keys(obj).length; },
@@ -139,16 +170,40 @@
 
   // How brave? A grown-up setting chosen on the title screen, kept on this
   // device (so it applies to Continue and New Game alike):
-  //   Easy (default) — bumps just knock the kitten back with a silly boing;
-  //                    no suns are lost and nobody ever gets too sad
-  //   Hard           — bumps and boss sad attacks cost happy suns; with no
-  //                    suns left the kitten floats back to its save point
-  const HARD_KEY = 'bubblepaws_hard';
+  //   Easy   — harmless bumps plus generous jump / landing assistance
+  //   Medium — the former Easy: original movement and harmless bumps
+  //   Hard   — original movement; bumps and sad attacks cost happy suns
+  // Existing non-hard adventures keep their old feel as Medium. Only a
+  // device with no previous choice or adventure defaults to the new Easy.
+  const HARD_KEY = 'bubblepaws_hard', MODE_KEY = 'bubblepaws_difficulty';
+  const MODES = ['easy', 'medium', 'hard'];
   BB.Settings = {
-    hard: (() => { try { return localStorage.getItem(HARD_KEY) === '1'; } catch (e) { return false; } })(),
+    difficulty: (() => {
+      let mode = 'easy';
+      try {
+        const saved = localStorage.getItem(MODE_KEY);
+        if (MODES.includes(saved)) return saved;
+        const old = localStorage.getItem(HARD_KEY);
+        if (old === '1') mode = 'hard';
+        else if (old != null || localStorage.getItem(KEY) != null) mode = 'medium';
+      } catch (e) { /* storage blocked */ }
+      // Save the resolved choice now: a new Easy adventure must still be
+      // Easy after its first progress save, even without touching the picker.
+      try { localStorage.setItem(MODE_KEY, mode); } catch (e) { /* storage blocked */ }
+      return mode;
+    })(),
+    get hard() { return this.difficulty === 'hard'; },
+    get assists() { return this.difficulty === 'easy'; },
+    setDifficulty(mode) {
+      if (!MODES.includes(mode)) return;
+      this.difficulty = mode;
+      try {
+        localStorage.setItem(MODE_KEY, mode);
+        localStorage.setItem(HARD_KEY, mode === 'hard' ? '1' : '0');
+      } catch (e) { /* storage blocked */ }
+    },
     setHard(on) {
-      this.hard = !!on;
-      try { localStorage.setItem(HARD_KEY, on ? '1' : '0'); } catch (e) { /* storage blocked */ }
+      this.setDifficulty(on ? 'hard' : 'medium');
     },
   };
 })(window.BB);

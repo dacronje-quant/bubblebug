@@ -35,6 +35,14 @@
     // ── Assists ──
     LEDGE_ASSIST: 18,       // px: feet this far below a ledge top still pop you up
     CORNER_SLIP: 11,        // px: head-bonks this close to a corner slide around it
+    EASY_COYOTE: 12,
+    EASY_BUFFER: 14,
+    EASY_LEDGE_ASSIST: 24,
+    EASY_CORNER_SLIP: 14,
+    EASY_EDGE_GRACE: 3,
+    EASY_ACC_AIR: 0.7,
+    EASY_DEC_AIR: 0.45,
+    EASY_APEX_GRAVITY: 0.35, // descent only: the jump never goes higher
 
     // ── Abilities ──
     BOUNCE: -14,            // mushroom bounce ≈ 7 tiles

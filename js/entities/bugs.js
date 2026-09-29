@@ -49,12 +49,12 @@
 
   // `n` = how many critters of this map character came before in the zone,
   // so each zone's cast takes turns
-  function create(thing, room, save, n = 0) {
+  function create(thing, room, save, n = 0, kindOverride = null) {
     const Z = BB.ZONES[room.zone];
     const key = thing.tx + ',' + thing.ty;
     const isKing = thing.ch === 'K';
     const list = Z.cast[thing.ch];
-    const kind = isKing ? 'king' : list[n % list.length];
+    const kind = kindOverride || (isKing ? 'king' : list[n % list.length]);
     const friend = !!save.friends[key];
     const b = {
       type: 'bug', kind, key, room: room.id, king: isKing,
@@ -110,7 +110,7 @@
       if (b.pauseT > 0) b.pauseT--;
       else if (b.hop === 0 && b.hopV === 0) {
         const aheadX = Math.floor((b.x + b.facing * 30) / T);
-        if (BB.Physics.solidSide(W().tile(aheadX, Math.floor(b.y / T))) || !landable(aheadX, Math.floor((b.y + 14) / T)) || Math.abs(b.x - b.homeX) > 140) b.facing *= -1;
+        if (BB.Physics.solidSide(W().tile(aheadX, Math.floor(b.y / T))) || !landable(aheadX, Math.floor((b.y + (b.footOffset || 14)) / T)) || Math.abs(b.x - b.homeX) > 140) b.facing *= -1;
         b.hopV = happy ? -4 : -3;
       }
       if (b.hopV || b.hop < 0) {
@@ -125,7 +125,7 @@
         const sp = (SPEED[b.kind] || 0.4) * (happy ? 1.3 : 1);
         const nx = b.x + b.facing * sp;
         const aheadX = Math.floor((nx + b.facing * 14) / T);
-        const footY = Math.floor((b.y + 12) / T);
+        const footY = Math.floor((b.y + (b.footOffset || 12)) / T);
         const bodyY = Math.floor(b.y / T);
         if (BB.Physics.solidSide(W().tile(aheadX, bodyY)) || !landable(aheadX, footY) || Math.abs(nx - b.homeX) > 150) {
           b.facing *= -1;
