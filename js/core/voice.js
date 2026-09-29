@@ -1,10 +1,11 @@
 // ════════════════════════════════════════════════════════════════
 //  VOICE — a friendly spoken line for the big moments, so little players
-//  who can't read yet still hear what happened: "You found Phoebe's Mama!",
-//  "A jingle bell!", "Hooray! The goose is happy!".
-//  Uses the device's own speech voice (no files, works offline on most
-//  tablets and computers); stays quiet when the sound is off, and simply
-//  does nothing where speech isn't available.
+//  who can't read yet still hear what happened: a cat saying who they are,
+//  "Ooh, a jingle bell!", "Hooray! The goose is happy!".
+//  line(key) plays the recorded clip assets/voice/<key>.wav (the host's and
+//  each cat's own voice); if there's no clip yet it speaks the same words
+//  (BB.VoiceLines) with the device's own voice instead. Stays quiet when the
+//  sound is off, and does nothing where neither is available.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -34,22 +35,51 @@
   }
   if (synth && 'onvoiceschanged' in synth) synth.onvoiceschanged = () => { voice = pick(); };
 
+  const DIR = 'assets/voice/';
+  let clip = null;          // the recorded line playing right now
+  const missing = {};       // keys with no clip on disk — go straight to the device voice
+
+  function speak(text) {
+    if (!synth || !text) return;
+    try {
+      if (!picked) voice = pick();
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      if (voice) u.voice = voice;
+      u.lang = voice ? voice.lang : 'en-GB';
+      u.rate = 0.95; u.pitch = 1.05; u.volume = 1; // (a raised pitch is what sounds most robotic)
+      synth.speak(u);
+    } catch (e) { /* speech is a bonus, never a crash */ }
+  }
+  function hush() {
+    try { if (synth) synth.cancel(); } catch (e) { /* ignore */ }
+    if (clip) { try { clip.pause(); } catch (e) { /* ignore */ } clip = null; }
+  }
+  function play(key, text) {
+    hush();
+    if (missing[key]) { speak(text); return; }
+    try {
+      const a = clip = new Audio(DIR + key + '.wav');
+      a.volume = 1;
+      const fallback = () => { missing[key] = 1; if (clip === a) { clip = null; speak(text); } };
+      a.addEventListener('error', fallback);
+      const p = a.play();
+      if (p && p.catch) p.catch(e => { if (e && e.name !== 'AbortError') fallback(); });
+    } catch (e) { speak(text); }
+  }
+
   BB.Voice = {
+    // a plain spoken sentence, in the device's voice
     say(text, delay = 0) {
-      if (!synth || !text || (BB.Audio && BB.Audio.muted)) return;
-      const go = () => {
-        try {
-          if (!picked) voice = pick();
-          synth.cancel();
-          const u = new SpeechSynthesisUtterance(text);
-          if (voice) u.voice = voice;
-          u.lang = voice ? voice.lang : 'en-GB';
-          u.rate = 0.95; u.pitch = 1.05; u.volume = 1; // (a raised pitch is what sounds most robotic)
-          synth.speak(u);
-        } catch (e) { /* speech is a bonus, never a crash */ }
-      };
-      if (delay) setTimeout(go, delay); else go();
+      if (!text || (BB.Audio && BB.Audio.muted)) return;
+      if (delay) setTimeout(() => speak(text), delay); else speak(text);
     },
-    stop() { try { if (synth) synth.cancel(); } catch (e) { /* ignore */ } },
+    // one of the game's own lines (BB.VoiceLines): recorded clip first, device voice as the fallback
+    line(key, delay = 0) {
+      const text = BB.VoiceLines && BB.VoiceLines[key];
+      if (!text || (BB.Audio && BB.Audio.muted)) return;
+      if (delay) setTimeout(() => play(key, text), delay); else play(key, text);
+    },
+    stop: hush,
   };
 })(window.BB);

@@ -26,7 +26,7 @@
       this.later(170, () => {
         this.outfitCard = { id: a.id, t: 0 };
         S().outfit();
-        BB.Voice.say('You got a ' + a.name + '!');
+        BB.Voice.line('outfit_' + a.id);
       });
     },
 

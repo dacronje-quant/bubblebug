@@ -4,3 +4,4 @@ Thumbs.db
 *.lnk
 .vscode/
 .idea/
+tools/voices/out/

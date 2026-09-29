@@ -24,9 +24,6 @@
   const S = () => BB.Audio.sfx;
   const Cam = () => BB.Camera;
   const FX = BB.FX;
-  // what the friendly voice calls things
-  const TOY_NAMES = { yarn: 'yarn ball', feather: 'feather wand', bell: 'jingle bell', mouse: 'toy mouse', boat: 'paper boat', star: 'star cushion', shell: 'seashell', bucket: 'sand bucket', mitten: 'mitten', kite: 'kite', duck: 'rubber duck', rocket: 'toy rocket' };
-  const BOSS_NAMES = { goose: 'goose', toad: 'toad', armadillo: 'armadillo', queenbee: 'queen bee', elephant: 'elephant', king: 'Cloud King', octopus: 'octopus', camel: 'camel', walrus: 'walrus', moose: 'moose', panda: 'panda', moonbunny: 'Moon Rabbit' };
   const NO_INPUT = { left: false, right: false, jump: false, jumpPressed: false, bubblePressed: false };
 
   const P = BB.Play = {
@@ -481,7 +478,7 @@
       this.heal(C.MOOD_MAX);
       S().bossHappy();
       this.later(40, () => S().bossFriend(b.kind));
-      BB.Voice.say('Hooray! The ' + (BOSS_NAMES[b.kind] || 'friend') + ' is happy!', 700);
+      BB.Voice.line('boss_' + b.kind, 700);
       this.giveOutfit(b.kind);
       BB.Audio.duck(0.3, 4);
       this.later(200, () => { if (this.bossMusic) { BB.Music.play(BB.ZONES[this.room.zone].key); this.bossMusic = false; } });
@@ -557,7 +554,7 @@
           self.save.toys[th.toy] = 1;
           S().toy();
           setTimeout(() => S().toySound(th.toy), 450);
-          BB.Voice.say('A ' + (TOY_NAMES[th.toy] || 'toy') + '!', 700);
+          BB.Voice.line('toy_' + th.toy, 700);
           self.pl.happyT = 90;
           PT().burst('confetti', th.x, th.y, 30, { speed: 4, g: 0.08, life: 70 });
           PT().burst('spark', th.x, th.y, 16, { color: '#ffffff', speed: 3, life: 40 });
@@ -610,8 +607,7 @@
           S().familyFound();
           S().meow(self.pl.cat);
           setTimeout(() => S().meow(th.fam), 350);
-          const m = BB.CATS[th.fam];
-          BB.Voice.say('You found ' + (m ? m.name : 'family') + '!', 600);
+          BB.Voice.line('cat_' + th.fam, 600);
           for (let i = 0; i < 14; i++) PT().heart(th.x + (Math.random() - 0.5) * 50, th.y - 20 - Math.random() * 30);
           PT().burst('confetti', th.x, th.y - 30, 24, { speed: 3.5, g: 0.08, life: 70 });
           BB.Save.write();
