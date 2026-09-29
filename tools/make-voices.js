@@ -15,6 +15,9 @@ const ctx = { window: { BB: {} } };
 vm.runInNewContext(fs.readFileSync(path.join(root, 'js/core/voice-lines.js'), 'utf8'), ctx);
 const LINES = ctx.window.BB.VoiceLines;
 
+// NOTE: "teenager" and "very high pitch" often make the model output silence or noise, so the cats above
+// use the descriptions that were checked with speech recognition. The delivered clips were also slowed by 15%
+// afterwards for young listeners (ffmpeg -af rubberband=tempo=0.85), so a fresh batch needs the same step.
 // VoiceStudio "voice design" only understands: gender, age (child / teenager / young adult /
 // middle-aged / elderly), pitch (very low … very high), and accent (american / british /
 // australian / canadian). Different mixes keep the twelve cats easy to tell apart.
@@ -23,14 +26,14 @@ const CATS = {
   mamaMallow: 'female, middle-aged, moderate pitch, british accent',
   papaBirman: 'male, middle-aged, low pitch, american accent',
   grannyLilac: 'female, elderly, moderate pitch, british accent',
-  bigSisterCocoa: 'female, teenager, high pitch, american accent',
-  babySnowflake: 'child, very high pitch, american accent',
+  bigSisterCocoa: 'female, young adult, high pitch',
+  babySnowflake: 'child, high pitch, american accent',
   grandpaSeal: 'male, elderly, very low pitch, british accent',
   mamaTortie: 'female, middle-aged, low pitch, canadian accent',
   papaGinger: 'male, middle-aged, moderate pitch, australian accent',
-  grannyGrey: 'female, elderly, high pitch, american accent',
-  bigBrotherTiger: 'male, teenager, moderate pitch, australian accent',
-  babyPatches: 'female, child, very high pitch, british accent',
+  grannyGrey: 'female, elderly, low pitch, american accent',
+  bigBrotherTiger: 'male, young adult, high pitch, australian accent',
+  babyPatches: 'female, child, high pitch, british accent',
   grandpaStripes: 'male, elderly, low pitch, american accent',
 };
 

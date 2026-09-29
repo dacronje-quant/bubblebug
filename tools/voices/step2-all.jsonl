@@ -37,12 +37,12 @@
 {"id":"cat_mamaMallow","text":"Purr-fect timing, sweetie! It's Marshmallow's Mama, and I've got cuddles for days!","instruct":"female, middle-aged, moderate pitch, british accent"}
 {"id":"cat_papaBirman","text":"Paws for applause! Marshmallow's Papa has arrived, looking fur-ociously handsome!","instruct":"male, middle-aged, low pitch, american accent"}
 {"id":"cat_grannyLilac","text":"Well, fur goodness' sake! It's Marshmallow's Granny. Who wants a biscuit?","instruct":"female, elderly, moderate pitch, british accent"}
-{"id":"cat_bigSisterCocoa","text":"Ta-da! Cocoa, Marshmallow's big sister! I was totally not hiding. Okay, maybe a little!","instruct":"female, teenager, high pitch, american accent"}
-{"id":"cat_babySnowflake","text":"Peekaboo! It's me, Snowflake! Marshmallow's baby brother! Mew mew!","instruct":"child, very high pitch, american accent"}
+{"id":"cat_bigSisterCocoa","text":"Ta-da! Cocoa, Marshmallow's big sister! I was totally not hiding. Okay, maybe a little!","instruct":"female, young adult, high pitch"}
+{"id":"cat_babySnowflake","text":"Peekaboo! It's me, Snowflake! Marshmallow's baby brother! Mew mew!","instruct":"child, high pitch, american accent"}
 {"id":"cat_grandpaSeal","text":"Whisker-wiggling wonderful! Marshmallow's Grandpa, at your service!","instruct":"male, elderly, very low pitch, british accent"}
 {"id":"cat_mamaTortie","text":"Oh, you clever kitten! Phoebe's Mama, right here. Come get your snuggle!","instruct":"female, middle-aged, low pitch, canadian accent"}
 {"id":"cat_papaGinger","text":"Ginger power! Phoebe's Papa reporting for duty, and for tummy rubs!","instruct":"male, middle-aged, moderate pitch, australian accent"}
-{"id":"cat_grannyGrey","text":"Oh my whiskers, you found me! Phoebe's Granny. I knitted you a hug!","instruct":"female, elderly, high pitch, american accent"}
-{"id":"cat_bigBrotherTiger","text":"Roar-some! Tiger, Phoebe's big brother! Race you to the next room!","instruct":"male, teenager, moderate pitch, australian accent"}
-{"id":"cat_babyPatches","text":"Hee hee! I'm Patches, Phoebe's baby sister! Wanna play?","instruct":"female, child, very high pitch, british accent"}
+{"id":"cat_grannyGrey","text":"Oh my whiskers, you found me! Phoebe's Granny. I knitted you a hug!","instruct":"female, elderly, low pitch, american accent"}
+{"id":"cat_bigBrotherTiger","text":"Roar-some! Tiger, Phoebe's big brother! Race you to the next room!","instruct":"male, young adult, high pitch, australian accent"}
+{"id":"cat_babyPatches","text":"Hee hee! I'm Patches, Phoebe's baby sister! Wanna play?","instruct":"female, child, high pitch, british accent"}
 {"id":"cat_grandpaStripes","text":"Well, look who found the cat's pajamas! I am Phoebe's Grandpa!","instruct":"male, elderly, low pitch, american accent"}
