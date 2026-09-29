@@ -1,0 +1,48 @@
+{"id":"toy_yarn","text":"Ooh, a yarn ball!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_feather","text":"Ooh, a feather wand!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_bell","text":"Ooh, a jingle bell!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_mouse","text":"Ooh, a toy mouse!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_boat","text":"Ooh, a paper boat!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_star","text":"Ooh, a star cushion!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_shell","text":"Ooh, a seashell!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_bucket","text":"Ooh, a sand bucket!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_mitten","text":"Ooh, a mitten!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_kite","text":"Ooh, a kite!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_duck","text":"Ooh, a rubber duck!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"toy_rocket","text":"Ooh, a toy rocket!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_goose","text":"Hooray! The goose is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_toad","text":"Hooray! The toad is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_armadillo","text":"Hooray! The armadillo is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_queenbee","text":"Hooray! The queen bee is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_elephant","text":"Hooray! The elephant is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_king","text":"Hooray! The Cloud King is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_octopus","text":"Hooray! The octopus is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_camel","text":"Hooray! The camel is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_walrus","text":"Hooray! The walrus is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_moose","text":"Hooray! The moose is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_panda","text":"Hooray! The panda is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"boss_moonbunny","text":"Hooray! The Moon Rabbit is happy!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_bonnet","text":"You got a goose bonnet!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_mushroom","text":"You got a mushroom hat!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_tiara","text":"You got a crystal tiara!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_crown","text":"You got a honey crown!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_horn","text":"You got a unicorn horn!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_ruff","text":"You got a cloud collar!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_sailor","text":"You got a sailor hat!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_sunhat","text":"You got a sun hat!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_bobble","text":"You got a bobble hat!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_scarf","text":"You got a stripy scarf!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_nightcap","text":"You got a sleepy nightcap!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"outfit_ears","text":"You got bunny ears!","ref_audio":"tools/voices/host_ref.wav","ref_text":"Hooray! The goose is happy!"}
+{"id":"cat_mamaMallow","text":"Purr-fect timing, sweetie! It's Marshmallow's Mama, and I've got cuddles for days!","instruct":"female, middle-aged, moderate pitch, british accent"}
+{"id":"cat_papaBirman","text":"Paws for applause! Marshmallow's Papa has arrived, looking fur-ociously handsome!","instruct":"male, middle-aged, low pitch, american accent"}
+{"id":"cat_grannyLilac","text":"Well, fur goodness' sake! It's Marshmallow's Granny. Who wants a biscuit?","instruct":"female, elderly, moderate pitch, british accent"}
+{"id":"cat_bigSisterCocoa","text":"Ta-da! Cocoa, Marshmallow's big sister! I was totally not hiding. Okay, maybe a little!","instruct":"female, teenager, high pitch, american accent"}
+{"id":"cat_babySnowflake","text":"Peekaboo! It's me, Snowflake! Marshmallow's baby brother! Mew mew!","instruct":"child, very high pitch, american accent"}
+{"id":"cat_grandpaSeal","text":"Whisker-wiggling wonderful! Marshmallow's Grandpa, at your service!","instruct":"male, elderly, very low pitch, british accent"}
+{"id":"cat_mamaTortie","text":"Oh, you clever kitten! Phoebe's Mama, right here. Come get your snuggle!","instruct":"female, middle-aged, low pitch, canadian accent"}
+{"id":"cat_papaGinger","text":"Ginger power! Phoebe's Papa reporting for duty, and for tummy rubs!","instruct":"male, middle-aged, moderate pitch, australian accent"}
+{"id":"cat_grannyGrey","text":"Oh my whiskers, you found me! Phoebe's Granny. I knitted you a hug!","instruct":"female, elderly, high pitch, american accent"}
+{"id":"cat_bigBrotherTiger","text":"Roar-some! Tiger, Phoebe's big brother! Race you to the next room!","instruct":"male, teenager, moderate pitch, australian accent"}
+{"id":"cat_babyPatches","text":"Hee hee! I'm Patches, Phoebe's baby sister! Wanna play?","instruct":"female, child, very high pitch, british accent"}
+{"id":"cat_grandpaStripes","text":"Well, look who found the cat's pajamas! I am Phoebe's Grandpa!","instruct":"male, elderly, low pitch, american accent"}

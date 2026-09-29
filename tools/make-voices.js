@@ -1,14 +1,14 @@
 // Dev helper: build the recording script for the game's spoken lines, for VoiceStudio's
 // batch tool (https://github.com/debpalash/VoiceStudio — needs a GPU-ish machine + model).
 //   node tools/make-voices.js
-// Then follow the two steps it prints. Clips land in assets/voice/<key>.wav, which is
+// Then follow tools/voices/README.md (or the steps it prints). Clips land in assets/voice/<key>.wav, which is
 // where js/core/voice.js looks for them (any missing clip falls back to the device voice).
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
 const root = path.join(__dirname, '..');
-const out = path.join(__dirname, 'voices', 'out');
+const out = path.join(__dirname, 'voices');
 
 // the game's own lines (js/core/voice-lines.js is the single source of truth)
 const ctx = { window: { BB: {} } };
@@ -35,7 +35,7 @@ const CATS = {
 };
 
 const HOST_SAMPLE = 'Hooray! The goose is happy!';
-const HOST_REF = path.join(out, 'host_ref.wav');
+const HOST_REF = 'tools/voices/host_ref.wav'; // (relative: run the commands below from the game's folder)
 
 const jsonl = rows => rows.map(r => JSON.stringify(r)).join('\n') + '\n';
 fs.mkdirSync(out, { recursive: true });
@@ -58,13 +58,13 @@ for (const [key, text] of Object.entries(LINES)) {
 }
 fs.writeFileSync(path.join(out, 'step2-all.jsonl'), jsonl(rows));
 
-console.log(`Wrote ${rows.length} lines to tools/voices/out/.
+console.log(`Wrote ${rows.length} lines to tools/voices/.
 
 1. Try the host voice, then keep the take you like:
-   omnivoice-infer-batch --model k2-fsa/OmniVoice --test_list tools/voices/out/step1-host.jsonl --res_dir tools/voices/out/step1
-   cp tools/voices/out/step1/host_takeN.wav tools/voices/out/host_ref.wav
+   omnivoice-infer-batch --model k2-fsa/OmniVoice --test_list tools/voices/step1-host.jsonl --res_dir tools/voices/host
+   cp tools/voices/host/host_takeN.wav tools/voices/host_ref.wav
 
 2. Record everything (re-run any single line by putting just it in a smaller .jsonl):
-   omnivoice-infer-batch --model k2-fsa/OmniVoice --test_list tools/voices/out/step2-all.jsonl --res_dir assets/voice
+   omnivoice-infer-batch --model k2-fsa/OmniVoice --test_list tools/voices/step2-all.jsonl --res_dir assets/voice
 
 3. Listen through assets/voice/*.wav, then open index.html.`);

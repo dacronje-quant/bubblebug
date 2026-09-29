@@ -5,4 +5,4 @@ The game plays `<key>.wav` from this folder for each line in `js/core/voice-line
 A line with no clip yet is spoken with the device's own voice instead, so this folder can be
 filled in gradually.
 
-To (re)record the lines with VoiceStudio, run `node tools/make-voices.js` and follow the steps it prints.
+To (re)record the lines with VoiceStudio, follow `tools/voices/README.md`; run `node tools/make-voices.js` after editing a line to rebuild the script.

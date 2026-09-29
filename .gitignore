@@ -4,4 +4,5 @@ Thumbs.db
 *.lnk
 .vscode/
 .idea/
-tools/voices/out/
+tools/voices/host/
+tools/voices/host_ref.wav
