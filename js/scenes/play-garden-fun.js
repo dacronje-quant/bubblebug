@@ -3,14 +3,14 @@
 (function (BB) {
   'use strict';
   const T = BB.CFG.TILE, G = () => BB.G, S = () => BB.Audio.sfx;
-  const PLACES = { ng: { col: 8.5, kind: 'ball' }, np: { col: 14.5, kind: 'bubbles' }, nr: { col: 10.5, kind: 'dance' } };
+  const PLACES = { ng: { col: 11.5, kind: 'ball' }, np: { col: 14.5, kind: 'bubbles' }, nr: { col: 10.5, kind: 'dance' } };
   const spot = room => {
     const p = PLACES[room.id];
     return p ? { room: room.id, kind: p.kind, x: (room.x + p.col) * T, y: (room.y + 31) * T } : null;
   };
   const colors = ['#ff9ec7', '#ffe27a', '#90d9df', '#b5a1ec'];
-  function ball(c, x, y, t, size = 14) {
-    c.save(); c.translate(x, y); c.rotate(t * 0.07);
+  function ball(c, x, y, angle = 0, size = 14) {
+    c.save(); c.translate(x, y); c.rotate(angle);
     c.fillStyle = '#ffe27a'; c.strokeStyle = '#d99753'; c.lineWidth = 2;
     G().circle(0, 0, size, c); c.fill(); c.stroke(); c.clip();
     c.fillStyle = '#ff9ec7'; c.fillRect(-size, -5, size * 2, 10);
@@ -25,7 +25,51 @@
     if (Math.abs(dx) > 6) v.facing = dx > 0 ? 1 : -1;
     if (v.behavior === 'dangle') v.anchorY = v.y - 65;
   }
-  BB.GardenFun = { spot, steer };
+  const GARDENS = ['ng', 'np', 'nr'];
+  function ballBounds() {
+    const first = BB.World.byId.ng, last = BB.World.byId.nr;
+    return { lo: first.px + 14, hi: last.px + last.pw - 14, floor: (first.y + 31) * T };
+  }
+  const wall = ch => ch === '#' || ch === 'G' || ch === 'I' || ch === 'M';
+  function stepBall(toy) {
+    const r = 14, bounds = ballBounds(), W = BB.World;
+    if (toy.kickCd > 0) toy.kickCd--;
+    toy.vx = BB.clamp(toy.vx, -8, 8);
+    toy.vy = BB.clamp(toy.vy + 0.28, -10, 12);
+    const steps = Math.max(1, Math.ceil(Math.max(Math.abs(toy.vx), Math.abs(toy.vy)) / 4));
+    toy.grounded = false;
+    for (let i = 0; i < steps; i++) {
+      let nx = toy.x + toy.vx / steps;
+      if (nx < bounds.lo || nx > bounds.hi) { nx = BB.clamp(nx, bounds.lo, bounds.hi); toy.vx *= -0.65; }
+      const edge = nx + (toy.vx > 0 ? r : -r), tx = Math.floor(edge / T);
+      if (toy.vx && [toy.y - r + 1, toy.y, toy.y + r - 1].some(y => wall(W.tile(tx, Math.floor(y / T))))) {
+        nx = toy.vx > 0 ? tx * T - r : (tx + 1) * T + r; toy.vx *= -0.65;
+      }
+      toy.x = BB.clamp(nx, bounds.lo, bounds.hi);
+      let ny = toy.y + toy.vy / steps;
+      const xs = [toy.x - r * 0.65, toy.x, toy.x + r * 0.65];
+      if (toy.vy >= 0) {
+        const ty = Math.floor((ny + r) / T), top = ty * T;
+        const tiles = xs.map(x => W.tile(Math.floor(x / T), ty));
+        if (toy.y + r <= top + 0.1 && ny + r >= top && tiles.some(ch => wall(ch) || ch === '-')) {
+          const speed = toy.vy; ny = top - r;
+          if (tiles.includes('M')) toy.vy = -Math.max(6.2, speed * 0.75);
+          else if (speed > 1.1) toy.vy = -speed * 0.58;
+          else { toy.vy = 0; toy.grounded = true; }
+        }
+      } else {
+        const ty = Math.floor((ny - r) / T);
+        if (xs.some(x => wall(W.tile(Math.floor(x / T), ty)))) { ny = (ty + 1) * T + r; toy.vy *= -0.58; }
+      }
+      toy.y = ny;
+    }
+    // Rolling slows naturally; airborne movement retains its momentum.
+    toy.vx *= toy.grounded ? 0.996 : 0.999;
+    if (toy.grounded && Math.abs(toy.vx) < 0.035) toy.vx = 0;
+    toy.angle = (toy.angle || 0) + toy.vx / r;
+    if (toy.y > bounds.floor + r) { toy.y = bounds.floor - r; toy.vy = 0; }
+  }
+  BB.GardenFun = { spot, steer, GARDENS, ballBounds, stepBall };
 
   Object.assign(BB.Play, {
     startGardenFun() {
@@ -35,7 +79,10 @@
         .sort((a, b) => Math.abs(a.x - q.x) - Math.abs(b.x - q.x)).slice(0, 6).sort((a, b) => a.x - b.x);
       const half = (friends.length - 1) * 32;
       const centre = BB.clamp(q.x, this.room.px + 3 * T + half, this.room.px + this.room.pw - 3 * T - half);
-      this.gardenFun = { ...q, t: 0, duration: 480, ball: { x: q.x, y: q.y - 16, vx: (this.pl.body.facing || 1) * 2.2, vy: -2.6 },
+      const toy = q.kind === 'ball' ? (this.gardenBall || (this.gardenBall = {
+        x: q.x + (this.pl.body.facing || 1) * 26, y: q.y - 16, vx: (this.pl.body.facing || 1) * 2.8, vy: -2.6, angle: 0, kickCd: 0,
+      })) : { x: q.x, y: q.y - 16, vx: 0, vy: 0 };
+      this.gardenFun = { ...q, t: 0, duration: 480, ball: toy,
         friends, slots: friends.map((v, i) => ({ x: centre + i * 64 - half,
           y: ['walk', 'hop'].includes(v.behavior) ? q.y - (v.footOffset - 1) : q.y - 64 - i % 2 * 22 })) };
       for (const v of friends) { v.hopV = 0; v.gardenReturning = false; v.danceT = 0; }
@@ -54,21 +101,27 @@
       this.gardenFun = null;
       if (f.kind === 'dance' && !this.party && !this.celebrationT) BB.Music.play(BB.ZONES[this.room.zone].key);
     },
+    updateGardenBall() {
+      const toy = this.gardenBall;
+      if (!toy || !GARDENS.includes(this.room.id) || this.traveling || this.pl.state !== 'play') return;
+      stepBall(toy);
+      const b = this.pl.body, cx = b.x + b.w / 2;
+      const px = BB.clamp(toy.x, b.x, b.x + b.w), py = BB.clamp(toy.y, b.y, b.y + b.h);
+      const touch = Math.hypot(toy.x - px, toy.y - py) < 17;
+      const tap = BB.Input.pressed.bubble && Math.hypot(toy.x - cx, toy.y - b.y - b.h / 2) < 58;
+      if (!toy.kickCd && (tap || touch && Math.abs(b.vx) > 0.45 && (toy.x - cx) * Math.sign(b.vx) >= -12)) {
+        const dir = tap ? (b.facing || 1) : Math.sign(b.vx);
+        if (touch) { const bounds = ballBounds(); toy.x = BB.clamp(cx + dir * (b.w / 2 + 14), bounds.lo, bounds.hi); }
+        toy.vx = dir * Math.min(8, (tap ? 4.5 : 2.7) + Math.abs(b.vx) * 0.9);
+        toy.vy = -3.4; toy.kickCd = 18; S().toySound('yarn');
+      }
+    },
     updateGardenFun() {
+      this.updateGardenBall();
       let f = this.gardenFun;
       if (f && (this.room.id !== f.room || ++f.t >= f.duration || this.traveling)) { this.endGardenFun(); f = null; }
       if (f) {
-        const r = this.room, toy = f.ball;
-        if (f.kind === 'ball') {
-          toy.x += toy.vx; toy.y += toy.vy; toy.vy += 0.18;
-          if (toy.y > f.y - 14) { toy.y = f.y - 14; toy.vy = -2.6; }
-          const lo = Math.max(r.px + 3 * T, f.x - 170), hi = Math.min(r.px + r.pw - 3 * T, f.x + 170);
-          if (toy.x < lo || toy.x > hi) { toy.x = BB.clamp(toy.x, lo, hi); toy.vx *= -1; }
-          const b = this.pl.body;
-          if (Math.abs(b.x + b.w / 2 - toy.x) < 26 && Math.abs(b.y + b.h - toy.y) < 34 && f.t % 18 === 0) {
-            toy.vx = (b.facing || 1) * 2.8; toy.vy = -3; S().toySound('yarn');
-          }
-        }
+        const toy = f.ball;
         f.friends.forEach((v, i) => {
           const returning = f.t >= f.duration - 120, slot = f.slots[i];
           const x = returning ? v.homeX : slot.x + Math.sin(f.t * 0.018 + i) * 4;
@@ -77,8 +130,9 @@
           v.danceT = !returning && f.kind === 'dance' ? 30 : 0;
           v.hop = Math.min(0, v.hop + 0.6); v.hopV = 0;
           if (!returning && (f.t + i * 29) % 180 === 0) BB.Particles.heart(v.x, v.y - 25, colors[i % colors.length]);
-          if (!returning && f.kind === 'ball' && Math.abs(v.x - toy.x) < 22 && f.t % 50 === i * 7) {
-            toy.vx = (toy.x > f.x ? -1 : 1) * 2.2; toy.vy = -2.8; S().toySound('yarn');
+          if (!returning && f.kind === 'ball' && !toy.kickCd && Math.hypot(v.x - toy.x, v.y - toy.y) < 32 && f.t % 50 === i * 7) {
+            const dir = Math.sign(toy.vx) || Math.sign(toy.x - v.x) || 1;
+            toy.vx = dir * Math.max(2.6, Math.abs(toy.vx)); toy.vy = -2.4; toy.kickCd = 18; S().toySound('yarn');
           }
         });
         if (f.kind === 'bubbles' && f.t % 90 === 0) S().pop(1);
@@ -99,8 +153,7 @@
       c.fillStyle = q.kind === 'dance' ? '#f1d5ed' : '#d5e9bd'; c.strokeStyle = '#a8c494'; c.lineWidth = 2;
       G().ellipse(x, y - 3, 71, 14, 0, c); c.fill(); c.stroke();
       if (q.kind === 'ball') {
-        if (f) ball(c, f.ball.x - cam.x, f.ball.y - cam.y, f.t);
-        else ball(c, x, y - 18, 0);
+        if (!this.gardenBall) ball(c, x, y - 18);
       } else if (q.kind === 'bubbles') {
         c.strokeStyle = '#bc8ed1'; c.lineWidth = 5; c.lineCap = 'round';
         c.beginPath(); c.moveTo(x - 8, y - 13); c.lineTo(x + 4, y - 40); c.stroke();
@@ -115,6 +168,12 @@
           const a = f ? Math.sin(t * 0.08) * 5 : 0;
           G().text('♪', x + d * 45, y - 37 + a * d, 24, '#bc8ed1', null, 'center', c);
         }
+      }
+      const toy = this.gardenBall;
+      if (toy && toy.x >= room.px && toy.x < room.px + room.pw) {
+        const height = Math.max(0, q.y - 14 - toy.y);
+        c.fillStyle = 'rgba(77,99,66,0.16)'; G().ellipse(toy.x - cam.x, q.y - cam.y - 2, Math.max(5, 14 - height * 0.025), 3, 0, c); c.fill();
+        ball(c, toy.x - cam.x, toy.y - cam.y, toy.angle);
       }
       if (!f) BB.Links.hintRing(c, x, y - 4, t);
       c.restore();

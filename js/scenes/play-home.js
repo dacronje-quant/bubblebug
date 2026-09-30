@@ -60,8 +60,20 @@
         const kind = friend.kind;
         const room = BB.World.byId[['ng', 'np', 'nr'][i % 3]];
         const local = Math.floor(i / 3), upper = local % 3 === 2;
-        const floor = upper ? 16 : 31, lo = upper ? 4 : 3, hi = upper && room.id === 'nr' ? 17 : 28;
-        const col = lo + (local * 5 + i % 3 * 3) % (hi - lo);
+        const floor = upper ? 16 : 31;
+        let lo = upper ? 4 : 3, hi = upper && room.id === 'nr' ? 17 : 28;
+        let col = lo + (local * 5 + i % 3 * 3) % (hi - lo);
+        if (upper) {
+          const ledges = [];
+          for (let x = lo; x <= hi; x++) if (BB.Physics.landKind(BB.World.tile(room.x + x, room.y + floor), { glow: true })) ledges.push(x);
+          col = ledges[(local * 5 + i % 3 * 3) % ledges.length];
+          let left = col, right = col;
+          while (ledges.includes(left - 1)) left--;
+          while (ledges.includes(right + 1)) right++;
+          // Upstairs visitors stay on their own leaf platform rather
+          // than hovering over the new gaps or falling onto play below.
+          lo = left + 0.5; hi = right + 0.5;
+        }
         const th = { tx: room.x + col, ty: room.y + floor - 1, ch: 'b' };
         const key = th.tx + ',' + th.ty;
         const visitor = BB.Bugs.create(th, room, { friends: { [key]: 1 } }, 0, kind);

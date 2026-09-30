@@ -930,6 +930,24 @@
     const w = n * T, cx = x + w / 2;
     const k = squash.get(tx + ',' + ty) || 0;
     const sq = k > 0 ? 1 - Math.sin((k / 18) * Math.PI) * 0.35 : 1;
+    const room = W().roomAtTile(tx, ty);
+    if (room && room.def.trampoline) {
+      // A padded garden trampoline uses the existing safe bounce physics.
+      const dip = (1 - sq) * 12;
+      c.strokeStyle = '#8273a3'; c.lineWidth = 3; c.lineCap = 'round';
+      for (let i = 0; i < n * 2; i++) {
+        const sx = x + 8 + i * (w - 16) / Math.max(1, n * 2 - 1);
+        c.beginPath(); c.moveTo(sx, y + 5); c.lineTo(sx - 3, y + 11); c.lineTo(sx + 3, y + 17); c.lineTo(sx, y + 25); c.stroke();
+      }
+      c.fillStyle = '#90ddd4'; c.strokeStyle = '#4c9a9a'; c.lineWidth = 2;
+      G.rrect(x - 3, y - 3 + dip, w + 6, 10, 5, c); c.fill(); c.stroke();
+      c.strokeStyle = '#fff7db'; c.lineWidth = 1;
+      for (let i = 1; i < n * 3; i++) { const sx = x + i * w / (n * 3); c.beginPath(); c.moveTo(sx, y + dip); c.lineTo(sx + 5, y + 5 + dip); c.stroke(); }
+      c.fillStyle = '#ffc6dd'; G.ellipse(cx, y + 2 + dip, 11, 3, 0, c); c.fill();
+      c.strokeStyle = '#b88bd1'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(cx, y - 26); c.lineTo(cx, y - 43); c.moveTo(cx - 7, y - 35); c.lineTo(cx, y - 43); c.lineTo(cx + 7, y - 35); c.stroke();
+      return;
+    }
     const palette = {
       gardens: ['#ff5d6c', '#ffffff'], meadow: ['#c46ad8', '#7cf5d4'], caves: ['#6a8cff', '#dff6ff'],
       hive: ['#ffb52e', '#fff3c4'], ruins: ['#ff8c4b', '#fff0d0'], clouds: ['#ff9ec7', '#ffffff'],

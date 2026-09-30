@@ -142,6 +142,8 @@ Stars unlock permanent milestones from the total collected; equipping never spen
 
 At the mirror, tap a picture to preview it; tap the selected picture again to equip it if unlocked. Keyboard/gamepad users press Up from the first item row to focus categories, Left/Right to change category, then Down to browse its pictures. Jump, bubble or Enter equips. There are eight glasses, eight collars/necklaces and four trails. Glasses and collars each fit an evenly spaced two-row grid, including locked choices; longer hat collections use page dots. Cards use pictures and short item names, without navigation arrows or long control hints. Touch movement buttons hide while menus are open and return when playing; the map button stays available to close its overlay. Rewards earned through activities are saved immediately and stay available through Rainbow replays. The original bubbles and trail remain free options, and earned boss presents remain free to wear. Styles change appearance only. The jingle collar uses an existing bell sound when running.
 
+The Front Garden has broad climbing steps, an open upper entrance and a lower-path trampoline that works without learned jump skills. Short gaps add hops to the high garden and pond branches. Ball play uses gravity, rolling friction, bounces and kitten kicks; the same ball can travel across Front Garden, Pond Walk and Root Hollow for the current play session, even after the gathering ends.
+
 Invited critters wander through the neighbourhood, and approaching them gives a purr and hearts animation. Soft fur and shell shading, bright eyes, breathing, ear twitches, tail wags, paw lifts and landing squashes bring their original vector art to life. Friends look at the nearby kitten, greet it and dance with an advancing pose even during garden games. These animations leave movement, hitboxes and saved progress unchanged. Petting never spends or awards currency. The fountain closes its card immediately for a six-second show of rainbow jets, flying hearts, confetti, fireworks, party music and family dancing. The first-use twirl card appears afterwards. Step away before using a paw ring again. These additions use sounds and animations, with no new speech lines.
 
 There are 39 friend species and 65 hearts in the world. One heart per species plus one for the fountain lets a completed adventure afford every current heart reward.
@@ -351,6 +353,7 @@ node tools/test-rewards.js             # milestones, held inputs, reload, founta
 node tools/test-maze.js                # entire maze graph, twelve-cat door, character changes and reload
 node tools/test-journey.js             # hidden glasses, migration and three rescue/cloud/replay cycles
 node tools/test-garden.js              # all 65 visitors, later rescues, repeated games, music and reload
+node tools/test-garden-route.js        # wider climb, high hops, trampoline and ball across all three gardens
 node tools/test-rainbow-garden.js       # indoor gate, lantern sequence, rescue exit and legacy routes
 node tools/test-interactions.js        # shorter waits, quick-turn cancellation, pause and safe exit/reload
 node tools/test-wardrobe.js            # eight glasses/collars, four trails, progress bars and retained unlocks

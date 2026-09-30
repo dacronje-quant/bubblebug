@@ -148,6 +148,7 @@
       this.homeVisitors = [];
       this.refreshHomeVisitors();
       this.gardenFun = null; this.funHold = 0; this.funLock = null;
+      this.gardenBall = null;
       this.signFade = {};
       this.enterZone(this.room.zone);
       if (!save.introDone && this.room.def.home) this.startIntro();

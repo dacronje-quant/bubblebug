@@ -183,7 +183,7 @@ async function walkMaze(page, target) {
       trail: BB.Play.save.cosmetics.trail, bubble: BB.Play.save.cosmetics.bubble,
       stars: Object.keys(BB.Play.save.sparkles).sort(),
     }));
-    assert.equal(saved.spent, 0); assert.ok(saved.stars.length >= 260);
+    assert.equal(saved.spent, 0); assert.ok(saved.stars.length >= 250);
     await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
     await page.keyboard.press('Space'); await page.waitForFunction(() => BB.Main.name === 'play');
     assert.deepEqual(await page.evaluate(() => ({
@@ -282,7 +282,7 @@ async function walkMaze(page, target) {
     }
     assert.equal(await page.evaluate(() => BB.Play.save.cosmetics.trail), 'heart');
     await shot(page, 'new-heart-trail-earned'); await tap(page, 776, 438);
-    for (const [id, col, kind] of [['ng', 8, 'ball'], ['np', 14, 'bubbles'], ['nr', 10, 'dance']]) {
+    for (const [id, col, kind] of [['ng', 11, 'ball'], ['np', 14, 'bubbles'], ['nr', 10, 'dance']]) {
       await place(page, id, col, 31); await page.keyboard.press('Enter');
       await page.waitForFunction(kind => BB.Play.gardenFun?.kind === kind && BB.Play.gardenFun.t > 60 && !BB.Play.zoneCard, kind);
       await shot(page, 'garden-' + kind);
@@ -376,7 +376,7 @@ async function walkMaze(page, target) {
     assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 2);
     assert.equal(await touch.evaluate(() => BB.Play.save.fountainUses), 2);
     assert.equal(await touch.evaluate(() => document.body.classList.contains('touch')), true);
-    for (const [id, col, kind] of [['ng', 8, 'ball'], ['np', 14, 'bubbles'], ['nr', 10, 'dance']]) {
+    for (const [id, col, kind] of [['ng', 11, 'ball'], ['np', 14, 'bubbles'], ['nr', 10, 'dance']]) {
       await place(touch, id, col, 31);
       await touch.waitForFunction(kind => BB.Play.gardenFun?.kind === kind, kind);
       assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 2);

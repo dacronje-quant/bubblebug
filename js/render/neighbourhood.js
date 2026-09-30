@@ -39,19 +39,27 @@
     for (let col = 0; col <= 30; col += 3) {
       c.fillStyle = '#77b77b'; G().ellipse(X(col), Y(floor - 0.2), 34, 13, 0, c); c.fill();
     }
-    // The raised route reads as one long branch, not three disconnected
-    // rooms. The same tree roots continue across their shared boundaries.
+    // Branches follow the actual platforms so the new jumping gaps
+    // look open, rather than painting a false bridge across empty air.
     if (kind !== 'maze') {
       c.strokeStyle = '#8a5a37'; c.lineWidth = 15; c.lineCap = 'round';
-      c.beginPath(); c.moveTo(X(kind === 'garden' ? 3 : 0), Y(16) + 9);
-      c.bezierCurveTo(X(10), Y(16) + 18, X(20), Y(16) + 2, X(30), Y(16) + 9); c.stroke();
+      const row = room.grid[16];
+      for (let start = 0; start < room.w;) {
+        if (!BB.Physics.landKind(row[start], { glow: true })) { start++; continue; }
+        let end = start + 1;
+        while (end < room.w && BB.Physics.landKind(row[end], { glow: true })) end++;
+        const length = end - start;
+        c.beginPath(); c.moveTo(X(start) + 4, Y(16) + 9);
+        c.bezierCurveTo(X(start + length / 3), Y(16) + 16, X(start + length * 2 / 3), Y(16) + 3, X(end) - 4, Y(16) + 9); c.stroke();
+        start = end;
+      }
     }
     if (kind === 'maze') {
       for (const col of [4, 10, 15]) {
         c.fillStyle = '#82bc8d'; G().ellipse(X(col), Y(32) - 24, 54, 25, 0, c); c.fill();
         BB.Tiles.flower(c, X(col), Y(32) - 32, '#fff1c2', 0.8);
       }
-    } else tree(c, X(15), Y(31), Y(13.5), kind === 'roots', t);
+    } else tree(c, X(kind === 'garden' ? 21 : kind === 'pond' ? 19 : 15), Y(31), Y(13.5), kind === 'roots', t);
     if (kind !== 'maze') {
       // Flower beds, little flags and spinning pinwheels make the walk
       // feel like a shared garden even before its first friend arrives.

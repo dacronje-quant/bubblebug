@@ -10,25 +10,32 @@
   const blank = () => Array.from({ length: H }, (_, y) => Array(W).fill(y >= 31 ? '#' : '.'));
   const ledge = (map, y, x, length = 5) => { for (let i = x; i < x + length; i++) map[y][i] = '-'; };
   const put = (map, x, y, ch) => { map[y][x] = ch; };
-  const room = (id, x, name, map, detail) => BB.room({
+  const room = (id, x, name, map, detail, extras = {}) => BB.room({
     id, zone: 0, x, y: -17, name,
     neighbourhood: detail, cameraGroup: 'home-neighbourhood',
     map: map.map(row => row.join('')),
+    ...extras,
   });
 
   const garden = blank();
   // Keep the upper edge against the house closed; the open lower path
   // lines up exactly with the living-room floor (world row 14).
   for (let y = 0; y < 26; y++) garden[y][0] = garden[y][1] = '#';
-  ledge(garden, 16, 3, 27);
-  for (const [y, x] of [[28, 5], [25, 10], [22, 5], [19, 10]]) ledge(garden, y, x);
+  // Broad overlapping leaf steps leave room to turn and jump. The
+  // three-tile opening above the last step gives the climb a clear exit.
+  for (const [x, length] of [[3, 11], [17, 6], [25, 5]]) ledge(garden, 16, x, length);
+  for (const [y, x] of [[28, 4], [25, 9], [22, 4], [19, 9]]) ledge(garden, y, x, y === 19 ? 9 : 8);
+  // Flush with the main path: walking across never meets a raised wall.
+  for (let x = 5; x < 8; x++) put(garden, x, 31, 'M');
   for (const x of [9, 14, 20, 26]) put(garden, x, 30, '*');
   for (const [x, y] of [[7, 27], [12, 24], [7, 21], [12, 18]]) put(garden, x, y, '*');
   put(garden, 22, 30, 'n'); put(garden, 26, 29, 'f'); put(garden, 28, 30, 'R');
-  room('ng', -90, 'Front Garden', garden, 'garden');
+  room('ng', -90, 'Front Garden', garden, 'garden', { trampoline: { col: 5, row: 31, width: 3 } });
 
   const pond = blank();
-  ledge(pond, 16, 0, 30);
+  // Short, forgiving hops break up the long upper bridge. The entire
+  // lower walk stays open for kittens who have not learned to jump yet.
+  for (const [x, length] of [[0, 7], [9, 6], [17, 6], [25, 5]]) ledge(pond, 16, x, length);
   for (const x of [4, 10, 20, 26]) { put(pond, x, 30, '*'); put(pond, x, 15, '*'); }
   put(pond, 7, 30, 'n'); put(pond, 22, 15, 'n'); put(pond, 27, 30, 'R');
   // The pond is painted below a walkable timber bridge. Children can
