@@ -1,0 +1,104 @@
+[
+  {
+    "id": "mamaMallow",
+    "auditionId": "mamaMallow-family-v2",
+    "label": "Marshmallow's Mama",
+    "voice": "marin",
+    "text": "You found Marshmallow's Mama! Come here, little kitten. I've saved you a cuddle!",
+    "direction": "A loving middle-aged mother with a warm female voice and a soft British accent. Smile warmly; gentle relief and affection. Natural medium pitch, clear and reassuring."
+  },
+  {
+    "id": "papaBirman",
+    "auditionId": "papaBirman-family-v2",
+    "label": "Marshmallow's Papa",
+    "voice": "cedar",
+    "text": "I'm Marshmallow's Papa! Well done, brave kitten. That was a purr-fect rescue!",
+    "direction": "A middle-aged father with a rounded male voice, a gentle American accent and a lower comfortable pitch. Proud, affectionate, slightly playful; a soft chuckle in the tone, not a separate laugh."
+  },
+  {
+    "id": "grannyLilac",
+    "auditionId": "grannyLilac-family-v2",
+    "label": "Marshmallow's Granny",
+    "voice": "sage",
+    "text": "Oh, my darling! You found Marshmallow's Granny. I've got a cuddle for you!",
+    "direction": "An elderly grandmother with a gentle female voice and a soft British accent. Cozy, patient and lightly textured, with loving warmth. Natural age, not a frail or exaggerated cartoon voice."
+  },
+  {
+    "id": "bigSisterCocoa",
+    "auditionId": "bigSisterCocoa-family-v2",
+    "label": "Marshmallow's Big Sister — Cocoa",
+    "voice": "coral",
+    "text": "Ta-da! I'm Cocoa, Marshmallow's big sister! You found me! Let's play!",
+    "direction": "A youthful older sister with a bright female voice and a light British accent. Friendly, mischievous and lively, with a smile. Naturally youthful without squeaking, shouting or baby talk."
+  },
+  {
+    "id": "babySnowflake",
+    "auditionId": "babySnowflake-original",
+    "label": "Marshmallow's Baby Brother — Snowflake",
+    "voice": "original recording",
+    "text": "Peekaboo! It's me, Snowflake! Marshmallow's baby brother! Mew mew!",
+    "direction": "Preserve the original baby recording exactly; do not regenerate.",
+    "recordingFile": "samples/family/babySnowflake-original.wav",
+    "source": "original-game",
+    "originalDirection": "child, high pitch, american accent"
+  },
+  {
+    "id": "grandpaSeal",
+    "auditionId": "grandpaSeal-family-v2",
+    "label": "Marshmallow's Grandpa",
+    "voice": "onyx",
+    "text": "I'm Marshmallow's Grandpa! Well done, little explorer. You made my whiskers smile!",
+    "direction": "An elderly grandfather with a warm male voice, a soft British accent and a deep comfortable pitch. Slightly gravelly but clear, calm and fond, with a gentle smile. Never stern or booming."
+  },
+  {
+    "id": "mamaTortie",
+    "auditionId": "mamaTortie-family-v2",
+    "label": "Phoebe's Mama",
+    "voice": "nova",
+    "text": "You found Phoebe's Mama! Oh, clever kitten. Come and get your snuggle!",
+    "direction": "A loving middle-aged mother with a mellow female voice and a subtle Canadian English accent. Tender and relieved, slightly lower natural pitch, unhurried and comforting."
+  },
+  {
+    "id": "papaGinger",
+    "auditionId": "papaGinger-family-v2",
+    "label": "Phoebe's Papa",
+    "voice": "ash",
+    "text": "I'm Phoebe's Papa! Well done, little sunshine! Cuddle time!",
+    "direction": "A middle-aged father with an easygoing male voice and a gentle Australian accent. Warm, sunny and proud; natural middle pitch, friendly energy, never loud."
+  },
+  {
+    "id": "grannyGrey",
+    "auditionId": "grannyGrey-family-v2",
+    "label": "Phoebe's Granny",
+    "voice": "shimmer",
+    "text": "Oh, my whiskers! You found Phoebe's Granny. I knitted you a great big hug!",
+    "direction": "An elderly grandmother with a soft female voice and a gentle American accent. Warm, slightly husky, quietly amused and affectionate; slower natural phrasing, not an exaggerated old-person imitation."
+  },
+  {
+    "id": "bigBrotherTiger",
+    "auditionId": "bigBrotherTiger-family-v2",
+    "label": "Phoebe's Big Brother — Tiger",
+    "voice": "echo",
+    "text": "I'm Tiger, Phoebe's big brother! That was roar-some! Let's explore!",
+    "direction": "A youthful older brother with a friendly male voice and a light Australian accent. Playful, energetic and protective, bright natural pitch; no roaring sound effects and no shouting."
+  },
+  {
+    "id": "babyPatches",
+    "auditionId": "babyPatches-original",
+    "label": "Phoebe's Baby Sister — Patches",
+    "voice": "original recording",
+    "text": "Hee hee! I'm Patches, Phoebe's baby sister! Wanna play?",
+    "direction": "Preserve the original baby recording exactly; do not regenerate.",
+    "recordingFile": "samples/family/babyPatches-original.wav",
+    "source": "original-game",
+    "originalDirection": "female, child, high pitch, british accent"
+  },
+  {
+    "id": "grandpaStripes",
+    "auditionId": "grandpaStripes-family-v2",
+    "label": "Phoebe's Grandpa",
+    "voice": "fable",
+    "text": "You found Phoebe's Grandpa! Hello, little adventurer. I've got a story just for you!",
+    "direction": "An elderly grandfather with a mellow male voice and a gentle American accent. Softly textured, relaxed, affectionate storyteller, medium-low natural pitch with a tiny amused smile."
+  }
+]

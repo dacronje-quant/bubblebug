@@ -6,7 +6,7 @@ A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wa
 
 ![Platform](https://img.shields.io/badge/Platform-Any%20modern%20browser-orange)
 ![Install](https://img.shields.io/badge/Install-None-brightgreen)
-![Audio](https://img.shields.io/badge/Audio-100%25%20synthesized-blue)
+![Audio](https://img.shields.io/badge/Audio-Story%20voices%20%2B%20synthesized-blue)
 ![Audience](https://img.shields.io/badge/Audience-Ages%203--7-ff69b4)
 
 ---
@@ -17,7 +17,9 @@ A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wa
 **Mac / Linux / tablets:** open `index.html` in Chrome, Edge, Safari or Firefox.
 **Online:** enable GitHub Pages (Settings → Pages → deploy from `main`, `/ (root)`).
 
-There's no install, no Node.js and no build step. Everything, sound included, is generated in the browser.
+There's no install, no Node.js and no build step. Music and sound effects are generated in the browser; the twenty story and family voice recordings are bundled with the game, so playing never needs an API key.
+
+The voice pack keeps speech for affectionate family discoveries and eight story moments. Snowflake and Patches retain their original baby recordings unchanged. The other family greetings identify Phoebe's or Marshmallow's family. Story voices are AI-generated; mute stops them immediately, and queued lines are cancelled when leaving scenes. [Listen to the approved pack](voice-plan/voice-review.html).
 
 **Quick test of the additions:** open `try-rewards.html`. It starts at home with 250 stars, 65 hearts, the family present and the homecoming complete. Rewards and progress in this preview never write to or erase the normal adventure. Open `index.html` to play normally. See [TESTING.md](TESTING.md) for a short playtest route.
 

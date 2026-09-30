@@ -1,0 +1,200 @@
+{
+  "status": "approved-integrated",
+  "totalClips": 20,
+  "clips": [
+    {
+      "id": "story_welcome",
+      "speaker": "narrator",
+      "trigger": "Kitten wakes at the beginning of a new adventure",
+      "text": "Little kitten, let's find all our family and bring everyone home!",
+      "label": "Bring the family home",
+      "voice": "marin",
+      "direction": "Warm, loving female storybook narrator with a gentle British accent, speaking to a four-year-old. Tender, reassuring and softly delighted. Natural medium pitch, clear English, concise natural pace with small expressive pauses. Keep the same narrator character in every story line. Speak only the supplied sentence; no introductions, extra words, music, meowing or sound effects.",
+      "file": "samples/story/story_welcome.mp3"
+    },
+    {
+      "id": "story_big_friend",
+      "speaker": "narrator",
+      "trigger": "A big friend is rescued; same clip for all bosses",
+      "text": "You did it! A little kindness brought a big smile!",
+      "label": "A big friend is rescued",
+      "voice": "marin",
+      "direction": "Warm, loving female storybook narrator with a gentle British accent, speaking to a four-year-old. Tender, reassuring and softly delighted. Natural medium pitch, clear English, concise natural pace with small expressive pauses. Keep the same narrator character in every story line. Speak only the supplied sentence; no introductions, extra words, music, meowing or sound effects.",
+      "file": "samples/story/story_big_friend.mp3"
+    },
+    {
+      "id": "story_homecoming",
+      "speaker": "narrator",
+      "trigger": "First homecoming party",
+      "text": "Welcome home, little hero! Let's celebrate with our friends!",
+      "label": "Welcome home",
+      "voice": "marin",
+      "direction": "Warm, loving female storybook narrator with a gentle British accent, speaking to a four-year-old. Tender, reassuring and softly delighted. Natural medium pitch, clear English, concise natural pace with small expressive pauses. Keep the same narrator character in every story line. Speak only the supplied sentence; no introductions, extra words, music, meowing or sound effects.",
+      "file": "samples/story/story_homecoming.mp3"
+    },
+    {
+      "id": "story_family_complete",
+      "speaker": "narrator",
+      "trigger": "All twelve family cats found",
+      "text": "The whole family is together! A rainbow surprise is waiting for you!",
+      "label": "All twelve family cats are home",
+      "voice": "marin",
+      "direction": "Warm, loving female storybook narrator with a gentle British accent, speaking to a four-year-old. Tender, reassuring and softly delighted. Natural medium pitch, clear English, concise natural pace with small expressive pauses. Keep the same narrator character in every story line. Speak only the supplied sentence; no introductions, extra words, music, meowing or sound effects.",
+      "file": "samples/story/story_family_complete.mp3"
+    },
+    {
+      "id": "story_rainbow_call",
+      "speaker": "Rainbow",
+      "trigger": "First approach to the gloomy grand maze door",
+      "text": "Is someone there? My rainbow has lost its sparkle. Could you help me?",
+      "label": "Rainbow asks for help",
+      "voice": "shimmer",
+      "direction": "A soft, magical female unicorn kitten with a gentle British accent. Light, clear, tender voice with natural flowing phrasing. Keep the same Rainbow character in both lines. Speak only the supplied dialogue, with no extra words, music, meowing or sound effects. No crying, whisper-only delivery or cartoon squeaks. Sound lonely and hopeful, gently asking for help.",
+      "file": "samples/story/story_rainbow_call.mp3"
+    },
+    {
+      "id": "story_rainbow_rescue",
+      "speaker": "Rainbow",
+      "trigger": "First unicorn rescue",
+      "text": "You found me! Thank you, little friend. My rainbow is shining again!",
+      "label": "Rainbow is rescued",
+      "voice": "shimmer",
+      "direction": "A soft, magical female unicorn kitten with a gentle British accent. Light, clear, tender voice with natural flowing phrasing. Keep the same Rainbow character in both lines. Speak only the supplied dialogue, with no extra words, music, meowing or sound effects. No crying, whisper-only delivery or cartoon squeaks. Sound relieved, grateful and gently joyful, with a radiant smile.",
+      "file": "samples/story/story_rainbow_rescue.mp3"
+    },
+    {
+      "id": "story_replay_choice",
+      "speaker": "narrator",
+      "trigger": "Sad-cloud replay confirmation opens",
+      "text": "Play again as Rainbow? Our friends will need help again. You keep your skills and outfits!",
+      "label": "Choose a new Rainbow adventure",
+      "voice": "marin",
+      "direction": "Warm, loving female storybook narrator with a gentle British accent, speaking to a four-year-old. Tender, reassuring and softly delighted. Natural medium pitch, clear English, concise natural pace with small expressive pauses. Keep the same narrator character in every story line. Speak only the supplied sentence; no introductions, extra words, music, meowing or sound effects. Pause after the opening question, and explain the choice patiently.",
+      "file": "samples/story/story_replay_choice.mp3"
+    },
+    {
+      "id": "story_replay_start",
+      "speaker": "narrator",
+      "trigger": "Rainbow replay confirmed",
+      "text": "Here we go, Rainbow! A new adventure, with all your magic!",
+      "label": "Rainbow starts again",
+      "voice": "marin",
+      "direction": "Warm, loving female storybook narrator with a gentle British accent, speaking to a four-year-old. Tender, reassuring and softly delighted. Natural medium pitch, clear English, concise natural pace with small expressive pauses. Keep the same narrator character in every story line. Speak only the supplied sentence; no introductions, extra words, music, meowing or sound effects.",
+      "file": "samples/story/story_replay_start.mp3"
+    },
+    {
+      "id": "mamaMallow",
+      "auditionId": "mamaMallow-family-v2",
+      "label": "Marshmallow's Mama",
+      "voice": "marin",
+      "text": "You found Marshmallow's Mama! Come here, little kitten. I've saved you a cuddle!",
+      "direction": "A loving middle-aged mother with a warm female voice and a soft British accent. Smile warmly; gentle relief and affection. Natural medium pitch, clear and reassuring.",
+      "file": "samples/family/mamaMallow-family-v2.mp3"
+    },
+    {
+      "id": "papaBirman",
+      "auditionId": "papaBirman-family-v2",
+      "label": "Marshmallow's Papa",
+      "voice": "cedar",
+      "text": "I'm Marshmallow's Papa! Well done, brave kitten. That was a purr-fect rescue!",
+      "direction": "A middle-aged father with a rounded male voice, a gentle American accent and a lower comfortable pitch. Proud, affectionate, slightly playful; a soft chuckle in the tone, not a separate laugh.",
+      "file": "samples/family/papaBirman-family-v2.mp3"
+    },
+    {
+      "id": "grannyLilac",
+      "auditionId": "grannyLilac-family-v2",
+      "label": "Marshmallow's Granny",
+      "voice": "sage",
+      "text": "Oh, my darling! You found Marshmallow's Granny. I've got a cuddle for you!",
+      "direction": "An elderly grandmother with a gentle female voice and a soft British accent. Cozy, patient and lightly textured, with loving warmth. Natural age, not a frail or exaggerated cartoon voice.",
+      "file": "samples/family/grannyLilac-family-v2.mp3"
+    },
+    {
+      "id": "bigSisterCocoa",
+      "auditionId": "bigSisterCocoa-family-v2",
+      "label": "Marshmallow's Big Sister — Cocoa",
+      "voice": "coral",
+      "text": "Ta-da! I'm Cocoa, Marshmallow's big sister! You found me! Let's play!",
+      "direction": "A youthful older sister with a bright female voice and a light British accent. Friendly, mischievous and lively, with a smile. Naturally youthful without squeaking, shouting or baby talk.",
+      "file": "samples/family/bigSisterCocoa-family-v2.mp3"
+    },
+    {
+      "id": "babySnowflake",
+      "auditionId": "babySnowflake-original",
+      "label": "Marshmallow's Baby Brother — Snowflake",
+      "voice": "original recording",
+      "text": "Peekaboo! It's me, Snowflake! Marshmallow's baby brother! Mew mew!",
+      "direction": "Preserve the original baby recording exactly; do not regenerate.",
+      "recordingFile": "samples/family/babySnowflake-original.wav",
+      "source": "original-game",
+      "originalDirection": "child, high pitch, american accent",
+      "file": "samples/family/babySnowflake-original.wav"
+    },
+    {
+      "id": "grandpaSeal",
+      "auditionId": "grandpaSeal-family-v2",
+      "label": "Marshmallow's Grandpa",
+      "voice": "onyx",
+      "text": "I'm Marshmallow's Grandpa! Well done, little explorer. You made my whiskers smile!",
+      "direction": "An elderly grandfather with a warm male voice, a soft British accent and a deep comfortable pitch. Slightly gravelly but clear, calm and fond, with a gentle smile. Never stern or booming.",
+      "file": "samples/family/grandpaSeal-family-v2.mp3"
+    },
+    {
+      "id": "mamaTortie",
+      "auditionId": "mamaTortie-family-v2",
+      "label": "Phoebe's Mama",
+      "voice": "nova",
+      "text": "You found Phoebe's Mama! Oh, clever kitten. Come and get your snuggle!",
+      "direction": "A loving middle-aged mother with a mellow female voice and a subtle Canadian English accent. Tender and relieved, slightly lower natural pitch, unhurried and comforting.",
+      "file": "samples/family/mamaTortie-family-v2.mp3"
+    },
+    {
+      "id": "papaGinger",
+      "auditionId": "papaGinger-family-v2",
+      "label": "Phoebe's Papa",
+      "voice": "ash",
+      "text": "I'm Phoebe's Papa! Well done, little sunshine! Cuddle time!",
+      "direction": "A middle-aged father with an easygoing male voice and a gentle Australian accent. Warm, sunny and proud; natural middle pitch, friendly energy, never loud.",
+      "file": "samples/family/papaGinger-family-v2.mp3"
+    },
+    {
+      "id": "grannyGrey",
+      "auditionId": "grannyGrey-family-v2",
+      "label": "Phoebe's Granny",
+      "voice": "shimmer",
+      "text": "Oh, my whiskers! You found Phoebe's Granny. I knitted you a great big hug!",
+      "direction": "An elderly grandmother with a soft female voice and a gentle American accent. Warm, slightly husky, quietly amused and affectionate; slower natural phrasing, not an exaggerated old-person imitation.",
+      "file": "samples/family/grannyGrey-family-v2.mp3"
+    },
+    {
+      "id": "bigBrotherTiger",
+      "auditionId": "bigBrotherTiger-family-v2",
+      "label": "Phoebe's Big Brother — Tiger",
+      "voice": "echo",
+      "text": "I'm Tiger, Phoebe's big brother! That was roar-some! Let's explore!",
+      "direction": "A youthful older brother with a friendly male voice and a light Australian accent. Playful, energetic and protective, bright natural pitch; no roaring sound effects and no shouting.",
+      "file": "samples/family/bigBrotherTiger-family-v2.mp3"
+    },
+    {
+      "id": "babyPatches",
+      "auditionId": "babyPatches-original",
+      "label": "Phoebe's Baby Sister — Patches",
+      "voice": "original recording",
+      "text": "Hee hee! I'm Patches, Phoebe's baby sister! Wanna play?",
+      "direction": "Preserve the original baby recording exactly; do not regenerate.",
+      "recordingFile": "samples/family/babyPatches-original.wav",
+      "source": "original-game",
+      "originalDirection": "female, child, high pitch, british accent",
+      "file": "samples/family/babyPatches-original.wav"
+    },
+    {
+      "id": "grandpaStripes",
+      "auditionId": "grandpaStripes-family-v2",
+      "label": "Phoebe's Grandpa",
+      "voice": "fable",
+      "text": "You found Phoebe's Grandpa! Hello, little adventurer. I've got a story just for you!",
+      "direction": "An elderly grandfather with a mellow male voice and a gentle American accent. Softly textured, relaxed, affectionate storyteller, medium-low natural pitch with a tiny amused smile.",
+      "file": "samples/family/grandpaStripes-family-v2.mp3"
+    }
+  ]
+}

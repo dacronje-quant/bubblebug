@@ -119,6 +119,7 @@
       mazePuzzleVersion: 1, mazeLegacyAccess: false,
       rainbowUnlocked: false,             // rescued character survives a Rainbow replay
       replayCount: 0,
+      voiceStory: {},                     // spoken story milestones in this adventure only
       glassesFound: {},                   // discoveries in this adventure; clothing stays earned
       doors: {},                            // zone → 1 once its cat flap is found (a door opens at home)
       introDone: 0,                         // the wake-up scene has played
@@ -167,7 +168,7 @@
             this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
             this.data.wear = Object.assign(fresh().wear, d.wear || {});
             this.data.cosmetics = Object.assign(fresh().cosmetics, d.cosmetics || {});
-            for (const field of ['outfits', 'purchases', 'residents', 'hiddenResidents', 'glassesFound']) this.data[field] = Object.assign({}, d[field] || {});
+            for (const field of ['outfits', 'purchases', 'residents', 'hiddenResidents', 'glassesFound', 'voiceStory']) this.data[field] = Object.assign({}, d[field] || {});
             // An older active maze can finish its existing route. New
             // entries use the lantern gates, keeping every pad/star key.
             if (d.inMaze && !d.mazePuzzleVersion) this.data.mazeLegacyAccess = true;

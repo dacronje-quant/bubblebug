@@ -47,6 +47,7 @@
       }
     },
     openGardenChoice(kind) {
+      BB.Voice.stop();
       this.endGardenFun();
       this.gardenChoice = { kind, kinds: this.earnedFriendKinds(), sel: 0, t: 0, wiggle: 0, cooldown: 0 };
       this.gardenHold = 0; this.pl.state = 'homechoice'; this.pl.body.vx = 0;

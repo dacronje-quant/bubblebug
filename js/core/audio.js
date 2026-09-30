@@ -603,6 +603,7 @@
     }),
     setMuted(m) {
       muted = m;
+      if (m && BB.Voice) BB.Voice.stop();
       try { localStorage.setItem('bubblebug_muted', m ? '1' : '0'); } catch (e) { /* ignore */ }
       if (master) master.gain.setTargetAtTime(m ? 0 : 0.9, ctx.currentTime, 0.05);
     },

@@ -1,0 +1,13 @@
+{
+  "model": "gpt-4o-mini-tts",
+  "id": "story_rainbow_rescue",
+  "speaker": "Rainbow",
+  "trigger": "First unicorn rescue",
+  "text": "You found me! Thank you, little friend. My rainbow is shining again!",
+  "label": "Rainbow is rescued",
+  "voice": "shimmer",
+  "direction": "A soft, magical female unicorn kitten with a gentle British accent. Light, clear, tender voice with natural flowing phrasing. Keep the same Rainbow character in both lines. Speak only the supplied dialogue, with no extra words, music, meowing or sound effects. No crying, whisper-only delivery or cartoon squeaks. Sound relieved, grateful and gently joyful, with a radiant smile.",
+  "instructions": "A soft, magical female unicorn kitten with a gentle British accent. Light, clear, tender voice with natural flowing phrasing. Keep the same Rainbow character in both lines. Speak only the supplied dialogue, with no extra words, music, meowing or sound effects. No crying, whisper-only delivery or cartoon squeaks. Sound relieved, grateful and gently joyful, with a radiant smile.",
+  "generatedAt": "2026-09-30T15:28:57.749Z",
+  "bytes": 98688
+}

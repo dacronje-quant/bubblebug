@@ -1,0 +1,13 @@
+{
+  "model": "gpt-4o-mini-tts",
+  "id": "story_replay_choice",
+  "speaker": "narrator",
+  "trigger": "Sad-cloud replay confirmation opens",
+  "text": "Play again as Rainbow? Our friends will need help again. You keep your skills and outfits!",
+  "label": "Choose a new Rainbow adventure",
+  "voice": "marin",
+  "direction": "Warm, loving female storybook narrator with a gentle British accent, speaking to a four-year-old. Tender, reassuring and softly delighted. Natural medium pitch, clear English, concise natural pace with small expressive pauses. Keep the same narrator character in every story line. Speak only the supplied sentence; no introductions, extra words, music, meowing or sound effects. Pause after the opening question, and explain the choice patiently.",
+  "instructions": "Warm, loving female storybook narrator with a gentle British accent, speaking to a four-year-old. Tender, reassuring and softly delighted. Natural medium pitch, clear English, concise natural pace with small expressive pauses. Keep the same narrator character in every story line. Speak only the supplied sentence; no introductions, extra words, music, meowing or sound effects. Pause after the opening question, and explain the choice patiently.",
+  "generatedAt": "2026-09-30T15:28:59.459Z",
+  "bytes": 102528
+}

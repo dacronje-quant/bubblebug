@@ -1,0 +1,14 @@
+# Preserve earlier auditions locally; ship only the approved recordings.
+*.zip
+review-*.png
+review-pack*/
+expanded-voice-audit.*
+local-auditions.jsonl
+select-original-babies.cjs
+build-plan.cjs
+generate-sample.mjs
+samples/mini-tts-*
+samples/family/*.mp3
+samples/family/*.json
+!samples/family/*-family-v2.mp3
+!samples/family/*-family-v2.json

@@ -17,6 +17,7 @@
 
     // go('play', opts) — fade through a soft lilac; pause/resume are instant
     go(name, opts) {
+      BB.Voice.stop();
       if (name === 'pause') { this.set('pause'); return; }
       if (name === 'play-resume') { this.scene = BB.Play; this.name = 'play'; BB.Input.clearAll(); return; }
       this.next = { name, opts };
@@ -24,6 +25,7 @@
     },
 
     set(name, opts) {
+      BB.Voice.stop();
       this.name = name;
       this.scene = SCENES[name];
       this.scene.enter(opts || {});

@@ -1,0 +1,12 @@
+{
+  "model": "gpt-4o-mini-tts",
+  "id": "bigSisterCocoa",
+  "auditionId": "bigSisterCocoa-family-v2",
+  "label": "Marshmallow's Big Sister — Cocoa",
+  "voice": "coral",
+  "text": "Ta-da! I'm Cocoa, Marshmallow's big sister! You found me! Let's play!",
+  "direction": "A youthful older sister with a bright female voice and a light British accent. Friendly, mischievous and lively, with a smile. Naturally youthful without squeaking, shouting or baby talk.",
+  "instructions": "A youthful older sister with a bright female voice and a light British accent. Friendly, mischievous and lively, with a smile. Naturally youthful without squeaking, shouting or baby talk. Speak only the supplied dialogue in clear English to a four-year-old. This is a lovable fictional kitten in a gentle storybook game. Keep the delivery concise and natural, with small expressive pauses. No additional words, introductions, music, meowing, sound effects or exaggerated baby talk.",
+  "generatedAt": "2026-09-30T15:16:31.118Z",
+  "bytes": 109056
+}

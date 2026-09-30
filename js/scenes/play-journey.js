@@ -177,11 +177,16 @@
     },
     openJourneyChoice(kind) {
       if (!unlocked(this.save, kind)) return false;
+      BB.Voice.stop();
       this.portalChoice = { kind, t: 0, focus: kind === 'cloud' ? 1 : 0 };
       this.pl.state = 'homechoice'; this.pl.body.vx = 0; this.journeyHold = 0;
-      BB.Input.takePointers(); S().select(); return true;
+      BB.Input.takePointers(); S().select();
+      if (kind === 'cloud') this.sayStory('story_replay_choice');
+      else if (!this.save.mazeSolved) this.sayStory('story_rainbow_call');
+      return true;
     },
     closeJourneyChoice() {
+      BB.Voice.stop();
       const w = this.portalChoice;
       this.journeyLock = w && w.kind; this.journeyHold = 0;
       this.portalChoice = null; this.pl.state = 'play'; this.pl.idleT = 0;

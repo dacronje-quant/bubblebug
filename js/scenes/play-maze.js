@@ -65,6 +65,7 @@
   Object.assign(BB.Play, {
     openMaze() {
       if (!available(this.save)) return false;
+      BB.Voice.stop();
       const pos = this.save.mazePosition;
       const at = pos && (walkable(pos.x, pos.y) || this.save.mazeSolved && atRescueExit(pos.x, pos.y)) ? pos : START;
       this.maze = { x: at.x, y: at.y, t: 0, moving: null, facing: -1, choice: false, sel: 0, rewardLock: !!this.save.mazeSolved && atRescueExit(at.x, at.y),
@@ -82,6 +83,7 @@
       return true;
     },
     closeMaze(atRescue = false) {
+      BB.Voice.stop();
       this.maze = null; this.save.mazePosition = null;
       document.body.classList.remove('in-maze');
       const back = this.save.mazeReturn, fallback = BB.RainbowJourney.spot('rainbow');
@@ -114,10 +116,12 @@
       this.save.mazePosition = { x: m.x, y: m.y };
       if (!atRescueExit(m.x, m.y) && (m.x !== PRIZE.x || m.y !== PRIZE.y)) m.rewardLock = false;
       else if (m.x === PRIZE.x && m.y === PRIZE.y && ready(this.save) && !m.rewardLock) {
+        const firstRescue = !this.save.mazeSolved;
         changed = !this.save.mazeSolved || changed;
         this.save.mazeSolved = true; this.save.rainbowUnlocked = true; this.save.gates.nm = 1;
         m.choice = true; m.choiceT = 0; m.rewardLock = true;
         m.sel = Math.max(0, CATS.indexOf(this.save.cat)); S().party();
+        if (firstRescue) this.sayStory('story_rainbow_rescue', 350);
       }
       if (changed) BB.Economy.milestones(this.save);
       BB.Save.write();

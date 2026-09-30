@@ -19,4 +19,16 @@ The title picker has three modes: **Easy** adds jumping and landing help; **Medi
 
 The additions have automated checks for saves, every star threshold, real scene inputs, physical routes, puzzles, difficulty and all 65 roaming residents. `node tools/test-maze.js` checks every maze corridor and exit, twelve-cat access, kitten choices and reloads. `node tools/test-rainbow-garden.js` checks the physical indoor lock in all difficulties, the lantern sequence, rescue exit, garden bloom and older active maze/checkpoint compatibility; pass an output folder to render its scenes. `node tools/test-journey.js` finds all three glasses and repeats the rescue/cloud/replay loop three times. `node tools/test-garden.js` repeats every garden game, measures calm movement/facing and safe floors, checks individual switches, the removed All action and reload, and verifies later rescues join without another payment. `node tools/test-critters.js` (with @napi-rs/canvas) renders all 39 species through real updates, checking animation, greetings, landings, moods, distinct art and unchanged entities/saves. Adventure critters keep their original movement and hitboxes; garden visitors roam and play more gently. The world verifier's `--replay` mode proves a fresh world with carried skills, every boss/puzzle gate closed and all collectibles reachable, using both original and Easy movement. Chromium checks cover keyboard/mouse input, every wardrobe category/page, individual garden switches, a complete lantern maze rescue and its exit, reloading, preview save protection and emulated tablet touch. `node tools/test-menu-feedback.js` checks safe menu hover and the gesture inputs; pass an output folder with @napi-rs/canvas available to inspect menu paws, an exact half star bar, visible doorway/wardrobe/garden/pond/lift waits and heart-locked critter sliders. Canvas scenes are rendered for inspection. A physical gamepad/tablet playtest remains useful for judging feel and touch comfort.
 
-Family wishes, house decorating and jukebox tunes remain deferred. No recovery benches or voice lines were added.
+Family wishes, house decorating and jukebox tunes remain deferred. No recovery benches were added. The approved story voice pack is covered below.
+
+## Approved story voices
+
+The game bundles twenty recordings: eight story moments and twelve family greetings. Snowflake and Patches use the original baby WAVs unchanged; the new babbling takes are not selected. No API key or network speech service is needed to play.
+
+- Start a new adventure: hear the mission once when the kitten wakes.
+- Find each family cat: hear its greeting. The twelfth greeting finishes before the whole-family announcement.
+- Rescue a boss, return for the first homecoming, approach Rainbow's door, rescue her, and open the sad-cloud replay choice: hear the matching story moments without menu or wardrobe narration.
+- Mute or pause during a line or its short delay: playback and queued lines stop. Walk between rooms or open a menu to check the same cancellation.
+- Replay as Rainbow three times: the new-adventure story line works each time, while skills and outfits stay unlocked. Reload a save to confirm story milestones do not repeat.
+
+Run `node tools/test-voice.js` for queue/cancellation/save checks. `node tools/test-voice-browser.js` verifies all twenty bundled files decode and tests real playback, mute and pause in Playwright. Use the same optional browser and dependency settings as `tools/test-browser.js`.

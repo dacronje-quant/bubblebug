@@ -127,7 +127,6 @@
       this.later(170, () => {
         this.outfitCard = { id: a.id, t: 0 };
         S().outfit();
-        BB.Voice.say('You got a ' + a.name + '!');
       });
     },
 
@@ -169,6 +168,7 @@
     },
 
     openWardrobe() {
+      BB.Voice.stop();
       BB.Economy.milestones(this.save);
       this.wardrobe = { sel: 0, tab: 0, focus: 'items', t: 0, wiggle: 0 };
       const list = this.wardrobeItems(), wear = this.save.wear || {};

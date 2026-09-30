@@ -24,9 +24,6 @@
   const S = () => BB.Audio.sfx;
   const Cam = () => BB.Camera;
   const FX = BB.FX;
-  // what the friendly voice calls things
-  const TOY_NAMES = { yarn: 'yarn ball', feather: 'feather wand', bell: 'jingle bell', mouse: 'toy mouse', boat: 'paper boat', star: 'star cushion', shell: 'seashell', bucket: 'sand bucket', mitten: 'mitten', kite: 'kite', duck: 'rubber duck', rocket: 'toy rocket' };
-  const BOSS_NAMES = { goose: 'goose', toad: 'toad', armadillo: 'armadillo', queenbee: 'queen bee', elephant: 'elephant', king: 'Cloud King', octopus: 'octopus', camel: 'camel', walrus: 'walrus', moose: 'moose', panda: 'panda', moonbunny: 'Moon Rabbit' };
   const NO_INPUT = { left: false, right: false, jump: false, jumpPressed: false, bubblePressed: false };
 
   const P = BB.Play = {
@@ -196,6 +193,7 @@
     // ──── Going through a door, a cat flap, the lift or the slide ────
     travel(dest, kind, from) {
       if (!dest || this.traveling) return;
+      BB.Voice.stop();
       // used once: its arrows and "stand here" rings can go now
       const key = from && BB.Links.linkKey(from);
       if (key) { this.save.used = this.save.used || {}; this.save.used[key] = 1; }
@@ -242,6 +240,14 @@
     },
 
     // ──── A new adventure: waking up alone in the Cat House ────
+    sayStory(id, delay = 0) {
+      const heard = this.save.voiceStory = this.save.voiceStory || {};
+      if (heard[id]) return false;
+      heard[id] = 1;
+      BB.Voice.play(id, delay);
+      BB.Save.write();
+      return true;
+    },
     startIntro() {
       const pl = this.pl, b = pl.body, h = this.room;
       const bed = h.things.find(t => t.ch === 'B');
@@ -254,7 +260,7 @@
       it.t++;
       if (it.t === 70 && pl.state === 'bench') {
         pl.state = 'play'; pl.idleT = 0; pl.squash = 1.2; BB.Gestures.start(pl, 'stretch'); S().meow(pl.cat);
-        BB.Voice.say("Little kitten, let's find all our family and bring everyone home!");
+        this.sayStory(this.save.replayCount ? 'story_replay_start' : 'story_welcome');
       }
       if (it.t > 70 && pl.state === 'play') pl.idleT = 0; // (awake now: no dozing back off on the bed)
       if (it.t > 260 || (it.t > 70 && pl.state === 'play' && (BB.Input.held.left || BB.Input.held.right || BB.Input.held.jump))) {
@@ -490,6 +496,7 @@
     },
 
     bossHappy(b) {
+      if (this.save.bosses[b.room]) return;
       this.save.bosses[b.room] = 1;
       // the way home opens here, and so does the Cat House door to the next zone
       const z = W().byId[b.room].zone;
@@ -500,7 +507,7 @@
       this.heal(C.MOOD_MAX);
       S().bossHappy();
       this.later(40, () => S().bossFriend(b.kind));
-      BB.Voice.say('Hooray! The ' + (BOSS_NAMES[b.kind] || 'friend') + ' is happy!', 700);
+      BB.Voice.play('story_big_friend', 700);
       this.giveOutfit(b.kind);
       BB.Audio.duck(0.3, 4);
       this.later(200, () => { if (this.bossMusic) { BB.Music.play(BB.ZONES[this.room.zone].key); this.bossMusic = false; } });
@@ -509,6 +516,7 @@
     },
 
     leaveRoom(room) {
+      BB.Voice.stop();
       if (!room) return;
       if (room.def.home && this.party) { this.party = null; this.partyStarted = false; }
       for (const bs of this.ents[room.id].bosses) BB.Bosses.reset(bs);
@@ -578,7 +586,6 @@
           self.save.toys[th.toy] = 1;
           S().toy();
           setTimeout(() => S().toySound(th.toy), 450);
-          BB.Voice.say('A ' + (TOY_NAMES[th.toy] || 'toy') + '!', 700);
           self.pl.happyT = 90;
           PT().burst('confetti', th.x, th.y, 30, { speed: 4, g: 0.08, life: 70 });
           PT().burst('spark', th.x, th.y, 16, { color: '#ffffff', speed: 3, life: 40 });
@@ -632,14 +639,15 @@
           BB.Save.write();
         },
         onFamily(th) {
+          if (self.save.family[th.fam]) return;
           self.save.family[th.fam] = 1;
           self.pl.happyT = 120;
           self.heal(C.MOOD_MAX, th.x, th.y - 30);
           S().familyFound();
           S().meow(self.pl.cat);
           setTimeout(() => S().meow(th.fam), 350);
-          const m = BB.CATS[th.fam];
-          BB.Voice.say('You found ' + (m ? m.name : 'family') + '!', 600);
+          BB.Voice.play('cat_' + th.fam, 600);
+          if (BB.GardenMaze.available(self.save)) self.sayStory('story_family_complete');
           for (let i = 0; i < 14; i++) PT().heart(th.x + (Math.random() - 0.5) * 50, th.y - 20 - Math.random() * 30);
           PT().burst('confetti', th.x, th.y - 30, 24, { speed: 3.5, g: 0.08, life: 70 });
           BB.Save.write();
@@ -694,6 +702,7 @@
     // kitten (grannies sway, babies bounce). Friends float in on little
     // clouds and the bosses you cheered up wave from the landing upstairs.
     startParty() {
+      this.sayStory('story_homecoming', 600);
       const h = this.room, b = this.pl.body;
       this.partyStarted = true;
       this.save.finale = true;
@@ -970,6 +979,7 @@
 
     // the see-through map floats over the game while you keep playing
     toggleMap() {
+      BB.Voice.stop();
       this.mapOn = !this.mapOn;
       BB.Audio.sfx.select();
       const btn = document.getElementById('map-btn');

@@ -2,14 +2,15 @@
 //  VOICE — a friendly spoken line for the big moments, so little players
 //  who can't read yet still hear what happened: "You found Phoebe's Mama!",
 //  "A jingle bell!", "Hooray! The goose is happy!".
-//  Uses the device's own speech voice (no files, works offline on most
-//  tablets and computers); stays quiet when the sound is off, and simply
-//  does nothing where speech isn't available.
+//  Plays the approved local recordings, with device speech as a fallback.
+//  Lines queue without overlapping and stop on mute or scene changes.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
   const synth = typeof window !== 'undefined' && window.speechSynthesis;
   let voice = null, picked = false;
+  let current = null, timer = null, generation = 0, ducked = false;
+  const queue = [];
 
   // the most natural-sounding English voice the device has: the newer
   // "natural" / "neural" / "enhanced" voices sound far less robotic than
@@ -34,22 +35,80 @@
   }
   if (synth && 'onvoiceschanged' in synth) synth.onvoiceschanged = () => { voice = pick(); };
 
+  const muted = () => BB.Audio && BB.Audio.muted;
+  function duck(seconds) {
+    if (BB.Audio) { BB.Audio.duck(0.32, seconds + 0.3); ducked = true; }
+  }
+  function restore() {
+    if (ducked && BB.Audio) BB.Audio.duck(1, 0);
+    ducked = false;
+  }
+  function detach(job) {
+    if (job.audio) {
+      job.audio.onended = job.audio.onerror = job.audio.onplaying = null;
+      try { job.audio.pause(); } catch (e) { /* optional audio */ }
+    }
+    if (job.utterance) job.utterance.onend = job.utterance.onerror = null;
+  }
+  function finish(job) {
+    if (current !== job) return;
+    detach(job); current = null; restore(); pump();
+  }
+  function fallback(job) {
+    if (current !== job || job.generation !== generation || job.fallback) return;
+    job.fallback = true; detach(job);
+    if (!synth || muted() || job.clip.source === 'original-game') { finish(job); return; }
+    try {
+      if (!picked) voice = pick();
+      const u = job.utterance = new SpeechSynthesisUtterance(job.clip.text);
+      if (voice) u.voice = voice;
+      u.lang = voice ? voice.lang : 'en-GB'; u.rate = 0.95; u.pitch = 1.05; u.volume = 1;
+      u.onend = u.onerror = () => finish(job);
+      duck(Math.max(3, job.clip.text.length / 13)); synth.speak(u);
+    } catch (e) { finish(job); }
+  }
+  function pump() {
+    if (current || !queue.length) return;
+    if (muted()) { BB.Voice.stop(); return; }
+    const job = current = queue.shift();
+    const start = () => {
+      timer = null;
+      if (current !== job || job.generation !== generation || muted()) return;
+      if (!job.clip.file || typeof window.Audio !== 'function') { fallback(job); return; }
+      try {
+        const a = job.audio = new window.Audio(job.clip.file);
+        a.preload = 'auto'; a.volume = 0.95;
+        a.onended = () => finish(job);
+        a.onerror = () => fallback(job);
+        a.onplaying = () => { if (current === job) duck(Number.isFinite(a.duration) ? a.duration : 8); };
+        const playing = a.play();
+        if (playing && playing.catch) playing.catch(error => {
+          if (current !== job || job.generation !== generation) return;
+          // A browser gesture restriction applies to speech too. Never
+          // keep a blocked welcome queued until a much later interaction.
+          if (error.name === 'NotAllowedError') finish(job); else fallback(job);
+        });
+      } catch (e) { fallback(job); }
+    };
+    if (job.delay) timer = setTimeout(start, job.delay); else start();
+  }
+  function enqueue(id, clip, delay) {
+    if (!clip || !clip.text || muted() || (!synth && typeof window.Audio !== 'function')) return false;
+    queue.push({ id, clip, delay: Math.max(0, delay || 0), generation }); pump(); return true;
+  }
   BB.Voice = {
-    say(text, delay = 0) {
-      if (!synth || !text || (BB.Audio && BB.Audio.muted)) return;
-      const go = () => {
-        try {
-          if (!picked) voice = pick();
-          synth.cancel();
-          const u = new SpeechSynthesisUtterance(text);
-          if (voice) u.voice = voice;
-          u.lang = voice ? voice.lang : 'en-GB';
-          u.rate = 0.95; u.pitch = 1.05; u.volume = 1; // (a raised pitch is what sounds most robotic)
-          synth.speak(u);
-        } catch (e) { /* speech is a bonus, never a crash */ }
-      };
-      if (delay) setTimeout(go, delay); else go();
+    play(id, delay = 0) { return enqueue(id, BB.VOICE_CLIPS[id], delay); },
+    say(text, delay = 0) { return enqueue(null, { text }, delay); },
+    get currentId() { return current && current.id; },
+    get queuedIds() { return queue.map(job => job.id); },
+    stop() {
+      generation++; queue.length = 0;
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+      if (current) detach(current);
+      current = null;
+      try { if (synth) synth.cancel(); } catch (e) { /* optional speech */ }
+      restore();
     },
-    stop() { try { if (synth) synth.cancel(); } catch (e) { /* ignore */ } },
   };
 })(window.BB);

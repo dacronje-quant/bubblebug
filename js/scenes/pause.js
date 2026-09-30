@@ -74,6 +74,7 @@
         }
         c.restore();
       }
+      G().text('AI-generated story voices', G().W / 2, G().H - 24, 12, '#e2d6ec', null, 'center', c);
     },
 
     // browsing the kingdom map
