@@ -10,6 +10,7 @@
     { id: 'trail-classic', name: 'Classic trail', slot: 'trail', value: 'classic', stars: 0 },
     { id: 'trail-rainbow', name: 'Rainbow trail', slot: 'trail', value: 'rainbow', stars: 250 },
     { id: 'trail-paw', name: 'Tiny paw trail', slot: 'trail', value: 'paw', stars: 60 },
+    { id: 'trail-heart', name: 'Heart trail', slot: 'trail', value: 'heart', unlock: { kind: 'bosses', count: 3 } },
   ];
   const COLORS = ['#ff8fb8', '#ffe066', '#8fe388', '#7cc8ff', '#b99cff'];
   function flower(c, x, y, r, color) {
@@ -31,6 +32,11 @@
   function icon(c, item, x, y, s, t) {
     if (item.slot === 'bubble') bubble(c, item.value, x, y, 14 * s, '#d8b8ff', 1, t);
     else if (item.value === 'paw') BB.Gestures.drawPaw(c, x, y, 1.2 * s, '#ff9ec7', '#b85b86');
+    else if (item.value === 'heart') {
+      [[-10, 6, 5], [0, 0, 7], [11, -8, 4]].forEach(([dx, dy, r]) => {
+        c.fillStyle = '#ff8fb8'; BB.G.heart(x + dx * s, y + dy * s, r * s, c); c.fill();
+      });
+    }
     else if (item.value === 'rainbow') {
       c.save(); c.lineWidth = 4 * s; c.lineCap = 'round';
       COLORS.forEach((col, i) => { c.strokeStyle = col; c.beginPath(); c.arc(x, y + 11 * s, (20 - i * 4) * s, Math.PI, Math.PI * 2); c.stroke(); }); c.restore();
@@ -40,6 +46,7 @@
     const style = save.cosmetics.trail;
     if (style === 'rainbow') BB.Particles.trail('dot', x, y, COLORS[Math.floor(t / 6) % COLORS.length]);
     if (style === 'paw') BB.Particles.trail('paw', x, y, '#ff9ec7');
+    if (style === 'heart') BB.Particles.trail('heart', x, y, '#ff8fb8');
   }
   BB.Cosmetics = { LIST, COLORS, bubble, icon, trail, flower };
 })(window.BB);

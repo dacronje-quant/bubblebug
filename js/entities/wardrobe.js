@@ -38,12 +38,97 @@
     { id: 'googly', name: 'Googly glasses', slot: 'face', discover: 'Ladybug Hill' },
     { id: 'disguise', name: 'Silly disguise', slot: 'face', discover: 'the hidden crystal grotto' },
     { id: 'starshades', name: 'Star shades', slot: 'face', discover: 'the coral garden' },
+    { id: 'heartshades', name: 'Heart glasses', slot: 'face', stars: 300 },
+    { id: 'flowerframes', name: 'Flower glasses', slot: 'face', unlock: { kind: 'buds', count: 4 } },
+    { id: 'moonframes', name: 'Moon glasses', slot: 'face', unlock: { kind: 'family', count: 4 } },
+    { id: 'aviators', name: 'Explorer goggles', slot: 'face', unlock: { kind: 'friends', count: 16 } },
+    { id: 'bowtie', name: 'Bow tie', slot: 'neck', unlock: { kind: 'toys', count: 3 } },
+    { id: 'pearls', name: 'Pearl necklace', slot: 'neck', unlock: { kind: 'songs', count: 2 } },
+    { id: 'leafcollar', name: 'Leaf collar', slot: 'neck', unlock: { kind: 'gestures', count: 3 } },
+    { id: 'rainbowcollar', name: 'Rainbow necklace', slot: 'neck', unlock: { kind: 'rainbow', count: 1 } },
   ];
   const BY = Object.fromEntries(LIST.map(a => [a.id, a]));
   const BY_BOSS = Object.fromEntries(LIST.filter(a => a.boss).map(a => [a.boss, a]));
 
   // ──── Drawing each thing (head space) ────
   const ART = {
+    heartshades(c) {
+      c.strokeStyle = '#cd648e'; c.lineWidth = 1.3;
+      c.beginPath(); c.moveTo(-11, -2); c.lineTo(12, -2); c.stroke();
+      for (const x of [-4.8, 5.8]) {
+        c.fillStyle = '#ffb6d6'; G().heart(x, -1, 5.4, c); c.fill(); c.stroke();
+        c.strokeStyle = '#fff7fc'; c.lineWidth = 0.8;
+        c.beginPath(); c.moveTo(x - 2.3, -3.5); c.lineTo(x - 0.7, -4); c.stroke();
+        c.strokeStyle = '#cd648e'; c.lineWidth = 1.3;
+      }
+    },
+    flowerframes(c) {
+      c.strokeStyle = '#79b997'; c.lineWidth = 1.3;
+      c.beginPath(); c.moveTo(-11, -2); c.lineTo(12, -2); c.stroke();
+      for (const [x, col] of [[-5, '#ff9fc8'], [6, '#b9a3ef']]) {
+        flower(c, x, -1, col, 1.3);
+        c.fillStyle = 'rgba(235,252,255,0.78)'; c.strokeStyle = '#dbbc56'; c.lineWidth = 0.8;
+        G().circle(x, -1, 3, c); c.fill(); c.stroke();
+        c.strokeStyle = '#79b997'; c.lineWidth = 1.3;
+      }
+    },
+    moonframes(c) {
+      c.strokeStyle = '#7f80ba'; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(-11, -2); c.lineTo(12, -2); c.stroke();
+      for (const x of [-5, 6]) {
+        c.fillStyle = 'rgba(198,217,255,0.6)'; G().circle(x, -1, 4.8, c); c.fill(); c.stroke();
+        c.fillStyle = '#ffe99b';
+        c.beginPath(); c.arc(x, -1, 4.6, -Math.PI / 2, Math.PI / 2);
+        c.quadraticCurveTo(x + 1.2, -1, x, -5.6); c.closePath(); c.fill();
+        c.fillStyle = '#ffffff'; G().twinkle(x - 1.2, -2.2, 1.1, c); c.fill();
+      }
+    },
+    aviators(c) {
+      c.strokeStyle = '#ae7048'; c.lineWidth = 2.7;
+      c.beginPath(); c.moveTo(-11, -1); c.lineTo(12, -1); c.stroke();
+      for (const x of [-5, 6]) {
+        c.fillStyle = '#ca9b64'; c.strokeStyle = '#936039'; c.lineWidth = 0.8;
+        G().ellipse(x, -1, 5.4, 4.8, 0, c); c.fill(); c.stroke();
+        c.fillStyle = 'rgba(165,222,236,0.8)'; G().ellipse(x, -1, 3.9, 3.4, 0, c); c.fill();
+        c.strokeStyle = '#effdff'; c.lineWidth = 0.9;
+        c.beginPath(); c.moveTo(x - 2, -1); c.lineTo(x + 0.5, -3); c.stroke();
+      }
+    },
+    bowtie(c) {
+      c.fillStyle = '#777cc9'; G().rrect(-8, 6, 19, 4, 2, c); c.fill();
+      c.fillStyle = '#a6adf5'; c.strokeStyle = '#6c72ba'; c.lineWidth = 0.7;
+      for (const d of [-1, 1]) {
+        c.beginPath(); c.moveTo(2, 9); c.lineTo(2 + d * 7, 5); c.quadraticCurveTo(2 + d * 9, 10, 2 + d * 7, 14); c.closePath(); c.fill(); c.stroke();
+      }
+      c.fillStyle = '#fff2bc'; G().circle(2, 9, 2.1, c); c.fill();
+    },
+    pearls(c) {
+      c.strokeStyle = '#b7a4bf'; c.lineWidth = 0.6;
+      for (let i = 0; i < 7; i++) {
+        const x = -7 + i * 3, y = 7 + Math.sin(i / 6 * Math.PI) * 3;
+        c.fillStyle = '#fff5f2'; G().circle(x, y, 2.2, c); c.fill(); c.stroke();
+        c.fillStyle = '#ffffff'; G().circle(x - 0.6, y - 0.7, 0.7, c); c.fill();
+      }
+      c.fillStyle = '#87d0de'; G().ellipse(2, 15, 2.5, 3.1, 0, c); c.fill(); c.stroke();
+    },
+    leafcollar(c) {
+      c.strokeStyle = '#528b67'; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(-8, 7); c.quadraticCurveTo(0, 13, 11, 7); c.stroke();
+      for (let i = 0; i < 6; i++) {
+        c.fillStyle = i % 2 ? '#98d39b' : '#69b78b';
+        G().ellipse(-7 + i * 3.5, 8 + Math.sin(i / 5 * Math.PI) * 3, 2.4, 4, (i - 2.5) * 0.32, c); c.fill();
+      }
+      flower(c, 2, 12, '#ffe8a3', 0.65);
+    },
+    rainbowcollar(c, t) {
+      c.save(); G().rrect(-8, 6, 19, 4, 2, c); c.clip();
+      BB.Cosmetics.COLORS.forEach((col, i) => { c.fillStyle = col; c.fillRect(-8 + i * 3.8, 6, 3.8, 4); });
+      c.restore();
+      c.strokeStyle = '#bfa266'; c.lineWidth = 0.6;
+      c.beginPath(); c.moveTo(2, 10); c.lineTo(2, 12); c.stroke();
+      c.fillStyle = '#ffe6a1'; G().star(2, 14, 4, 5, 0.5, -Math.PI / 2, c); c.fill(); c.stroke();
+      c.fillStyle = '#ffffff'; G().twinkle(2.4, 13, 1 + Math.sin(t * 0.06) * 0.15, c); c.fill();
+    },
     googly(c, t) {
       c.strokeStyle = '#8b69b3'; c.lineWidth = 1.2;
       c.beginPath(); c.moveTo(-10, -2); c.lineTo(11, -2); c.stroke();
@@ -276,6 +361,9 @@
     pirate: [-14, -16, 15, -5], chef: [-13, -25, 15, -4], sparkly: [-8, 5, 11, 11],
     jingle: [-8, 5, 11, 17], scuba: [-15, -35, 12, 11], googly: [-11, -7, 12, 5],
     disguise: [-11, -9, 12, 10], starshades: [-11, -8, 12, 6],
+    heartshades: [-12, -7, 13, 6], flowerframes: [-11, -7, 12, 5], moonframes: [-11, -7, 12, 5],
+    aviators: [-12, -7, 13, 5], bowtie: [-9, 4, 12, 15], pearls: [-10, 4, 14, 19],
+    leafcollar: [-10, 3, 14, 16], rainbowcollar: [-9, 5, 12, 19],
   };
   function framedIcon(c, id, x, y, size, t) {
     const bounds = BOUNDS[id];

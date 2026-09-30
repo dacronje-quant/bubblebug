@@ -12,7 +12,7 @@
 //          door to go back to that zone's flap. Door 0 is a physical front
 //          door: walk through it into the garden without a teleport.
 //   u / v  the Rainbow Lift: from the bottom of Cloud Castles up to the
-//          beach of the Sky Lagoon, and back. Walk in and whoosh!
+//          beach of the Sky Lagoon, and back. Stand still, then whoosh!
 //   F      (in things.js) the Rainbow Slide at the top of Starlight Sky,
 //          which slides you home through the skylight for the party.
 //
@@ -28,7 +28,7 @@
   const W = () => BB.World;
   const PT = () => BB.Particles;
   const S = () => BB.Audio.sfx;
-  const HOLD = 36; // ticks standing still in a doorway
+  const HOLD = C.INTERACT_HOLD;
 
   const home = () => W().rooms.find(r => r.def.home);
   function floorBelow(tx, ty) {
@@ -75,7 +75,7 @@
   function create(thing, room, save) {
     const s = spot(thing.tx, thing.ty);
     if (thing.ch === 'h') return { type: 'flap', link: true, zone: room.zone, idx: Math.max(0, flapIndex(room.zone, thing)), room: room.id, bossRoom: room.def.arena ? room.id : null, x: s.x, y: s.y, t: 0, hold: 0 };
-    if (thing.ch === 'u' || thing.ch === 'v') return { type: 'lift', link: true, end: thing.ch, zone: room.zone, room: room.id, x: s.x, y: s.y, t: 0 };
+    if (thing.ch === 'u' || thing.ch === 'v') return { type: 'lift', link: true, end: thing.ch, zone: room.zone, room: room.id, x: s.x, y: s.y, t: 0, hold: 0 };
     return null;
   }
   // the door hall's doors live in the Cat House room definition
@@ -106,7 +106,7 @@
       if (th.opened > 0) th.opened--;
       if (near < 90 && ((save.doors || {})[th.zone] || 0) < th.idx + 1) ctx.onFlapFound(th);
       const still = standingIn(th, pl, 18) && Math.abs(b.vx) < 0.3 && !locked;
-      th.hold = still ? th.hold + 1 : Math.max(0, th.hold - 3);
+      th.hold = still ? th.hold + 1 : 0;
       if (th.hold >= HOLD) { th.hold = 0; ctx.travel(doorSpot(th.zone), 'home', th); }
     } else if (th.type === 'door') {
       // The front door is a physical opening into the Front Garden.
@@ -114,10 +114,13 @@
       if (th.walkOut) { th.hold = 0; return; }
       const ok = unlocked(th, save);
       const still = ok && standingIn(th, pl, 18) && Math.abs(b.vx) < 0.3 && !locked;
-      th.hold = still ? th.hold + 1 : Math.max(0, th.hold - 3);
+      th.hold = still ? th.hold + 1 : 0;
       if (th.hold >= HOLD) { th.hold = 0; ctx.travel(flapSpot(th.zone, doorFlap(th.zone, save)), th.front ? 'out' : 'door', th); }
     } else if (th.type === 'lift') {
-      if (!locked && standingIn(th, pl, 22)) {
+      const still = !locked && standingIn(th, pl, 22) && Math.abs(b.vx) < 0.3;
+      th.hold = still ? th.hold + 1 : 0;
+      if (th.hold >= HOLD) {
+        th.hold = 0;
         const other = liftTile(th.end === 'u' ? 'v' : 'u');
         if (other) ctx.travel(spot(other.tx, other.ty), th.end === 'u' ? 'liftUp' : 'liftDown', th);
       }
@@ -401,7 +404,8 @@
         G().twinkle(x + Math.sin(i * 2 + t * 0.05) * 10, y - k * tall, 3, c); c.fill();
       }
       // which way it goes: up from the clouds, down from the lagoon
-      if (!used(th, save)) {
+      if (th.hold > 0) holdRing(c, x, y - 60, th.hold / HOLD);
+      else if (!used(th, save)) {
         arrow(c, x, y - 150, t, '#ffffff', th.end === 'u');
         if (kittenNear(th, ctx, 90)) hintRing(c, x, y - 60, t);
       }

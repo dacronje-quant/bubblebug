@@ -10,6 +10,8 @@
     VIEW_W: 960,            // logical view (16:9)
     VIEW_H: 540,
     STEP: 1000 / 60,        // fixed simulation step (ms)
+    INTERACT_HOLD: 90,      // 1.5 seconds standing still at doors / home activities
+    MAZE_EXIT_HOLD: 180,    // 3 seconds; moving away cancels leaving the maze
 
     // ── Kitten body ──
     PW: 20,                 // collision width

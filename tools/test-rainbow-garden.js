@@ -62,7 +62,8 @@ function check() {
   walkMaze(g, M.PRIZE); assert.equal(save.mazeSolved, true); assert.equal(B.Play.maze.bloom, 0);
   tick(140); assert.equal(B.Play.maze.bloom, 1);
   B.Play.maze.sel = 2; tick(1, ['Enter']); tick(); assert.equal(save.cat, 'rainbow');
-  tick(1, ['ArrowLeft']); tick(); assert.equal(B.Play.maze, null); assert.equal(B.Play.room.id, 'nm');
+  tick(1, ['ArrowLeft']); tick(); assert.ok(B.Play.maze);
+  tick(M.EXIT_HOLD - 2); assert.equal(B.Play.maze, null); assert.equal(B.Play.room.id, 'nm');
   const door = B.RainbowJourney.spot('rainbow');
   assert.ok(Math.abs(B.Play.pl.body.x + 10 - door.x) < 1); assert.equal(B.Play.save.inMaze, false);
   assert.equal(B.Play.journeyLock, 'rainbow');

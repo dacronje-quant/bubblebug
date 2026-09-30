@@ -17,7 +17,7 @@ function checks(g) {
   const stars = JSON.stringify(save.sparkles), hearts = JSON.stringify(save.friends);
 
   // The mirror opens through its actual paw ring; entry never spends.
-  place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(50);
+  place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(B.Links.HOLD + 15);
   assert.ok(B.Play.wardrobe); assert.equal(save.starsSpent, 0);
   tick(45, ['KeyX']); assert.equal(save.starsSpent, 0); assert.equal(save.wear.head, 'partyhat');
   tick(); tick(1, ['KeyX']); assert.equal(save.starsSpent, 0); assert.equal(save.wear.head, null);
@@ -57,7 +57,7 @@ function checks(g) {
 
   // Invitations require an earned species and one heart, exactly once.
   const visitorCount = () => B.World.rooms.flatMap(r => B.Play.ents[r.id].bugs).filter(b => save.friends[b.key] && save.residents[b.kind] && !save.hiddenResidents[b.kind]).length;
-  place('ng', 16, 31); tick(50); assert.equal(B.Play.gardenChoice.kind, 'friends');
+  place('ng', 16, 31); tick(B.Links.HOLD + 15); assert.equal(B.Play.gardenChoice.kind, 'friends');
   assert.equal(save.heartsSpent, 0); assert.equal(B.Play.homeVisitors.length, 0);
   tick(50, ['KeyX']); assert.equal(save.heartsSpent, 1); assert.equal(B.Play.homeVisitors.length, visitorCount());
   tick(); tick(1, ['KeyX']); assert.equal(save.heartsSpent, 1); tick();
@@ -72,18 +72,18 @@ function checks(g) {
 
   // A held button is one toss. The first costs one heart; repeats are free,
   // visible in the world, and never reopen a choice until you step away.
-  place('hm', 24, 32); tick(50); assert.equal(B.Play.gardenChoice.kind, 'fountain');
+  place('hm', 24, 32); tick(B.Links.HOLD + 15); assert.equal(B.Play.gardenChoice.kind, 'fountain');
   assert.equal(save.heartsSpent, 2); tick(240, ['KeyX']);
   assert.equal(save.heartsSpent, 3); assert.equal(save.fountainUses, 1); assert.equal(save.gestures.twirl, 1);
   assert.equal(B.Play.gardenChoice, null);
   for (let i = 0; i < 5; i++) {
-    place('hm', 21, 32); tick(); place('hm', 24, 32); tick(50); assert.ok(B.Play.gardenChoice);
+    place('hm', 21, 32); tick(); place('hm', 24, 32); tick(B.Links.HOLD + 15); assert.ok(B.Play.gardenChoice);
     tick(130, ['KeyX']); assert.equal(B.Play.gardenChoice, null);
   }
   assert.equal(save.heartsSpent, 3); assert.equal(save.fountainUses, 6);
   // An exhausted wallet can still use an owned fountain.
   save.heartsSpent = 8;
-  place('hm', 21, 32); tick(); place('hm', 24, 32); tick(50); tick(130, ['KeyX']);
+  place('hm', 21, 32); tick(); place('hm', 24, 32); tick(B.Links.HOLD + 15); tick(130, ['KeyX']);
   assert.equal(save.heartsSpent, 8); assert.equal(save.fountainUses, 7);
   assert.equal(B.Economy.balance(save, 'hearts'), 0); assert.equal(JSON.stringify(save.friends), hearts);
   B.Save.load(); assert.equal(B.Save.data.fountainUses, 7); assert.equal(B.Save.data.gestures.twirl, 1);
@@ -223,11 +223,11 @@ function render(dir) {
   for (const bug of B.World.rooms.flatMap(r => B.Play.ents[r.id].bugs).slice(0, 8)) B.Play.save.friends[bug.key] = 1;
   fs.mkdirSync(dir, { recursive: true });
   const shot = name => { B.Play.zoneCard = 0; B.Play.pl.invuln = 0; B.Main.draw(); fs.writeFileSync(path.join(dir, name + '.png'), B.G.canvas.toBuffer('image/png')); };
-  g.place('hm', B.Home.MIRROR_COL - 0.5, 32); g.tick(50); shot('mirror-outfits');
+  g.place('hm', B.Home.MIRROR_COL - 0.5, 32); g.tick(B.Links.HOLD + 15); shot('mirror-outfits');
   B.Play.wardrobeTab(4); B.Play.wardrobe.sel = 1; shot('mirror-styles'); B.Play.closeWardrobe();
-  g.place('ng', 16, 31); g.tick(50); shot('invite'); B.Play.chooseGarden(); shot('invited'); B.Play.closeGardenChoice();
+  g.place('ng', 16, 31); g.tick(B.Links.HOLD + 15); shot('invite'); B.Play.chooseGarden(); shot('invited'); B.Play.closeGardenChoice();
   for (const r of B.World.rooms) if (r.def.family) B.Play.save.family[r.def.family] = 1;
-  g.place('hm', 24, 32); g.tick(50); shot('fountain'); B.Play.chooseGarden(); g.tick(15); shot('fountain-party');
+  g.place('hm', 24, 32); g.tick(B.Links.HOLD + 15); shot('fountain'); B.Play.chooseGarden(); g.tick(15); shot('fountain-party');
   console.log('✓ reward interfaces rendered to ' + dir);
 }
 

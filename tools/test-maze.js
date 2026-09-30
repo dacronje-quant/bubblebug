@@ -37,7 +37,7 @@ function check(g) {
   for (const state of ['fresh', 'finale', 'eleven']) {
     save.finale = state === 'finale' || state === 'eleven'; save.family = {};
     if (state === 'eleven') B.Home.familyOrder().slice(0, 11).forEach(id => { save.family[id] = 1; });
-    place('nm', 21, 32); tick(60);
+    place('nm', 21, 32); tick(B.Links.HOLD + 15);
     assert.equal(B.Play.room.id, 'nm'); assert.equal(B.Play.maze, null); assert.equal(B.Play.portalChoice, null);
     assert.equal(M.available(save), false);
     // Old maze gate flags cannot accidentally unlock the new entrance.
@@ -45,7 +45,7 @@ function check(g) {
   }
   save.finale = false; B.Home.familyOrder().forEach(id => { save.family[id] = 1; });
   const earned = JSON.stringify({ friends: save.friends, family: save.family, abilities: save.abilities, bosses: save.bosses, finale: save.finale });
-  place('nm', 21, 32); tick(60);
+  place('nm', 21, 32); tick(B.Links.HOLD + 15);
   assert.equal(B.Play.maze, null); assert.equal(B.Play.portalChoice.kind, 'rainbow');
   tick(1, ['Enter']); tick();
   assert.ok(B.Play.maze); assert.equal(B.Play.pl.state, 'maze');
@@ -98,7 +98,7 @@ function check(g) {
 
   B.Play.closeMaze();
   assert.equal(B.Play.lastZone, B.Play.room.zone); assert.equal(B.Music.wanted, B.ZONES[B.Play.room.zone].key);
-  place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(50);
+  place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(B.Links.HOLD + 15);
   assert.equal(B.Play.wardrobeTabs(), 6);
   B.Play.wardrobeTab(5);
   const body = B.Play.pl.body;
@@ -109,9 +109,9 @@ function check(g) {
   B.Play.writeSave(); B.Save.load(); B.Main.set('play', {}); save = B.Play.save;
   assert.equal(save.cat, 'rainbow'); assert.equal(B.Play.pl.cat, 'rainbow'); assert.equal(save.mazeSolved, true);
   assert.equal(B.Save.count(save.sparkles), total); assert.equal(save.finale, false);
-  place('nm', 21, 32); tick(60); tick(1, ['Enter']); tick(); assert.ok(B.Play.maze);
+  place('nm', 21, 32); tick(B.Links.HOLD + 15); tick(1, ['Enter']); tick(); assert.ok(B.Play.maze);
   walkTo(M.START);
-  tick(9, ['ArrowRight']); assert.equal(B.Play.maze, null); assert.equal(B.Play.room.id, 'nm');
+  tick(M.EXIT_HOLD, ['ArrowRight']); assert.equal(B.Play.maze, null); assert.equal(B.Play.room.id, 'nm');
   console.log('✓ all three playable kittens can be chosen again at the mirror, persist, and keep progress');
   return g;
 }

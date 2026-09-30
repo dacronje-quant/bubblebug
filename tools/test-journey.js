@@ -28,12 +28,12 @@ function discoveries(g) {
   assert.equal(B.World.rooms.flatMap(r => B.Play.ents[r.id].things).some(th => th.type === 'glasses'), false);
   // All boss presents join their clothing category; hats use two pages.
   for (const item of B.Wardrobe.LIST.filter(a => a.boss)) B.Play.save.outfits[item.id] = 1;
-  place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(60);
+  place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(B.Links.HOLD + 15);
   B.Play.wardrobeTab(0); assert.equal(B.Play.wardrobeItems().length, 15);
   B.Input.pointers.push({ x: 647, y: 333 }); tick(); assert.equal(B.Play.wardrobe.sel, 8);
   assert.ok(B.Play.wardrobeItems().slice(8).every(item => item.slot === 'head'));
-  B.Play.wardrobeTab(1); assert.equal(B.Play.wardrobeItems().length, 4);
-  B.Play.wardrobeTab(2); assert.equal(B.Play.wardrobeItems().length, 4);
+  B.Play.wardrobeTab(1); assert.equal(B.Play.wardrobeItems().length, 8);
+  B.Play.wardrobeTab(2); assert.equal(B.Play.wardrobeItems().length, 8);
   for (const id of ['googly', 'disguise', 'starshades']) {
     const index = B.Play.wardrobeItems().findIndex(a => a.id === id);
     B.Play.toggleOutfit(index); assert.equal(B.Play.save.wear.face, id);
@@ -69,18 +69,18 @@ function cycles(g) {
     save.bench = { x: 100, y: 100 }; save.glassesFound.googly = 1;
     B.Play.writeSave(); B.Main.set('play', {}); save = B.Play.save;
     assert.equal(B.Play.ents.g6.bosses[0].state, 'happy');
-    place('nm', 21, 32); tick(60); tick(1, ['Enter']); tick();
+    place('nm', 21, 32); tick(B.Links.HOLD + 15); tick(1, ['Enter']); tick();
     assert.ok(B.Play.maze);
     for (const pad of B.GardenMaze.ORDER) walkMaze(g, pad);
     walkMaze(g, B.GardenMaze.PRIZE); assert.equal(save.mazeSolved, true); assert.equal(save.rainbowUnlocked, true);
     // Back out of character choice; the rescue has already been earned.
     tick(12); tick(1, ['Escape']); tick(); B.Play.closeMaze();
-    place('nm', 6, 32); tick(60);
+    place('nm', 6, 32); tick(B.Links.HOLD + 15);
     assert.equal(B.Play.portalChoice.kind, 'cloud'); assert.equal(B.Play.portalChoice.focus, 1);
     const unchanged = B.Save.data;
     tick(1, ['Enter']); tick(); assert.equal(B.Play.portalChoice, null); assert.equal(B.Save.data, unchanged);
     assert.equal(B.Save.data.replayCount, cycle - 1);
-    place('nm', 21, 32); tick(); place('nm', 6, 32); tick(60);
+    place('nm', 21, 32); tick(); place('nm', 6, 32); tick(B.Links.HOLD + 15);
     tick(1, ['ArrowLeft']); tick(); tick(50, ['Enter']); tick();
     save = B.Play.save;
     assert.equal(B.Main.name, 'play'); assert.equal(B.Save.data, save);
@@ -149,13 +149,13 @@ if (require.main === module) {
     B.Play.iris = null; B.G.begin();
     fs.mkdirSync(dir, { recursive: true });
     g.place('nm', 21, 32); B.Play.draw(B.G.ctx); fs.writeFileSync(path.join(dir, 'rainbow-path.png'), B.G.canvas.toBuffer('image/png'));
-    g.tick(60); B.Play.draw(B.G.ctx); fs.writeFileSync(path.join(dir, 'rainbow-entry.png'), B.G.canvas.toBuffer('image/png'));
+    g.tick(B.Links.HOLD + 15); B.Play.draw(B.G.ctx); fs.writeFileSync(path.join(dir, 'rainbow-entry.png'), B.G.canvas.toBuffer('image/png'));
     B.Play.closeJourneyChoice(); B.Play.save.mazeSolved = true; B.Play.save.rainbowUnlocked = true;
-    g.place('nm', 6, 32); g.tick(60); B.Play.draw(B.G.ctx); fs.writeFileSync(path.join(dir, 'cloud-replay.png'), B.G.canvas.toBuffer('image/png'));
+    g.place('nm', 6, 32); g.tick(B.Links.HOLD + 15); B.Play.draw(B.G.ctx); fs.writeFileSync(path.join(dir, 'cloud-replay.png'), B.G.canvas.toBuffer('image/png'));
     B.Play.closeJourneyChoice(); B.Play.pl.cat = B.Play.save.cat = 'rainbow';
     B.Play.save.wear = { head: null, neck: null, face: null };
     for (const item of B.Wardrobe.LIST) if (item.boss || item.discover) B.Play.save.outfits[item.id] = 1;
-    g.place('hm', B.Home.MIRROR_COL - 0.5, 32); g.tick(60); B.Play.wardrobeTab(2);
+    g.place('hm', B.Home.MIRROR_COL - 0.5, 32); g.tick(B.Links.HOLD + 15); B.Play.wardrobeTab(2);
     B.Play.wardrobe.sel = B.Play.wardrobeItems().findIndex(item => item.id === 'googly');
     B.Play.draw(B.G.ctx); fs.writeFileSync(path.join(dir, 'mirror-glasses.png'), B.G.canvas.toBuffer('image/png'));
   }

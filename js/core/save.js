@@ -179,6 +179,9 @@
       return false;
     },
     write() {
+      // Earn activity rewards at the moment their progress is saved,
+      // including in the demo. They remain earned through Rainbow replays.
+      if (BB.Economy) BB.Economy.milestones(this.data);
       if (this.preview) return;
       try { localStorage.setItem(KEY, JSON.stringify(this.data)); } catch (e) { /* storage full / blocked */ }
     },
@@ -192,6 +195,7 @@
     rainbowReplay() {
       const old = this.data;
       if (!old.mazeSolved || !old.rainbowUnlocked) return false;
+      BB.Economy.milestones(old);
       const next = fresh();
       next.cat = 'rainbow'; next.rainbowUnlocked = true;
       next.replayCount = (Number.isSafeInteger(old.replayCount) && old.replayCount >= 0 ? old.replayCount : 0) + 1;

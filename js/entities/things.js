@@ -212,6 +212,7 @@
     S().bloom(done);
     PT().burst('spark', th.x, th.y, 12, { color: '#ffd6f0', speed: 2.5, life: 32 });
     if (done >= buds.length) ctx.openGates(room);
+    BB.Save.write(); // keep each flower and its reward, even before the gate opens
   }
 
   // ──── Drawing ────

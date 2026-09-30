@@ -30,6 +30,14 @@ async function category(page, i, touch = false) {
   await tap(page, await page.evaluate(i => BB.Play.wardrobeTabX(i), i), 88, touch);
   assert.equal(await page.evaluate(() => BB.Play.wardrobe.tab), i);
 }
+async function wardrobeItem(page, id, touch = false) {
+  const index = await page.evaluate(id => BB.Play.wardrobeItems().findIndex(item => item.id === id), id);
+  assert.ok(index >= 0, id + ' is available in its category');
+  await tap(page, 505 + index % 4 * 88, 178 + Math.floor(index / 4) * 96, touch);
+}
+async function barColor(page, x) {
+  return page.evaluate(x => Array.from(BB.G.ctx.getImageData(Math.round(x * BB.G.scale), Math.round(418 * BB.G.scale), 1, 1).data).slice(0, 3), x);
+}
 async function place(page, id, col, floor) {
   await page.evaluate(({ id, col, floor }) => {
     const P = BB.Play, r = BB.World.byId[id];
@@ -118,7 +126,17 @@ async function walkMaze(page, target) {
     await category(page, 3);
     await tap(page, 769, 178); await tap(page, 769, 178);
     assert.equal(await page.evaluate(() => BB.Play.save.cosmetics.bubble), 'flower');
-    await shot(page, 'mirror-styles'); await tap(page, 776, 438);
+    await shot(page, 'mirror-styles');
+    await category(page, 2); assert.equal(await page.evaluate(() => BB.Play.wardrobeItems().length), 8);
+    await wardrobeItem(page, 'heartshades'); await shot(page, 'locked-heart-glasses-partial');
+    assert.deepEqual(await barColor(page, 525), [255, 214, 101]);
+    assert.deepEqual(await barColor(page, 725), [232, 222, 234]);
+    await wardrobeItem(page, 'googly'); await shot(page, 'locked-hidden-glasses-empty');
+    assert.deepEqual(await barColor(page, 525), [232, 222, 234]);
+    assert.deepEqual(await barColor(page, 725), [232, 222, 234]);
+    await category(page, 1); assert.equal(await page.evaluate(() => BB.Play.wardrobeItems().length), 8);
+    await category(page, 4); assert.equal(await page.evaluate(() => BB.Play.wardrobeItems().length), 4);
+    await tap(page, 776, 438);
     await page.waitForFunction(() => !BB.Play.wardrobe);
     await place(page, 'hm', 57, 32); await page.keyboard.down('ArrowRight');
     const walk = await page.evaluate(() => {
@@ -168,7 +186,7 @@ async function walkMaze(page, target) {
     await tap(page, 647, 333); assert.equal(await page.evaluate(() => BB.Play.wardrobe.sel), 8);
     await shot(page, 'mirror-hats-page-2');
     await category(page, 1); await shot(page, 'mirror-necklaces');
-    await category(page, 2); await tap(page, 593, 178); await tap(page, 593, 178);
+    await category(page, 2); await tap(page, 681, 178); await tap(page, 681, 178);
     assert.equal(await page.evaluate(() => BB.Play.save.wear.face), 'googly');
     await shot(page, 'mirror-glasses'); await tap(page, 776, 438);
     await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
@@ -218,6 +236,23 @@ async function walkMaze(page, target) {
     await page.keyboard.press('Enter'); await pause(page); assert.equal(await page.evaluate(() => BB.Play.homeVisitors.length), 65);
     assert.equal(await page.evaluate(() => BB.Play.save.heartsSpent), gardenSpent);
     await tap(page, 678, 145); assert.equal(await page.evaluate(() => BB.Play.homeVisitors.length), 65);
+    await page.evaluate(() => {
+      const s = BB.Play.save;
+      BB.World.findThings('o').forEach(th => { s.buds[th.tx + ',' + th.ty] = 1; });
+      BB.World.rooms.filter(r => r.def.toy).slice(0, 3).forEach(r => { s.toys[r.def.toy] = 1; });
+      BB.Gestures.LIST.slice(0, 3).forEach(g => { s.gestures[g.id] = 1; });
+      BB.World.rooms.filter(r => r.things.some(th => th.ch === 'V')).forEach(r => { s.songs[r.id] = 1; });
+      BB.World.rooms.filter(r => r.def.boss || r.things.some(th => th.ch === 'K')).slice(0, 3).forEach(r => { s.bosses[r.id] = 1; });
+      s.rainbowUnlocked = true;
+      BB.Save.write();
+    });
+    await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
+    for (const [tab, id] of [[2, 'flowerframes'], [2, 'aviators'], [1, 'bowtie'], [1, 'pearls'], [1, 'leafcollar'], [1, 'rainbowcollar'], [4, 'trail-heart']]) {
+      await category(page, tab); await wardrobeItem(page, id); await wardrobeItem(page, id);
+      assert.equal(await page.evaluate(id => BB.Economy.progress(BB.Play.save, BB.Play.wardrobeItems().find(item => item.id === id)), id), 1, id);
+    }
+    assert.equal(await page.evaluate(() => BB.Play.save.cosmetics.trail), 'heart');
+    await shot(page, 'new-heart-trail-earned'); await tap(page, 776, 438);
     for (const [id, col, kind] of [['ng', 8, 'ball'], ['np', 14, 'bubbles'], ['nr', 10, 'dance']]) {
       await place(page, id, col, 31); await page.keyboard.press('Enter');
       await page.waitForFunction(kind => BB.Play.gardenFun?.kind === kind && BB.Play.gardenFun.t > 60 && !BB.Play.zoneCard, kind);
@@ -263,6 +298,12 @@ async function walkMaze(page, target) {
     await category(touch, 2, true); await tap(touch, 505, 178, true);
     assert.equal(await touch.evaluate(() => BB.Play.save.wear.face), 'scuba');
     await shot(touch, 'scuba-milestone');
+    assert.equal(await touch.evaluate(() => BB.Play.wardrobeItems().length), 8);
+    await wardrobeItem(touch, 'heartshades', true);
+    assert.ok(await touch.evaluate(() => BB.Economy.progress(BB.Play.save, BB.Wardrobe.BY.heartshades) < 1));
+    await category(touch, 1, true); assert.equal(await touch.evaluate(() => BB.Play.wardrobeItems().length), 8);
+    await category(touch, 4, true); assert.equal(await touch.evaluate(() => BB.Play.wardrobeItems().length), 4);
+    await wardrobeItem(touch, 'trail-heart', true); await shot(touch, 'touch-four-trails');
     await tap(touch, 776, 438, true); await touch.waitForFunction(() => !BB.Play.wardrobe);
     await touch.waitForFunction(() => getComputedStyle(document.getElementById('touch')).display === 'block');
     const pauseButton = await touch.locator('#pause-btn').boundingBox();
@@ -312,6 +353,8 @@ async function walkMaze(page, target) {
     await tap(touch, 448, 506, true);
     await touch.waitForFunction(() => BB.Play.maze.y === 12);
     await tap(touch, 850, 30, true);
+    assert.ok(await touch.evaluate(() => BB.Play.maze));
+    await touch.waitForFunction(() => BB.Play.maze === null);
     assert.equal(await touch.evaluate(() => BB.Play.room.id), 'nm');
     assert.equal(await touch.evaluate(() => BB.Play.maze), null);
     // Touch cancelling a replay keeps the same adventure; confirming

@@ -1,4 +1,4 @@
-// Stars unlock milestones without being spent. Hearts still pay once
+// Stars and adventure progress unlock rewards. Hearts still pay once
 // for invitations and the fountain; collection progress is never removed.
 (function (BB) {
   'use strict';
@@ -35,16 +35,44 @@
     }
     c.restore();
   }
+  const earned = (save, item) => !!((save.outfits || {})[item.id] || (save.purchases || {})[item.id]);
+  function requirement(save, item) {
+    if (Number.isFinite(item.stars)) return { found: balance(save, 'stars'), total: item.stars };
+    const goal = item.unlock;
+    if (goal) {
+      const found = goal.kind === 'rainbow' ? Number(!!save.rainbowUnlocked)
+        : Object.values(save[goal.kind] || {}).filter(Boolean).length;
+      return { found, total: goal.count };
+    }
+    // A hidden discovery or a boss present must be found in the world.
+    // Having earned every star reward cannot fill its locked bar.
+    return { found: 0, total: 1 };
+  }
   function unlocked(save, item) {
-    if (save.outfits[item.id] || save.purchases[item.id]) return true;
-    return Number.isFinite(item.stars) && balance(save, 'stars') >= item.stars;
+    if (!item) return false;
+    if (earned(save, item)) return true;
+    const { found, total } = requirement(save, item);
+    return found >= total;
+  }
+  function progress(save, item) {
+    if (!item) return 0;
+    if (unlocked(save, item)) return 1;
+    const { found, total } = requirement(save, item);
+    return BB.clamp(found / total, 0, 1);
+  }
+  function progressBar(c, save, item, x, y, width, height = 15) {
+    c.save();
+    c.fillStyle = '#e8deea'; BB.G.rrect(x, y, width, height, height / 2, c); c.fill(); c.clip();
+    c.fillStyle = '#ffd665'; c.fillRect(x, y, width * progress(save, item), height);
+    c.restore();
   }
   function milestones(save) {
-    const items = BB.Wardrobe.LIST.concat(BB.Cosmetics.LIST).filter(a => Number.isFinite(a.stars));
+    const items = BB.Wardrobe.LIST.concat(BB.Cosmetics.LIST).filter(a => Number.isFinite(a.stars) || a.unlock);
+    save.outfits = save.outfits || {}; save.purchases = save.purchases || {};
     for (const item of items) if (unlocked(save, item)) {
       (item.slot === 'bubble' || item.slot === 'trail' ? save.purchases : save.outfits)[item.id] = 1;
     }
-    return items.filter(a => !unlocked(save, a)).sort((a, b) => a.stars - b.stars)[0] || null;
+    return items.filter(a => Number.isFinite(a.stars) && !unlocked(save, a)).sort((a, b) => a.stars - b.stars)[0] || null;
   }
-  BB.Economy = { balance, spend, buy, pips, unlocked, milestones };
+  BB.Economy = { balance, spend, buy, pips, unlocked, progress, progressBar, milestones };
 })(window.BB);

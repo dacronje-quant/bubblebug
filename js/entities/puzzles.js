@@ -245,6 +245,7 @@
             if (stone.i >= stone.seq.length) {
               stone.phase = 'done';
               ctx.save.songs[th.room] = 1;
+              BB.Save.write(); // save the song/reward before its delayed gate celebration
               const bells = ctx.entsOf(room).filter(b => b.type === 'bell');
               bells.forEach((b, k) => ctx.later(10 + k * 8, () => ringBell(b, true)));
               ctx.later(40, () => { S().songDone(); ctx.tryOpen(room); });

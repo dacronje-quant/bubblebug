@@ -4,6 +4,7 @@
 (function (BB) {
   'use strict';
   const W = 29, H = 15, TILE = 28, X = 74, Y = 57;
+  const EXIT_HOLD = BB.CFG.MAZE_EXIT_HOLD;
   const START = { x: 27, y: 13 }, PRIZE = { x: 1, y: 1 };
   const CATS = ['marshmallow', 'phoebe', 'rainbow'];
   const DIRS = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] };
@@ -56,15 +57,16 @@
     c.restore();
   }
   const blend = (a, b, k) => '#' + [1, 3, 5].map(i => Math.round(BB.lerp(parseInt(a.slice(i, i + 2), 16), parseInt(b.slice(i, i + 2), 16), k)).toString(16).padStart(2, '0')).join('');
-  BB.GardenMaze = { MAP, START, PRIZE, PADS, ORDER, GATES, STARS, CATS, walkable, gateOpen, available, starKey, ready, lantern };
+  BB.GardenMaze = { MAP, START, PRIZE, PADS, ORDER, GATES, STARS, CATS, walkable, gateOpen, available, starKey, ready, lantern, EXIT_HOLD };
 
   Object.assign(BB.Play, {
     openMaze() {
       if (!available(this.save)) return false;
       const pos = this.save.mazePosition;
-      this.maze = { x: pos && walkable(pos.x, pos.y) ? pos.x : START.x,
-        y: pos && walkable(pos.x, pos.y) ? pos.y : START.y, t: 0, moving: null, facing: -1, choice: false, sel: 0, rewardLock: false,
-        bloom: this.save.mazeSolved ? 1 : 0 };
+      const at = pos && walkable(pos.x, pos.y) ? pos : START;
+      this.maze = { x: at.x, y: at.y, t: 0, moving: null, facing: -1, choice: false, sel: 0, rewardLock: false,
+        bloom: this.save.mazeSolved ? 1 : 0, exitHold: 0, exit: null, queuedExit: null,
+        startExitArmed: at.x !== START.x || at.y !== START.y };
       this.save.mazeReturn = this.save.mazeReturn || { x: this.pl.body.x, y: this.pl.body.y };
       this.save.inMaze = true;
       this.pl.state = 'maze'; this.pl.body.vx = this.pl.body.vy = 0;
@@ -97,6 +99,7 @@
     },
     mazeCell() {
       const m = this.maze;
+      if (m.x !== START.x || m.y !== START.y) m.startExitArmed = true;
       let changed = false;
       STARS.forEach(([x, y], i) => {
         const key = starKey(i);
@@ -121,11 +124,20 @@
       this.save.cat = id; this.pl.cat = id;
       BB.Save.write(); S().befriend(); return true;
     },
+    requestMazeExit(kind, source) {
+      const m = this.maze;
+      if (!m) return;
+      if (m.moving) { if (source === 'header') m.queuedExit = { kind, source }; return; }
+      // Preserve a quick buffered turn: moving out of the icon must
+      // cancel its countdown even if the key has already been released.
+      if (!m.exit || m.exit.kind !== kind) { m.exit = { kind, source }; m.exitHold = 0; }
+    },
     updateMaze() {
       const m = this.maze, I = BB.Input;
       m.t++;
       if (this.save.mazeSolved) m.bloom = Math.min(1, m.bloom + 1 / 120);
       if (m.choice) {
+        m.exit = null; m.queuedExit = null; m.exitHold = 0;
         m.choiceT++;
         if (m.choiceT < 8) { I.takePointers(); return; }
         // A gamepad's B button is both bubble and back. Close the picker
@@ -144,11 +156,11 @@
         }
         return;
       }
-      if (I.pressed.pause || I.pressed.back) { BB.Main.go('pause'); return; }
+      if (I.pressed.pause || I.pressed.back) { m.exit = null; m.queuedExit = null; m.exitHold = 0; m.buffer = null; BB.Main.go('pause'); return; }
       let dir = null;
       for (const p of I.takePointers()) {
-        if (Math.hypot(p.x - 850, p.y - 30) < 25) return this.closeMaze();
-        if (this.save.mazeSolved && m.x === PRIZE.x && m.y === PRIZE.y && Math.hypot(p.x - (X + TILE / 2), p.y - (Y + TILE * 1.5)) < 26) return this.closeMaze(true);
+        if (Math.hypot(p.x - 850, p.y - 30) < 25) { this.requestMazeExit('home', 'header'); continue; }
+        if (this.save.mazeSolved && m.x === PRIZE.x && m.y === PRIZE.y && Math.hypot(p.x - (X + TILE / 2), p.y - (Y + TILE * 1.5)) < 26) { this.requestMazeExit('rescue', 'rescue'); continue; }
         CONTROLS.forEach((d, i) => { if (Math.hypot(p.x - (386 + i * 62), p.y - 506) < 25) dir = d; });
       }
       const pd = I.pointerDown;
@@ -156,7 +168,12 @@
       for (const d of CONTROLS) if (I.pressed[d]) m.buffer = d;
       if (dir) m.buffer = dir;
       if (m.moving) {
-        if (++m.moving.t >= 8) { m.x = m.moving.x; m.y = m.moving.y; m.moving = null; this.mazeCell(); }
+        m.exit = null; m.exitHold = 0;
+        if (++m.moving.t >= 8) {
+          m.x = m.moving.x; m.y = m.moving.y; m.moving = null; this.mazeCell();
+          if (m.queuedExit && !m.choice) this.requestMazeExit(m.queuedExit.kind, m.queuedExit.source);
+          m.queuedExit = null;
+        }
         return;
       }
       // Keep a requested turn buffered until its corridor opens, while
@@ -165,15 +182,20 @@
       for (const d of [m.buffer, dir, held]) {
         if (!d) continue;
         const [dx, dy] = DIRS[d], nx = m.x + dx, ny = m.y + dy;
-        if (m.x === START.x && m.y === START.y && d === 'right') return this.closeMaze();
-        if (this.save.mazeSolved && m.x === PRIZE.x && m.y === PRIZE.y && d === 'left') return this.closeMaze(true);
+        if (m.x === START.x && m.y === START.y && d === 'right') { this.requestMazeExit('home', 'start'); continue; }
+        if (this.save.mazeSolved && m.x === PRIZE.x && m.y === PRIZE.y && d === 'left') { this.requestMazeExit('rescue', 'rescue'); continue; }
         if (walkable(nx, ny, this.save)) {
+          m.exit = null; m.exitHold = 0;
           m.moving = { x: nx, y: ny, t: 0 };
           if (dx) m.facing = dx;
           if (d === m.buffer) m.buffer = null;
           break;
         }
       }
+      // The starting icon becomes a waiting exit only after walking
+      // away once. Taking a moment to look at a new maze is always safe.
+      if (!m.moving && m.startExitArmed && m.x === START.x && m.y === START.y && !m.exit) this.requestMazeExit('home', 'start');
+      if (m.exit && !m.moving && ++m.exitHold >= EXIT_HOLD) this.closeMaze(m.exit.kind === 'rescue');
     },
     drawMaze(c) {
       const m = this.maze, t = m.t, bloom = m.bloom;
@@ -266,6 +288,12 @@
       const px = X + (m.x + 0.5 + (step ? (step.x - m.x) * k : 0)) * TILE;
       const py = Y + (m.y + 0.5 + (step ? (step.y - m.y) * k : 0)) * TILE;
       BB.Kittens.draw(c, this.pl.cat, { mode: step ? 'run' : 'sit', phase: t * 0.3, happy: true, t }, px, py + 10, 0.72, m.facing);
+      if (m.exitHold > 0 && m.exit) {
+        const source = m.exit.source;
+        const ex = source === 'header' ? 850 : source === 'rescue' ? X + TILE / 2 : X + (START.x + 0.5) * TILE;
+        const ey = source === 'header' ? 30 : source === 'rescue' ? Y + TILE * 1.5 : Y + (START.y + 0.5) * TILE;
+        c.save(); BB.Links.holdRing(c, ex, ey, m.exitHold / EXIT_HOLD); c.restore();
+      }
       if (!m.choice) CONTROLS.forEach((d, i) => {
         const bx = 386 + i * 62;
         c.fillStyle = col('#9381ac', '#80b984'); G().circle(bx, 506, 23, c); c.fill();
