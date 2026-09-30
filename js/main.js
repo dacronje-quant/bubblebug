@@ -45,6 +45,8 @@
     },
 
     draw() {
+      const p = BB.Play;
+      document.body.classList.toggle('menu-open', this.name !== 'play' || !!(p.wardrobe || p.gardenChoice || p.portalChoice || p.mapOn || p.maze && p.maze.choice));
       G.begin();
       const c = G.ctx;
       c.save();

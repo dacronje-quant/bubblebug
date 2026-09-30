@@ -124,3 +124,5 @@ body.in-play #pause-btn { display: flex; }
 #pause-btn:active { transform: scale(0.9); }
 /* The maze has its own large four-direction canvas controls. */
 body.in-maze #touch, body.in-maze #map-btn { display: none; }
+/* Picture menus are tapped directly; keep the movement pad out of them. */
+body.in-play.menu-open #touch { display: none; }

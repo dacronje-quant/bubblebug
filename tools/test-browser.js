@@ -26,6 +26,10 @@ async function tap(page, x, y, touch = false) {
   if (touch) await page.touchscreen.tap(p.x, p.y); else await page.mouse.click(p.x, p.y);
   await pause(page);
 }
+async function category(page, i, touch = false) {
+  await tap(page, await page.evaluate(i => BB.Play.wardrobeTabX(i), i), 88, touch);
+  assert.equal(await page.evaluate(() => BB.Play.wardrobe.tab), i);
+}
 async function place(page, id, col, floor) {
   await page.evaluate(({ id, col, floor }) => {
     const P = BB.Play, r = BB.World.byId[id];
@@ -86,8 +90,11 @@ async function shot(page, name) {
     assert.equal(await page.evaluate(() => BB.Play.wardrobe.tab), 1);
     await page.keyboard.press('ArrowDown'); await pause(page);
     assert.equal(await page.evaluate(() => BB.Play.wardrobe.focus), 'items');
-    await tap(page, 621, 88); await tap(page, 593, 246); await tap(page, 593, 246);
+    await category(page, 4); await tap(page, 593, 150); await tap(page, 593, 150);
     assert.equal(await page.evaluate(() => BB.Play.save.starsSpent), 0);
+    assert.equal(await page.evaluate(() => BB.Play.save.cosmetics.trail), 'rainbow');
+    await shot(page, 'mirror-trails');
+    await category(page, 3);
     await tap(page, 769, 150); await tap(page, 769, 150);
     assert.equal(await page.evaluate(() => BB.Play.save.cosmetics.bubble), 'flower');
     await shot(page, 'mirror-styles'); await tap(page, 776, 438);
@@ -126,8 +133,8 @@ async function shot(page, name) {
     });
     await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
     await page.keyboard.press('ArrowUp'); await pause(page);
-    for (let i = 0; i < 3; i++) { await page.keyboard.press('ArrowRight'); await pause(page); }
-    assert.equal(await page.evaluate(() => BB.Play.wardrobe.tab), 3);
+    for (let i = 0; i < 5; i++) { await page.keyboard.press('ArrowRight'); await pause(page); }
+    assert.equal(await page.evaluate(() => BB.Play.wardrobe.tab), 5);
     await page.keyboard.press('ArrowDown'); await pause(page);
     await page.keyboard.press('ArrowRight'); await pause(page); await page.keyboard.press('ArrowRight'); await pause(page);
     await page.keyboard.press('Enter'); await pause(page);
@@ -135,9 +142,12 @@ async function shot(page, name) {
     await shot(page, 'mirror-kittens');
     await page.evaluate(() => {
       BB.Wardrobe.LIST.filter(item => item.boss || item.discover).forEach(item => { BB.Play.save.outfits[item.id] = 1; });
-      BB.Play.save.wear.head = null; BB.Play.wardrobeTab(2);
+      BB.Play.save.wear.head = null; BB.Play.wardrobeTab(0);
     });
-    await tap(page, 780, 308); await tap(page, 505, 246); await tap(page, 505, 246);
+    await tap(page, 647, 308); assert.equal(await page.evaluate(() => BB.Play.wardrobe.sel), 8);
+    await shot(page, 'mirror-hats-page-2');
+    await category(page, 1); await shot(page, 'mirror-necklaces');
+    await category(page, 2); await tap(page, 593, 150); await tap(page, 593, 150);
     assert.equal(await page.evaluate(() => BB.Play.save.wear.face), 'googly');
     await shot(page, 'mirror-glasses'); await tap(page, 776, 438);
     await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
@@ -204,12 +214,32 @@ async function shot(page, name) {
     await touch.goto(pathToFileURL(path.join(ROOT, 'try-rewards.html')).href);
     await touch.waitForFunction(() => BB.Save.preview && BB.Main.name === 'play');
     await place(touch, 'hm', mirror - 0.5, 32); await touch.waitForFunction(() => BB.Play.wardrobe?.t > 8);
+    assert.equal(await touch.locator('#touch').isVisible(), false);
     await tap(touch, 505, 150, true); assert.equal(await touch.evaluate(() => BB.Play.save.starsSpent), 0);
-    await tap(touch, 769, 246, true); await tap(touch, 769, 246, true);
+    for (let i = 0; i < 5; i++) await category(touch, i, true);
+    await category(touch, 0, true); await tap(touch, 647, 308, true);
+    assert.equal(await touch.evaluate(() => BB.Play.wardrobe.sel), 8);
+    await category(touch, 2, true); await tap(touch, 505, 150, true);
     assert.equal(await touch.evaluate(() => BB.Play.save.wear.face), 'scuba');
     await shot(touch, 'scuba-milestone');
     await tap(touch, 776, 438, true); await touch.waitForFunction(() => !BB.Play.wardrobe);
+    await touch.waitForFunction(() => getComputedStyle(document.getElementById('touch')).display === 'block');
+    const pauseButton = await touch.locator('#pause-btn').boundingBox();
+    const tapPause = () => touch.touchscreen.tap(pauseButton.x + pauseButton.width / 2, pauseButton.y + pauseButton.height / 2);
+    await tapPause(); await touch.waitForFunction(() => BB.Main.name === 'pause' && document.body.classList.contains('menu-open'));
+    assert.equal(await touch.locator('#touch').isVisible(), false);
+    await shot(touch, 'touch-pause');
+    await tapPause(); await touch.waitForFunction(() => BB.Main.name === 'play' && !document.body.classList.contains('menu-open'));
+    assert.equal(await touch.locator('#touch').isVisible(), true);
+    const mapButton = await touch.locator('#map-btn').boundingBox();
+    const tapMap = () => touch.touchscreen.tap(mapButton.x + mapButton.width / 2, mapButton.y + mapButton.height / 2);
+    await tapMap(); await touch.waitForFunction(() => BB.Play.mapOn && document.body.classList.contains('menu-open'));
+    assert.equal(await touch.locator('#touch').isVisible(), false);
+    assert.equal(await touch.locator('#map-btn').isVisible(), true); // remains available to close the map
+    await tapMap(); await touch.waitForFunction(() => !BB.Play.mapOn && !document.body.classList.contains('menu-open'));
+    assert.equal(await touch.locator('#touch').isVisible(), true);
     await place(touch, 'ng', 16, 31); await touch.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
+    assert.equal(await touch.locator('#touch').isVisible(), false);
     await tap(touch, 480, 390, true); assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 1);
     await shot(touch, 'touch-invite'); await tap(touch, 678, 145, true);
     await place(touch, 'hm', 24, 32); await touch.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
@@ -230,6 +260,7 @@ async function shot(page, name) {
       assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 2);
     }
     await place(touch, 'nm', 21, 32); await touch.waitForFunction(() => BB.Play.portalChoice?.t > 10);
+    assert.equal(await touch.locator('#touch').isVisible(), false);
     await tap(touch, 385, 405, true); await touch.waitForFunction(() => BB.Play.maze !== null);
     await tap(touch, 448, 506, true);
     await touch.waitForFunction(() => BB.Play.maze.y === 12);

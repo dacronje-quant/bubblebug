@@ -111,7 +111,7 @@ The adventure starts at home, and nobody's there. The kitten wakes on its bed, s
 - **The front door** opens straight onto the Front Garden at the right of the living room. Keep walking east through the pond and roots to reach Sparkle Gardens. At the left of the living room is the optional Pawprint Maze.
 - **Family come home.** Each family member you find hops off home. Their frame on the family wall fills in with their face, and next time you're home they're napping on their own cushion (and wake up for a cuddle when you come close). Your own Mama waits by the front door.
 - **The homecoming party.** Slide home down the Rainbow Slide and the party starts in the living room. Only the family you actually found come: they dance in a ring around your kitten (the grannies sway, the babies bounce). Every friend you made floats in on a little cloud, and every boss you cheered up waves from the landing upstairs. Then a big card fills in the family frames one by one and shows how many you found, like **9 / 12**. Find all twelve and the card turns rainbow, with extra fireworks. Afterwards you can keep playing and go back out for anyone you missed.
-- **Dressing up.** Every boss still gives its original free present: a bonnet, mushroom hat, tiara, honey crown, unicorn horn, cloud collar, sailor hat, sun hat, bobble hat, scarf, nightcap or bunny ears. Hidden corners also hold Googly glasses in Ladybug Hill, a silly nose-and-moustache disguise in the crystal grotto and star shades in the coral garden. Discoveries are free, equip on pickup and join the mirror's presents tab, which has pages for all earned treasures. Stand still at the pink-and-gold mirror to choose outfits, bubble/trail styles or presents. Up focuses categories; Left/Right changes category; Down returns to items. A fourth kitten tab appears after rescuing Rainbow. A hat, neck item and face accessory can be worn together.
+- **Dressing up.** Every boss still gives its original free present: a bonnet, mushroom hat, tiara, honey crown, unicorn horn, cloud collar, sailor hat, sun hat, bobble hat, scarf, nightcap or bunny ears. Hidden corners also hold Googly glasses in Ladybug Hill, a silly nose-and-moustache disguise in the crystal grotto and star shades in the coral garden. Discoveries are free and equip on pickup. The mirror has five picture tabs: Hats, Necklaces, Glasses, Bubbles and Trails. Earned presents join their matching clothing category; hidden glasses and scuba gear share Glasses. Page dots browse longer categories. Up focuses categories; Left/Right changes category; Down returns to items. A sixth kitten tab appears after rescuing Rainbow. A hat, neck item and face accessory can be worn together.
 - **Toys come home too.** Every hidden toy you find turns up somewhere in the house: the yarn ball on the rug, the jingle bell hanging from a cat tree, the paper boat on the windowsill, the star cushion on the sofa… Walk into one to bat it about and hear its own sound. The spots for toys you haven't found yet show a faint outline.
 - The house has its own gentle music-box tune. The party tune plays only while you're at the party; step out of the house and the music changes with you.
 
@@ -121,18 +121,19 @@ Stars unlock permanent milestones from the total collected; equipping never spen
 
 | Place | Optional extra | Unlock / cost |
 |---|---|---|
-| Mirror · clothes picture | Party hat / flower crown / chef hat | Collect 25 / 50 / 75 stars |
-| Mirror · clothes picture | Wizard hat / pirate hat | Collect 100 / 125 stars |
-| Mirror · clothes picture | Sparkly collar / jingle collar / scuba mask & snorkel | Collect 150 / 175 / 200 stars |
+| Mirror · hat picture | Party hat / flower crown / chef hat | Collect 25 / 50 / 75 stars |
+| Mirror · hat picture | Wizard hat / pirate hat | Collect 100 / 125 stars |
+| Mirror · necklace picture | Sparkly collar / jingle collar | Collect 150 / 175 stars |
+| Mirror · glasses picture | Scuba mask & snorkel | Collect 200 stars |
 | Mirror · bubble picture | Heart / star / flower bubbles | Collect 40 / 80 / 140 stars |
-| Mirror · bubble picture | Tiny paw trail / rainbow trail | Collect 60 / 250 stars |
+| Mirror · paw picture | Tiny paw trail / rainbow trail | Collect 60 / 250 stars |
 | Front Garden · welcome board | All rescued critters of an invited species, including later rescues | 1 heart per species |
 | Outdoor play rings | Ball play, bubbles and dancing with garden friends | Free; step away to repeat |
 | Living room · heart fountain | Unlock fireworks, family dancing and the extra twirl trick | 1 heart once; every repeat is free |
 
-At the mirror, tap a picture to preview it; tap the selected picture again to equip it if unlocked. Keyboard/gamepad users press Up from the first item row to focus categories, Left/Right to change category, then Down to browse its pictures. Jump, bubble or Enter equips. The original bubbles and trail remain free options, and earned boss presents remain free to wear. Styles change appearance only. The jingle collar uses an existing bell sound when running.
+At the mirror, tap a picture to preview it; tap the selected picture again to equip it if unlocked. Keyboard/gamepad users press Up from the first item row to focus categories, Left/Right to change category, then Down to browse its pictures. Jump, bubble or Enter equips. Cards use pictures, short item names and page dots, without navigation arrows or long control hints. Touch movement buttons hide while menus are open and return when playing; the map button stays available to close its overlay. Milestones show the remaining star count and reward picture under their progress bar. The original bubbles and trail remain free options, and earned boss presents remain free to wear. Styles change appearance only. The jingle collar uses an existing bell sound when running.
 
-Invited critters wander through the neighbourhood, and approaching them gives a purr and hearts animation. Petting never spends or awards currency. The fountain closes its card immediately for a six-second show of rainbow jets, flying hearts, confetti, fireworks, party music and family dancing. The first-use twirl card appears afterwards. Step away before using a paw ring again. These additions use sounds and animations, with no new speech lines.
+Invited critters wander through the neighbourhood, and approaching them gives a purr and hearts animation. Soft fur and shell shading, bright eyes, breathing, ear twitches, tail wags, paw lifts and landing squashes bring their original vector art to life. Friends look at the nearby kitten, greet it and dance with an advancing pose even during garden games. These animations leave movement, hitboxes and saved progress unchanged. Petting never spends or awards currency. The fountain closes its card immediately for a six-second show of rainbow jets, flying hearts, confetti, fireworks, party music and family dancing. The first-use twirl card appears afterwards. Step away before using a paw ring again. These additions use sounds and animations, with no new speech lines.
 
 There are 39 friend species and 65 hearts in the world. One heart per species plus one for the fountain lets a completed adventure afford every current heart reward.
 
@@ -341,6 +342,7 @@ node tools/test-rewards.js             # milestones, held inputs, reload, founta
 node tools/test-maze.js                # entire maze graph, twelve-cat door, character changes and reload
 node tools/test-journey.js             # hidden glasses, migration and three rescue/cloud/replay cycles
 node tools/test-garden.js              # all 65 visitors, later rescues, repeated games, music and reload
+node tools/test-critters.js            # all 39 species: animation, moods and render isolation (needs @napi-rs/canvas)
 node tools/test-difficulty.js          # mode migration, picker inputs, movement and bumps
 node tools/test-browser.js            # optional Chromium keyboard/mouse/touch checks (needs Playwright)
 node tools/verify-world.js --jobs 4    # all stages, original Medium / Hard movement

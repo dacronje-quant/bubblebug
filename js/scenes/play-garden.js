@@ -151,7 +151,6 @@
         BB.HUD.zoneIcon(c, BB.HOME_ZONE, x + 19, y - 72, 0.55);
         c.strokeStyle = '#a28c6d'; c.lineWidth = 2; c.beginPath(); c.moveTo(x - 1, y - 80); c.lineTo(x + 7, y - 80); c.stroke();
         c.fillStyle = '#a28c6d'; c.fillRect(x - 4, y - 45, 8, 31);
-        G().text('Friends live here', x, y - 136, 15, '#786080', null, 'center', c);
         if (this.earnedFriendKinds().some(kind => !this.save.residents[kind])) {
           c.fillStyle = '#ffb35c'; G().circle(x + 33, y - 105, 8 + Math.sin(t * 0.06), c); c.fill();
         }
@@ -169,17 +168,21 @@
       c.fillStyle = 'rgba(30,18,40,0.38)'; c.fillRect(0, 0, G().W, G().H);
       c.fillStyle = '#fff8f0'; c.strokeStyle = '#ffb3cf'; c.lineWidth = 5;
       G().rrect(255, 116, 450, 326, 55, c); c.fill(); c.stroke();
-      if (w.kind === 'friends') G().text('Bring a friend home', 480, 194, 18, '#82629c', null, 'center', c);
       c.fillStyle = '#ffd5e8'; G().circle(480, 265, 82, c); c.fill();
       if (w.kind === 'friends') {
         c.fillStyle = '#c9e6b7'; G().ellipse(480, 308, 65, 16, 0, c); c.fill();
         if (kind) BB.Critters.drawBug(c, kind, 480, 280, { t, mood: 0, facing: 1, scale: 3, joy: have });
         else { BB.Critters.drawBug(c, 'bunny', 450, 280, { t, mood: 0, facing: 1, scale: 2 }); BB.HUD.buttonIcon(c, 'bubble', 522, 265, 1.2, 0); }
         if (w.kinds.length > 1) for (const [x, d] of [[310, -1], [650, 1]]) {
-          c.fillStyle = '#ffffff'; G().circle(x, 267, 32, c); c.fill();
-          BB.HUD.buttonIcon(c, d < 0 ? 'left' : 'right', x, 267, 0.9, 0);
+          c.fillStyle = '#ffffff'; c.strokeStyle = '#e0cfdd'; c.lineWidth = 2; G().circle(x, 267, 32, c); c.fill(); c.stroke();
+          const neighbour = w.kinds[(w.sel + d + w.kinds.length) % w.kinds.length];
+          BB.Critters.drawBug(c, neighbour, x, 274, { t, mood: 0, facing: d < 0 ? 1 : -1, scale: 1.15, joy: false });
         }
-        G().text(kind ? have ? 'Your rescued friends live in the garden' : 'Invite this kind of friend to the garden' : 'Cheer up critters on your adventure first', 480, 345, 13, '#82629c', null, 'center', c);
+        BB.HUD.zoneIcon(c, BB.HOME_ZONE, 480, 345, 0.65);
+        if (have) {
+          c.strokeStyle = '#5fb77b'; c.lineWidth = 3; c.lineCap = 'round';
+          c.beginPath(); c.moveTo(507, 345); c.lineTo(512, 350); c.lineTo(520, 340); c.stroke();
+        }
       } else {
         c.fillStyle = '#ff7eb6'; G().heart(480, 260, 42 + Math.sin(t * 0.08) * 3, c); c.fill();
         if (this.celebrationT) BB.Gestures.drawPaw(c, 575, 205, 1.6, '#ffd84a', '#b8860b');

@@ -67,6 +67,7 @@
       state: friend ? 'happy' : 'gloomy',
       t: Math.floor(Math.random() * 1000), pauseT: 0, shake: 0, bumpCd: 0,
       hop: 0, hopV: 0, rainbow: 0, danceT: 0, bubbledT: 0, blink: 0, blinkT: 60,
+      visualMood: friend ? 0 : 1, stepT: 0, landT: 0, greetT: 0, noticed: false, moving: false,
       r: isKing ? 40 : (RADIUS[kind] || 15) * 1.15,
     };
     if (b.behavior === 'walk') {
@@ -85,7 +86,11 @@
   }
 
   function update(b, ctx) {
+    const startX = b.x;
     b.t++;
+    b.visualMood = BB.lerp(b.visualMood == null ? b.mood : b.visualMood, b.mood, 0.12);
+    if (b.landT > 0) b.landT--;
+    if (b.greetT > 0) b.greetT--;
     if (b.shake > 0) b.shake--;
     if (b.bumpCd > 0) b.bumpCd--;
     if (b.rainbow > 0) b.rainbow--;
@@ -95,9 +100,13 @@
     const pb = ctx.pl.body;
     const pcx = pb.x + pb.w / 2, pcy = pb.y + pb.h / 2;
     const dx = pcx - b.x, dy = pcy - b.y, dist = Math.hypot(dx, dy);
+    b.lookAt = dist < 180 ? pcx : b.x;
     const happy = b.state === 'happy';
+    if (happy && dist < 105 && !b.noticed) { b.greetT = 66; b.noticed = true; }
+    else if (dist > 150) b.noticed = false;
 
     if (b.state === 'bubbled') {
+      b.moving = false;
       b.bubbledT++;
       b.y -= 0.7;
       if (b.bubbledT > 50) befriend(b, ctx);
@@ -116,7 +125,7 @@
       if (b.hopV || b.hop < 0) {
         b.x += b.facing * (SPEED[b.kind] || 1) * (happy ? 1.2 : 1);
         b.hop += b.hopV; b.hopV += 0.3;
-        if (b.hop >= 0) { b.hop = 0; b.hopV = 0; b.pauseT = (happy ? 15 : 35) + Math.random() * 40; }
+        if (b.hop >= 0) { b.hop = 0; b.hopV = 0; b.landT = 9; b.pauseT = (happy ? 15 : 35) + Math.random() * 40; }
       }
       if (happy && dist < 110 && b.hop === 0) b.facing = dx > 0 ? 1 : -1;
     } else if (b.behavior === 'walk') {
@@ -135,7 +144,7 @@
       }
       // happy hop when the kitten is near
       if (happy && dist < 90 && b.hop === 0 && Math.random() < 0.04) b.hopV = -3.2;
-      if (b.hopV || b.hop < 0) { b.hop += b.hopV; b.hopV += 0.3; if (b.hop >= 0) { b.hop = 0; b.hopV = 0; } }
+      if (b.hopV || b.hop < 0) { b.hop += b.hopV; b.hopV += 0.3; if (b.hop >= 0) { b.hop = 0; b.hopV = 0; b.landT = 9; } }
       if (happy && dist < 110) b.facing = dx > 0 ? 1 : -1;
     } else if (b.behavior === 'hover') {
       const k = happy ? 1.5 : 1;
@@ -156,6 +165,9 @@
       }
       b.facing = dx > 0 ? 1 : -1;
     }
+
+    b.moving = Math.abs(b.x - startX) > 0.02;
+    b.stepT += Math.abs(b.x - startX) * 0.4;
 
     // ── a gloomy bump makes the kitten sadder (gloomy only) ──
     if (!happy && ctx.pl.state === 'play' && b.bumpCd <= 0 && Math.abs(dx) < b.r * 0.85 + 6 && Math.abs(dy) < b.r * 0.85 + 8) {
@@ -180,6 +192,7 @@
       // friends giggle at bubbles
       for (let i = 0; i < 3; i++) PT().heart(b.x, b.y - 10);
       b.hopV = -3;
+      b.greetT = 66;
       return true;
     }
     if (b.state !== 'gloomy') return false;
@@ -201,6 +214,7 @@
     b.state = 'happy';
     b.rainbow = 200;
     b.danceT = 90;
+    b.greetT = 66;
     b.homeX = b.x;
     // ground critters drop back to their floor (the bubble lifted them);
     // flyers and danglers just stay where the bubble popped
@@ -220,12 +234,14 @@
       c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 1;
       c.beginPath(); c.moveTo(x, b.anchorY - cam.y); c.lineTo(x, y - 8); c.stroke();
     }
-    const dance = b.danceT > 0 ? Math.sin(b.danceT * 0.35) * 0.3 : 0;
+    const dance = b.danceT > 0 ? Math.sin(b.t * 0.16) * 0.13 : 0;
     const st = {
-      t: b.t, mood: b.mood, facing: b.facing, blink: b.blink, joy: b.state === 'happy' && (b.danceT > 0 || b.t % 200 < 40),
-      shake: b.shake ? Math.sin(b.shake * 2) * 2.5 : 0, walk: b.behavior === 'walk' && !b.pauseT, spin: dance,
+      t: b.t, mood: b.visualMood == null ? b.mood : b.visualMood, facing: b.facing, blink: b.blink, joy: b.state === 'happy' && (b.danceT > 0 || b.greetT > 0 || b.t % 200 < 40),
+      shake: b.shake ? Math.sin(b.shake * 2) * 2.5 : 0, walk: b.behavior === 'walk' && b.moving, spin: dance,
       rainbow: b.rainbow > 0 ? Math.min(1, b.rainbow / 40) : 0, squash: b.hopV < 0 ? 1.12 : b.hop < 0 ? 1.05 : 1,
-      lookX: BB.clamp(((b.lookAt || 0) - b.x) / 100, -1, 1),
+      step: b.stepT, landing: b.landT / 9, greeting: b.greetT ? Math.sin(b.greetT / 66 * Math.PI) : 0,
+      ground: ['walk', 'hop'].includes(b.behavior) ? (b.footOffset == null ? (LIFT[b.kind] || 9) * LOOK : b.footOffset - 1) - b.hop : undefined,
+      lookX: b.lookAt == null ? 0 : BB.clamp((b.lookAt - b.x) * b.facing / 100, -1, 1),
     };
     if (b.king) {
       st.scale = KING_LOOK;

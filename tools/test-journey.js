@@ -26,18 +26,21 @@ function discoveries(g) {
   assert.equal(B.Play.save.wear.face, 'starshades');
   assert.equal(B.Play.save.starsSpent, 0);
   assert.equal(B.World.rooms.flatMap(r => B.Play.ents[r.id].things).some(th => th.type === 'glasses'), false);
-  // All 12 presents + 3 discoveries fit two pages in the original panel.
+  // All boss presents join their clothing category; hats use two pages.
   for (const item of B.Wardrobe.LIST.filter(a => a.boss)) B.Play.save.outfits[item.id] = 1;
   place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(60);
-  B.Play.wardrobeTab(2); assert.equal(B.Play.wardrobeItems().length, 15);
-  B.Input.pointers.push({ x: 780, y: 308 }); tick(); assert.equal(B.Play.wardrobe.sel, 8);
+  B.Play.wardrobeTab(0); assert.equal(B.Play.wardrobeItems().length, 15);
+  B.Input.pointers.push({ x: 647, y: 308 }); tick(); assert.equal(B.Play.wardrobe.sel, 8);
+  assert.ok(B.Play.wardrobeItems().slice(8).every(item => item.slot === 'head'));
+  B.Play.wardrobeTab(1); assert.equal(B.Play.wardrobeItems().length, 4);
+  B.Play.wardrobeTab(2); assert.equal(B.Play.wardrobeItems().length, 4);
   for (const id of ['googly', 'disguise', 'starshades']) {
     const index = B.Play.wardrobeItems().findIndex(a => a.id === id);
     B.Play.toggleOutfit(index); assert.equal(B.Play.save.wear.face, id);
   }
   tick(1, ['ArrowUp']); tick(); tick(1, ['ArrowUp']); tick(); assert.equal(B.Play.wardrobe.focus, 'tabs');
   B.Play.closeWardrobe();
-  console.log('✓ all three hidden glasses are discovered, equipped, saved and browsed with paged gifts');
+  console.log('✓ all hidden glasses save in Glasses; every boss gift is reachable in Hats or Necklaces');
   return g;
 }
 
@@ -97,7 +100,7 @@ function cycles(g) {
     assert.notEqual(B.Play.ents.g6.bosses[0].state, 'happy');
     assert.ok(B.World.rooms.flatMap(r => B.Play.ents[r.id].bugs).every(b => b.state === 'gloomy'));
     assert.equal(B.RainbowJourney.unlocked(save, 'rainbow'), false); assert.equal(B.RainbowJourney.unlocked(save, 'cloud'), false);
-    assert.equal(B.Play.wardrobeTabs(), 4); // permanent rescued character choice
+    assert.equal(B.Play.wardrobeTabs(), 6); // permanent rescued character choice
     assert.equal(B.Settings.difficulty, 'hard');
     tick(400); assert.equal(B.Play.intro, null); assert.equal(save.introDone, 1);
     B.Play.writeSave(); assert.ok(storage.get('bubblebug_kingdom_v2'));

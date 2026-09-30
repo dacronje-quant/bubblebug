@@ -136,22 +136,23 @@
       c.save(); c.fillStyle = 'rgba(35,28,56,0.6)'; c.fillRect(0, 0, G().W, G().H);
       c.fillStyle = '#fff8ee'; c.strokeStyle = '#ff9ec7'; c.lineWidth = 5;
       G().rrect(200, 107, 560, 351, 36, c); c.fill(); c.stroke();
-      G().text(replay ? 'Make the kingdom gloomy again?' : 'Rescue Rainbow', 480, 156, replay ? 22 : 26, '#82629c', null, 'center', c);
+      G().text(replay ? 'Replay as Rainbow?' : 'Rescue Rainbow', 480, 156, 26, '#82629c', null, 'center', c);
       if (replay) {
         BB.Kittens.draw(c, 'rainbow', { mode: 'sit', happy: true, t, wear: this.save.wear }, 354, 296, 2.7, 1);
         sadCloud(c, 599, 243, t, 2.3);
         BB.HUD.zoneIcon(c, BB.HOME_ZONE, 599, 291, 0.8);
-        c.strokeStyle = '#c7b5d6'; c.lineWidth = 4; c.lineCap = 'round';
-        c.beginPath(); c.moveTo(426, 247); c.lineTo(506, 247); c.lineTo(494, 235); c.moveTo(506, 247); c.lineTo(494, 259); c.stroke();
-        G().text('Cats, stars, hearts, bosses and puzzles restart', 480, 329, 15, '#82629c', null, 'center', c);
-        G().text('Keep your skills and outfits · Play as Rainbow', 480, 351, 14, '#998097', null, 'center', c);
+        G().text('Restart adventure · Keep skills and outfits', 480, 339, 15, '#82629c', null, 'center', c);
       } else {
         rainbow(c, 392, 291, t, 1.15);
         BB.Kittens.draw(c, 'rainbow', { mode: 'sit', t }, 391, 282, 1.7, 1);
         c.fillStyle = '#55945b'; G().rrect(528, 201, 116, 91, 12, c); c.fill();
         c.strokeStyle = '#eaddb4'; c.lineWidth = 8;
         c.beginPath(); c.moveTo(630, 280); c.lineTo(555, 280); c.lineTo(555, 252); c.lineTo(612, 252); c.lineTo(612, 217); c.lineTo(543, 217); c.stroke();
-        G().text('Follow the maze and wake the three paw stones', 480, 331, 15, '#82629c', null, 'center', c);
+        BB.GardenMaze.PADS.forEach((p, i) => {
+          c.fillStyle = this.save.pads[p.key] ? '#b6e5ac' : '#e9ded4';
+          G().circle(446 + i * 34, 336, 12, c); c.fill();
+          BB.Gestures.drawPaw(c, 446 + i * 34, 336, 0.5, this.save.pads[p.key] ? '#4d9259' : '#b29d89', '#b29d89');
+        });
       }
       for (let i = 0; i < 2; i++) {
         const q = button(i), on = w.focus === i;

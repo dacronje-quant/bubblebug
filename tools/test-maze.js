@@ -99,8 +99,8 @@ function check(g) {
   B.Play.closeMaze();
   assert.equal(B.Play.lastZone, B.Play.room.zone); assert.equal(B.Music.wanted, B.ZONES[B.Play.room.zone].key);
   place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(50);
-  assert.equal(B.Play.wardrobeTabs(), 4);
-  B.Play.wardrobeTab(3);
+  assert.equal(B.Play.wardrobeTabs(), 6);
+  B.Play.wardrobeTab(5);
   const body = B.Play.pl.body;
   for (const [i, cat] of ['marshmallow', 'phoebe', 'rainbow'].entries()) {
     B.Play.toggleOutfit(i); assert.equal(save.cat, cat); assert.equal(B.Play.pl.cat, cat); assert.equal(B.Play.pl.body, body);

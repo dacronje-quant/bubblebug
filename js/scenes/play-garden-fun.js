@@ -63,7 +63,9 @@
           else if (f.kind === 'bubbles') { x = f.x + Math.sin(f.t * 0.014 + i * 2.4) * 130; y = f.y - 18 - (v.behavior === 'hover' ? 48 : 0); }
           else { const a = f.t * 0.025 + i * Math.PI * 2 / Math.max(1, f.friends.length); x = f.x + Math.cos(a) * 125; y = f.y - 23 - Math.sin(a) * 14; }
           if (returning) { x = v.homeX; y = v.homeY; }
+          const beforeX = v.x;
           v.x = BB.lerp(v.x, BB.clamp(x, r.px + 3 * T, r.px + r.pw - 3 * T), returning ? 0.12 : 0.035);
+          v.stepT += Math.abs(v.x - beforeX) * 0.4; v.moving = Math.abs(v.x - beforeX) > 0.02;
           v.y = BB.lerp(v.y, y, returning ? 0.12 : 0.06); v.facing = x > v.x ? 1 : -1;
           if (v.behavior === 'dangle') v.anchorY = v.y - 65;
           v.danceT = returning ? 0 : 30; v.hop = returning ? 0 : -Math.max(0, Math.sin(f.t * 0.13 + i)) * (f.kind === 'bubbles' ? 12 : 5);
@@ -92,7 +94,6 @@
       if (q.kind === 'ball') {
         if (f) ball(c, f.ball.x - cam.x, f.ball.y - cam.y, f.t);
         else ball(c, x, y - 18, 0);
-        G().text('Ball play', x, y - 53, 14, '#786080', null, 'center', c);
       } else if (q.kind === 'bubbles') {
         c.strokeStyle = '#bc8ed1'; c.lineWidth = 5; c.lineCap = 'round';
         c.beginPath(); c.moveTo(x - 8, y - 13); c.lineTo(x + 4, y - 40); c.stroke();
@@ -101,14 +102,12 @@
           const u = ((t + i * 39) % 180) / 180;
           G().bubble(x + Math.sin(t * 0.013 + i * 2) * (f ? 150 : 30), y - 65 - u * (f ? 150 : 45), 7 + i % 4 * 2, colors[i % colors.length], (1 - u) * 0.8, c);
         }
-        G().text('Bubble play', x, y - 86, 14, '#786080', null, 'center', c);
       } else {
         BB.Gestures.drawPaw(c, x, y - 11, 1.3, '#bc8ed1', '#9468b0');
         for (const d of [-1, 1]) {
           const a = f ? Math.sin(t * 0.08) * 5 : 0;
           G().text('♪', x + d * 45, y - 37 + a * d, 24, '#bc8ed1', null, 'center', c);
         }
-        G().text('Dance together', x, y - 66, 14, '#786080', null, 'center', c);
       }
       if (!f) BB.Links.hintRing(c, x, y - 4, t);
       if (this.room === room && this.funHold > 0) BB.Links.holdRing(c, x, y - 35, this.funHold / BB.Links.HOLD);

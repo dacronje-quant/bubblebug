@@ -154,7 +154,6 @@
       G().text('Secret Garden', 197, 28, 23, '#326452', null, 'center', c);
       for (let i = 0; i < 3; i++) BB.Gestures.drawPaw(c, 448 + i * 40, 28, 0.85,
         this.save.pads[PADS[i].key] ? '#ffcb65' : '#b2c4ac', '#628567');
-      G().text('Find the three paw stones', 688, 28, 16, '#527760', null, 'center', c);
       c.fillStyle = '#79b87c'; G().circle(850, 30, 23, c); c.fill(); BB.HUD.zoneIcon(c, BB.HOME_ZONE, 850, 30, 0.7);
       c.fillStyle = '#617857'; G().rrect(X - 5, Y - 5, W * TILE + 10, H * TILE + 10, 16, c); c.fill();
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -199,15 +198,13 @@
       const px = X + (m.x + 0.5 + (step ? (step.x - m.x) * k : 0)) * TILE;
       const py = Y + (m.y + 0.5 + (step ? (step.y - m.y) * k : 0)) * TILE;
       BB.Kittens.draw(c, this.pl.cat, { mode: step ? 'run' : 'sit', phase: t * 0.3, happy: true, t }, px, py + 10, 0.72, m.facing);
-      G().text('← ↑ ↓ →  or WASD', 193, 510, 16, '#527760', null, 'center', c);
-      CONTROLS.forEach((d, i) => {
+      if (!m.choice) CONTROLS.forEach((d, i) => {
         const bx = 386 + i * 62;
         c.fillStyle = '#80b984'; G().circle(bx, 506, 23, c); c.fill();
         c.save(); c.translate(bx, 506); c.rotate({ left: Math.PI, up: -Math.PI / 2, down: Math.PI / 2, right: 0 }[d]);
         c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.lineCap = 'round';
         c.beginPath(); c.moveTo(-8, 0); c.lineTo(9, 0); c.moveTo(2, -7); c.lineTo(9, 0); c.lineTo(2, 7); c.stroke(); c.restore();
       });
-      G().text('Home is always open →', 747, 510, 16, '#527760', null, 'center', c);
       if (m.choice) this.drawMazeCatChoice(c, t);
       c.restore();
     },
@@ -216,8 +213,7 @@
       c.fillStyle = 'rgba(35,61,46,0.6)'; c.fillRect(0, 0, G().W, G().H);
       c.fillStyle = '#fff8ee'; c.strokeStyle = '#dbadf1'; c.lineWidth = 5;
       G().rrect(180, 106, 600, 337, 40, c); c.fill(); c.stroke();
-      G().text('Rainbow is safe!', 480, 151, 25, '#82629c', null, 'center', c);
-      G().text('Choose your kitten', 480, 184, 17, '#998097', null, 'center', c);
+      G().text('Rainbow!', 480, 157, 27, '#82629c', null, 'center', c);
       CATS.forEach((id, i) => {
         const x = 300 + i * 180;
         c.fillStyle = '#f5e7f9'; c.strokeStyle = m.sel === i ? '#f3b24b' : '#d7c4de'; c.lineWidth = m.sel === i ? 5 : 2;
