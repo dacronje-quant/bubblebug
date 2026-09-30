@@ -9,7 +9,7 @@ function check(g) {
   const { BB: B, tick, keys, place } = g;
   B.Save.data = B.Save.fresh(); B.Save.data.introDone = 1; B.Main.set('play', {});
   const P = B.Play, save = P.save, wait = B.Links.HOLD, exitWait = B.GardenMaze.EXIT_HOLD;
-  assert.ok(wait >= 90); assert.ok(exitWait >= 180);
+  assert.ok(wait >= 45 && wait < 90); assert.ok(exitWait > wait && exitWait < 180);
   const hm = B.World.byId.hm;
   const flapTile = B.World.findThings('h')[0], liftTile = B.World.findThings('u')[0];
   const links = [
@@ -31,7 +31,7 @@ function check(g) {
     frames(wait - 1); locked = true; frames(1); assert.equal(th.hold, 0); locked = false;
     frames(wait - 1); assert.equal(journeys, 0); frames(1); assert.equal(journeys, 1);
   }
-  console.log('✓ doors, cat flaps and lifts wait 1½ seconds; walking away or a travel lock clears progress');
+  console.log('✓ doors, cat flaps and lifts wait 1 second; walking away or a travel lock clears progress');
 
   place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(wait - 1); assert.equal(P.wardrobe, null);
   tick(1, ['ArrowRight']); assert.equal(P.mirrorHold, 0);
@@ -44,7 +44,7 @@ function check(g) {
   B.Home.familyOrder().forEach(id => { save.family[id] = 1; });
   place('nm', 21, 32); tick(wait - 1); assert.equal(P.portalChoice, null);
   tick(); assert.equal(P.portalChoice.kind, 'rainbow'); P.closeJourneyChoice();
-  console.log('✓ wardrobe, garden choices/play and rainbow entry share the longer automatic wait');
+  console.log('✓ wardrobe, garden choices/play and rainbow entry share the shorter automatic wait');
 
   P.openMaze(); tick(exitWait * 2); assert.ok(P.maze); assert.equal(P.maze.exitHold, 0);
   P.closeMaze(); save.mazePosition = { x: 999, y: 999 }; P.openMaze(); tick(exitWait * 2);
@@ -57,7 +57,7 @@ function check(g) {
   tick(8); assert.equal(P.maze.y, adjacent.y); tick(exitWait); assert.ok(P.maze);
   walkMaze(g, M.START); tick(exitWait - 1); assert.ok(P.maze); tick(); assert.equal(P.maze, null);
   assert.equal(save.inMaze, false); assert.equal(P.room.id, 'nm');
-  console.log('✓ new maze entries are safe; returning to the house waits 3 seconds, and a quick turn cancels it');
+  console.log('✓ new maze entries are safe; returning to the house waits 2 seconds, and a quick turn cancels it');
 
   P.openMaze(); tick(1, ['ArrowUp']); assert.ok(P.maze.moving);
   B.Input.pointers.push({ x: 850, y: 30 }); tick(); tick(7);
@@ -86,7 +86,7 @@ function check(g) {
   tick(9, ['ArrowRight']); assert.equal(P.maze.choice, false);
   tick(9, ['ArrowLeft']); tick(exitWait - 1); assert.ok(P.maze); tick(); assert.equal(P.maze, null);
   assert.equal(P.room.id, 'nm'); assert.equal(P.save.mazeSolved, true);
-  console.log('✓ rescue exit also waits 3 seconds; save/reload clears timers and preserves the rescued kitten');
+  console.log('✓ rescue exit also waits 2 seconds; save/reload clears timers and preserves the rescued kitten');
 }
 if (require.main === module) check(bootGame());
 module.exports = { check };
