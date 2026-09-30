@@ -23,12 +23,12 @@ function checks(g) {
   tick(); tick(1, ['KeyX']); assert.equal(save.starsSpent, 0); assert.equal(save.wear.head, null);
   tick();
   tap(B.Play.wardrobeTabX(4), 88); assert.equal(B.Play.wardrobe.tab, 4);
-  tap(593, 150); assert.equal(save.starsSpent, 0); // preview a milestone item
-  tap(593, 150); assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.trail, 'rainbow');
-  tap(593, 150); assert.equal(save.starsSpent, 0);
+  tap(593, 178); assert.equal(save.starsSpent, 0); // preview a milestone item
+  tap(593, 178); assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.trail, 'rainbow');
+  tap(593, 178); assert.equal(save.starsSpent, 0);
   tap(B.Play.wardrobeTabX(3), 88);
-  tap(769, 150); tap(769, 150); assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.bubble, 'flower');
-  tap(505, 88); tap(681, 150); tap(681, 150);
+  tap(769, 178); tap(769, 178); assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.bubble, 'flower');
+  tap(505, 88); tap(681, 178); tap(681, 178);
   assert.equal(save.starsSpent, 0); assert.equal(save.outfits.wizard, 1);
   assert.equal(B.Economy.balance(save, 'stars'), 250);
   assert.equal(JSON.stringify(save.sparkles), stars); assert.equal(JSON.stringify(save.friends), hearts);
@@ -39,8 +39,8 @@ function checks(g) {
   tick(1, ['ArrowRight']); assert.equal(B.Play.wardrobe.tab, 2); tick();
   tick(1, ['ArrowLeft']); assert.equal(B.Play.wardrobe.tab, 1); tick();
   tick(1, ['ArrowDown']); assert.equal(B.Play.wardrobe.focus, 'items'); tick();
-  tap(B.Play.wardrobeTabX(2), 88); tap(505, 150); assert.equal(save.wear.face, 'scuba');
-  tap(B.Play.wardrobeTabX(1), 88); tap(505, 150); assert.equal(save.wear.neck, 'sparkly');
+  tap(B.Play.wardrobeTabX(2), 88); tap(505, 178); assert.equal(save.wear.face, 'scuba');
+  tap(B.Play.wardrobeTabX(1), 88); tap(505, 178); assert.equal(save.wear.neck, 'sparkly');
   assert.equal(save.wear.head, 'wizard'); assert.equal(save.wear.face, 'scuba');
   for (const [tab, slot] of ['head', 'neck', 'face', 'bubble', 'trail'].entries()) {
     tap(B.Play.wardrobeTabX(tab), 88);
@@ -56,7 +56,7 @@ function checks(g) {
   console.log('✓ five wardrobe categories, simultaneous hat/neck/glasses, free styles, keyboard focus and reload');
 
   // Invitations require an earned species and one heart, exactly once.
-  const visitorCount = () => B.World.rooms.flatMap(r => B.Play.ents[r.id].bugs).filter(b => save.friends[b.key] && save.residents[b.kind]).length;
+  const visitorCount = () => B.World.rooms.flatMap(r => B.Play.ents[r.id].bugs).filter(b => save.friends[b.key] && save.residents[b.kind] && !save.hiddenResidents[b.kind]).length;
   place('ng', 16, 31); tick(50); assert.equal(B.Play.gardenChoice.kind, 'friends');
   assert.equal(save.heartsSpent, 0); assert.equal(B.Play.homeVisitors.length, 0);
   tick(50, ['KeyX']); assert.equal(save.heartsSpent, 1); assert.equal(B.Play.homeVisitors.length, visitorCount());

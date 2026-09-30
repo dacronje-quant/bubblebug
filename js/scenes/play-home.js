@@ -14,10 +14,10 @@
 
   // wardrobe layout (logical screen px)
   const MIRROR = { x: 290, y: 272, rx: 118, ry: 168 };
-  const cell = i => ({ x: 505 + (i % 4) * 88, y: 150 + Math.floor(i / 4) * 96, r: 36 });
+  const cell = i => ({ x: 505 + (i % 4) * 88, y: 178 + Math.floor(i / 4) * 96, r: 36 });
   const DONE = { x: 776, y: 438, r: 34 };
   const CATEGORIES = ['head', 'neck', 'face', 'bubble', 'trail', 'cat'];
-  const pageDot = (i, n) => ({ x: 625 + (i - (n - 1) / 2) * 44, y: 308, r: 20 });
+  const pageDot = (i, n) => ({ x: 625 + (i - (n - 1) / 2) * 44, y: 333, r: 20 });
 
   Object.assign(BB.Play, {
     // ──── Invited friends live in the neighbourhood ────
@@ -46,15 +46,15 @@
         visitor.roamLo = (room.x + lo) * T; visitor.roamHi = (room.x + hi) * T;
         visitor.petNear = false; visitor.petCd = 0;
         return visitor;
-      });
+      }).filter(visitor => !this.save.hiddenResidents[visitor.kind]);
     },
 
     petHomeVisitor(visitor) {
       if (visitor.petCd > 0) return false;
-      visitor.petCd = 90; visitor.hopV = -3; visitor.danceT = 60;
+      visitor.petCd = 90;
       visitor.greetT = 66;
       S().purr();
-      for (let i = 0; i < 3; i++) PT().heart(visitor.x, visitor.y - 20);
+      PT().heart(visitor.x, visitor.y - 20);
       this.pl.happyT = Math.max(this.pl.happyT, 40);
       return false; // play bubbles pass through visitors to reach buds and music flowers
     },
@@ -62,10 +62,19 @@
     updateHomeVisitors() {
       if (!['ng', 'np', 'nr'].includes(this.room.id)) return;
       const ctx = this.ctx(), b = this.pl.body, room = this.room;
+      ctx.garden = true;
+      const players = new Set(this.gardenFun ? this.gardenFun.friends : []);
       for (const visitor of this.homeVisitors) {
         if (visitor.room !== room.id) continue;
         if (visitor.petCd > 0) visitor.petCd--;
-        BB.Bugs.update(visitor, ctx);
+        if (players.has(visitor)) BB.Bugs.animate(visitor, ctx);
+        else if (visitor.gardenReturning) {
+          BB.Bugs.animate(visitor, ctx);
+          BB.GardenFun.steer(visitor, visitor.homeX, visitor.homeY);
+          if (Math.hypot(visitor.x - visitor.homeX, visitor.y - visitor.homeY) < 2) {
+            visitor.gardenReturning = false; visitor.pauseT = 90;
+          }
+        } else BB.Bugs.update(visitor, ctx);
         const lo = visitor.roamLo, hi = visitor.roamHi;
         if (visitor.x < lo || visitor.x > hi) {
           visitor.x = BB.clamp(visitor.x, lo, hi);
@@ -242,12 +251,12 @@
         c.fillStyle = i === w.tab ? '#ffe7ad' : '#ffffff'; c.strokeStyle = '#d8c8d8'; c.lineWidth = 2;
         G().circle(x, 88, 26, c); c.fill(); c.stroke();
         if (i === w.tab && w.focus === 'tabs') { c.strokeStyle = '#ffb35c'; c.lineWidth = 4; G().circle(x, 88, 32, c); c.stroke(); }
-        if (i === 0) BB.Wardrobe.icon(c, 'partyhat', x, 88, 1.6, t);
-        if (i === 1) BB.Wardrobe.icon(c, 'jingle', x, 74, 1.7, t);
-        if (i === 2) BB.Wardrobe.icon(c, 'starshades', x, 88, 1.6, t);
+        if (i === 0) BB.Wardrobe.framedIcon(c, 'partyhat', x, 88, 31, t);
+        if (i === 1) BB.Wardrobe.framedIcon(c, 'jingle', x, 88, 31, t);
+        if (i === 2) BB.Wardrobe.framedIcon(c, 'starshades', x, 88, 31, t);
         if (i === 3) BB.Cosmetics.icon(c, BB.Cosmetics.LIST[1], x, 88, 1.15, t);
         if (i === 4) BB.Cosmetics.icon(c, BB.Cosmetics.LIST[6], x, 88, 1.05, t);
-        if (i === 5) BB.Kittens.draw(c, 'rainbow', { mode: 'sit', t }, x, 102, 0.9, 1);
+        if (i === 5) BB.Kittens.draw(c, 'rainbow', { mode: 'sit', t }, x, 101, 0.7, 1);
       }
       // Locked items can be previewed; stars are never spent.
       if (selected && (selected.slot === 'bubble' || selected.slot === 'trail')) BB.Cosmetics.icon(c, selected, MIRROR.x + 8, MIRROR.y - 68, 2, t);
@@ -261,15 +270,14 @@
         const q = cell(i % 8), have = it.slot === 'cat' ? save.rainbowUnlocked : BB.Economy.unlocked(save, it);
         const worn = it.slot === 'cat' ? save.cat === it.id : style ? save.cosmetics[it.slot] === it.value : (save.wear || {})[it.slot] === it.id, sel = i === w.sel && w.focus === 'items';
         const afford = have;
-        const k = sel ? 1.1 + Math.sin(t * 0.15) * 0.04 : 1;
         const wx = sel && w.wiggle ? Math.sin(w.wiggle * 1.5) * 4 : 0;
-        c.save(); c.translate(q.x + wx, q.y); c.scale(k, k);
+        c.save(); c.translate(q.x + wx, q.y);
         if (afford && (sel || !have)) G().drawGlow(0, 0, 48, '#fff1c2', sel ? 0.7 : 0.4, c);
         c.fillStyle = '#ffffff'; c.strokeStyle = worn ? '#5fd48a' : sel ? '#ffb35c' : '#d8c8d8'; c.lineWidth = worn || sel ? 5 : 3;
         G().circle(0, 0, q.r, c); c.fill(); c.stroke();
-        if (it.slot === 'cat') BB.Kittens.draw(c, it.id, { mode: 'sit', happy: true, t }, 0, 22, 1.4, 1);
-        else if (style) BB.Cosmetics.icon(c, it, 0, 0, 1.65, t);
-        else BB.Wardrobe.icon(c, it.id, 0, 0, 2.4, t);
+        if (it.slot === 'cat') BB.Kittens.draw(c, it.id, { mode: 'sit', happy: true, t }, 0, 22, it.id === 'rainbow' ? 1.08 : 1.35, 1);
+        else if (style) BB.Cosmetics.icon(c, it, 0, 0, 1.25, t);
+        else BB.Wardrobe.framedIcon(c, it.id, 0, 0, 52, t);
         if (!have) {
           c.strokeStyle = '#aaa0b4'; c.lineWidth = 2; G().rrect(19, 19, 13, 11, 3, c); c.stroke();
           c.beginPath(); c.arc(25.5, 19, 4, Math.PI, 0); c.stroke();
@@ -285,17 +293,17 @@
         for (let i = 0; i < pages; i++) { const q = pageDot(i, pages); c.fillStyle = i === page ? '#ffb35c' : '#d8c8d8'; G().circle(q.x, q.y, i === page ? 10 : 8, c); c.fill(); }
       }
       const next = BB.Economy.milestones(save), total = BB.Economy.balance(save, 'stars');
-      G().text(selected ? selected.name : 'Found treasures', 625, 351, 18, '#795830', null, 'center', c);
-      if (selected && selected.discover && !BB.Economy.unlocked(save, selected)) BB.HUD.zoneIcon(c, { googly: 0, disguise: 2, starshades: 6 }[selected.id], 625, 373, 0.48);
+      G().text(selected ? selected.name : 'Found treasures', 625, 365, 18, '#795830', null, 'center', c);
+      if (selected && selected.discover && !BB.Economy.unlocked(save, selected)) BB.HUD.zoneIcon(c, { googly: 0, disguise: 2, starshades: 6 }[selected.id], 625, 388, 0.48);
       const target = selected && Number.isFinite(selected.stars) && !BB.Economy.unlocked(save, selected) ? selected : next;
-      const bx = 467, by = 392, bw = 242;
+      const bx = 515, by = 411, bw = 220;
       c.fillStyle = '#e8deea'; G().rrect(bx, by, bw, 15, 7, c); c.fill();
       c.fillStyle = '#ffd665'; G().rrect(bx, by, bw * (target ? Math.min(1, total / target.stars) : 1), 15, 7, c); c.fill();
-      c.fillStyle = '#ffd665'; G().star(target ? 535 : 588, 432, 9, 5, 0.5, -Math.PI / 2, c); c.fill();
+      c.fillStyle = '#ffd665'; G().star(target ? 573 : 625, 458, 9, 5, 0.5, -Math.PI / 2, c); c.fill();
       if (target) {
-        G().text(String(Math.max(0, target.stars - total)), 573, 432, 18, '#795830', null, 'center', c);
-        if (BB.Cosmetics.LIST.some(item => item.id === target.id)) BB.Cosmetics.icon(c, target, 646, 432, 1.05, t);
-        else BB.Wardrobe.icon(c, target.id, 646, 432, 1.4, t);
+        G().text(String(Math.max(0, target.stars - total)), 611, 458, 18, '#795830', null, 'center', c);
+        if (BB.Cosmetics.LIST.some(item => item.id === target.id)) BB.Cosmetics.icon(c, target, 684, 458, 1.05, t);
+        else BB.Wardrobe.framedIcon(c, target.id, 684, 458, 27, t);
       }
       // ✓ all done
       c.fillStyle = '#5fd48a'; c.strokeStyle = '#ffffff'; c.lineWidth = 4;

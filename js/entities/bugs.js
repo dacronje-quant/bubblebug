@@ -85,8 +85,8 @@
     return b;
   }
 
-  function update(b, ctx) {
-    const startX = b.x;
+  // Visual time advances once, even when a garden game owns movement.
+  function animate(b, ctx) {
     b.t++;
     b.visualMood = BB.lerp(b.visualMood == null ? b.mood : b.visualMood, b.mood, 0.12);
     if (b.landT > 0) b.landT--;
@@ -104,6 +104,12 @@
     const happy = b.state === 'happy';
     if (happy && dist < 105 && !b.noticed) { b.greetT = 66; b.noticed = true; }
     else if (dist > 150) b.noticed = false;
+    return { dx, dy, dist, happy };
+  }
+
+  function update(b, ctx) {
+    const startX = b.x, { dx, dy, dist, happy } = animate(b, ctx);
+    const calm = !!ctx.garden;
 
     if (b.state === 'bubbled') {
       b.moving = false;
@@ -120,18 +126,18 @@
       else if (b.hop === 0 && b.hopV === 0) {
         const aheadX = Math.floor((b.x + b.facing * 30) / T);
         if (BB.Physics.solidSide(W().tile(aheadX, Math.floor(b.y / T))) || !landable(aheadX, Math.floor((b.y + (b.footOffset || 14)) / T)) || Math.abs(b.x - b.homeX) > 140) b.facing *= -1;
-        b.hopV = happy ? -4 : -3;
+        b.hopV = calm ? -1.9 : happy ? -4 : -3;
       }
       if (b.hopV || b.hop < 0) {
-        b.x += b.facing * (SPEED[b.kind] || 1) * (happy ? 1.2 : 1);
+        b.x += b.facing * (SPEED[b.kind] || 1) * (calm ? 0.55 : happy ? 1.2 : 1);
         b.hop += b.hopV; b.hopV += 0.3;
-        if (b.hop >= 0) { b.hop = 0; b.hopV = 0; b.landT = 9; b.pauseT = (happy ? 15 : 35) + Math.random() * 40; }
+        if (b.hop >= 0) { b.hop = 0; b.hopV = 0; b.landT = 9; b.pauseT = (calm ? 100 : happy ? 15 : 35) + Math.random() * (calm ? 90 : 40); }
       }
-      if (happy && dist < 110 && b.hop === 0) b.facing = dx > 0 ? 1 : -1;
+      if (happy && dist < 110 && b.hop === 0 && (!calm || Math.abs(dx) > 35)) b.facing = dx > 0 ? 1 : -1;
     } else if (b.behavior === 'walk') {
       if (b.pauseT > 0) b.pauseT--;
       else {
-        const sp = (SPEED[b.kind] || 0.4) * (happy ? 1.3 : 1);
+        const sp = (SPEED[b.kind] || 0.4) * (calm ? 0.65 : happy ? 1.3 : 1);
         const nx = b.x + b.facing * sp;
         const aheadX = Math.floor((nx + b.facing * 14) / T);
         const footY = Math.floor((b.y + (b.footOffset || 12)) / T);
@@ -143,18 +149,22 @@
         if (Math.random() < 0.004) b.pauseT = 60 + Math.random() * 90; // a little sigh
       }
       // happy hop when the kitten is near
-      if (happy && dist < 90 && b.hop === 0 && Math.random() < 0.04) b.hopV = -3.2;
+      if (!calm && happy && dist < 90 && b.hop === 0 && Math.random() < 0.04) b.hopV = -3.2;
       if (b.hopV || b.hop < 0) { b.hop += b.hopV; b.hopV += 0.3; if (b.hop >= 0) { b.hop = 0; b.hopV = 0; b.landT = 9; } }
-      if (happy && dist < 110) b.facing = dx > 0 ? 1 : -1;
+      if (happy && dist < 110 && (!calm || Math.abs(dx) > 35)) b.facing = dx > 0 ? 1 : -1;
     } else if (b.behavior === 'hover') {
-      const k = happy ? 1.5 : 1;
-      b.x = b.homeX + Math.sin(b.t * 0.015 * k) * 60;
-      b.y = b.homeY + Math.sin(b.t * 0.033 * k) * 16 + (happy ? Math.sin(b.t * 0.1) * 4 : 0);
+      const k = calm ? 0.55 : happy ? 1.5 : 1;
+      const x = b.homeX + Math.sin(b.t * 0.015 * k) * (calm ? 40 : 60);
+      const y = b.homeY + Math.sin(b.t * 0.033 * k) * (calm ? 5 : 16) + (happy && !calm ? Math.sin(b.t * 0.1) * 4 : 0);
+      b.x = calm ? b.x + BB.clamp((x - b.x) * 0.06, -0.8, 0.8) : x;
+      b.y = calm ? b.y + BB.clamp((y - b.y) * 0.06, -0.5, 0.5) : y;
       b.facing = Math.cos(b.t * 0.015 * k) > 0 ? 1 : -1;
     } else if (b.behavior === 'dangle') {
-      b.y = b.homeY + (Math.sin(b.t * 0.018) * 0.5 + 0.5) * 60 - 20;
-      b.x = b.homeX + Math.sin(b.t * 0.03) * (happy ? 8 : 2);
-      b.facing = dx > 0 ? 1 : -1;
+      const y = b.homeY + (Math.sin(b.t * (calm ? 0.008 : 0.018)) * 0.5 + 0.5) * (calm ? 10 : 60) - (calm ? 5 : 20);
+      const x = b.homeX + Math.sin(b.t * (calm ? 0.012 : 0.03)) * (happy ? 8 : 2);
+      b.y = calm ? b.y + BB.clamp((y - b.y) * 0.06, -0.5, 0.5) : y;
+      b.x = calm ? b.x + BB.clamp((x - b.x) * 0.06, -0.8, 0.8) : x;
+      if (!calm || Math.abs(dx) > 35) b.facing = dx > 0 ? 1 : -1;
     } else if (b.behavior === 'king') {
       if (!happy) {
         b.x = b.homeX + Math.sin(b.t * 0.012) * 190;
@@ -180,8 +190,8 @@
     }
 
     // ── friends share the love ──
-    if (happy && dist < 120 && b.t % 50 === 0) PT().heart(b.x, b.y - 16);
-    if (happy && b.t % 240 === 0 && Math.random() < 0.5) {
+    if (happy && dist < 120 && b.t % (calm ? 240 : 50) === 0) PT().heart(b.x, b.y - 16);
+    if (happy && b.t % (calm ? 480 : 240) === 0 && Math.random() < 0.5) {
       // friends blow their own tiny bubbles now and then
       PT().burst('dot', b.x + b.facing * 12, b.y - 4, 2, { color: '#e8fbff', speed: 0.6, life: 50, size: 3, up: 0.4 });
     }
@@ -234,7 +244,7 @@
       c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 1;
       c.beginPath(); c.moveTo(x, b.anchorY - cam.y); c.lineTo(x, y - 8); c.stroke();
     }
-    const dance = b.danceT > 0 ? Math.sin(b.t * 0.16) * 0.13 : 0;
+    const dance = b.danceT > 0 ? Math.sin(b.t * (b.sourceKey ? 0.045 : 0.16)) * (b.sourceKey ? 0.055 : 0.13) : 0;
     const st = {
       t: b.t, mood: b.visualMood == null ? b.mood : b.visualMood, facing: b.facing, blink: b.blink, joy: b.state === 'happy' && (b.danceT > 0 || b.greetT > 0 || b.t % 200 < 40),
       shake: b.shake ? Math.sin(b.shake * 2) * 2.5 : 0, walk: b.behavior === 'walk' && b.moving, spin: dance,
@@ -256,5 +266,5 @@
     }
   }
 
-  BB.Bugs = { create, update, hit, draw };
+  BB.Bugs = { create, animate, update, hit, draw };
 })(window.BB);

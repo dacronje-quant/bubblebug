@@ -16,7 +16,7 @@ function walkMaze(g, target) {
       if (seen.has(key)) continue; seen.add(key);
       if (node.x === target.x && node.y === target.y) { route = node.steps; break; }
       for (const [code, dx, dy] of [['ArrowLeft',-1,0],['ArrowRight',1,0],['ArrowUp',0,-1],['ArrowDown',0,1]]) {
-        if (M.walkable(node.x + dx, node.y + dy)) queue.push({ x: node.x + dx, y: node.y + dy, steps: [...node.steps, { code, x: node.x + dx, y: node.y + dy }] });
+        if (M.walkable(node.x + dx, node.y + dy, B.Play.save)) queue.push({ x: node.x + dx, y: node.y + dy, steps: [...node.steps, { code, x: node.x + dx, y: node.y + dy }] });
       }
     }
     assert.ok(route, 'route exists to ' + JSON.stringify(target));
@@ -75,7 +75,7 @@ function check(g) {
   // Blocked directions never cut through a hedge.
   const before = { x: B.Play.maze.x, y: B.Play.maze.y };
   tick(20, ['ArrowDown']); assert.equal(B.Play.maze.x, before.x); assert.equal(B.Play.maze.y, before.y); tick();
-  for (const pad of [M.PADS[0], M.PADS[2], M.PADS[1]]) walkTo(pad);
+  for (const pad of M.ORDER) walkTo(pad);
   assert.equal(M.ready(save), true); assert.equal(save.mazeSolved, false);
   // Every original maze star key is reachable and collected exactly once.
   for (const [x, y] of M.STARS) walkTo({ x, y });

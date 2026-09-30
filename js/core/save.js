@@ -111,10 +111,12 @@
       purchases: {},                       // optional cosmetic id → 1
       cosmetics: { bubble: 'classic', trail: 'classic' },
       residents: {},                       // invited friend species → 1
+      hiddenResidents: {},                 // invited species resting away from the garden
       fountainUses: 0,
       mazeSolved: false,
       mazePosition: null,                  // top-down garden cell, separate from world save point
       inMaze: false, mazeReturn: null,
+      mazePuzzleVersion: 1, mazeLegacyAccess: false,
       rainbowUnlocked: false,             // rescued character survives a Rainbow replay
       replayCount: 0,
       glassesFound: {},                   // discoveries in this adventure; clothing stays earned
@@ -165,7 +167,10 @@
             this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
             this.data.wear = Object.assign(fresh().wear, d.wear || {});
             this.data.cosmetics = Object.assign(fresh().cosmetics, d.cosmetics || {});
-            for (const field of ['outfits', 'purchases', 'residents', 'glassesFound']) this.data[field] = Object.assign({}, d[field] || {});
+            for (const field of ['outfits', 'purchases', 'residents', 'hiddenResidents', 'glassesFound']) this.data[field] = Object.assign({}, d[field] || {});
+            // An older active maze can finish its existing route. New
+            // entries use the lantern gates, keeping every pad/star key.
+            if (d.inMaze && !d.mazePuzzleVersion) this.data.mazeLegacyAccess = true;
             return true;
           }
         }

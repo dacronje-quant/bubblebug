@@ -5,7 +5,7 @@
   'use strict';
   const T = BB.CFG.TILE, G = () => BB.G, S = () => BB.Audio.sfx;
   const SPOTS = { ng: { col: 16, floor: 31, kind: 'friends' }, hm: { col: 24, floor: 32, kind: 'fountain' } };
-  const CLOSE = { x: 678, y: 145 }, CHOOSE = { x: 480, y: 390 };
+  const CLOSE = { x: 678, y: 145 }, CHOOSE = { x: 480, y: 390 }, ALL = { x: 610, y: 390 };
   Object.assign(BB.Play, {
     earnedFriendKinds() {
       const kinds = [];
@@ -47,7 +47,8 @@
       }
     },
     openGardenChoice(kind) {
-      this.gardenChoice = { kind, kinds: this.earnedFriendKinds(), sel: 0, t: 0, wiggle: 0, cooldown: 0 };
+      this.endGardenFun();
+      this.gardenChoice = { kind, kinds: this.earnedFriendKinds(), sel: 0, focus: 'one', t: 0, wiggle: 0, cooldown: 0 };
       this.gardenHold = 0; this.pl.state = 'homechoice'; this.pl.body.vx = 0;
       BB.Input.takePointers(); S().select();
     },
@@ -63,9 +64,13 @@
       if (w.kind === 'friends') {
         const kind = w.kinds[w.sel];
         if (!kind || !this.earnedFriendKinds().includes(kind)) return false;
-        if (this.save.residents[kind]) { S().purr(); return false; }
+        if (this.save.residents[kind]) {
+          if (this.save.hiddenResidents[kind]) delete this.save.hiddenResidents[kind];
+          else this.save.hiddenResidents[kind] = 1;
+          this.endGardenFun(); this.refreshHomeVisitors(); BB.Save.write(); S().purr(); return true;
+        }
         if (BB.Economy.buy(this.save, 'resident-' + kind, 'hearts', 1) === 'poor') { w.wiggle = 20; S().hmph(); return false; }
-        this.save.residents[kind] = 1; this.refreshHomeVisitors(); S().befriend();
+        this.save.residents[kind] = 1; delete this.save.hiddenResidents[kind]; this.refreshHomeVisitors(); S().befriend();
         BB.Particles.burst('heart', this.pl.body.x + 10, this.pl.body.y - 16, 8, { color: '#ff7eb6', life: 50 });
       } else {
         if (BB.Economy.buy(this.save, 'heart-fountain', 'hearts', 1) === 'poor') { w.wiggle = 20; S().hmph(); return false; }
@@ -85,6 +90,13 @@
       BB.Save.write(); this.pl.happyT = 90;
       return true;
     },
+    toggleGardenAll() {
+      const kinds = this.earnedFriendKinds().filter(kind => this.save.residents[kind]);
+      if (!kinds.length) return false;
+      const hide = kinds.some(kind => !this.save.hiddenResidents[kind]);
+      for (const kind of kinds) { if (hide) this.save.hiddenResidents[kind] = 1; else delete this.save.hiddenResidents[kind]; }
+      this.endGardenFun(); this.refreshHomeVisitors(); BB.Save.write(); S().purr(); return true;
+    },
     updateGardenChoice() {
       const w = this.gardenChoice, I = BB.Input;
       w.t++; if (w.wiggle) w.wiggle--; if (this.fountainCd > 0) this.fountainCd--;
@@ -93,14 +105,19 @@
       if (w.t < 8) return;
       if (I.pressed.pause || I.pressed.back || I.pressed.map) return this.closeGardenChoice();
       const n = w.kinds.length;
+      if (w.kind === 'friends' && (I.pressed.up || I.pressed.down)) { w.focus = w.focus === 'one' ? 'all' : 'one'; S().select(); }
       if (w.kind === 'friends' && n && (I.pressed.left || I.pressed.right)) {
-        w.sel = (w.sel + n + (I.pressed.left ? -1 : 1)) % n; S().select();
-      } else if (I.pressed.jump || I.pressed.bubble || I.pressed.confirm) { this.chooseGarden(); if (!this.gardenChoice) return; }
+        w.sel = (w.sel + n + (I.pressed.left ? -1 : 1)) % n; w.focus = 'one'; S().select();
+      } else if (!I.pressed.up && !I.pressed.down && (I.pressed.jump || I.pressed.bubble || I.pressed.confirm)) {
+        if (w.focus === 'all' && w.kind === 'friends') this.toggleGardenAll(); else this.chooseGarden();
+        if (!this.gardenChoice) return;
+      }
       for (const p of I.takePointers()) {
         if (Math.hypot(p.x - CLOSE.x, p.y - CLOSE.y) < 32) return this.closeGardenChoice();
-        if (Math.hypot(p.x - CHOOSE.x, p.y - CHOOSE.y) < 40) { this.chooseGarden(); if (!this.gardenChoice) return; }
+        if (w.kind === 'friends' && Math.hypot(p.x - ALL.x, p.y - ALL.y) < 35) { w.focus = 'all'; this.toggleGardenAll(); }
+        if (Math.hypot(p.x - CHOOSE.x, p.y - CHOOSE.y) < 40) { w.focus = 'one'; this.chooseGarden(); if (!this.gardenChoice) return; }
         if (w.kind === 'friends' && n && Math.abs(p.y - 267) < 40 && (Math.abs(p.x - 310) < 40 || Math.abs(p.x - 650) < 40)) {
-          w.sel = (w.sel + n + (p.x < 480 ? -1 : 1)) % n; S().select();
+          w.sel = (w.sel + n + (p.x < 480 ? -1 : 1)) % n; w.focus = 'one'; S().select();
         }
       }
     },
@@ -163,6 +180,7 @@
     drawGardenChoice(c, t) {
       const w = this.gardenChoice, kind = w.kinds[w.sel];
       const have = w.kind === 'friends' ? !!this.save.residents[kind] : !!this.save.purchases['heart-fountain'];
+      const shown = have && !this.save.hiddenResidents[kind];
       const cost = have ? 0 : 1, afford = BB.Economy.balance(this.save, 'hearts') >= cost;
       c.save(); c.globalAlpha = Math.min(1, w.t / 12);
       c.fillStyle = 'rgba(30,18,40,0.38)'; c.fillRect(0, 0, G().W, G().H);
@@ -171,7 +189,7 @@
       c.fillStyle = '#ffd5e8'; G().circle(480, 265, 82, c); c.fill();
       if (w.kind === 'friends') {
         c.fillStyle = '#c9e6b7'; G().ellipse(480, 308, 65, 16, 0, c); c.fill();
-        if (kind) BB.Critters.drawBug(c, kind, 480, 280, { t, mood: 0, facing: 1, scale: 3, joy: have });
+        if (kind) BB.Critters.drawBug(c, kind, 480, 280, { t, mood: 0, facing: 1, scale: 3, joy: shown });
         else { BB.Critters.drawBug(c, 'bunny', 450, 280, { t, mood: 0, facing: 1, scale: 2 }); BB.HUD.buttonIcon(c, 'bubble', 522, 265, 1.2, 0); }
         if (w.kinds.length > 1) for (const [x, d] of [[310, -1], [650, 1]]) {
           c.fillStyle = '#ffffff'; c.strokeStyle = '#e0cfdd'; c.lineWidth = 2; G().circle(x, 267, 32, c); c.fill(); c.stroke();
@@ -179,7 +197,7 @@
           BB.Critters.drawBug(c, neighbour, x, 274, { t, mood: 0, facing: d < 0 ? 1 : -1, scale: 1.15, joy: false });
         }
         BB.HUD.zoneIcon(c, BB.HOME_ZONE, 480, 345, 0.65);
-        if (have) {
+        if (shown) {
           c.strokeStyle = '#5fb77b'; c.lineWidth = 3; c.lineCap = 'round';
           c.beginPath(); c.moveTo(507, 345); c.lineTo(512, 350); c.lineTo(520, 340); c.stroke();
         }
@@ -191,12 +209,30 @@
       c.fillStyle = '#ff7eb6'; G().heart(300, 153, 9, c); c.fill();
       G().text(String(BB.Economy.balance(this.save, 'hearts')), 330, 153, 20, '#9b5d74', null, 'center', c);
       const wx = w.wiggle ? Math.sin(w.wiggle * 1.5) * 4 : 0;
-      c.fillStyle = have ? '#5fd48a' : afford && !this.fountainCd && (w.kind === 'fountain' || kind) ? '#ffd84a' : '#d5ccdb';
-      G().circle(CHOOSE.x + wx, CHOOSE.y, 32, c); c.fill();
-      BB.Gestures.drawPaw(c, CHOOSE.x + wx, CHOOSE.y, 1.25, '#ffffff', '#ffffff');
+      if (w.kind === 'friends' && have) this.drawGardenSwitch(c, CHOOSE.x + wx, CHOOSE.y, shown, w.focus === 'one', false);
+      else {
+        c.fillStyle = have ? '#5fd48a' : afford && !this.fountainCd && (w.kind === 'fountain' || kind) ? '#ffd84a' : '#d5ccdb';
+        G().circle(CHOOSE.x + wx, CHOOSE.y, 32, c); c.fill();
+        BB.Gestures.drawPaw(c, CHOOSE.x + wx, CHOOSE.y, 1.25, '#ffffff', '#ffffff');
+      }
+      if (w.kind === 'friends') {
+        const invited = w.kinds.filter(k => this.save.residents[k]);
+        c.save(); if (!invited.length) c.globalAlpha *= 0.35;
+        this.drawGardenSwitch(c, ALL.x, ALL.y, invited.some(k => !this.save.hiddenResidents[k]), w.focus === 'all', true);
+        G().text('All', ALL.x, 426, 16, '#82629c', null, 'center', c); c.restore();
+      }
       c.fillStyle = '#5fd48a'; G().circle(CLOSE.x, CLOSE.y, 23, c); c.fill();
       c.strokeStyle = '#ffffff'; c.lineWidth = 4; c.lineCap = 'round';
       c.beginPath(); c.moveTo(CLOSE.x - 10, CLOSE.y); c.lineTo(CLOSE.x - 2, CLOSE.y + 7); c.lineTo(CLOSE.x + 10, CLOSE.y - 8); c.stroke();
+      c.restore();
+    },
+    drawGardenSwitch(c, x, y, on, focus, all) {
+      c.save(); c.fillStyle = on ? '#70c995' : '#b9adca'; c.strokeStyle = focus ? '#edb04e' : '#ffffff'; c.lineWidth = 3;
+      G().rrect(x - 33, y - 20, 66, 40, 20, c); c.fill(); c.stroke();
+      const thumb = x + (on ? 13 : -13);
+      c.fillStyle = '#ffffff'; G().circle(thumb, y, 15, c); c.fill();
+      BB.Gestures.drawPaw(c, thumb, y, 0.58, on ? '#4ba477' : '#9281a9', '#9281a9');
+      if (all) for (const dx of [-4, 4]) BB.Gestures.drawPaw(c, x - (on ? 15 : -15) + dx, y, 0.23, '#ffffff', '#ffffff');
       c.restore();
     },
   });

@@ -35,10 +35,28 @@ function check(g) {
     for (let repeat = 0; repeat < 2; repeat++) {
       place(id, 27, 31); tick();
       place(id, (q.x - B.World.byId[id].px) / 32 - 0.5, 31); tick(1, ['Enter']); tick();
-      assert.equal(P.gardenFun.kind, q.kind); assert.ok(P.gardenFun.friends.length >= 20);
-      tick(150); assert.ok(P.gardenFun.friends.every(v => v.danceT > 0));
+      assert.equal(P.gardenFun.kind, q.kind); assert.equal(P.gardenFun.friends.length, 6);
+      const f = P.gardenFun, selected = f.friends.slice();
+      assert.ok(selected.every(v => Math.abs(v.gardenFloor - q.y) < 1), 'upstairs friends keep their own floor');
+      assert.ok(f.slots.every((slot, i) => !i || slot.x - f.slots[i - 1].x >= 64), 'spaced places around the game');
+      const lastFlip = new Map();
+      for (let frame = 0; frame < 150; frame++) {
+        const before = selected.map(v => ({ x: v.x, y: v.y, facing: v.facing })); tick();
+        selected.forEach((v, i) => {
+          assert.ok(Math.hypot(v.x - before[i].x, v.y - before[i].y) <= 1.151, 'one calm movement update per frame');
+          assert.equal(v.hopV, 0); assert.ok(v.hop <= 0 && v.hop >= -7.1);
+          if (v.facing !== before[i].facing) {
+            assert.ok(!lastFlip.has(v) || frame - lastFlip.get(v) >= 20, 'no twitching direction changes'); lastFlip.set(v, frame);
+          }
+        });
+      }
+      assert.ok(selected.every(v => q.kind === 'dance' ? v.danceT > 0 : v.danceT === 0));
       if (q.kind === 'dance') assert.equal(B.Music.wanted, 'party');
-      tick(400); assert.equal(P.gardenFun, null); assert.equal(B.Music.wanted, B.ZONES[P.room.zone].key);
+      for (let frame = 0; frame < 400; frame++) {
+        const before = selected.map(v => ({ x: v.x, y: v.y })); const active = !!P.gardenFun; tick();
+        if (active) selected.forEach((v, i) => assert.ok(Math.hypot(v.x - before[i].x, v.y - before[i].y) <= 1.151, 'ending never snaps visitors home'));
+      }
+      assert.equal(P.gardenFun, null); assert.equal(B.Music.wanted, B.ZONES[P.room.zone].key);
       tick(90, ['Enter']); tick(); assert.equal(P.gardenFun, null, 'staying on the ring never repeats automatically');
       assert.deepEqual(plain({ friends: save.friends, family: save.family, bosses: save.bosses, purchases: save.purchases, heartsSpent: save.heartsSpent }), progress);
       for (const v of P.homeVisitors.filter(v => v.room === id)) {
@@ -65,6 +83,21 @@ function check(g) {
   assert.equal(P.homeVisitors.length, 65); assert.equal(P.gardenFun, null);
   assert.equal(save.heartsSpent, 1); assert.equal(Object.keys(save.friends).length, 65);
   console.log('✓ all 65 visitors play every game twice; safe floors/reload, no added cost/hearts, and bubbles still reach buds');
+  // Visibility is separate from invitations and collected hearts. Both
+  // individual and all switches use real pointer/keyboard menu inputs.
+  place('ng', 16, 31); tick(50);
+  const firstKind = P.gardenChoice.kinds[0], count = P.homeVisitors.filter(v => v.kind === firstKind).length;
+  tick(1, ['Enter']); tick(); assert.equal(save.hiddenResidents[firstKind], 1);
+  assert.equal(P.homeVisitors.length, 65 - count); assert.equal(save.residents[firstKind], 1);
+  assert.equal(save.heartsSpent, 1); assert.equal(Object.keys(save.friends).length, 65);
+  P.closeGardenChoice(); P.writeSave(); B.Save.load(); B.Main.set('play', {}); P = B.Play; save = P.save;
+  assert.equal(save.hiddenResidents[firstKind], 1); assert.equal(P.homeVisitors.length, 65 - count);
+  place('ng', 16, 31); tick(50); tick(1, ['Enter']); tick(); assert.equal(P.homeVisitors.length, 65);
+  tick(1, ['ArrowUp']); tick(); assert.equal(P.gardenChoice.focus, 'all'); assert.equal(P.homeVisitors.length, 65);
+  tick(1, ['Enter']); tick(); assert.equal(P.homeVisitors.length, 0);
+  B.Input.pointers.push({ x: 610, y: 390 }); tick(); assert.equal(P.homeVisitors.length, 65);
+  assert.equal(save.heartsSpent, 1); P.closeGardenChoice();
+  console.log('✓ individual and all garden switches persist; no invitations, rescued progress or hearts lost');
   // Leaving in the middle restores the adventure music and visitor homes.
   place('nr', 10, 31); tick(50); assert.equal(P.gardenFun.kind, 'dance');
   place('hm', 40, 32); tick(); assert.equal(P.gardenFun, null); assert.equal(B.Music.wanted, B.ZONES[P.room.zone].key);

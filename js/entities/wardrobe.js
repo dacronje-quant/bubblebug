@@ -265,6 +265,26 @@
     c.restore();
   }
 
+  // Head-space artwork has different origins/heights. Fit it to a
+  // centred display box; worn clothing keeps its original proportions.
+  const BOUNDS = {
+    bonnet: [-12, -15, 11, 10], mushroom: [-12, -16, 13, -6], tiara: [-9, -16, 10, -6],
+    crown: [-9, -18, 10, -6], horn: [-13, -28, 14, 4], ruff: [-10, 4, 15, 14],
+    sailor: [-12, -16, 13, -3], sunhat: [-17, -16, 17, -2], bobble: [-11, -23, 12, -4],
+    scarf: [-8, 5, 12, 20], nightcap: [-19, -19, 13, -2], ears: [-10, -27, 12, -3],
+    partyhat: [-9, -29, 11, -5], flowers: [-13, -16, 13, -2], wizard: [-14, -28, 15, -3],
+    pirate: [-14, -16, 15, -5], chef: [-13, -25, 15, -4], sparkly: [-8, 5, 11, 11],
+    jingle: [-8, 5, 11, 17], scuba: [-15, -35, 12, 11], googly: [-11, -7, 12, 5],
+    disguise: [-11, -9, 12, 10], starshades: [-11, -8, 12, 6],
+  };
+  function framedIcon(c, id, x, y, size, t) {
+    const bounds = BOUNDS[id];
+    if (!bounds || !ART[id]) return;
+    const [x0, y0, x1, y1] = bounds, scale = size / Math.max(x1 - x0, y1 - y0);
+    c.save(); c.translate(x, y); c.scale(scale, scale); c.translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+    ART[id](c, t || 0); c.restore();
+  }
+
   // a grey "still to find" shape
   function silhouette(c, id, x, y, s) {
     c.save();
@@ -285,5 +305,5 @@
     return isNew ? a : null;
   }
 
-  BB.Wardrobe = { LIST, BY, BY_BOSS, drawOn, icon, silhouette, grant };
+  BB.Wardrobe = { LIST, BY, BY_BOSS, drawOn, icon, framedIcon, silhouette, grant };
 })(window.BB);

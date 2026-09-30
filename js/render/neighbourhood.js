@@ -27,6 +27,7 @@
     const X = col => (room.x + col) * T - cam.x;
     const Y = row => (room.y + row) * T - cam.y;
     const kind = room.def.neighbourhood;
+    if (kind === 'maze') return; // the grand Rainbow courtyard owns its scenery
     c.save();
     // A single fence and flowering hedge continue across all three rooms.
     c.strokeStyle = '#d8b589'; c.lineWidth = 6; c.lineCap = 'round';
@@ -96,6 +97,7 @@
   }
 
   function drawFront(c, room, cam, t) {
+    if (room.def.neighbourhood === 'maze') return;
     const X = col => (room.x + col) * T - cam.x;
     const Y = row => (room.y + row) * T - cam.y;
     c.save();

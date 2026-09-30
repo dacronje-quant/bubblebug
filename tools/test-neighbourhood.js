@@ -133,8 +133,9 @@ function checks(game) {
   console.log('✓ continuous, jump-free walk from home through all three rooms and back');
   place('hm', 3, 32);
   tick(120, ['ArrowLeft']);
-  assert.equal(B.Play.room.id, 'nm'); assert.equal(B.Play.maze, null); assert.equal(B.Play.portalChoice, null);
-  console.log('✓ the garden path stays open but its rainbow game is locked before 12 cats');
+  assert.equal(B.Play.room.id, 'hm'); assert.equal(B.Play.maze, null); assert.equal(B.Play.portalChoice, null);
+  assert.ok(B.Play.pl.body.x >= (B.World.byId.hm.x + 2) * 32);
+  console.log('✓ the indoor rainbow door blocks the courtyard before 12 cats');
 
   // The two original progression gates remain closed until solved.
   place('g1', 26, 14); tick(180, ['ArrowRight']);

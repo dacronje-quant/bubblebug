@@ -121,6 +121,11 @@
       this.gardenChoice = null; this.gardenHold = 0; this.celebrationT = 0; this.gardenLock = null; this.fountainCd = 0; this.mirrorLock = false;
       this.maze = null;
       this.portalChoice = null; this.journeyHold = 0; this.journeyLock = null; this.replayStarting = false;
+      this.rainbowGateOpen = null;
+      // An old checkpoint outside the newly locked door must still
+      // allow its kitten to walk home before the door closes behind it.
+      this.rainbowExitPass = x < (W().byId.hm.x + 2) * T;
+      this.syncRainbowGate();
       document.body.classList.remove('in-maze');
       // (the elephant's rain hat became a unicorn horn)
       if (save.outfits && save.outfits.rainhat) { delete save.outfits.rainhat; save.outfits.horn = 1; }
