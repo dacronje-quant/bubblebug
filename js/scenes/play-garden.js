@@ -20,13 +20,7 @@
     },
     updateGarden() {
       if (this.fountainCd > 0) this.fountainCd--;
-      if (this.celebrationT > 0) {
-        this.celebrationT--;
-        if (this.celebrationT % 30 === 0) {
-          const sp = this.gardenSpot(BB.World.byId.hm);
-          BB.Particles.firework(sp.x + (Math.random() - 0.5) * 360, sp.y - 100 - Math.random() * 100);
-        }
-      }
+      this.updateCelebration();
       const sp = this.gardenSpot(this.room), b = this.pl.body;
       if (this.gardenLock) {
         if (this.room.id === this.gardenLock.room && Math.hypot(b.x + b.w / 2 - this.gardenLock.x, b.y + b.h - this.gardenLock.y) < 60) { this.gardenHold = 0; return; }
@@ -36,6 +30,21 @@
       const near = b.grounded && Math.abs(b.x + b.w / 2 - sp.x) < 18 && Math.abs(b.y + b.h - sp.y) < 6 && Math.abs(b.vx) < 0.3;
       this.gardenHold = near ? (this.gardenHold || 0) + 1 : Math.max(0, (this.gardenHold || 0) - 3);
       if (this.gardenHold >= BB.Links.HOLD) this.openGardenChoice(sp.kind);
+    },
+    updateCelebration() {
+      if (this.celebrationT > 0) {
+        this.celebrationT--;
+        if (this.room.id === 'hm') {
+          const sp = this.gardenSpot(this.room), colors = BB.Cosmetics.COLORS;
+          if (this.celebrationT % 24 === 0) BB.Particles.firework(sp.x + (Math.random() - 0.5) * 440, sp.y - 150 - Math.random() * 150);
+          if (this.celebrationT % 12 === 0) {
+            BB.Particles.burst('confetti', sp.x, sp.y - 190, 8, { speed: 3.5, g: 0.06, life: 100 });
+            BB.Particles.heart(sp.x + (Math.random() - 0.5) * 170, sp.y - 95, colors[Math.floor(this.celebrationT / 12) % colors.length]);
+          }
+          if (this.celebrationT === 240 || this.celebrationT === 120) S().befriend();
+        }
+        if (!this.celebrationT && !this.party && BB.Music.wanted === 'party') BB.Music.play(BB.ZONES[this.room.zone].key);
+      }
     },
     openGardenChoice(kind) {
       this.gardenChoice = { kind, kinds: this.earnedFriendKinds(), sel: 0, t: 0, wiggle: 0, cooldown: 0 };
@@ -64,12 +73,14 @@
         this.zoneCard = 0; // keep the celebration and new trick picture clear
         this.save.fountainUses++;
         this.save.gestures.twirl = 1; this.showTrickButton();
-        this.celebrationT = 180; this.fountainCd = 120;
-        S().party(); BB.Particles.firework(this.pl.body.x + 10, this.pl.body.y - 100);
-        for (const v of this.homeVisitors) v.danceT = 180;
+        this.celebrationT = 360; this.fountainCd = 120;
+        BB.Music.play('party'); S().party();
+        for (const dx of [-120, 0, 120]) BB.Particles.firework(this.pl.body.x + 10 + dx, this.pl.body.y - 170 - (dx === 0 ? 60 : 0));
+        BB.Particles.burst('heart', this.pl.body.x + 10, this.pl.body.y - 110, 20, { color: '#ff9ec7', speed: 4, up: 2, life: 90, size: 6, g: 0.03 });
+        for (const v of this.homeVisitors) v.danceT = 360;
         this.closeGardenChoice();
         BB.Gestures.start(this.pl, 'twirl');
-        if (first) this.trickCard = { id: 'twirl', t: 0 };
+        if (first) this.later(360, () => { this.trickCard = { id: 'twirl', t: 0 }; });
       }
       BB.Save.write(); this.pl.happyT = 90;
       return true;
@@ -78,7 +89,7 @@
       const w = this.gardenChoice, I = BB.Input;
       w.t++; if (w.wiggle) w.wiggle--; if (this.fountainCd > 0) this.fountainCd--;
       this.updateHomeVisitors();
-      if (this.celebrationT) this.celebrationT--;
+      this.updateCelebration();
       if (w.t < 8) return;
       if (I.pressed.pause || I.pressed.back || I.pressed.map) return this.closeGardenChoice();
       const n = w.kinds.length;
@@ -102,18 +113,41 @@
       c.save();
       if (afford) G().drawGlow(x, y - 34, 62, '#ffd5e8', 0.3 + Math.sin(t * 0.07) * 0.1, c);
       if (sp.kind === 'fountain') {
-        c.fillStyle = '#b5c4e3'; c.strokeStyle = '#7c8bb1'; c.lineWidth = 3;
-        G().ellipse(x, y - 15, 32, 12, 0, c); c.fill(); c.stroke();
-        G().rrect(x - 8, y - 54, 16, 39, 6, c); c.fill();
-        c.fillStyle = '#ff9ec7'; G().heart(x, y - 57, 13, c); c.fill();
-        c.strokeStyle = '#b2efff'; c.lineWidth = 3;
-        for (const d of [-1, 1]) { c.beginPath(); c.moveTo(x, y - 46); c.quadraticCurveTo(x + d * 27, y - 56, x + d * 25, y - 19); c.stroke(); }
+        const active = this.celebrationT > 0, colors = BB.Cosmetics.COLORS;
+        const lift = active ? Math.min(1, (360 - this.celebrationT) / 24, this.celebrationT / 45) : 0;
+        if (active) G().drawGlow(x, y - 100, 185, '#ffd1ed', 0.35 * lift, c);
+        c.fillStyle = '#c5cbe6'; c.strokeStyle = '#8492bc'; c.lineWidth = 3;
+        G().ellipse(x, y - 9, 49, 17, 0, c); c.fill(); c.stroke();
+        c.fillStyle = '#99dce9'; G().ellipse(x, y - 13, 40, 10, 0, c); c.fill();
+        c.fillStyle = '#e5dcf2'; G().rrect(x - 10, y - 61, 20, 48, 8, c); c.fill();
+        G().ellipse(x, y - 43, 26, 8, 0, c); c.fill(); c.stroke();
+        const height = 35 + lift * 140;
+        c.lineCap = 'round';
+        for (let i = 0; i < 5; i++) for (const d of [-1, 1]) {
+          const wide = 24 + lift * (40 + i * 16);
+          c.strokeStyle = active ? colors[i] : '#c4f5ff'; c.lineWidth = active ? 3.5 : 1.5;
+          c.beginPath(); c.moveTo(x, y - 61); c.quadraticCurveTo(x + d * wide * 0.6, y - 61 - height + i * 9, x + d * wide, y - 15); c.stroke();
+          if (active) {
+            const u = ((t + i * 13) % 65) / 65, v = 1 - u;
+            const dx = x + d * wide * (1.2 * v * u + u * u);
+            const dy = v * v * (y - 61) + 2 * v * u * (y - 61 - height + i * 9) + u * u * (y - 15);
+            c.fillStyle = colors[i]; G().heart(dx, dy, 3.5, c); c.fill();
+          }
+        }
+        c.fillStyle = '#ff89bd'; c.strokeStyle = '#d3639b'; c.lineWidth = 2;
+        G().heart(x, y - 72, 20 + Math.sin(t * 0.1) * (active ? 3 : 1), c); c.fill(); c.stroke();
+        if (active) {
+          c.fillStyle = 'rgba(255,240,200,0.85)';
+          G().star(x, y - 145 - lift * 50, 14, 5, 0.5, t * 0.03, c); c.fill();
+          c.strokeStyle = '#e3ffff'; c.lineWidth = 1.5;
+          G().ellipse(x, y - 12, 16 + (t % 35), 3 + (t % 35) * 0.1, 0, c); c.stroke();
+        }
       } else {
         c.fillStyle = '#d8b589'; G().rrect(x - 22, y - 53, 44, 33, 6, c); c.fill();
         BB.Critters.drawBug(c, 'bunny', x, y - 28, { t, mood: 0, facing: 1, scale: 0.9, joy: true });
         c.fillStyle = '#ff7eb6'; G().heart(x + 17, y - 51, 5, c); c.fill();
       }
-      if (cost) BB.Economy.pips(c, 'hearts', cost, x, y - 77, afford);
+      if (cost) BB.Economy.pips(c, 'hearts', cost, x, y - (sp.kind === 'fountain' ? 103 : 77), afford);
       BB.Links.hintRing(c, x, y - 4, t);
       if (this.room === room && this.gardenHold > 0) BB.Links.holdRing(c, x, y - 30, this.gardenHold / BB.Links.HOLD);
       c.restore();

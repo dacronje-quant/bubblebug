@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════════════
-//  KITTENS — the two heroes, painted procedurally in vector.
+//  KITTENS — the heroes and family, painted procedurally in vector.
 //
 //  MARSHMALLOW — a fluffy cream Birman kitten: warm taupe points on
 //    ears, mask and tail, a dark little nose, snowy "gloves" on every
@@ -45,6 +45,13 @@
   // Marshmallow's family are all colour-pointed Birmans; Phoebe's are a
   // tortie, tabby and calico bunch. `size` is how big they're drawn.
   const base = (from, over) => Object.assign({}, CATS[from], over);
+  CATS.rainbow = base('marshmallow', {
+    id: 'rainbow', name: 'Rainbow', magical: true,
+    fur: '#fff8ff', furShade: '#e4c8ff', belly: '#ffffff', point: '#eda8db', pointDark: '#b078c7',
+    tail: '#bda4ff', tailTip: '#70d8e0', paw: '#fff7bf', earInner: '#ffb5d9', nose: '#de86b1',
+    iris: '#48cfd5', irisLight: '#c1ffff', irisDark: '#36839c', outline: '#9160a1',
+    bubbleTint: '#d5bdff', bubbleTint2: '#b1f7ee', trail: 'star', voice: 700,
+  });
   const blueEyes = { iris: '#3d8ff0', irisLight: '#a8e0ff', irisDark: '#123f8f' };
   Object.assign(CATS, {
     mamaMallow: base('marshmallow', {
@@ -198,6 +205,12 @@
       c.fillStyle = g; c.fillRect(-rx - 2, -ry - 2, rx * 2 + 4, ry * 2 + 4);
       c.fillStyle = BB.rgba(cat.point, 0.28); G.ellipse(-rx * 0.8, -ry * 0.2, rx * 0.45, ry, 0, c); c.fill();
       c.fillStyle = cat.belly; G.ellipse(rx * 0.75, ry * 0.2, rx * 0.45, ry * 0.9, 0, c); c.fill();
+      if (cat.magical) {
+        const rainbow = c.createLinearGradient(-rx, -ry, rx, ry);
+        ['#ffa7ce', '#ffe99c', '#a6ecc6', '#96dcff', '#d8adff'].forEach((color, i) => rainbow.addColorStop(i / 4, color));
+        c.fillStyle = rainbow; c.globalAlpha = 0.85;
+        G.ellipse(-rx * 0.15, -ry * 0.3, rx * 0.9, ry * 0.75, -0.25, c); c.fill(); c.globalAlpha = 1;
+      }
     } else if (cat.pattern === 'tabby') {
       // classic tabby: soft darker back, curved stripes, white tummy
       c.fillStyle = cat.furShade; G.ellipse(-rx * 0.1, -ry * 0.55, rx * 1.1, ry * 0.6, 0, c); c.fill();
@@ -447,6 +460,12 @@
       c.beginPath(); c.moveTo(0, 4 + dy * 0.5); c.lineTo(-len + 1, 3 + dy * 1.5 - wig); c.stroke();
     }
     if (cat.acc) drawAccessories(c, cat);
+    if (cat.magical && BB.Wardrobe) {
+      for (const [i, color] of ['#ff9ec7', '#ffe066', '#8fe388', '#7cc8ff', '#b99cff'].entries()) {
+        c.fillStyle = color; G.ellipse(-7 + i * 1.7, -8.5 - Math.sin(i) * 2, 2.3, 4, -0.4, c); c.fill();
+      }
+      BB.Wardrobe.drawOn(c, { head: 'horn' }, t);
+    }
     // what the kitten is wearing (presents from the bosses)
     if (pose.wear && BB.Wardrobe) BB.Wardrobe.drawOn(c, pose.wear, t);
     c.restore();

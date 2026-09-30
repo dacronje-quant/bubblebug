@@ -1,5 +1,5 @@
-// Optional spending uses a separate ledger. Collectible keys, map stars,
-// family, powers and story progress are never removed by a purchase.
+// Stars unlock milestones without being spent. Hearts still pay once
+// for invitations and the fountain; collection progress is never removed.
 (function (BB) {
   'use strict';
   const spent = (save, currency) => {
@@ -8,10 +8,10 @@
   };
   function balance(save, currency) {
     const found = currency === 'stars' ? save.sparkles : save.friends;
-    return Math.max(0, BB.Save.count(found || {}) - spent(save, currency));
+    return Math.max(0, BB.Save.count(found || {}) - (currency === 'stars' ? 0 : spent(save, currency)));
   }
   function spend(save, currency, cost) {
-    if (!['stars', 'hearts'].includes(currency) || !Number.isSafeInteger(cost) || cost < 1 || balance(save, currency) < cost) return false;
+    if (currency !== 'hearts' || !Number.isSafeInteger(cost) || cost < 1 || balance(save, currency) < cost) return false;
     save[currency + 'Spent'] = spent(save, currency) + cost;
     return true;
   }
@@ -35,5 +35,16 @@
     }
     c.restore();
   }
-  BB.Economy = { balance, spend, buy, pips };
+  function unlocked(save, item) {
+    if (save.outfits[item.id] || save.purchases[item.id]) return true;
+    return Number.isFinite(item.stars) && balance(save, 'stars') >= item.stars;
+  }
+  function milestones(save) {
+    const items = BB.Wardrobe.LIST.concat(BB.Cosmetics.LIST).filter(a => Number.isFinite(a.stars));
+    for (const item of items) if (unlocked(save, item)) {
+      (item.slot === 'bubble' || item.slot === 'trail' ? save.purchases : save.outfits)[item.id] = 1;
+    }
+    return items.filter(a => !unlocked(save, a)).sort((a, b) => a.stars - b.stars)[0] || null;
+  }
+  BB.Economy = { balance, spend, buy, pips, unlocked, milestones };
 })(window.BB);

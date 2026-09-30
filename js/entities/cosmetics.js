@@ -3,13 +3,13 @@
 (function (BB) {
   'use strict';
   const LIST = [
-    { id: 'bubble-classic', slot: 'bubble', value: 'classic', cost: 0 },
-    { id: 'bubble-heart', slot: 'bubble', value: 'heart', cost: 10 },
-    { id: 'bubble-star', slot: 'bubble', value: 'star', cost: 10 },
-    { id: 'bubble-flower', slot: 'bubble', value: 'flower', cost: 20 },
-    { id: 'trail-classic', slot: 'trail', value: 'classic', cost: 0 },
-    { id: 'trail-rainbow', slot: 'trail', value: 'rainbow', cost: 30 },
-    { id: 'trail-paw', slot: 'trail', value: 'paw', cost: 15 },
+    { id: 'bubble-classic', name: 'Classic bubbles', slot: 'bubble', value: 'classic', stars: 0 },
+    { id: 'bubble-heart', name: 'Heart bubbles', slot: 'bubble', value: 'heart', stars: 40 },
+    { id: 'bubble-star', name: 'Star bubbles', slot: 'bubble', value: 'star', stars: 80 },
+    { id: 'bubble-flower', name: 'Flower bubbles', slot: 'bubble', value: 'flower', stars: 140 },
+    { id: 'trail-classic', name: 'Classic trail', slot: 'trail', value: 'classic', stars: 0 },
+    { id: 'trail-rainbow', name: 'Rainbow trail', slot: 'trail', value: 'rainbow', stars: 250 },
+    { id: 'trail-paw', name: 'Tiny paw trail', slot: 'trail', value: 'paw', stars: 60 },
   ];
   const COLORS = ['#ff8fb8', '#ffe066', '#8fe388', '#7cc8ff', '#b99cff'];
   function flower(c, x, y, r, color) {

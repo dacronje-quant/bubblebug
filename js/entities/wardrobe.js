@@ -3,7 +3,7 @@
 //  Every boss you cheer up gives the kitten a present to wear (the goose's
 //  bonnet, the walrus's bobble hat, the moose's stripy scarf…). The newest
 //  one goes straight on; at home, stand still at the big mirror to try
-//  them all on: one hat and one neck thing at a time.
+//  them all on: one hat, one neck thing and a face accessory at a time.
 //
 //  Everything is drawn in the kitten's head space (the head is an ellipse
 //  about 9.6 × 8.8 around 0,0, looking right; ears poke up to y ≈ −15).
@@ -27,19 +27,39 @@
     { id: 'scarf', boss: 'moose', slot: 'neck', name: 'stripy scarf' },
     { id: 'nightcap', boss: 'panda', slot: 'head', name: 'sleepy nightcap' },
     { id: 'ears', boss: 'moonbunny', slot: 'head', name: 'bunny ears' },
-    { id: 'partyhat', slot: 'head', cost: 15 },
-    { id: 'flowers', slot: 'head', cost: 20 },
-    { id: 'wizard', slot: 'head', cost: 25 },
-    { id: 'pirate', slot: 'head', cost: 25 },
-    { id: 'chef', slot: 'head', cost: 20 },
-    { id: 'sparkly', slot: 'neck', cost: 20 },
-    { id: 'jingle', slot: 'neck', cost: 25 },
+    { id: 'partyhat', name: 'Party hat', slot: 'head', stars: 25 },
+    { id: 'flowers', name: 'Flower crown', slot: 'head', stars: 50 },
+    { id: 'wizard', name: 'Wizard hat', slot: 'head', stars: 100 },
+    { id: 'pirate', name: 'Pirate hat', slot: 'head', stars: 125 },
+    { id: 'chef', name: 'Chef hat', slot: 'head', stars: 75 },
+    { id: 'sparkly', name: 'Sparkly collar', slot: 'neck', stars: 150 },
+    { id: 'jingle', name: 'Jingle collar', slot: 'neck', stars: 175 },
+    { id: 'scuba', name: 'Scuba mask & snorkel', slot: 'face', stars: 200 },
   ];
   const BY = Object.fromEntries(LIST.map(a => [a.id, a]));
   const BY_BOSS = Object.fromEntries(LIST.filter(a => a.boss).map(a => [a.boss, a]));
 
   // ──── Drawing each thing (head space) ────
   const ART = {
+    scuba(c, t) {
+      // Transparent lenses leave the eyes visible; the snorkel curls up
+      // beside the ear. It can be worn with a hat and collar.
+      c.strokeStyle = '#438eab'; c.lineWidth = 1.8; c.lineJoin = 'round';
+      c.beginPath(); c.moveTo(-10, -2); c.lineTo(11, -2); c.stroke();
+      c.fillStyle = 'rgba(153,235,255,0.42)'; c.strokeStyle = '#45c9d0'; c.lineWidth = 1.3;
+      for (const x of [-7, 2]) { G().rrect(x, -4, 8, 7, 2.2, c); c.fill(); c.stroke(); }
+      c.beginPath(); c.moveTo(1, -1); c.lineTo(2, -1); c.stroke();
+      c.strokeStyle = '#ffaf70'; c.lineWidth = 2.7; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(6, 6); c.quadraticCurveTo(-12, 9, -12, -1);
+      c.lineTo(-12, -18); c.quadraticCurveTo(-12, -22, -8, -22); c.lineTo(-7, -22); c.stroke();
+      c.fillStyle = '#5dbecb'; G().rrect(-9, -24, 5, 4, 1, c); c.fill();
+      c.fillStyle = '#ffffff'; G().ellipse(5, -2, 1.8, 0.6, -0.5, c); c.fill();
+      for (let i = 0; i < 2; i++) {
+        const phase = (t * 0.04 + i * 0.8) % 1.6;
+        c.strokeStyle = 'rgba(99,201,225,0.55)'; c.lineWidth = 0.6;
+        G().circle(-7 + Math.sin(phase * 3), -25 - phase * 5, 0.8, c); c.stroke();
+      }
+    },
     partyhat(c) {
       c.fillStyle = '#ff8fb8'; c.strokeStyle = OUT; c.lineWidth = 0.9;
       c.beginPath(); c.moveTo(-8, -6); c.lineTo(1, -26); c.lineTo(10, -6); c.closePath(); c.fill(); c.stroke();
@@ -195,7 +215,7 @@
   // on the kitten (called from the head drawing, in head space)
   function drawOn(c, wear, t) {
     if (!wear) return;
-    for (const slot of ['neck', 'head']) {
+    for (const slot of ['neck', 'head', 'face']) {
       const id = wear[slot];
       if (!id || !ART[id]) continue;
       // (neck things sit a little lower, under the chin)

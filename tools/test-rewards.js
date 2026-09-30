@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Regression checks for real scene inputs, spending and save/reload.
+// Regression checks for star milestones, real scene inputs and save/reload.
 // Uses the same game boot harness as the neighbourhood checks.
 'use strict';
 const assert = require('assert/strict');
@@ -12,34 +12,40 @@ function checks(g) {
   B.Save.data = B.Save.fresh(); B.Save.data.introDone = 1; B.Main.set('play', {});
   let save = B.Play.save;
   const tap = (x, y) => { B.Input.pointers.push({ x, y }); tick(); };
-  for (const th of B.World.findThings('*').slice(0, 80)) save.sparkles[th.tx + ',' + th.ty] = 1;
+  for (const th of B.World.findThings('*').slice(0, 250)) save.sparkles[th.tx + ',' + th.ty] = 1;
   for (const bug of B.World.rooms.flatMap(r => B.Play.ents[r.id].bugs).slice(0, 8)) save.friends[bug.key] = 1;
   const stars = JSON.stringify(save.sparkles), hearts = JSON.stringify(save.friends);
 
   // The mirror opens through its actual paw ring; entry never spends.
   place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(50);
   assert.ok(B.Play.wardrobe); assert.equal(save.starsSpent, 0);
-  tick(45, ['KeyX']); assert.equal(save.starsSpent, 15); assert.equal(save.wear.head, 'partyhat');
-  tick(); tick(1, ['KeyX']); assert.equal(save.starsSpent, 15); assert.equal(save.wear.head, null);
+  tick(45, ['KeyX']); assert.equal(save.starsSpent, 0); assert.equal(save.wear.head, 'partyhat');
+  tick(); tick(1, ['KeyX']); assert.equal(save.starsSpent, 0); assert.equal(save.wear.head, null);
   tick();
   tap(621, 88); assert.equal(B.Play.wardrobe.tab, 1);
-  tap(593, 246); assert.equal(save.starsSpent, 15); // select rainbow, preview price
-  tap(593, 246); assert.equal(save.starsSpent, 45); assert.equal(save.cosmetics.trail, 'rainbow');
-  tap(593, 246); assert.equal(save.starsSpent, 45);
-  tap(769, 150); tap(769, 150); assert.equal(save.starsSpent, 65); assert.equal(save.cosmetics.bubble, 'flower');
-  tap(505, 88); tap(681, 150); tap(681, 150); // wizard costs more than the remaining balance
-  assert.equal(save.starsSpent, 65); assert.equal(save.outfits.wizard, undefined);
-  assert.equal(B.Economy.balance(save, 'stars'), 15);
+  tap(593, 246); assert.equal(save.starsSpent, 0); // preview a milestone item
+  tap(593, 246); assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.trail, 'rainbow');
+  tap(593, 246); assert.equal(save.starsSpent, 0);
+  tap(769, 150); tap(769, 150); assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.bubble, 'flower');
+  tap(505, 88); tap(681, 150); tap(681, 150);
+  assert.equal(save.starsSpent, 0); assert.equal(save.outfits.wizard, 1);
+  assert.equal(B.Economy.balance(save, 'stars'), 250);
   assert.equal(JSON.stringify(save.sparkles), stars); assert.equal(JSON.stringify(save.friends), hearts);
-  // ArrowUp is also a jump binding: navigating must never make a purchase.
-  tick(1, ['ArrowUp']); assert.equal(save.starsSpent, 65); tick();
+  // Up focuses categories and must never equip, despite its jump binding.
+  const headBefore = save.wear.head;
+  tick(1, ['ArrowUp']); assert.equal(B.Play.wardrobe.focus, 'tabs'); assert.equal(save.wear.head, headBefore); tick();
+  tick(1, ['ArrowRight']); assert.equal(B.Play.wardrobe.tab, 1); tick();
+  tick(1, ['ArrowRight']); assert.equal(B.Play.wardrobe.tab, 2); tick();
+  tick(1, ['ArrowLeft']); assert.equal(B.Play.wardrobe.tab, 1); tick();
+  tick(1, ['ArrowDown']); assert.equal(B.Play.wardrobe.focus, 'items'); tick();
+  tap(505, 88); tap(769, 246); tap(769, 246); assert.equal(save.wear.face, 'scuba');
   tap(776, 438); assert.equal(B.Play.wardrobe, null);
   tick(150); assert.equal(B.Play.wardrobe, null); // no automatic reopen while standing still
   B.Save.load(); B.Main.set('play', {}); save = B.Play.save;
-  assert.equal(save.starsSpent, 65); assert.equal(save.cosmetics.bubble, 'flower');
+  assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.bubble, 'flower');
   assert.equal(save.cosmetics.trail, 'rainbow'); assert.equal(save.outfits.partyhat, 1);
-  assert.equal(B.Economy.balance(save, 'stars'), 15);
-  console.log('✓ mirror entry, pictures, preview, held buttons, free reuse, poor funds and reload');
+  assert.equal(B.Economy.balance(save, 'stars'), 250); assert.equal(save.wear.face, 'scuba');
+  console.log('✓ star milestones, free reuse, keyboard category focus, scuba mask and reload');
 
   // Invitations require an earned species and one heart, exactly once.
   place('ng', 16, 31); tick(50); assert.equal(B.Play.gardenChoice.kind, 'friends');
@@ -163,6 +169,42 @@ function residents(g) {
   console.log('✓ all 39 species and the fountain fit the heart budget; every walking/hopping resident roams');
 }
 
+function milestones() {
+  const g = bootGame(), B = g.BB;
+  B.Save.data.introDone = 1; B.Main.set('play', {});
+  const stars = B.World.findThings('*');
+  const fill = (save, n) => { for (const th of stars.slice(0, n)) save.sparkles[th.tx + ',' + th.ty] = 1; };
+  for (const item of B.Wardrobe.LIST.concat(B.Cosmetics.LIST).filter(a => a.stars > 0)) {
+    const save = B.Save.fresh(); fill(save, item.stars - 1);
+    assert.equal(B.Economy.unlocked(save, item), false, item.id + ' stays locked before its milestone');
+    fill(save, item.stars); B.Economy.milestones(save);
+    assert.equal(B.Economy.unlocked(save, item), true, item.id + ' unlocks at its milestone');
+    assert.equal(save.starsSpent, 0); assert.equal(B.Save.count(save.sparkles), item.stars);
+  }
+  // A low-star mirror refuses equip but still permits picture previews.
+  B.Save.data = B.Save.fresh(); B.Save.data.introDone = 1; B.Main.set('play', {});
+  B.Play.openWardrobe(); B.Play.toggleOutfit(0);
+  assert.equal(B.Play.save.wear.head, null); assert.equal(B.Play.save.starsSpent, 0);
+  // Migration keeps earlier purchases, original maze stars, outfits and
+  // completion even when their new milestone is higher than the old cost.
+  const old = B.Save.fresh(); old.v = 6; old.starsSpent = 30; old.introDone = 1;
+  old.finale = true; old.outfits.scuba = 1; old.wear.face = 'scuba';
+  old.outfits.wizard = 1; old.wear.head = 'wizard'; old.purchases['trail-rainbow'] = 1;
+  old.cosmetics.trail = 'rainbow'; old.gates.nm = 1; old.pads['-173,13'] = 1;
+  old.sparkles['-168,13'] = 1; fill(old, 30);
+  B.Home.familyOrder().forEach(id => { old.family[id] = 1; });
+  const migrated = bootGame(null, { storage: [['bubblebug_kingdom_v2', JSON.stringify(old)]] });
+  migrated.BB.Main.set('play', {});
+  const s = migrated.BB.Play.save;
+  assert.equal(s.v, 7); assert.equal(s.starsSpent, 0); assert.equal(s.outfits.wizard, 1);
+  assert.equal(s.purchases['trail-rainbow'], 1); assert.equal(s.cosmetics.trail, 'rainbow');
+  assert.equal(s.sparkles['-168,13'], 1); assert.equal(s.pads['-173,13'], 1);
+  assert.equal(s.finale, true); assert.equal(migrated.BB.Save.count(s.family), 12);
+  assert.equal(migrated.BB.Save.count(s.sparkles), B.Save.count(old.sparkles));
+  assert.equal(migrated.BB.Economy.unlocked(s, migrated.BB.Cosmetics.LIST[5]), true);
+  console.log('✓ every star threshold, locked previews and v6 owned items/maze stars/completion migrate safely');
+}
+
 function render(dir) {
   const { createCanvas } = require('@napi-rs/canvas');
   const g = bootGame(createCanvas), B = g.BB;
@@ -180,7 +222,7 @@ function render(dir) {
 }
 
 if (require.main === module) {
-  checks(bootGame()); movement(bootGame()); residents(bootGame());
+  checks(bootGame()); movement(bootGame()); residents(bootGame()); milestones();
   const normal = JSON.stringify({ v: 4, cat: 'marshmallow', sparkles: { '6,13': 1 } });
   const demo = bootGame(null, { hash: '#play=phoebe&room=hm&demo=rewards', storage: [['bubblebug_kingdom_v2', normal]] });
   assert.equal(demo.BB.Save.preview, true); assert.equal(demo.BB.Economy.balance(demo.BB.Play.save, 'stars'), 250);

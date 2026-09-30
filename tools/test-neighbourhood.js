@@ -62,7 +62,8 @@ function bootGame(canvasFactory, options = {}) {
     if (P.room !== r) P.leaveRoom(P.room);
     P.room = r; P.prevRoom = null;
     P.enterZone(r.zone);
-    P.wardrobe = null; P.gardenChoice = null; P.gardenHold = 0;
+    P.wardrobe = null; P.gardenChoice = null; P.gardenHold = 0; P.maze = null;
+    context.document.body.classList.remove('in-maze');
     P.pl.state = 'play'; P.intro = null; P.traveling = null; P.linkLock = null;
     P.pl.body = B.Physics.newBody((r.x + col) * 32 + 6, (r.y + floor) * 32 - 24);
     P.pl.body.grounded = true; P.pl.body.groundKind = 1;
@@ -87,7 +88,7 @@ function checks(game) {
   old.abilities.doubleJump = true;
   storage.set(SAVE_KEY, JSON.stringify(old));
   assert.equal(B.Save.load(), true);
-  assert.equal(B.Save.data.v, 6);
+  assert.equal(B.Save.data.v, 7);
   assert.equal(B.Save.data.x, old.x - 630 * 32);
   assert.equal(B.Save.data.y, old.y + 100 * 32);
   assert.deepEqual(plain(B.Save.data.bench), { x: old.bench.x - 630 * 32, y: old.bench.y + 100 * 32 });
@@ -101,7 +102,7 @@ function checks(game) {
   assert.equal(B.Save.data.bench.x, old.bench.x - 630 * 32);
   for (const v of [2, 3]) {
     storage.set(SAVE_KEY, JSON.stringify({ ...outside, v }));
-    assert.equal(B.Save.load(), true); assert.equal(B.Save.data.v, 6);
+    assert.equal(B.Save.load(), true); assert.equal(B.Save.data.v, 7);
   }
   console.log('✓ v2/v3/v4 saves migrate; home moves once and progress survives');
 
@@ -131,19 +132,9 @@ function checks(game) {
   assert.equal(B.Play.save.finale, false);
   console.log('✓ continuous, jump-free walk from home through all three rooms and back');
   place('hm', 3, 32);
-  for (let i = 0; i < 100 && B.Play.room.id !== 'nm'; i++) tick(1, ['ArrowLeft']);
-  assert.equal(B.Play.room.id, 'nm');
-  for (let i = 0; i < 100 && B.Play.room.id !== 'hm'; i++) tick(1, ['ArrowRight']);
-  assert.equal(B.Play.room.id, 'hm');
-  // All three pads are independent and saved; the prize stays optional.
-  for (const [col, floor] of [[7, 32], [12, 25], [21, 18]]) { place('nm', col, floor); tick(60); }
-  assert.equal(B.Play.save.gates.nm, 1);
-  const mazeBefore = Object.keys(B.Play.save.sparkles).length;
-  for (const col of [3, 5, 7]) { place('nm', col, 11); tick(2); }
-  assert.equal(Object.keys(B.Play.save.sparkles).length, mazeBefore + 3);
-  B.Play.writeSave(); B.Save.load(); B.Main.set('play', { cat: 'phoebe' });
-  assert.equal(B.Play.save.gates.nm, 1);
-  console.log('✓ optional maze opens after three pads; its prizes and exit survive reload');
+  tick(120, ['ArrowLeft']);
+  assert.equal(B.Play.room.id, 'hm'); assert.equal(B.Play.maze, null);
+  console.log('✓ the secret maze is closed during the adventure');
 
   // The two original progression gates remain closed until solved.
   place('g1', 26, 14); tick(180, ['ArrowRight']);

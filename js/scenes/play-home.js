@@ -117,10 +117,11 @@
     },
 
     openWardrobe() {
-      const list = BB.Wardrobe.LIST.filter(a => a.cost), wear = this.save.wear || {};
+      BB.Economy.milestones(this.save);
+      const list = BB.Wardrobe.LIST.filter(a => a.stars), wear = this.save.wear || {};
       let sel = list.findIndex(a => wear[a.slot] === a.id);
       if (sel < 0) sel = 0;
-      this.wardrobe = { sel, tab: 0, t: 0, wiggle: 0 };
+      this.wardrobe = { sel, tab: 0, focus: 'items', t: 0, wiggle: 0 };
       this.save.wardrobeNew = 0;
       this.save.used = this.save.used || {}; this.save.used.mirror = 1;
       this.pl.state = 'wardrobe'; this.pl.body.vx = 0;
@@ -131,11 +132,16 @@
     wardrobeItems() {
       const tab = this.wardrobe.tab;
       if (tab === 1) return BB.Cosmetics.LIST;
-      return BB.Wardrobe.LIST.filter(a => tab === 0 ? !!a.cost : !!a.boss && !!this.save.outfits[a.id]);
+      if (tab === 3) return BB.GardenMaze.CATS.map(id => ({ id, name: BB.CATS[id].name, slot: 'cat' }));
+      return BB.Wardrobe.LIST.filter(a => tab === 0 ? !!a.stars : !!a.boss && !!this.save.outfits[a.id]);
     },
 
+    wardrobeTabs() { return this.save.mazeSolved ? 4 : 3; },
+    wardrobeTabX(i) { return 505 + i * (this.wardrobeTabs() === 4 ? 100 : 116); },
+
     wardrobeTab(tab) {
-      this.wardrobe.tab = (tab + 3) % 3; this.wardrobe.sel = 0;
+      const tabs = this.wardrobeTabs();
+      this.wardrobe.tab = (tab + tabs) % tabs; this.wardrobe.sel = 0;
       S().select();
     },
 
@@ -153,9 +159,10 @@
       const a = this.wardrobeItems()[i], w = this.wardrobe;
       if (!a) return;
       w.sel = i;
+      if (a.slot === 'cat') { this.chooseMazeCat(a.id); return; }
       const style = w.tab === 1;
-      const have = style ? !a.cost || this.save.purchases[a.id] : this.save.outfits[a.id];
-      if (!have && BB.Economy.buy(this.save, a.id, 'stars', a.cost) === 'poor') { w.wiggle = 20; S().hmph(); return; }
+      BB.Economy.milestones(this.save);
+      if (!BB.Economy.unlocked(this.save, a)) { w.wiggle = 20; S().hmph(); return; }
       if (style) {
         this.save.cosmetics[a.slot] = a.value; S().outfit();
       } else {
@@ -168,20 +175,27 @@
     },
 
     updateWardrobe() {
-      const I = BB.Input, w = this.wardrobe, n = this.wardrobeItems().length;
+      const I = BB.Input, w = this.wardrobe;
       w.t++;
       if (w.wiggle > 0) w.wiggle--;
       if (w.t < 8) return;
       if (I.pressed.pause || I.pressed.back || I.pressed.map) return this.closeWardrobe();
-      if (I.pressed.left) { if (w.sel === 0) this.wardrobeTab(w.tab - 1); else { w.sel--; S().select(); } }
-      if (I.pressed.right) { if (w.sel >= n - 1) this.wardrobeTab(w.tab + 1); else { w.sel++; S().select(); } }
-      if (n && I.pressed.up) { w.sel = (w.sel + n - Math.min(4, n)) % n; S().select(); }
-      if (n && I.pressed.down) { w.sel = (w.sel + 4) % n; S().select(); }
-      if (!I.pressed.up && !I.pressed.down && !I.pressed.left && !I.pressed.right && (I.pressed.jump || I.pressed.bubble || I.pressed.confirm)) this.toggleOutfit(w.sel);
+      const n = this.wardrobeItems().length;
+      if (w.focus === 'tabs') {
+        if (I.pressed.left) this.wardrobeTab(w.tab - 1);
+        if (I.pressed.right) this.wardrobeTab(w.tab + 1);
+        if (I.pressed.down || (!I.pressed.up && (I.pressed.confirm || I.pressed.bubble || I.pressed.jump))) { w.focus = 'items'; S().select(); }
+      } else {
+        if (I.pressed.left && n) { w.sel = (w.sel + n - 1) % n; S().select(); }
+        if (I.pressed.right && n) { w.sel = (w.sel + 1) % n; S().select(); }
+        if (I.pressed.up) { if (w.sel < 4 || !n) w.focus = 'tabs'; else w.sel -= 4; S().select(); }
+        if (n && I.pressed.down) { w.sel = Math.min(n - 1, w.sel + 4); S().select(); }
+        if (!I.pressed.up && !I.pressed.down && !I.pressed.left && !I.pressed.right && (I.pressed.jump || I.pressed.bubble || I.pressed.confirm)) this.toggleOutfit(w.sel);
+      }
       for (const p of I.takePointers()) {
         if (Math.hypot(p.x - DONE.x, p.y - DONE.y) < DONE.r + 10) return this.closeWardrobe();
-        for (let i = 0; i < 3; i++) if (Math.hypot(p.x - (505 + i * 116), p.y - 88) < 32) return this.wardrobeTab(i);
-        for (let i = 0; i < n; i++) { const q = cell(i); if (Math.hypot(p.x - q.x, p.y - q.y) < q.r + 8) { if (w.sel === i) this.toggleOutfit(i); else { w.sel = i; S().select(); } break; } }
+        for (let i = 0; i < this.wardrobeTabs(); i++) if (Math.hypot(p.x - this.wardrobeTabX(i), p.y - 88) < 32) { this.wardrobeTab(i); w.focus = 'items'; return; }
+        for (let i = 0; i < this.wardrobeItems().length; i++) { const q = cell(i); if (Math.hypot(p.x - q.x, p.y - q.y) < q.r + 8) { if (w.sel === i && w.focus === 'items') this.toggleOutfit(i); else { w.sel = i; w.focus = 'items'; S().select(); } break; } }
       }
     },
 
@@ -202,37 +216,43 @@
       c.save(); G().ellipse(MIRROR.x, MIRROR.y, MIRROR.rx, MIRROR.ry, 0, c); c.clip();
       c.fillStyle = 'rgba(255,255,255,0.5)'; c.beginPath(); c.ellipse(MIRROR.x - 60, MIRROR.y - 60, 14, 70, 0.4, 0, TAU); c.fill();
       const previewWear = Object.assign({}, save.wear);
-      if (w.tab !== 1 && selected) previewWear[selected.slot] = selected.id;
-      BB.Kittens.draw(c, this.pl.cat, { mode: 'sit', happy: true, t, wear: previewWear }, MIRROR.x + 6, MIRROR.y + 118, 5.2, 1);
+      if (w.tab === 0 || w.tab === 2) if (selected) previewWear[selected.slot] = selected.id;
+      BB.Kittens.draw(c, w.tab === 3 && selected ? selected.id : this.pl.cat, { mode: 'sit', happy: true, t, wear: previewWear }, MIRROR.x + 6, MIRROR.y + 118, 5.2, 1);
       c.restore();
       // Picture tabs: extra outfits, bubble / trail styles, earned gifts.
-      for (let i = 0; i < 3; i++) {
-        const x = 505 + i * 116;
+      for (let i = 0; i < this.wardrobeTabs(); i++) {
+        const x = this.wardrobeTabX(i);
         c.fillStyle = i === w.tab ? '#ffe7ad' : '#ffffff'; c.strokeStyle = '#d8c8d8'; c.lineWidth = 2;
         G().circle(x, 88, 26, c); c.fill(); c.stroke();
+        if (i === w.tab && w.focus === 'tabs') { c.strokeStyle = '#ffb35c'; c.lineWidth = 4; G().circle(x, 88, 32, c); c.stroke(); }
         if (i === 0) BB.Wardrobe.icon(c, 'partyhat', x, 88, 1.6, t);
         if (i === 1) BB.Cosmetics.icon(c, BB.Cosmetics.LIST[1], x, 88, 1.15, t);
         if (i === 2) { c.fillStyle = '#b99cff'; G().rrect(x - 12, 78, 24, 22, 3, c); c.fill(); c.fillStyle = '#ffe066'; c.fillRect(x - 2, 76, 4, 25); c.fillRect(x - 14, 80, 28, 4); }
+        if (i === 3) BB.Kittens.draw(c, 'rainbow', { mode: 'sit', t }, x, 102, 0.9, 1);
       }
-      // The mirror previews the selected style before spending.
+      // Locked items can be previewed; stars are never spent.
       if (w.tab === 1 && selected) BB.Cosmetics.icon(c, selected, MIRROR.x + 8, MIRROR.y - 68, 2, t);
       c.fillStyle = '#ffd84a'; G().star(244, 85, 10, 5, 0.5, -Math.PI / 2, c); c.fill();
       G().text(String(BB.Economy.balance(save, 'stars')), 287, 85, 23, '#795830', null, 'center', c);
-      // Every purchasable extra stays visible; affordable choices glow.
+      // Every milestone stays visible; unlocked choices glow.
       list.forEach((it, i) => {
         const style = w.tab === 1;
-        const q = cell(i), have = style ? !it.cost || !!save.purchases[it.id] : !!save.outfits[it.id];
-        const worn = style ? save.cosmetics[it.slot] === it.value : (save.wear || {})[it.slot] === it.id, sel = i === w.sel;
-        const afford = have || BB.Economy.balance(save, 'stars') >= it.cost;
+        const q = cell(i), have = it.slot === 'cat' ? save.mazeSolved : BB.Economy.unlocked(save, it);
+        const worn = it.slot === 'cat' ? save.cat === it.id : style ? save.cosmetics[it.slot] === it.value : (save.wear || {})[it.slot] === it.id, sel = i === w.sel && w.focus === 'items';
+        const afford = have;
         const k = sel ? 1.1 + Math.sin(t * 0.15) * 0.04 : 1;
         const wx = sel && w.wiggle ? Math.sin(w.wiggle * 1.5) * 4 : 0;
         c.save(); c.translate(q.x + wx, q.y); c.scale(k, k);
         if (afford && (sel || !have)) G().drawGlow(0, 0, 48, '#fff1c2', sel ? 0.7 : 0.4, c);
         c.fillStyle = '#ffffff'; c.strokeStyle = worn ? '#5fd48a' : sel ? '#ffb35c' : '#d8c8d8'; c.lineWidth = worn || sel ? 5 : 3;
         G().circle(0, 0, q.r, c); c.fill(); c.stroke();
-        if (style) BB.Cosmetics.icon(c, it, 0, 0, 1.65, t);
+        if (it.slot === 'cat') BB.Kittens.draw(c, it.id, { mode: 'sit', happy: true, t }, 0, 22, 1.4, 1);
+        else if (style) BB.Cosmetics.icon(c, it, 0, 0, 1.65, t);
         else BB.Wardrobe.icon(c, it.id, 0, 0, 2.4, t);
-        if (!have) { c.fillStyle = afford ? '#ffd84a' : '#b7afbf'; G().star(26, 25, 6, 5, 0.5, -Math.PI / 2, c); c.fill(); }
+        if (!have) {
+          c.strokeStyle = '#aaa0b4'; c.lineWidth = 2; G().rrect(19, 19, 13, 11, 3, c); c.stroke();
+          c.beginPath(); c.arc(25.5, 19, 4, Math.PI, 0); c.stroke();
+        }
         if (worn) {
           c.fillStyle = '#5fd48a'; G().circle(q.r * 0.7, -q.r * 0.7, 11, c); c.fill();
           c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.lineCap = 'round';
@@ -240,7 +260,14 @@
         }
         c.restore();
       });
-      if (selected && selected.cost && !(w.tab === 1 ? save.purchases[selected.id] : save.outfits[selected.id])) BB.Economy.pips(c, 'stars', selected.cost, 592, 430, BB.Economy.balance(save, 'stars') >= selected.cost);
+      const next = BB.Economy.milestones(save), total = BB.Economy.balance(save, 'stars');
+      G().text(selected ? selected.name : 'Boss presents', 625, 351, 18, '#795830', null, 'center', c);
+      const target = selected && selected.slot !== 'cat' && !BB.Economy.unlocked(save, selected) ? selected : next;
+      const bx = 467, by = 392, bw = 242;
+      c.fillStyle = '#e8deea'; G().rrect(bx, by, bw, 15, 7, c); c.fill();
+      c.fillStyle = '#ffd665'; G().rrect(bx, by, bw * (target ? Math.min(1, total / target.stars) : 1), 15, 7, c); c.fill();
+      G().text(target ? `${target.stars - total} stars to ${target.name}` : 'All star rewards unlocked!', 588, 426, 16, '#795830', null, 'center', c);
+      G().text('↑ categories   ← → choose   ↓ items', 620, 469, 15, '#998097', null, 'center', c);
       // ✓ all done
       c.fillStyle = '#5fd48a'; c.strokeStyle = '#ffffff'; c.lineWidth = 4;
       G().circle(DONE.x, DONE.y, DONE.r, c); c.fill(); c.stroke();

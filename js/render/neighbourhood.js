@@ -89,12 +89,27 @@
     }
     // A few petals sit at the feet, clear of the kitten and touch buttons.
     if (room.def.neighbourhood === 'maze') {
-      // The terraces read as trimmed hedges; the gaps and landing edges
-      // stay clear. A house picture always marks the open lower exit.
-      for (const [row, from, to] of [[11, 1, 24], [18, 5, 29], [25, 1, 24]]) for (let col = from; col < to; col++) {
-        c.fillStyle = '#70b574'; G().ellipse(X(col + 0.5), Y(row) + 12, 19, 7, 0, c); c.fill();
+      const open = BB.GardenMaze.available(BB.Play.save), x = X(29.5), floor = Y(32);
+      c.fillStyle = '#367953'; c.fillRect(X(0), Y(0), room.pw, room.ph);
+      for (let row = 24; row < 34; row++) for (let col = 26; col < 30; col++) {
+        c.fillStyle = (row + col) % 2 ? '#55945b' : '#65a464';
+        G().ellipse(X(col + 0.5), Y(row + 0.5), 21, 18, 0.1, c); c.fill();
+        if ((row * 3 + col) % 4 === 0) BB.Cosmetics.flower(c, X(col + 0.5), Y(row + 0.4), 5, '#ffd1e8');
       }
-      BB.HUD.zoneIcon(c, BB.HOME_ZONE, X(28), Y(30), 0.9);
+      c.fillStyle = '#274b41'; G().rrect(x - 19, floor - 94, 38, 96, 18, c); c.fill();
+      c.strokeStyle = open ? '#efca76' : '#829d91'; c.lineWidth = 4;
+      c.beginPath(); c.moveTo(x - 22, floor); c.lineTo(x - 22, floor - 72);
+      c.arc(x, floor - 72, 22, Math.PI, 0); c.lineTo(x + 22, floor); c.stroke();
+      if (!open) {
+        for (let i = -1; i <= 1; i++) { c.beginPath(); c.moveTo(x + i * 11, floor); c.lineTo(x + i * 11, floor - 80); c.stroke(); }
+        c.fillStyle = '#efca76'; G().rrect(x - 7, floor - 53, 14, 17, 4, c); c.fill();
+      } else G().drawGlow(x, floor - 50, 42, '#efc3fc', 0.6, c);
+      BB.Kittens.draw(c, 'rainbow', { mode: 'sit', t }, x - 3, floor - 107, 0.85, 1);
+      const cats = BB.Home.familyOrder().filter(id => BB.Play.save.family[id]).length;
+      G().text(open ? 'Secret Garden' : `Homecoming + ${cats}/12 cats`, x + 62, floor - 140, 16, '#fff9db', null, 'center', c);
+      for (let i = 0; i < 12; i++) {
+        c.fillStyle = i < cats ? '#ffcb65' : '#86a98a'; G().circle(x - 12 + (i % 6) * 6, floor - 173 + Math.floor(i / 6) * 8, 2.3, c); c.fill();
+      }
     }
     for (const col of [3, 9, 17, 27]) BB.Tiles.flower(c, X(col), Y(room.def.neighbourhood === 'maze' ? 32 : 31) + 4, '#ffd1e8', 0.65);
     c.restore();

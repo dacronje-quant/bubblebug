@@ -48,25 +48,12 @@
   put(roots, 16, 29, 'n'); put(roots, 25, 30, 'R');
   room('nr', -30, 'Root Hollow', roots, 'roots');
 
-  // A garden maze beside the house: three switchback terraces with a
-  // few short branches, rather than a dark labyrinth. Its lower exit is
-  // always open; paw pads only open the optional treasure nook above.
-  const maze = Array.from({ length: H }, (_, y) => Array(W).fill(y >= 32 || y === 0 ? '#' : '.'));
-  for (let y = 0; y < 32; y++) {
-    maze[y][0] = '#';
-    if (y < 28) maze[y][29] = '#';
-  }
-  for (const [y, from, to] of [[25, 0, 24], [18, 5, 30], [11, 0, 24]])
-    for (let x = from; x < to; x++) maze[y][x] = '#';
-  for (const [y, x] of [[29, 24], [26, 21], [22, 3], [15, 24], [12, 21]]) ledge(maze, y, x, 4);
-  ledge(maze, 19, 2, 3); // leave column 1 clear for the walk back down
-  // A three-pad picture sign on the gate explains the whole challenge.
-  for (let x = 0; x <= 9; x++) maze[7][x] = '#';
-  for (let y = 8; y < 11; y++) maze[y][9] = 'G';
-  for (const [x, y] of [[7, 31], [12, 24], [21, 17]]) put(maze, x, y, 'P');
-  for (const [x, y] of [[12, 31], [18, 31], [25, 31], [6, 24], [16, 24], [22, 24], [8, 17], [15, 17], [26, 17], [3, 10], [5, 10], [7, 10]]) put(maze, x, y, '*');
-  put(maze, 27, 31, 'R'); put(maze, 25, 28, 'U');
-  put(maze, 5, 21, 'f'); put(maze, 26, 14, 'f');
+  // The courtyard entrance leads into the four-direction hedge maze.
+  // World.tile closes its only doorway until the finale and all 12 cats.
+  const maze = Array.from({ length: H }, () => Array(W).fill('#'));
+  for (let y = 28; y < 32; y++) for (let x = 26; x < 30; x++) maze[y][x] = '.';
   BB.room({ id: 'nm', zone: 0, x: -180, y: -18, name: 'Pawprint Maze',
-    neighbourhood: 'maze', cameraGroup: 'home-neighbourhood', map: maze.map(row => row.join('')) });
+    neighbourhood: 'maze', maze: true, cameraGroup: 'home-neighbourhood',
+    mazeStars: [[12,31],[18,31],[25,31],[6,24],[16,24],[22,24],[8,17],[15,17],[26,17],[3,10],[5,10],[7,10]],
+    map: maze.map(row => row.join('')) });
 })(window.BB);

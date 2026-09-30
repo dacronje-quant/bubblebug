@@ -83,7 +83,7 @@
 
   function fresh() {
     return {
-      v: 6,
+      v: 7,
       cat: 'marshmallow',
       room: null, x: null, y: null,        // resume spot (world px)
       bench: null,                          // last bench rested at {x,y}
@@ -106,12 +106,14 @@
       secrets: {},                          // shy-wall room → 1
       visited: {},                          // room id → 1
       outfits: {},                          // things to wear, from the bosses: id → 1
-      wear: { head: null, neck: null },     // what the kitten has on
+      wear: { head: null, neck: null, face: null }, // what the kitten has on
       starsSpent: 0, heartsSpent: 0,        // collection totals stay untouched
       purchases: {},                       // optional cosmetic id → 1
       cosmetics: { bubble: 'classic', trail: 'classic' },
       residents: {},                       // invited friend species → 1
       fountainUses: 0,
+      mazeSolved: false,
+      mazePosition: null,                  // top-down garden cell, separate from world save point
       doors: {},                            // zone → 1 once its cat flap is found (a door opens at home)
       introDone: 0,                         // the wake-up scene has played
       leftHome: 0,                          // been out of the front door
@@ -142,6 +144,15 @@
           if (d && d.v === 4) migrate4(d);
           if (d && d.v === 5) d.v = 6; // defaults give existing players their full collected balance
           if (d && d.v === 6) {
+            d.v = 7; d.starsSpent = 0; // all collected stars count; keep every old owned item
+            // The old platform maze has become a hedge labyrinth. Resume
+            // beside its entrance; its stars/pads/progress keep their keys.
+            if (d.room === 'nm' || (d.x != null && d.x >= -180 * T && d.x < -150 * T && d.y >= -18 * T && d.y < 16 * T)) {
+              d.room = 'hm'; d.x = -148 * T + 6; d.y = 14 * T - 24;
+            }
+            if (d.bench && d.bench.x >= -180 * T && d.bench.x < -150 * T) d.bench = null;
+          }
+          if (d && d.v === 7) {
             this.data = Object.assign(fresh(), d);
             this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
             this.data.wear = Object.assign(fresh().wear, d.wear || {});

@@ -1,6 +1,6 @@
 # Bubble Paws: The Rainbow Kingdom 🫧🐾
 
-A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wakes up alone in the Cat House: a big gloom cloud has sent the whole family wandering off. Walk through the garden neighbourhood and round a ring of twelve hand-built biomes, blowing friendship bubbles to cheer up gloomy animals (and a few bugs), and slide home at the end for a big homecoming party. At the end of every zone waits a big, very sad boss, each with its own silly animal moves and its own arena: dodge their slow, simple "sad attacks", then bubble them happy to open the way on. Solve picture puzzles, snack on fishy treats, learn hidden cat tricks, find the kittens' twelve lost family members, and spend collected stars and hearts on optional fun at home. A grown-up picks **Easy** (extra jumping help), **Medium** (the former Easy), or **Hard** (happy suns and save-point returns). There's no game over, and play never depends on reading. A full adventure is a long one, so plan on an hour or more for a young player.
+A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wakes up alone in the Cat House: a big gloom cloud has sent the whole family wandering off. Walk through the garden neighbourhood and round a ring of twelve hand-built biomes, blowing friendship bubbles to cheer up gloomy animals (and a few bugs), and slide home at the end for a big homecoming party. At the end of every zone waits a big, very sad boss, each with its own silly animal moves and its own arena: dodge their slow, simple "sad attacks", then bubble them happy to open the way on. Solve picture puzzles, snack on fishy treats, learn hidden cat tricks, find the kittens' twelve lost family members, and unlock optional fun at home with collected stars and hearts. A grown-up picks **Easy** (extra jumping help), **Medium** (the former Easy), or **Hard** (happy suns and save-point returns). There's no game over, and play never depends on reading. A full adventure is a long one, so plan on an hour or more for a young player.
 
 *Formerly called **Bubblebug**. Saves from the Bubblebug version carry over automatically.*
 
@@ -19,7 +19,7 @@ A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wa
 
 There's no install, no Node.js and no build step. Everything, sound included, is generated in the browser.
 
-**Quick test of the additions:** open `try-rewards.html`. It starts at home with 250 stars, 65 hearts and the family present. Purchases and progress in this preview never write to or erase the normal adventure. Open `index.html` to play normally. See [TESTING.md](TESTING.md) for a short playtest route.
+**Quick test of the additions:** open `try-rewards.html`. It starts at home with 250 stars, 65 hearts, the family present and the homecoming complete. Rewards and progress in this preview never write to or erase the normal adventure. Open `index.html` to play normally. See [TESTING.md](TESTING.md) for a short playtest route.
 
 | Action | Keyboard | Gamepad | Touch |
 |---|---|---|---|
@@ -38,7 +38,7 @@ On tablets and phones, *Add to Home Screen* (when the game is served online) ins
 
 The title screen has two big picture buttons:
 
-- **▶ Continue** (green) goes straight back into the saved adventure, with the kitten it was saved with. A small tally beside it shows stars and hearts left to spend, and family found. With no save yet, Continue is greyed out and does nothing.
+- **▶ Continue** (green) goes straight back into the saved adventure, with the kitten it was saved with. A small tally beside it shows stars collected, hearts available, and family found. With no save yet, Continue is greyed out and does nothing.
 - **🌱 New Game** (pink) goes to kitten select. If an adventure is already saved, a picture check pops up first: the saved kitten and its tallies crossed out, a green **✓** (erase it and start fresh) and a pink **✗** (keep it). Nothing is erased unless ✓ is chosen.
 
 Use ◀ ▶ and jump to choose, or tap/click.
@@ -55,6 +55,8 @@ Both kittens are painted from photos of two real cats:
 - **Phoebe**, a patchwork tortoiseshell-tabby. Phoebe has chocolate and ginger patches with tabby stripes, a white bib and paws, a ginger cheek and bright green eyes. Phoebe's bubbles are honey-gold and mint with a sprinkle of stars. Phoebe twitches an ear, licks a paw, and does a wiggly pounce-crouch.
 
 Both move the same way. They differ in voice (a synthesized *mew*), idle habits and bubble style.
+
+After the homecoming and finding all twelve cats, solve the Secret Garden maze to unlock **Rainbow**, a magical kitten with pastel fur, a rainbow mane and a golden unicorn horn. Choose any of the three as your playable kitten, then change again at the mirror. Your adventure progress and outfits carry over.
 
 ## 🗺 The Rainbow Kingdom
 
@@ -90,9 +92,9 @@ The house and the opening garden share one moving camera: no teleport, fade or f
 | Front Garden | 30 × 34 tiles | Walk east from the house; invite earned critter species at the picture paw ring; leaf steps lead to the upper loop | 8 |
 | Pond Walk | 30 × 34 tiles | A safe wooden bridge on the lower path, a branch above, and no dangerous water | 8 |
 | Root Hollow | 30 × 34 tiles | Walk into Sparkle Gardens; bubble two sleepy buds to open an optional star nook upstairs | 8 |
-| Pawprint Maze | 30 × 34 tiles | Walk west from the house; climb three hedge terraces and step on three paw pads to open the prize nook | 12 |
+| Secret Garden / Pawprint Maze | 29 × 15 maze cells | After the homecoming and finding all twelve cats, walk west from the house into a four-direction hedge labyrinth with loops and dead ends; touch three paw stones to unlock the kitten chooser | 12 |
 
-The maze's lower return to the house is always open and marked with a house picture. Its pads and the root buds only gate bonus prizes. Neither puzzle blocks the adventure or needs an elder power.
+The maze opens only after both the homecoming and all twelve family cats. It has no enemies or jumps: use all four arrows, WASD, a D-pad or its on-screen direction buttons. Its house-picture exit is always available. Three paw stones unlock a choice of Marshmallow, Phoebe or Rainbow, a magical unicorn kitten, as your playable character. Choose again at the mirror's cat tab after solving the maze. Stars and paw stones collected in the earlier maze stay earned. The root nook remains an optional adventure bonus.
 
 ### 🏠 The Cat House
 
@@ -105,28 +107,27 @@ The adventure starts at home, and nobody's there. The kitten wakes on its bed, s
 - **The front door** opens straight onto the Front Garden at the right of the living room. Keep walking east through the pond and roots to reach Sparkle Gardens. At the left of the living room is the optional Pawprint Maze.
 - **Family come home.** Each family member you find hops off home. Their frame on the family wall fills in with their face, and next time you're home they're napping on their own cushion (and wake up for a cuddle when you come close). Your own Mama waits by the front door.
 - **The homecoming party.** Slide home down the Rainbow Slide and the party starts in the living room. Only the family you actually found come: they dance in a ring around your kitten (the grannies sway, the babies bounce). Every friend you made floats in on a little cloud, and every boss you cheered up waves from the landing upstairs. Then a big card fills in the family frames one by one and shows how many you found, like **9 / 12**. Find all twelve and the card turns rainbow, with extra fireworks. Afterwards you can keep playing and go back out for anyone you missed.
-- **Dressing up.** Every boss still gives its original free present: a bonnet, mushroom hat, tiara, honey crown, unicorn horn, cloud collar, sailor hat, sun hat, bobble hat, scarf, nightcap or bunny ears. Stand still at the pink-and-gold mirror to choose extra outfits, bubble/trail styles or earned boss presents through three picture tabs. One hat and one neck item can be worn together.
+- **Dressing up.** Every boss still gives its original free present: a bonnet, mushroom hat, tiara, honey crown, unicorn horn, cloud collar, sailor hat, sun hat, bobble hat, scarf, nightcap or bunny ears. Stand still at the pink-and-gold mirror to choose extra outfits, bubble/trail styles or earned boss presents. A fourth kitten tab appears after solving the maze. A hat, neck item and scuba mask can be worn together.
 - **Toys come home too.** Every hidden toy you find turns up somewhere in the house: the yarn ball on the rug, the jingle bell hanging from a cat tree, the paper boat on the windowsill, the star cushion on the sofa… Walk into one to bat it about and hear its own sound. The spots for toys you haven't found yet show a faint outline.
 - The house has its own gentle music-box tune. The party tune plays only while you're at the party; step out of the house and the music changes with you.
 
 ### ⭐ Stars for you, hearts for friends
 
-The corner counters show what is left to spend. Spending uses a separate saved ledger: **found − spent**. Collected sparkle/friend keys, map ★ marks, bosses, family, toys and powers stay intact. Every purchase is an optional extra. Prices are rows of star or heart pips; affordable choices glow. Opening a paw-ring choice never spends anything, and holding a button never makes repeated purchases. Owned extras are free to use again.
+Stars unlock permanent milestones from the total collected; equipping never spends stars. The mirror shows a progress bar and how many stars remain to the selected locked reward or next milestone. Previous purchases remain owned even below their new milestone. Hearts still use a separate **found − spent** ledger for one-time invitations and fountain unlocking. Collected sparkle/friend keys, map ★ marks, bosses, family, toys, powers and completion stay intact.
 
-| Place | Optional extra | Cost |
+| Place | Optional extra | Unlock / cost |
 |---|---|---|
-| Mirror · clothes picture | Party hat | 15 stars |
-| Mirror · clothes picture | Flower crown, chef hat, sparkly collar | 20 stars each |
-| Mirror · clothes picture | Wizard hat, pirate hat, jingle collar | 25 stars each |
-| Mirror · bubble picture | Heart or star bubbles | 10 stars each |
-| Mirror · bubble picture | Flower-pop bubbles | 20 stars |
-| Mirror · bubble picture | Paw-print trail / rainbow trail | 15 / 30 stars |
+| Mirror · clothes picture | Party hat / flower crown / chef hat | Collect 25 / 50 / 75 stars |
+| Mirror · clothes picture | Wizard hat / pirate hat | Collect 100 / 125 stars |
+| Mirror · clothes picture | Sparkly collar / jingle collar / scuba mask & snorkel | Collect 150 / 175 / 200 stars |
+| Mirror · bubble picture | Heart / star / flower bubbles | Collect 40 / 80 / 140 stars |
+| Mirror · bubble picture | Tiny paw trail / rainbow trail | Collect 60 / 250 stars |
 | Front Garden · critter picture | One resident of a species you have befriended | 1 heart per species |
 | Living room · heart fountain | Unlock fireworks, family dancing and the extra twirl trick | 1 heart once; every repeat is free |
 
-At the mirror, tap a picture to preview it; tap the selected picture again to buy and equip it. Keyboard/gamepad users move between pictures, then press jump or bubble. The original bubbles and trail remain free options, and earned boss presents remain free to wear. Styles change appearance only. The jingle collar uses an existing bell sound when running.
+At the mirror, tap a picture to preview it; tap the selected picture again to equip it if unlocked. Keyboard/gamepad users press Up from the first item row to focus categories, Left/Right to change category, then Down to browse its pictures. Jump, bubble or Enter equips. The original bubbles and trail remain free options, and earned boss presents remain free to wear. Styles change appearance only. The jingle collar uses an existing bell sound when running.
 
-Invited critters wander through the neighbourhood, and approaching them gives a purr and hearts animation. Petting never spends or awards currency. The fountain closes its card immediately so the celebration is visible in the room. Step away before using a paw ring again. These additions use sounds and animations, with no new speech lines.
+Invited critters wander through the neighbourhood, and approaching them gives a purr and hearts animation. Petting never spends or awards currency. The fountain closes its card immediately for a six-second show of rainbow jets, flying hearts, confetti, fireworks, party music and family dancing. The first-use twirl card appears afterwards. Step away before using a paw ring again. These additions use sounds and animations, with no new speech lines.
 
 There are 39 friend species and 65 hearts in the world. One heart per species plus one for the fountain lets a completed adventure afford every current heart reward.
 
@@ -314,7 +315,8 @@ js/entities/            player · bubbles · bugs (all gloomy critters) · bosse
                         wardrobe (boss presents and extra clothes) · cosmetics (bubble and trail styles)
                         links (cat flaps, Cat House doors, the Rainbow Lift) · things (sparkles, benches, elders, the slide…)
 js/scenes/              title (Continue / New Game) · select · play (suns, save points, travel, bosses, party)
-                        play-home (mirror, presents, toys) · play-garden (invitations and fountain) · pause (+ map)
+                        play-home (mirror, presents, toys) · play-garden (invitations and fountain)
+                        play-maze (hedge labyrinth and kitten rewards) · pause (+ map)
 js/main.js              fixed 60 Hz loop, scene switching, adaptive quality
 tools/                  verify-world.js + dev playtest/screenshot helpers (optional, need Node)
 tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (see the note at the top of Launcher.cs)
@@ -323,13 +325,14 @@ tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (
 - **One continuous world grid.** Rooms are placed at world coordinates (Hollow-Knight style), so walking off any edge leads straight into the neighbouring room, and the camera glides across.
 - **Pure physics.** `BB.Physics.step(body, input, abilities, easy = false)` runs in play and in the verifier. Medium and Hard use the original movement; only Easy passes the assistance flag.
 - **Adaptive music.** Each biome has an 8-bar song in layers (pad, bass, lead, arpeggio, percussion, twinkles). Running swells the arps and percussion, benches fade to a music box, a new friend adds a twinkle layer, dark caves warm the mix, and boss arenas get their own bouncy tune.
-- **Saves.** Progress lives in browser local storage and is written on every room change, save point, friend, gate and purchase. Difficulty and sound are separate device settings. Schema v6 adds the spending ledger, purchases, styles and residents. The v4 home relocation changes only resume/bench coordinates inside the old house; existing world collectible keys stay intact. Older migrations still open new gates behind an existing adventure and carry pre-ring collectibles into their current rooms. The rewards preview keeps progress entirely in memory.
+- **Saves.** Progress lives in browser local storage and is written on every room change, save point, friend, gate and reward. Difficulty and sound are separate device settings. Schema v7 restores the full collected-star total, keeps old purchased items, and adds maze position/completion and face accessories. Older maze saves resume safely beside the new entrance with their collectibles intact. The v4 home relocation changes only resume/bench coordinates inside the old house. Older migrations still open new gates behind an existing adventure and carry pre-ring collectibles into their current rooms. The rewards preview keeps progress entirely in memory.
 
 ### Zero softlocks, proven
 
 ```
 node tools/test-neighbourhood.js       # real scene/physics, migration, routes, puzzles and save checks
-node tools/test-rewards.js             # purchases, held inputs, reload, fountain and Easy regressions
+node tools/test-rewards.js             # milestones, held inputs, reload, fountain and Easy regressions
+node tools/test-maze.js                # entire maze graph, completion gate, character changes and reload
 node tools/test-difficulty.js          # mode migration, picker inputs, movement and bumps
 node tools/test-browser.js            # optional Chromium keyboard/mouse/touch checks (needs Playwright)
 node tools/verify-world.js --jobs 4    # all stages, original Medium / Hard movement
@@ -353,9 +356,9 @@ A too-sad pop-back only ever returns the kitten to a spot it has already stood o
 
 Before any of that, a quick map check makes sure every pool has a floor and walls, so once you can swim, water is safe everywhere (no pool may sit over mist or the edge of the world).
 
-The starting-stage check also requires all 36 new neighbourhood stars to be reachable without elder powers. The world now contains 87 rooms and 716 stars, with the original 65 critters, 12 toys, 12 family members, 25 benches, 12 bosses and 24 cat flaps retained.
+The starting-stage check requires all 24 adventure neighbourhood stars to be reachable without elder powers. The separate maze check proves every post-game corridor, paw stone, star and exit reachable with four-direction movement. The world contains 87 rooms and 716 stars, with the original 65 critters, 12 toys, 12 family members, 25 benches, 12 bosses and 24 cat flaps retained.
 
-The browser check opens the real HTML files, chooses modes with keyboard and pointer events, buys mirror styles, walks the neighbourhood, reloads progress, checks the preview's save protection, and uses emulated tablet touch for invitations and fountain repeats. Set `BUBBLEPAWS_BROWSER` if using a custom Chromium executable. Physical gamepad and tablet comfort still need a human playtest.
+The browser check opens the real HTML files, chooses modes and mirror categories with keyboard and pointer events, equips milestone styles and the scuba mask, walks the neighbourhood, checks maze controls, reloads progress, checks preview save protection, and uses emulated tablet touch for invitations and fountain repeats. Set `BUBBLEPAWS_BROWSER` if using a custom Chromium executable. Physical gamepad and tablet comfort still need a human playtest.
 
 ### Editing rooms
 

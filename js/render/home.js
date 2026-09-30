@@ -296,9 +296,9 @@
       const b = play.pl.body, near = Math.abs(b.x - (x + cam.x)) < 120 && Math.abs(b.y - (y + cam.y)) < 100;
       const tt = t + i * 37;
       // (Mama stays awake, watching the door)
-      const pose = play.celebrationT > 0 ? { mode: 'stand', happy: true, t: tt, squash: 1 + Math.sin(tt * 0.2) * 0.08 }
+      const pose = play.celebrationT > 0 ? { mode: 'stand', happy: true, t: tt, squash: 1 + Math.sin(tt * 0.2) * 0.12, wave: Math.max(0, Math.sin(tt * 0.1)) }
         : near || mama ? { mode: 'sit', happy: near, t: tt } : { mode: 'sleep', t: tt };
-      const hop = play.celebrationT > 0 ? Math.max(0, Math.sin(tt * 0.18)) * 12 : 0;
+      const hop = play.celebrationT > 0 ? Math.max(0, Math.sin(tt * 0.18)) * 22 : 0;
       BB.Kittens.draw(c, id, pose, x, y - hop, m.size || 1.4, x < b.x - cam.x ? 1 : -1);
       if (near && tt % 60 === 0) BB.Particles.heart(x + cam.x, y + cam.y - 40);
 

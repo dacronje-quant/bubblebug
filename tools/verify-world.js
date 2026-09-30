@@ -522,11 +522,11 @@ function runStage(stage, mapRoom) {
   else if (W.rooms.some(r => r.def.needs && !stage.have.includes(r.def.needs))) pass('every power gate holds (no sneaking ahead)');
 
   if (stage.i === 0) {
-    const missing = W.rooms.filter(r => r.def.neighbourhood).flatMap(r => r.things
+    const missing = W.rooms.filter(r => r.def.neighbourhood && !r.def.maze).flatMap(r => r.things
       .filter(t => t.ch === '*' && !touched(res.cover, t.tx, t.ty, 0))
       .map(t => `${r.id} (${t.tx - r.x},${t.ty - r.y})`));
     if (missing.length) fail('neighbourhood rewards unreachable without powers: ' + missing.join(', '));
-    else pass('every neighbourhood / maze reward is reachable without powers');
+    else pass('every adventure neighbourhood reward is reachable without powers (post-game maze checked separately)');
   }
 
   if (stage.goal === 'finale') {
@@ -543,6 +543,7 @@ function runStage(stage, mapRoom) {
     // Collectibles, critters and family members
     const missing = [];
     for (const room of W.rooms) {
+      if (room.def.maze) continue; // post-game four-direction search: tools/test-maze.js
       for (const t of room.things) {
         const at = `in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`;
         if ('*TBnfy&eWjhuv'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
@@ -552,7 +553,7 @@ function runStage(stage, mapRoom) {
         if (t.ch === 'o' && !bubbleable(res.nodes, t.tx, t.ty)) missing.push(`bud ${at} can't be bubbled`);
       }
     }
-    const unvisited = W.rooms.filter(r => !roomTouched(res.cover, r));
+    const unvisited = W.rooms.filter(r => !r.def.maze && !roomTouched(res.cover, r));
     if (unvisited.length) fail('rooms never entered: ' + unvisited.map(r => r.id).join(', '));
     if (missing.length) { fail(`${missing.length} collectible(s)/landmark(s) out of reach:`); missing.forEach(m => out.push('      ' + m)); }
     else pass('every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack, cat trick, cat flap and lift is reachable');

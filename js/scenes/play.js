@@ -44,6 +44,7 @@
       const save = this.save = BB.Save.data;
       save.cat = opts.cat || save.cat;
       W().build();
+      BB.Economy.milestones(save);
       // create every room's residents
       this.ents = {};
       this.locks = {};
@@ -51,6 +52,7 @@
       for (const room of W().rooms) {
         const e = { things: [], bugs: [], bosses: [] };
         for (const th of room.things) {
+          if (room.def.maze) continue; // the maze scene owns its collectibles
           if (th.ch === 'b' || th.ch === 'c') {
             const k = room.zone + th.ch;
             turns[k] = (turns[k] || 0) + 1;
@@ -76,6 +78,7 @@
       }
       // the kitten, at the save point
       let x, y;
+      if (save.room === 'nm' && !BB.GardenMaze.available(save)) { save.room = 'hm'; save.x = -148 * T + 6; save.y = 14 * T - C.PH; }
       if (save.x != null && W().roomAtPx(save.x + 10, save.y + 12)) { x = save.x; y = save.y; }
       else {
         const s = W().findThings('S')[0];
@@ -116,6 +119,8 @@
       this.traveling = null; this.linkLock = null; this.intro = null;
       this.wardrobe = null; this.outfitCard = null; this.mirrorHold = 0; this.toyBounce = {}; this.toyNear = {};
       this.gardenChoice = null; this.gardenHold = 0; this.celebrationT = 0; this.gardenLock = null; this.fountainCd = 0; this.mirrorLock = false;
+      this.maze = null;
+      document.body.classList.remove('in-maze');
       // (the elephant's rain hat became a unicorn horn)
       if (save.outfits && save.outfits.rainhat) { delete save.outfits.rainhat; save.outfits.horn = 1; }
       if (save.wear && save.wear.head === 'rainhat') save.wear.head = 'horn';
@@ -145,6 +150,7 @@
       BB.Bubbles.clear(); PT().clear(); BB.Bosses.clear();
       this.t = 0;
       this.writeSave();
+      if (this.room.def.maze) this.openMaze();
     },
 
     enterZone(z) {
@@ -536,6 +542,7 @@
         onBossHappy: b => self.bossHappy(b),
         onSparkle(th) {
           self.save.sparkles[th.key] = 1;
+          BB.Economy.milestones(self.save);
           S().sparkle();
           PT().burst('spark', th.x, th.y, 8, { color: '#fff1a8', speed: 2.2, life: 26 });
           PT().ring(th.x, th.y, '#fff1a8', 10);
@@ -735,6 +742,7 @@
       this.t++;
       G().t++;
       const I = BB.Input;
+      if (this.maze) { this.updateMaze(); return; }
       if (this.wardrobe) { this.updateWardrobe(); PT().update(); return; }
       if (this.gardenChoice) { this.updateGardenChoice(); PT().update(); return; }
       if (I.pressed.pause && !this.gift && this.pl.state !== 'sad') { BB.Main.go('pause'); return; }
@@ -826,6 +834,7 @@
           this.leaveRoom(this.room);
           this.prevRoom = this.room;
           this.room = r;
+          if (r.def.maze) { this.openMaze(); return; }
           this.save.visited[r.id] = 1;
           if (this.prevRoom.def.home && r.id === 'ng') this.save.leftHome = 1;
           if (r.def.neighbourhood === 'garden') this.refreshHomeVisitors();
@@ -953,6 +962,7 @@
 
     // ──── Drawing ────
     draw(c) {
+      if (this.maze) { this.drawMaze(c); return; }
       const cam0 = Cam();
       const sc = G().scale;
       let sx = 0, sy = 0;

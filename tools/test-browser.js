@@ -75,9 +75,17 @@ async function shot(page, name) {
     await place(page, 'hm', mirror - 0.5, 32);
     await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
     await page.keyboard.down('KeyX'); await page.waitForTimeout(350); await page.keyboard.up('KeyX');
-    assert.equal(await page.evaluate(() => BB.Play.save.starsSpent), 15);
+    assert.equal(await page.evaluate(() => BB.Play.save.starsSpent), 0);
+    const previousHead = await page.evaluate(() => BB.Play.save.wear.head);
+    await page.keyboard.press('ArrowUp'); await pause(page);
+    assert.equal(await page.evaluate(() => BB.Play.wardrobe.focus), 'tabs');
+    assert.equal(await page.evaluate(() => BB.Play.save.wear.head), previousHead);
+    await page.keyboard.press('ArrowRight'); await pause(page);
+    assert.equal(await page.evaluate(() => BB.Play.wardrobe.tab), 1);
+    await page.keyboard.press('ArrowDown'); await pause(page);
+    assert.equal(await page.evaluate(() => BB.Play.wardrobe.focus), 'items');
     await tap(page, 621, 88); await tap(page, 593, 246); await tap(page, 593, 246);
-    assert.equal(await page.evaluate(() => BB.Play.save.starsSpent), 45);
+    assert.equal(await page.evaluate(() => BB.Play.save.starsSpent), 0);
     await tap(page, 769, 150); await tap(page, 769, 150);
     assert.equal(await page.evaluate(() => BB.Play.save.cosmetics.bubble), 'flower');
     await shot(page, 'mirror-styles'); await tap(page, 776, 438);
@@ -100,7 +108,7 @@ async function shot(page, name) {
       trail: BB.Play.save.cosmetics.trail, bubble: BB.Play.save.cosmetics.bubble,
       stars: Object.keys(BB.Play.save.sparkles).sort(),
     }));
-    assert.equal(saved.spent, 65); assert.ok(saved.stars.length >= 260);
+    assert.equal(saved.spent, 0); assert.ok(saved.stars.length >= 260);
     await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
     await page.keyboard.press('Space'); await page.waitForFunction(() => BB.Main.name === 'play');
     assert.deepEqual(await page.evaluate(() => ({
@@ -108,6 +116,25 @@ async function shot(page, name) {
       trail: BB.Play.save.cosmetics.trail, bubble: BB.Play.save.cosmetics.bubble,
       stars: Object.keys(BB.Play.save.sparkles).sort(),
     })), saved);
+    // Completed save fixture: changing the playable kitten through the
+    // real keyboard category navigation must also survive Continue.
+    await page.evaluate(() => {
+      BB.Play.save.finale = true; BB.Play.save.mazeSolved = true;
+      BB.Home.familyOrder().forEach(id => { BB.Play.save.family[id] = 1; });
+    });
+    await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
+    await page.keyboard.press('ArrowUp'); await pause(page);
+    for (let i = 0; i < 3; i++) { await page.keyboard.press('ArrowRight'); await pause(page); }
+    assert.equal(await page.evaluate(() => BB.Play.wardrobe.tab), 3);
+    await page.keyboard.press('ArrowDown'); await pause(page);
+    await page.keyboard.press('ArrowRight'); await pause(page); await page.keyboard.press('ArrowRight'); await pause(page);
+    await page.keyboard.press('Enter'); await pause(page);
+    assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
+    await shot(page, 'mirror-kittens'); await tap(page, 776, 438);
+    await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
+    await page.keyboard.press('Space'); await page.waitForFunction(() => BB.Main.name === 'play');
+    assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
+    assert.equal(await page.evaluate(() => Object.keys(BB.Play.save.sparkles).length), saved.stars.length);
     const normal = await page.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2'));
     await page.goto(pathToFileURL(path.join(ROOT, 'try-rewards.html')).href);
     await page.waitForFunction(() => BB.Save.preview && BB.Main.name === 'play');
@@ -115,7 +142,13 @@ async function shot(page, name) {
     await tap(page, 505, 150); await tap(page, 776, 438); await page.reload();
     await page.waitForFunction(() => BB.Save.preview);
     assert.equal(await page.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2')), normal);
-    console.log('✓ Chromium: keyboard/mouse modes, held purchase, styles, continuous walk, reload and safe preview');
+    await place(page, 'hm', 2, 32); await page.keyboard.down('ArrowLeft');
+    await page.waitForFunction(() => BB.Play.maze !== null); await page.keyboard.up('ArrowLeft');
+    await shot(page, 'hedge-maze');
+    await page.evaluate(() => { BB.Play.maze.choice = true; BB.Play.maze.choiceT = 10; BB.Play.maze.sel = 2; });
+    await shot(page, 'kitten-choices');
+    await page.evaluate(() => BB.Play.closeMaze());
+    console.log('✓ Chromium: keyboard categories, free milestones, hedge maze, styles, continuous walk, reload and safe preview');
     await context.close();
 
     const tablet = await browser.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true });
@@ -125,7 +158,10 @@ async function shot(page, name) {
     await touch.goto(pathToFileURL(path.join(ROOT, 'try-rewards.html')).href);
     await touch.waitForFunction(() => BB.Save.preview && BB.Main.name === 'play');
     await place(touch, 'hm', mirror - 0.5, 32); await touch.waitForFunction(() => BB.Play.wardrobe?.t > 8);
-    await tap(touch, 505, 150, true); assert.equal(await touch.evaluate(() => BB.Play.save.starsSpent), 15);
+    await tap(touch, 505, 150, true); assert.equal(await touch.evaluate(() => BB.Play.save.starsSpent), 0);
+    await tap(touch, 769, 246, true); await tap(touch, 769, 246, true);
+    assert.equal(await touch.evaluate(() => BB.Play.save.wear.face), 'scuba');
+    await shot(touch, 'scuba-milestone');
     await tap(touch, 776, 438, true); await touch.waitForFunction(() => !BB.Play.wardrobe);
     await place(touch, 'ng', 16, 31); await touch.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
     await tap(touch, 480, 390, true); assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 1);
@@ -142,8 +178,14 @@ async function shot(page, name) {
     assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 2);
     assert.equal(await touch.evaluate(() => BB.Play.save.fountainUses), 2);
     assert.equal(await touch.evaluate(() => document.body.classList.contains('touch')), true);
+    await touch.evaluate(() => { BB.Play.room = BB.World.byId.nm; BB.Play.openMaze(); });
+    await tap(touch, 448, 506, true);
+    await touch.waitForFunction(() => BB.Play.maze.y === 12);
+    await tap(touch, 850, 30, true);
+    assert.equal(await touch.evaluate(() => BB.Play.room.id), 'hm');
+    assert.equal(await touch.evaluate(() => BB.Play.maze), null);
     assert.deepEqual(errors, []);
-    console.log('✓ Chromium touch: picture purchases, invitations, free fountain repeat and zero page errors');
+    console.log('✓ Chromium touch: scuba mask, milestones, maze directions, invitations, free fountain repeat and zero page errors');
     await tablet.close();
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

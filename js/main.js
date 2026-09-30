@@ -154,7 +154,7 @@
         for (const ch of ['b', 'c']) for (const th of BB.World.findThings(ch)) s.friends[th.tx + ',' + th.ty] = 1;
         for (const r of BB.World.rooms) if (r.def.family) s.family[r.def.family] = 1;
         for (const a of BB.Wardrobe.LIST) if (a.boss) s.outfits[a.id] = 1;
-        s.introDone = 1; s.leftHome = 1;
+        s.introDone = 1; s.leftHome = 1; s.finale = true;
       }
       if (all) Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
       if (room) {

@@ -96,6 +96,9 @@
           }
           room.grid.push(row);
         }
+        // The post-game maze has its own four-direction movement. Keep
+        // its original collectible keys for old saves and the kingdom map.
+        for (const [x, y] of def.mazeStars || []) room.things.push({ ch: '*', tx: def.x + x, ty: def.y + y });
         if (this.byId[room.id]) throw new Error(`Duplicate room id ${room.id}`);
         this.rooms.push(room);
         this.byId[room.id] = room;
@@ -168,6 +171,9 @@
 
     // Tile character at a world tile, or null when outside every room.
     tile(tx, ty) {
+      const maze = this.byId.nm;
+      if (maze && tx === maze.x + maze.w - 1 && ty >= maze.y + 28 && ty < maze.y + 32 &&
+          !(BB.GardenMaze && BB.GardenMaze.available(BB.Save.data))) return '#';
       const b = this.bounds;
       if (tx < b.x0 || ty < b.y0 || tx >= b.x1 || ty >= b.y1) return null;
       return CH[this.flat[(ty - b.y0) * this.gw + (tx - b.x0)]];
