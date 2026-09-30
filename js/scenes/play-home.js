@@ -35,7 +35,7 @@
       if (kind === 'family') BB.Home.faceOf(c, BB.Home.familyOrder()[0], x, y, 1.25, true);
       if (kind === 'friends') BB.Critters.drawBug(c, 'bunny', x, y + 4, { t, mood: 0, facing: 1, scale: 0.5, noCloud: true, joy: true });
       if (kind === 'toys') BB.HUD.toyIcon(c, 'yarn', x, y, 0.8, t);
-      if (kind === 'gestures') BB.Gestures.drawPaw(c, x, y, 0.9, '#ffd665', '#b8860b');
+      if (kind === 'gestures') BB.Gestures.drawIcon(c, x, y, 0.9);
       if (kind === 'songs') {
         c.fillStyle = '#8a83c7';
         for (const [dx, dy] of [[-5, 5], [5, 2]]) { G().ellipse(x + dx, y + dy, 4, 3, -0.3, c); c.fill(); c.fillRect(x + dx + 2.5, y + dy - 13, 2, 13); }

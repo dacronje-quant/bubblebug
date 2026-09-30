@@ -41,6 +41,7 @@
     touchEnabled: false,
     pointers: [],             // queued pointer taps in logical coords {x,y}
     pointerPos: null,         // hover position (mouse), logical coords
+    pointerVersion: 0,        // only a new mouse movement changes menu focus
 
     poll() {
       padHeld = readGamepads();

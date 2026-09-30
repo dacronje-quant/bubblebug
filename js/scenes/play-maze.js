@@ -6,6 +6,8 @@
   const W = 29, H = 15, TILE = 28, X = 74, Y = 57;
   const EXIT_HOLD = BB.CFG.MAZE_EXIT_HOLD;
   const START = { x: 27, y: 13 }, PRIZE = { x: 1, y: 1 };
+  const RESCUE_EXIT = { x: 0, y: PRIZE.y };
+  const atRescueExit = (x, y) => x === RESCUE_EXIT.x && y === RESCUE_EXIT.y;
   const CATS = ['marshmallow', 'phoebe', 'rainbow'];
   const DIRS = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] };
   const CONTROLS = ['left', 'up', 'down', 'right'];
@@ -37,7 +39,8 @@
      (MAP[y - 1][x] === '.' && MAP[y + 1][x] === '.' && x % 2))) loops.push([x, y]);
   for (let i = 0; i < 9; i++) { const [x, y] = loops.splice(random(loops.length), 1)[0]; MAP[y][x] = '.'; }
   const gateOpen = (save, gate) => !!(save.mazeSolved || save.mazeLegacyAccess || save.pads[gate.key]);
-  const walkable = (x, y, save) => Number.isInteger(x) && Number.isInteger(y) && !!MAP[y] && MAP[y][x] === '.' &&
+  const walkable = (x, y, save) => Number.isInteger(x) && Number.isInteger(y) && !!MAP[y] &&
+    (MAP[y][x] === '.' || !!save && save.mazeSolved && atRescueExit(x, y)) &&
     (!save || !GATES.some(g => g.x === x && g.y === y && !gateOpen(save, g)));
   const available = save => !!save && BB.World.rooms.filter(r => r.def.family).length === 12 &&
     BB.World.rooms.filter(r => r.def.family).every(r => save.family[r.def.family]);
@@ -57,14 +60,14 @@
     c.restore();
   }
   const blend = (a, b, k) => '#' + [1, 3, 5].map(i => Math.round(BB.lerp(parseInt(a.slice(i, i + 2), 16), parseInt(b.slice(i, i + 2), 16), k)).toString(16).padStart(2, '0')).join('');
-  BB.GardenMaze = { MAP, START, PRIZE, PADS, ORDER, GATES, STARS, CATS, walkable, gateOpen, available, starKey, ready, lantern, EXIT_HOLD };
+  BB.GardenMaze = { MAP, START, PRIZE, RESCUE_EXIT, PADS, ORDER, GATES, STARS, CATS, walkable, gateOpen, available, starKey, ready, lantern, EXIT_HOLD };
 
   Object.assign(BB.Play, {
     openMaze() {
       if (!available(this.save)) return false;
       const pos = this.save.mazePosition;
-      const at = pos && walkable(pos.x, pos.y) ? pos : START;
-      this.maze = { x: at.x, y: at.y, t: 0, moving: null, facing: -1, choice: false, sel: 0, rewardLock: false,
+      const at = pos && (walkable(pos.x, pos.y) || this.save.mazeSolved && atRescueExit(pos.x, pos.y)) ? pos : START;
+      this.maze = { x: at.x, y: at.y, t: 0, moving: null, facing: -1, choice: false, sel: 0, rewardLock: !!this.save.mazeSolved && atRescueExit(at.x, at.y),
         bloom: this.save.mazeSolved ? 1 : 0, exitHold: 0, exit: null, queuedExit: null,
         startExitArmed: at.x !== START.x || at.y !== START.y };
       this.save.mazeReturn = this.save.mazeReturn || { x: this.pl.body.x, y: this.pl.body.y };
@@ -109,8 +112,8 @@
         this.save.pads[pad.key] = 1; changed = true; S().confirm();
       }
       this.save.mazePosition = { x: m.x, y: m.y };
-      if (m.x !== PRIZE.x || m.y !== PRIZE.y) m.rewardLock = false;
-      else if (ready(this.save) && !m.rewardLock) {
+      if (!atRescueExit(m.x, m.y) && (m.x !== PRIZE.x || m.y !== PRIZE.y)) m.rewardLock = false;
+      else if (m.x === PRIZE.x && m.y === PRIZE.y && ready(this.save) && !m.rewardLock) {
         changed = !this.save.mazeSolved || changed;
         this.save.mazeSolved = true; this.save.rainbowUnlocked = true; this.save.gates.nm = 1;
         m.choice = true; m.choiceT = 0; m.rewardLock = true;
@@ -160,7 +163,12 @@
       let dir = null;
       for (const p of I.takePointers()) {
         if (Math.hypot(p.x - 850, p.y - 30) < 25) { this.requestMazeExit('home', 'header'); continue; }
-        if (this.save.mazeSolved && m.x === PRIZE.x && m.y === PRIZE.y && Math.hypot(p.x - (X + TILE / 2), p.y - (Y + TILE * 1.5)) < 26) { this.requestMazeExit('rescue', 'rescue'); continue; }
+        if (this.save.mazeSolved && m.y === PRIZE.y && (m.x === PRIZE.x || atRescueExit(m.x, m.y)) &&
+          Math.hypot(p.x - (X + (RESCUE_EXIT.x + 0.5) * TILE), p.y - (Y + (RESCUE_EXIT.y + 0.5) * TILE)) < 26) {
+          if (m.x === PRIZE.x) dir = 'left';
+          else this.requestMazeExit('rescue', 'rescue');
+          continue;
+        }
         CONTROLS.forEach((d, i) => { if (Math.hypot(p.x - (386 + i * 62), p.y - 506) < 25) dir = d; });
       }
       const pd = I.pointerDown;
@@ -183,7 +191,6 @@
         if (!d) continue;
         const [dx, dy] = DIRS[d], nx = m.x + dx, ny = m.y + dy;
         if (m.x === START.x && m.y === START.y && d === 'right') { this.requestMazeExit('home', 'start'); continue; }
-        if (this.save.mazeSolved && m.x === PRIZE.x && m.y === PRIZE.y && d === 'left') { this.requestMazeExit('rescue', 'rescue'); continue; }
         if (walkable(nx, ny, this.save)) {
           m.exit = null; m.exitHold = 0;
           m.moving = { x: nx, y: ny, t: 0 };
@@ -195,6 +202,7 @@
       // The starting icon becomes a waiting exit only after walking
       // away once. Taking a moment to look at a new maze is always safe.
       if (!m.moving && m.startExitArmed && m.x === START.x && m.y === START.y && !m.exit) this.requestMazeExit('home', 'start');
+      if (!m.moving && this.save.mazeSolved && atRescueExit(m.x, m.y) && !m.exit) this.requestMazeExit('rescue', 'rescue');
       if (m.exit && !m.moving && ++m.exitHold >= EXIT_HOLD) this.closeMaze(m.exit.kind === 'rescue');
     },
     drawMaze(c) {
@@ -210,7 +218,7 @@
       c.fillStyle = col('#6e6283', '#617857'); G().rrect(X - 5, Y - 5, W * TILE + 10, H * TILE + 10, 16, c); c.fill();
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const px = X + x * TILE, py = Y + y * TILE, n = x * 17 + y * 13;
-        if (MAP[y][x] === '#') {
+        if (MAP[y][x] === '#' && !(this.save.mazeSolved && atRescueExit(x, y))) {
           c.fillStyle = col('#353d4b', '#397957'); c.fillRect(px, py, TILE, TILE);
           c.fillStyle = n % 3 ? col('#4b4c60', '#55945b') : col('#575369', '#65a464'); G().rrect(px + 1, py + 1, TILE - 2, TILE - 3, 7, c); c.fill();
           for (let i = 0; i < 3; i++) {

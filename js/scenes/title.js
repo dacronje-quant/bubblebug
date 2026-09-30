@@ -86,6 +86,11 @@
       c.fillStyle = 'rgba(255,255,255,0.7)'; G().ellipse(-4, 2, 4, 2.4, -0.3, c); c.fill();
       c.restore();
     },
+    selectionPaw(c, x, y, s = 1.6) {
+      c.save(); c.globalAlpha *= 0.62;
+      this.paw(c, x, y, s, -0.18);
+      c.restore();
+    },
     playButton(c, x, y, r, t, lit) {
       const k = 1 + Math.sin(t * 0.08) * 0.06 + (lit ? 0.1 : 0);
       G().drawGlow(x, y, r * 2.4, '#fff4c2', 0.6, c);
@@ -115,6 +120,8 @@
         family: BB.Save.count(BB.Save.data.family || {}),
       } : null;
       this.focus = this.hasSave ? 0 : 1;
+      this.modeFocus = MODES.indexOf(BB.Settings.difficulty);
+      this.hoverVersion = BB.Input.pointerVersion;
       BB.Music.play('lullaby');
     },
 
@@ -160,6 +167,22 @@
       BB.Input._anyKey = false;
       if (this.t < 15 || this.leaving) return;
 
+      // Hover selects a picture; activation still needs a click or press.
+      // A parked mouse must never undo a keyboard/gamepad selection.
+      if (this.hoverVersion !== I.pointerVersion) {
+        this.hoverVersion = I.pointerVersion;
+        const p = I.pointerPos;
+        if (p) {
+          const hit = b => Math.hypot(p.x - b.x, p.y - b.y) < b.r + 10;
+          if (this.confirm) {
+            for (let i = 0; i < 2; i++) if (hit(this.cbtn(i))) this.confirm.focus = i;
+          } else {
+            for (let i = 0; i < 2; i++) if (hit(this.btn(i))) this.focus = this.lastFocus = i;
+            for (let i = 0; i < 3; i++) if (hit(this.mbtn(i))) { this.focus = 2; this.modeFocus = i; }
+          }
+        }
+      }
+
       if (this.confirm) {
         const cf = this.confirm;
         cf.t++;
@@ -184,13 +207,16 @@
 
       if (this.focus === 2) {
         // ↑ goes back; it is also "jump", so check it first.
-        const mode = MODES.indexOf(BB.Settings.difficulty);
+        const mode = this.modeFocus;
         if (I.pressed.up) { this.focus = this.lastFocus; S().select(); }
-        else if (I.pressed.left) this.setMode(MODES[Math.max(0, mode - 1)]);
-        else if (I.pressed.right) this.setMode(MODES[Math.min(2, mode + 1)]);
-        else if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) this.setMode(MODES[(mode + 1) % 3]);
+        else if (I.pressed.left) { this.modeFocus = Math.max(0, mode - 1); this.setMode(MODES[this.modeFocus]); }
+        else if (I.pressed.right) { this.modeFocus = Math.min(2, mode + 1); this.setMode(MODES[this.modeFocus]); }
+        else if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) {
+          this.modeFocus = BB.Settings.difficulty === MODES[mode] ? (mode + 1) % 3 : mode;
+          this.setMode(MODES[this.modeFocus]);
+        }
       } else if (I.pressed.down) {
-        this.lastFocus = this.focus; this.focus = 2; S().select();
+        this.lastFocus = this.focus; this.focus = 2; this.modeFocus = MODES.indexOf(BB.Settings.difficulty); S().select();
       } else {
         if (I.pressed.left && this.focus !== 0) { this.focus = 0; S().select(); }
         if (I.pressed.right && this.focus !== 1) { this.focus = 1; S().select(); }
@@ -199,7 +225,7 @@
       for (const p of taps) {
         for (let i = 0; i < 3; i++) {
           const m = this.mbtn(i);
-          if (Math.hypot(p.x - m.x, p.y - m.y) < m.r + 12) { this.focus = 2; this.setMode(MODES[i]); return; }
+          if (Math.hypot(p.x - m.x, p.y - m.y) < m.r + 12) { this.focus = 2; this.modeFocus = i; this.setMode(MODES[i]); return; }
         }
         for (let i = 0; i < 2; i++) {
           const b = this.btn(i);
@@ -219,6 +245,10 @@
       this.drawContinue(c, t);
       this.drawNew(c, t);
       this.drawMode(c, t);
+      if (this.focus !== 2 && !this.confirm) {
+        const b = this.btn(this.focus);
+        UI.selectionPaw(c, b.x + 31, b.y - 36, 1.7);
+      }
       if (this.confirm) this.drawConfirm(c, t);
     },
 
@@ -274,6 +304,10 @@
         c.restore();
         G.text(label, m.x, m.y + m.r + 15, 15, on ? '#fff8e8' : 'rgba(255,248,232,0.6)', 'rgba(40,24,60,0.7)');
       });
+      if (this.focus === 2 && !this.confirm) {
+        const m = this.mbtn(this.modeFocus);
+        UI.selectionPaw(c, m.x + 15, m.y - 17, 1.05);
+      }
       c.restore();
     },
 
@@ -367,6 +401,7 @@
         else { c.moveTo(-14, -14); c.lineTo(14, 14); c.moveTo(14, -14); c.lineTo(-14, 14); }
         c.stroke();
         c.restore();
+        if (on) UI.selectionPaw(c, b.x + 24, b.y - 28, 1.4);
       }
       c.restore();
     },

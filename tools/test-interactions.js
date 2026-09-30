@@ -69,13 +69,22 @@ function check(g) {
   console.log('✓ clicking the house during a step queues its wait; pausing clears it and re-clicking waits afresh');
 
   save.mazeSolved = true; save.rainbowUnlocked = true;
+  assert.equal(M.walkable(M.RESCUE_EXIT.x, M.RESCUE_EXIT.y, { ...save, mazeSolved: false }), false);
   save.mazePosition = { x: M.PRIZE.x, y: M.PRIZE.y }; P.openMaze();
-  tick(1, ['ArrowLeft']); tick(50); assert.ok(P.maze); assert.equal(P.maze.exit.kind, 'rescue');
+  tick(9, ['ArrowLeft']); assert.equal(P.maze.x, M.RESCUE_EXIT.x); assert.equal(P.maze.exitHold, 0);
+  tick(50); assert.ok(P.maze); assert.equal(P.maze.exit.kind, 'rescue');
+  tick(9, ['ArrowRight']); assert.equal(P.maze.x, M.PRIZE.x); assert.equal(P.maze.exitHold, 0);
+  assert.equal(P.maze.choice, false, 'walking away cancels exit without reopening the kitten picker');
+  // Tapping the rescue house also walks through the new opening.
+  B.Input.pointers.push({ x: 88, y: 99 }); tick(9); assert.equal(P.maze.x, M.RESCUE_EXIT.x);
+  tick(50); assert.ok(P.maze);
   // Transient timers do not get saved or turn into an instant exit on Continue.
   P.writeSave(); B.Save.load(); B.Main.set('play', {});
   assert.equal(P.maze.exitHold, 0); assert.equal(P.maze.exit, null);
+  assert.equal(P.maze.x, M.RESCUE_EXIT.x, 'Continue keeps the saved exit position');
   assert.equal(P.save.rainbowUnlocked, true); assert.equal(P.save.mazeSolved, true);
-  tick(1, ['ArrowLeft']); tick(exitWait - 2); assert.ok(P.maze); tick(); assert.equal(P.maze, null);
+  tick(9, ['ArrowRight']); assert.equal(P.maze.choice, false);
+  tick(9, ['ArrowLeft']); tick(exitWait - 1); assert.ok(P.maze); tick(); assert.equal(P.maze, null);
   assert.equal(P.room.id, 'nm'); assert.equal(P.save.mazeSolved, true);
   console.log('✓ rescue exit also waits 3 seconds; save/reload clears timers and preserves the rescued kitten');
 }

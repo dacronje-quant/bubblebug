@@ -132,11 +132,24 @@
   // ──── Drawing ────
   function holdRing(c, x, y, k) {
     if (k <= 0) return;
-    c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = 5;
+    c.save();
+    c.fillStyle = 'rgba(255,248,232,0.96)'; G().circle(x, y, 19, c); c.fill();
+    c.strokeStyle = '#d6cadc'; c.lineWidth = 5;
     c.beginPath(); c.arc(x, y, 13, 0, TAU); c.stroke();
     c.strokeStyle = '#ffd84a'; c.lineWidth = 5; c.lineCap = 'round';
     c.beginPath(); c.arc(x, y, 13, -Math.PI / 2, -Math.PI / 2 + TAU * k); c.stroke();
     BB.Gestures.drawPaw(c, x, y + 1, 0.42, '#ffd84a', '#b8860b');
+    c.restore();
+  }
+
+  // Active waits belong in the foreground, above the kitten and hats.
+  function drawProgress(c, th, cam, ctx) {
+    if (!(th.hold > 0)) return;
+    if (th.type === 'door' && !unlocked(th, ctx.save)) return;
+    if (th.type === 'flap' && th.bossRoom && !(ctx.save.bosses || {})[th.bossRoom]) return;
+    const offset = th.type === 'flap' ? 130 : th.type === 'door' && !th.front ? 150 : 96;
+    if (th.type === 'flap' || th.type === 'door' || th.type === 'lift')
+      holdRing(c, th.x - cam.x, th.y - cam.y - offset, th.hold / HOLD);
   }
 
   // "stand here!": an empty paw ring that pulses
@@ -343,10 +356,10 @@
         catDoor(c, x, y, 34, 50, BB.mix(Z.accent, '#ffffff', 0.2), true, t);
       }
       homeSign(c, x, y - 92, t, 1.15);
-      if (th.hold > 0) holdRing(c, x, y - 130, th.hold / HOLD);
-      else if (used(th, save)) { /* (already used: no more hints) */ }
-      else if (kittenNear(th, ctx)) hintRing(c, x, y - 130, t);
-      else if (((save.doors || {})[th.zone] || 0) < th.idx + 1) arrow(c, x, y - 136, t); // (not found yet: look here!)
+      if (th.hold <= 0 && !used(th, save)) {
+        if (kittenNear(th, ctx)) hintRing(c, x, y - 130, t);
+        else if (((save.doors || {})[th.zone] || 0) < th.idx + 1) arrow(c, x, y - 136, t); // (not found yet: look here!)
+      }
     } else if (th.type === 'door') {
       const ok = unlocked(th, save);
       if (th.front) {
@@ -387,8 +400,7 @@
         }
       } else zoneDoor(c, th, x, y, t, ok, save.newDoor != null ? save.newDoor === th.zone : save.lastZone === th.zone);
       const ry = y - (th.front ? 96 : 150);
-      if (ok && th.hold > 0) holdRing(c, x, ry, th.hold / HOLD);
-      else if (ok && !th.walkOut && !used(th, save) && kittenNear(th, ctx, 70)) hintRing(c, x, ry, t);
+      if (ok && th.hold <= 0 && !th.walkOut && !used(th, save) && kittenNear(th, ctx, 70)) hintRing(c, x, ry, t);
     } else if (th.type === 'lift') {
       // a rainbow beam (bottom end) or a rainbow landing pool (top end)
       const cols = ['#ff7b9c', '#ffcf5c', '#fff27a', '#8fe388', '#7cc8ff', '#b99cff'];
@@ -404,13 +416,12 @@
         G().twinkle(x + Math.sin(i * 2 + t * 0.05) * 10, y - k * tall, 3, c); c.fill();
       }
       // which way it goes: up from the clouds, down from the lagoon
-      if (th.hold > 0) holdRing(c, x, y - 60, th.hold / HOLD);
-      else if (!used(th, save)) {
+      if (th.hold <= 0 && !used(th, save)) {
         arrow(c, x, y - 150, t, '#ffffff', th.end === 'u');
         if (kittenNear(th, ctx, 90)) hintRing(c, x, y - 60, t);
       }
     }
   }
 
-  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, holdRing, hintRing, arrow, linkKey, HOLD };
+  BB.Links = { create, hallDoors, update, draw, drawProgress, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, holdRing, hintRing, arrow, linkKey, HOLD };
 })(window.BB);

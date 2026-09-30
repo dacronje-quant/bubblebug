@@ -83,8 +83,8 @@ function check(g) {
   assert.equal(P.homeVisitors.length, 65); assert.equal(P.gardenFun, null);
   assert.equal(save.heartsSpent, 1); assert.equal(Object.keys(save.friends).length, 65);
   console.log('✓ all 65 visitors play every game twice; safe floors/reload, no added cost/hearts, and bubbles still reach buds');
-  // Visibility is separate from invitations and collected hearts. Both
-  // individual and all switches use real pointer/keyboard menu inputs.
+  // Visibility is separate from invitations and collected hearts.
+  // There is just one switch, for the currently selected critter type.
   place('ng', 16, 31); tick(B.Links.HOLD + 15);
   const firstKind = P.gardenChoice.kinds[0], count = P.homeVisitors.filter(v => v.kind === firstKind).length;
   tick(1, ['Enter']); tick(); assert.equal(save.hiddenResidents[firstKind], 1);
@@ -93,11 +93,12 @@ function check(g) {
   P.closeGardenChoice(); P.writeSave(); B.Save.load(); B.Main.set('play', {}); P = B.Play; save = P.save;
   assert.equal(save.hiddenResidents[firstKind], 1); assert.equal(P.homeVisitors.length, 65 - count);
   place('ng', 16, 31); tick(B.Links.HOLD + 15); tick(1, ['Enter']); tick(); assert.equal(P.homeVisitors.length, 65);
-  tick(1, ['ArrowUp']); tick(); assert.equal(P.gardenChoice.focus, 'all'); assert.equal(P.homeVisitors.length, 65);
-  tick(1, ['Enter']); tick(); assert.equal(P.homeVisitors.length, 0);
-  B.Input.pointers.push({ x: 610, y: 390 }); tick(); assert.equal(P.homeVisitors.length, 65);
+  tick(1, ['ArrowUp']); tick(); assert.equal(P.homeVisitors.length, 65);
+  B.Input.pointers.push({ x: 610, y: 390 }); tick(); assert.equal(P.homeVisitors.length, 65, 'old All location has no action');
+  tick(1, ['Enter']); tick(); assert.equal(P.homeVisitors.length, 65 - count);
+  B.Input.pointers.push({ x: 500, y: 390 }); tick(); assert.equal(P.homeVisitors.length, 65, 'the whole visible slider is tappable');
   assert.equal(save.heartsSpent, 1); P.closeGardenChoice();
-  console.log('✓ individual and all garden switches persist; no invitations, rescued progress or hearts lost');
+  console.log('✓ individual garden switches persist; no All action, extra costs or lost rescued progress');
   // Leaving in the middle restores the adventure music and visitor homes.
   place('nr', 10, 31); tick(B.Links.HOLD + 15); assert.equal(P.gardenFun.kind, 'dance');
   place('hm', 40, 32); tick(); assert.equal(P.gardenFun, null); assert.equal(B.Music.wanted, B.ZONES[P.room.zone].key);

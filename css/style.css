@@ -66,7 +66,7 @@ body.touch.in-play #touch { display: block; }
 #t-right { left: calc(max(18px, env(safe-area-inset-left)) + clamp(90px, 15vmin, 134px)); }
 #t-jump  { right: max(18px, env(safe-area-inset-right)); background: rgba(95, 212, 138, 0.45); width: clamp(88px, 15vmin, 132px); height: clamp(88px, 15vmin, 132px); }
 #t-bubble { right: calc(max(18px, env(safe-area-inset-right)) + clamp(104px, 17vmin, 150px)); background: rgba(95, 184, 255, 0.45); }
-/* the paw button for cat tricks: small, above the bubble button, once a trick is found */
+/* Cat tricks: the smiling-cat/music button appears after learning one. */
 #t-trick {
   display: none;
   right: calc(max(18px, env(safe-area-inset-right)) + clamp(114px, 18.5vmin, 162px));
@@ -77,6 +77,9 @@ body.touch.in-play #touch { display: block; }
 }
 body.has-tricks #t-trick { display: block; }
 .tbtn .pad { fill: #fff; stroke: none; }
+.tbtn .trick-face, .tbtn .trick-beat { fill: #fff; stroke: none; }
+.tbtn .trick-lines { fill: none; stroke: #a66b30; stroke-width: 3.5; }
+.tbtn .trick-note { stroke-width: 4; }
 
 /* ──── Map button (see-through map overlay) ──── */
 #map-btn {

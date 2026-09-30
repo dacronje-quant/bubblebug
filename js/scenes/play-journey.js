@@ -222,7 +222,6 @@
           G().text('Play again', x, y - 116, 15, '#786080', null, 'center', c);
           BB.Links.hintRing(c, x, y - 4, t);
         }
-        if (this.room === room && this.journeyHold > 0 && Math.abs(this.pl.body.x + 10 - q.x) < 18) BB.Links.holdRing(c, x, y - 35, this.journeyHold / BB.Links.HOLD);
       }
     },
     drawJourneyChoice(c, t) {

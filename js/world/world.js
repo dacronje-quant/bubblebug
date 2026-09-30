@@ -35,7 +35,7 @@
 //   V  song bell;  O  the singing stone that shows the tune to repeat
 //   cat food (regrows; in Hard it cheers you back up):
 //   e  a fishy treat (+1 happy sun);  W  a full food bowl (every sun)
-//   j  a golden paw bubble: the zone's cat trick (do it with ▼)
+//   j  a smiling-cat bubble: the zone's cat trick (do it with ▼)
 //   a  hidden funny glasses (room.glasses lists their item and location)
 //   links (see js/entities/links.js):
 //   h  a cat flap: stand in it to pop home (and it lights its door there)

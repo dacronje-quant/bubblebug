@@ -110,14 +110,13 @@
           G().bubble(x + Math.sin(t * 0.013 + i * 2) * (f ? 150 : 30), y - 65 - u * (f ? 150 : 45), 7 + i % 4 * 2, colors[i % colors.length], (1 - u) * 0.8, c);
         }
       } else {
-        BB.Gestures.drawPaw(c, x, y - 11, 1.3, '#bc8ed1', '#9468b0');
+        BB.Gestures.drawIcon(c, x, y - 11, 1.3, '#bc8ed1', '#72518d');
         for (const d of [-1, 1]) {
           const a = f ? Math.sin(t * 0.08) * 5 : 0;
           G().text('♪', x + d * 45, y - 37 + a * d, 24, '#bc8ed1', null, 'center', c);
         }
       }
       if (!f) BB.Links.hintRing(c, x, y - 4, t);
-      if (this.room === room && this.funHold > 0) BB.Links.holdRing(c, x, y - 35, this.funHold / BB.Links.HOLD);
       c.restore();
     },
   });

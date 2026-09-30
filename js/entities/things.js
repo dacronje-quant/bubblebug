@@ -14,7 +14,7 @@
 //   family &    a member of the kittens' own family, napping somewhere
 //               secret — find them all and they come to the party
 //  (puzzle pieces live in puzzles.js, cat food in food.js and the golden
-//  paw bubbles that teach cat tricks in gestures.js)
+//  smiling-cat bubbles that teach cat tricks in gestures.js)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';

@@ -114,7 +114,16 @@
       BB.Input.pointerDown = p;
       e.preventDefault();
     });
-    cv.addEventListener('pointermove', e => { if (BB.Input.pointerDown) BB.Input.pointerDown = G.toLogical(e.clientX, e.clientY); });
+    cv.addEventListener('pointermove', e => {
+      const p = G.toLogical(e.clientX, e.clientY), I = BB.Input;
+      if (I.pointerDown) I.pointerDown = p;
+      if (e.pointerType === 'mouse' && (!I.pointerPos || p.x !== I.pointerPos.x || p.y !== I.pointerPos.y)) {
+        I.pointerPos = p; I.pointerVersion++;
+      }
+    });
+    cv.addEventListener('pointerleave', () => {
+      if (BB.Input.pointerPos) { BB.Input.pointerPos = null; BB.Input.pointerVersion++; }
+    });
     window.addEventListener('pointerup', () => { BB.Input.pointerDown = null; });
     window.addEventListener('pointercancel', () => { BB.Input.pointerDown = null; });
     window.addEventListener('keydown', unlock);

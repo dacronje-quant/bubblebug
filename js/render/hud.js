@@ -24,7 +24,7 @@
     else if (kind === 'bubble') { G.bubble(-2, 2, 8, '#ffffff', 1, c); G.bubble(7, -7, 4, '#ffffff', 1, c); }
     else if (kind === 'right') { c.beginPath(); c.moveTo(-4, -8); c.lineTo(5, 0); c.lineTo(-4, 8); c.stroke(); }
     else if (kind === 'left') { c.beginPath(); c.moveTo(4, -8); c.lineTo(-5, 0); c.lineTo(4, 8); c.stroke(); }
-    else if (kind === 'trick') BB.Gestures.drawPaw(c, 0, 1, 0.85, '#ffffff', '#ffffff');
+    else if (kind === 'trick') BB.Gestures.drawIcon(c, 0, 1, 0.85, '#ffffff', '#b87838');
     c.restore();
   }
 
@@ -282,14 +282,14 @@
     }
     last.family = fam;
 
-    // cat tricks learned: a golden paw and a count
+    // cat tricks learned: the smiling-cat symbol and a count
     const tricks = s.tricks || 0;
     if (tricks > 0) {
       if (last.tricks >= 0 && tricks > last.tricks) bounce.tricks = 1;
       bounce.tricks = (bounce.tricks || 0) * 0.9;
       const px = x0 + (fam > 0 ? 90 : 0);
       pill(px, 82);
-      BB.Gestures.drawPaw(c, px + 22, 32, 0.95 * (1 + bounce.tricks * 0.5), '#ffd84a', '#b8860b');
+      BB.Gestures.drawIcon(c, px + 22, 32, 0.95 * (1 + bounce.tricks * 0.5));
       G.text(String(tricks), px + 58, 32, 22 * (1 + bounce.tricks * 0.2), '#fff4c2', 'rgba(40,20,60,0.6)');
     }
     last.tricks = tricks;

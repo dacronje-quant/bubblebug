@@ -62,13 +62,17 @@ function check() {
   walkMaze(g, M.PRIZE); assert.equal(save.mazeSolved, true); assert.equal(B.Play.maze.bloom, 0);
   tick(140); assert.equal(B.Play.maze.bloom, 1);
   B.Play.maze.sel = 2; tick(1, ['Enter']); tick(); assert.equal(save.cat, 'rainbow');
-  tick(1, ['ArrowLeft']); tick(); assert.ok(B.Play.maze);
-  tick(M.EXIT_HOLD - 2); assert.equal(B.Play.maze, null); assert.equal(B.Play.room.id, 'nm');
+  assert.equal(M.walkable(M.RESCUE_EXIT.x, M.RESCUE_EXIT.y, save), true);
+  tick(9, ['ArrowLeft']); assert.equal(B.Play.maze.x, M.RESCUE_EXIT.x); assert.equal(B.Play.maze.exitHold, 0);
+  tick(M.EXIT_HOLD - 1); assert.ok(B.Play.maze);
+  tick(); assert.equal(B.Play.maze, null); assert.equal(B.Play.room.id, 'nm');
   const door = B.RainbowJourney.spot('rainbow');
   assert.ok(Math.abs(B.Play.pl.body.x + 10 - door.x) < 1); assert.equal(B.Play.save.inMaze, false);
   assert.equal(B.Play.journeyLock, 'rainbow');
+  tick(170, ['ArrowRight']); tick(); assert.equal(B.Play.room.id, 'hm');
+  assert.equal(B.Play.save.mazeSolved, true); assert.equal(B.Play.save.rainbowUnlocked, true);
   B.Save.load(); B.Main.set('play', {}); assert.equal(B.Play.save.mazeSolved, true);
-  console.log('✓ moon → flower → star opens three connected sections; rescue blooms the garden and its nearby exit returns outside');
+  console.log('✓ moon → flower → star opens the maze; the rescued kitten walks through its nearby exit and back into Cat House');
 
   // Saves already inside the original maze keep their route while new
   // entries use the matching gates. This compatibility pass is saved.

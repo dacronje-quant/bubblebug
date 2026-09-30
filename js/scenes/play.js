@@ -289,7 +289,7 @@
       document.body.classList.toggle('has-tricks', n > 0);
     },
 
-    // "A new trick!": the kitten doing it on a little card, with the ▼ / paw button
+    // "A new trick!": the kitten doing it beside the smiling-cat button
     drawTrickCard(c, t) {
       const tc = this.trickCard;
       const a = tc.t < 16 ? tc.t / 16 : tc.t > 225 ? Math.max(0, (260 - tc.t) / 35) : 1;
@@ -321,7 +321,7 @@
       c.restore();
     },
 
-    // pressed ▼ before finding any trick: a thought bubble with a paw and a "?"
+    // Pressed ▼ before finding a trick: its own symbol and a "?".
     drawTrickHint(c, cam) {
       const b = this.pl.body, a = Math.min(1, this.trickHint / 15);
       const x = b.x + b.w / 2 - cam.x + 18, y = b.y - cam.y - 26 - (80 - this.trickHint) * 0.15;
@@ -330,7 +330,7 @@
       G().circle(x - 10, y + 18, 3, c); c.fill(); c.stroke();
       G().circle(x - 5, y + 11, 4.5, c); c.fill(); c.stroke();
       G().circle(x + 8, y - 4, 16, c); c.fill(); c.stroke();
-      BB.Gestures.drawPaw(c, x + 3, y - 3, 0.6, '#ffd84a', '#b8860b');
+      BB.Gestures.drawIcon(c, x + 1, y - 3, 0.6);
       G().text('?', x + 15, y - 8, 14, '#9a7ac8', null);
       c.restore();
     },
@@ -616,7 +616,7 @@
           else for (let i = 0; i < (big ? 7 : 3); i++) PT().heart(th.x + (Math.random() - 0.5) * 34, th.y - 24 - Math.random() * 22);
         },
         dropFood: (x, y) => BB.Food.drop(x, y, self.pl.body.x + self.pl.body.w / 2, self.room),
-        // a golden paw bubble: a new cat trick to do with ▼
+        // a smiling-cat bubble: a new cat trick to do with ▼
         onTrick(th) {
           self.save.gestures[th.gid] = 1;
           self.nextTrick = th.gid;
@@ -1042,8 +1042,7 @@
       for (const r of visible) if (r.def.home) { BB.Home.drawToys(c, r, cam, t, this); BB.Home.drawFamily(c, r, cam, t, this); }
       if (room.def.home && !this.wardrobe) {
         const mx = (room.x + BB.Home.MIRROR_COL) * T, my = (room.y + 32) * T, pb = this.pl.body;
-        if (this.mirrorHold > 0) BB.Links.holdRing(c, mx - cam.x, my - cam.y - 186, this.mirrorHold / BB.Links.HOLD);
-        else if (!(this.save.used || {}).mirror && Math.abs(pb.x + pb.w / 2 - mx) < 80 && Math.abs(pb.y + pb.h - my) < 40) BB.Links.hintRing(c, mx - cam.x, my - cam.y - 186, t);
+        if (this.mirrorHold <= 0 && !(this.save.used || {}).mirror && Math.abs(pb.x + pb.w / 2 - mx) < 80 && Math.abs(pb.y + pb.h - my) < 40) BB.Links.hintRing(c, mx - cam.x, my - cam.y - 186, t);
       }
       if (this.party) this.drawGuests(c, cam, true);
       for (const r of visible) {
@@ -1105,6 +1104,8 @@
         c.fillStyle = g; c.fillRect(0, 0, G().W, G().H);
       }
 
+      this.drawInteractionProgress(c, cam, visible);
+
       // HUD
       BB.HUD.drawHUD(c, {
         stars: BB.Economy.balance(this.save, 'stars'),
@@ -1139,6 +1140,22 @@
       if (this.gardenChoice) this.drawGardenChoice(c, t);
       if (this.portalChoice) this.drawJourneyChoice(c, t);
       this.drawIris(c, cam);
+    },
+
+    drawInteractionProgress(c, cam, visible) {
+      if (this.wardrobe || this.gardenChoice || this.portalChoice || this.mapOn || this.iris) return;
+      const ctx = this.ctx(), room = this.room;
+      for (const r of visible) for (const th of this.ents[r.id].things) BB.Links.drawProgress(c, th, cam, ctx);
+      if (room.def.home && this.mirrorHold > 0)
+        BB.Links.holdRing(c, (room.x + BB.Home.MIRROR_COL) * T - cam.x, (room.y + 32) * T - cam.y - 186, this.mirrorHold / BB.Links.HOLD);
+      const garden = this.gardenSpot(room), fun = BB.GardenFun.spot(room);
+      if (garden && this.gardenHold > 0) BB.Links.holdRing(c, garden.x - cam.x, garden.y - cam.y - 96, this.gardenHold / BB.Links.HOLD);
+      if (fun && this.funHold > 0) BB.Links.holdRing(c, fun.x - cam.x, fun.y - cam.y - 96, this.funHold / BB.Links.HOLD);
+      if (room.id === 'nm' && this.journeyHold > 0) for (const kind of ['rainbow', 'cloud']) {
+        const q = BB.RainbowJourney.spot(kind);
+        if (BB.RainbowJourney.unlocked(this.save, kind) && Math.abs(this.pl.body.x + this.pl.body.w / 2 - q.x) < 18)
+          BB.Links.holdRing(c, q.x - cam.x, q.y - cam.y - 96, this.journeyHold / BB.Links.HOLD);
+      }
     },
 
     // the save-point lantern: a little post with a glowing paw-print lamp

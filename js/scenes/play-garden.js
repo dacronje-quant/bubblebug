@@ -5,7 +5,7 @@
   'use strict';
   const T = BB.CFG.TILE, G = () => BB.G, S = () => BB.Audio.sfx;
   const SPOTS = { ng: { col: 16, floor: 31, kind: 'friends' }, hm: { col: 24, floor: 32, kind: 'fountain' } };
-  const CLOSE = { x: 678, y: 145 }, CHOOSE = { x: 480, y: 390 }, ALL = { x: 610, y: 390 };
+  const CLOSE = { x: 678, y: 145 }, CHOOSE = { x: 480, y: 390 };
   Object.assign(BB.Play, {
     earnedFriendKinds() {
       const kinds = [];
@@ -48,7 +48,7 @@
     },
     openGardenChoice(kind) {
       this.endGardenFun();
-      this.gardenChoice = { kind, kinds: this.earnedFriendKinds(), sel: 0, focus: 'one', t: 0, wiggle: 0, cooldown: 0 };
+      this.gardenChoice = { kind, kinds: this.earnedFriendKinds(), sel: 0, t: 0, wiggle: 0, cooldown: 0 };
       this.gardenHold = 0; this.pl.state = 'homechoice'; this.pl.body.vx = 0;
       BB.Input.takePointers(); S().select();
     },
@@ -90,13 +90,6 @@
       BB.Save.write(); this.pl.happyT = 90;
       return true;
     },
-    toggleGardenAll() {
-      const kinds = this.earnedFriendKinds().filter(kind => this.save.residents[kind]);
-      if (!kinds.length) return false;
-      const hide = kinds.some(kind => !this.save.hiddenResidents[kind]);
-      for (const kind of kinds) { if (hide) this.save.hiddenResidents[kind] = 1; else delete this.save.hiddenResidents[kind]; }
-      this.endGardenFun(); this.refreshHomeVisitors(); BB.Save.write(); S().purr(); return true;
-    },
     updateGardenChoice() {
       const w = this.gardenChoice, I = BB.Input;
       w.t++; if (w.wiggle) w.wiggle--; if (this.fountainCd > 0) this.fountainCd--;
@@ -105,19 +98,19 @@
       if (w.t < 8) return;
       if (I.pressed.pause || I.pressed.back || I.pressed.map) return this.closeGardenChoice();
       const n = w.kinds.length;
-      if (w.kind === 'friends' && (I.pressed.up || I.pressed.down)) { w.focus = w.focus === 'one' ? 'all' : 'one'; S().select(); }
       if (w.kind === 'friends' && n && (I.pressed.left || I.pressed.right)) {
-        w.sel = (w.sel + n + (I.pressed.left ? -1 : 1)) % n; w.focus = 'one'; S().select();
+        w.sel = (w.sel + n + (I.pressed.left ? -1 : 1)) % n; S().select();
       } else if (!I.pressed.up && !I.pressed.down && (I.pressed.jump || I.pressed.bubble || I.pressed.confirm)) {
-        if (w.focus === 'all' && w.kind === 'friends') this.toggleGardenAll(); else this.chooseGarden();
+        this.chooseGarden();
         if (!this.gardenChoice) return;
       }
       for (const p of I.takePointers()) {
         if (Math.hypot(p.x - CLOSE.x, p.y - CLOSE.y) < 32) return this.closeGardenChoice();
-        if (w.kind === 'friends' && Math.hypot(p.x - ALL.x, p.y - ALL.y) < 35) { w.focus = 'all'; this.toggleGardenAll(); }
-        if (Math.hypot(p.x - CHOOSE.x, p.y - CHOOSE.y) < 40) { w.focus = 'one'; this.chooseGarden(); if (!this.gardenChoice) return; }
+        const onChoose = w.kind === 'friends' ? Math.abs(p.x - CHOOSE.x) < 53 && Math.abs(p.y - CHOOSE.y) < 28
+          : Math.hypot(p.x - CHOOSE.x, p.y - CHOOSE.y) < 40;
+        if (onChoose) { this.chooseGarden(); if (!this.gardenChoice) return; }
         if (w.kind === 'friends' && n && Math.abs(p.y - 267) < 40 && (Math.abs(p.x - 310) < 40 || Math.abs(p.x - 650) < 40)) {
-          w.sel = (w.sel + n + (p.x < 480 ? -1 : 1)) % n; w.focus = 'one'; S().select();
+          w.sel = (w.sel + n + (p.x < 480 ? -1 : 1)) % n; S().select();
         }
       }
     },
@@ -174,7 +167,6 @@
       }
       if (cost) BB.Economy.pips(c, 'hearts', cost, x, y - (sp.kind === 'fountain' ? 103 : 120), afford);
       BB.Links.hintRing(c, x, y - 4, t);
-      if (this.room === room && this.gardenHold > 0) BB.Links.holdRing(c, x, y - 30, this.gardenHold / BB.Links.HOLD);
       c.restore();
     },
     drawGardenChoice(c, t) {
@@ -203,36 +195,45 @@
         }
       } else {
         c.fillStyle = '#ff7eb6'; G().heart(480, 260, 42 + Math.sin(t * 0.08) * 3, c); c.fill();
-        if (this.celebrationT) BB.Gestures.drawPaw(c, 575, 205, 1.6, '#ffd84a', '#b8860b');
+        if (this.celebrationT) BB.Gestures.drawIcon(c, 575, 205, 1.4);
       }
-      if (!have) BB.Economy.pips(c, 'hearts', cost, 480, 163, afford);
+      if (!have && w.kind === 'fountain') BB.Economy.pips(c, 'hearts', cost, 480, 163, afford);
       c.fillStyle = '#ff7eb6'; G().heart(300, 153, 9, c); c.fill();
       G().text(String(BB.Economy.balance(this.save, 'hearts')), 330, 153, 20, '#9b5d74', null, 'center', c);
       const wx = w.wiggle ? Math.sin(w.wiggle * 1.5) * 4 : 0;
-      if (w.kind === 'friends' && have) this.drawGardenSwitch(c, CHOOSE.x + wx, CHOOSE.y, shown, w.focus === 'one', false);
+      if (w.kind === 'friends') this.drawGardenSwitch(c, CHOOSE.x + wx, CHOOSE.y, shown, have, afford && !!kind);
       else {
         c.fillStyle = have ? '#5fd48a' : afford && !this.fountainCd && (w.kind === 'fountain' || kind) ? '#ffd84a' : '#d5ccdb';
         G().circle(CHOOSE.x + wx, CHOOSE.y, 32, c); c.fill();
-        BB.Gestures.drawPaw(c, CHOOSE.x + wx, CHOOSE.y, 1.25, '#ffffff', '#ffffff');
-      }
-      if (w.kind === 'friends') {
-        const invited = w.kinds.filter(k => this.save.residents[k]);
-        c.save(); if (!invited.length) c.globalAlpha *= 0.35;
-        this.drawGardenSwitch(c, ALL.x, ALL.y, invited.some(k => !this.save.hiddenResidents[k]), w.focus === 'all', true);
-        G().text('All', ALL.x, 426, 16, '#82629c', null, 'center', c); c.restore();
+        c.fillStyle = '#ffffff'; G().heart(CHOOSE.x + wx, CHOOSE.y + 2, 14, c); c.fill();
       }
       c.fillStyle = '#5fd48a'; G().circle(CLOSE.x, CLOSE.y, 23, c); c.fill();
       c.strokeStyle = '#ffffff'; c.lineWidth = 4; c.lineCap = 'round';
       c.beginPath(); c.moveTo(CLOSE.x - 10, CLOSE.y); c.lineTo(CLOSE.x - 2, CLOSE.y + 7); c.lineTo(CLOSE.x + 10, CLOSE.y - 8); c.stroke();
       c.restore();
     },
-    drawGardenSwitch(c, x, y, on, focus, all) {
-      c.save(); c.fillStyle = on ? '#70c995' : '#b9adca'; c.strokeStyle = focus ? '#edb04e' : '#ffffff'; c.lineWidth = 3;
-      G().rrect(x - 33, y - 20, 66, 40, 20, c); c.fill(); c.stroke();
-      const thumb = x + (on ? 13 : -13);
-      c.fillStyle = '#ffffff'; G().circle(thumb, y, 15, c); c.fill();
-      BB.Gestures.drawPaw(c, thumb, y, 0.58, on ? '#4ba477' : '#9281a9', '#9281a9');
-      if (all) for (const dx of [-4, 4]) BB.Gestures.drawPaw(c, x - (on ? 15 : -15) + dx, y, 0.23, '#ffffff', '#ffffff');
+    drawGardenSwitch(c, x, y, on, unlocked, afford) {
+      c.save();
+      c.fillStyle = on ? '#70c995' : unlocked ? '#b9adca' : '#e6daea';
+      c.strokeStyle = unlocked || afford ? '#edb04e' : '#b5a5be'; c.lineWidth = 3;
+      G().rrect(x - 48, y - 23, 96, 46, 23, c); c.fill(); c.stroke();
+      const thumb = x + (on ? 24 : -24);
+      c.fillStyle = '#ffffff'; G().circle(thumb, y, 19, c); c.fill();
+      if (!unlocked) {
+        // One heart unlocks this critter's switch; the lock never looks on.
+        c.fillStyle = '#ff7eb6'; G().heart(thumb, y + 1, 11, c); c.fill();
+        c.strokeStyle = afford ? '#b57c37' : '#9c8da9'; c.lineWidth = 2.5;
+        c.beginPath(); c.arc(x + 22, y - 3, 5, Math.PI, 0); c.lineTo(x + 27, y + 3); c.stroke();
+        c.fillStyle = afford ? '#f4ca79' : '#c1b2cc'; G().rrect(x + 14, y - 2, 16, 13, 3, c); c.fill();
+        c.fillStyle = '#ffffff'; G().circle(x + 22, y + 4, 1.5, c); c.fill();
+      } else if (on) {
+        c.strokeStyle = '#4ba477'; c.lineWidth = 3; c.lineCap = 'round'; c.lineJoin = 'round';
+        c.beginPath(); c.moveTo(thumb - 8, y); c.lineTo(thumb - 2, y + 6); c.lineTo(thumb + 8, y - 6); c.stroke();
+      } else {
+        c.strokeStyle = '#9281a9'; c.lineWidth = 3; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(thumb - 6, y - 6); c.lineTo(thumb + 6, y + 6);
+        c.moveTo(thumb + 6, y - 6); c.lineTo(thumb - 6, y + 6); c.stroke();
+      }
       c.restore();
     },
   });
