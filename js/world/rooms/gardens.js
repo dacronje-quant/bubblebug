@@ -36,6 +36,7 @@
   //      wall at the hill's foot hiding the first toy
   BB.room({
     id: 'g2', zone: 0, x: 30, y: 0, toy: 'yarn',
+    glasses: [{ id: 'googly', x: 7, y: 13 }],
     map: [
       '.........................-----',
       '..............................',

@@ -17,6 +17,8 @@
   'use strict';
   const G = BB.G;
   const TAU = Math.PI * 2;
+  const RAINBOW = ['#ff77b5', '#ffa870', '#ffe575', '#91e6a6', '#76dbea', '#849fff', '#c293f4'];
+  const rainbowColor = s => { const p = Math.min(5.999, s * 6), i = Math.floor(p); return BB.mix(RAINBOW[i], RAINBOW[i + 1], p - i); };
 
   const CATS = BB.CATS = {
     marshmallow: {
@@ -166,11 +168,12 @@
     if (cat.fluffy) {
       // Birman plume: overlapping soft puffs that get darker toward the tip
       for (let pass = 0; pass < 2; pass++) {
-        for (let i = 0; i <= 10; i++) {
-          const s = i / 10;
+        const count = cat.magical ? 18 : 10;
+        for (let i = 0; i <= count; i++) {
+          const s = i / count;
           const [px, py] = bez(s);
           const r = (3.2 + Math.sin(s * Math.PI) * 2.6) * (pose.mode === 'sit' || pose.mode === 'sleep' ? 0.72 : 1);
-          c.fillStyle = pass === 0 ? cat.outline : BB.mix(cat.tail, cat.tailTip, Math.pow(s, 1.6));
+          c.fillStyle = pass === 0 ? cat.outline : cat.magical ? rainbowColor(s) : BB.mix(cat.tail, cat.tailTip, Math.pow(s, 1.6));
           G.circle(px, py, pass === 0 ? r + 0.9 : r, c); c.fill();
         }
       }
@@ -207,7 +210,7 @@
       c.fillStyle = cat.belly; G.ellipse(rx * 0.75, ry * 0.2, rx * 0.45, ry * 0.9, 0, c); c.fill();
       if (cat.magical) {
         const rainbow = c.createLinearGradient(-rx, -ry, rx, ry);
-        ['#ffa7ce', '#ffe99c', '#a6ecc6', '#96dcff', '#d8adff'].forEach((color, i) => rainbow.addColorStop(i / 4, color));
+        RAINBOW.forEach((color, i) => rainbow.addColorStop(i / 6, color));
         c.fillStyle = rainbow; c.globalAlpha = 0.85;
         G.ellipse(-rx * 0.15, -ry * 0.3, rx * 0.9, ry * 0.75, -0.25, c); c.fill(); c.globalAlpha = 1;
       }
@@ -461,10 +464,20 @@
     }
     if (cat.acc) drawAccessories(c, cat);
     if (cat.magical && BB.Wardrobe) {
-      for (const [i, color] of ['#ff9ec7', '#ffe066', '#8fe388', '#7cc8ff', '#b99cff'].entries()) {
-        c.fillStyle = color; G.ellipse(-7 + i * 1.7, -8.5 - Math.sin(i) * 2, 2.3, 4, -0.4, c); c.fill();
+      G.drawGlow(-1, -16, 18, '#ffefb1', 0.22, c);
+      for (const [i, color] of RAINBOW.entries()) {
+        c.fillStyle = color; G.ellipse(-8 + i * 1.5, -10 - Math.sin(i * 0.5) * 2, 2.5, 5, -0.4, c); c.fill();
       }
-      BB.Wardrobe.drawOn(c, { head: 'horn' }, t);
+      c.save();
+      const gold = c.createLinearGradient(-3, -30, 4, -9);
+      gold.addColorStop(0, '#fffbea'); gold.addColorStop(0.45, '#ffdf7c'); gold.addColorStop(1, '#e6b554');
+      c.fillStyle = gold; c.strokeStyle = '#bf9250'; c.lineWidth = 0.8;
+      c.beginPath(); c.moveTo(-4, -9); c.lineTo(0, -30); c.lineTo(4, -9); c.quadraticCurveTo(0, -7, -4, -9); c.fill(); c.stroke();
+      c.clip(); c.strokeStyle = '#fff7d0'; c.lineWidth = 1;
+      for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(-5, -12 - i * 4); c.lineTo(5, -15 - i * 4); c.stroke(); }
+      c.restore();
+      c.fillStyle = '#fff3bd'; G.star(7, -13, 1.9, 4, 0.3, 0, c); c.fill();
+      G.star(-11, -18 + Math.sin(t * 0.05), 1.5, 4, 0.3, 0, c); c.fill();
     }
     // what the kitten is wearing (presents from the bosses)
     if (pose.wear && BB.Wardrobe) BB.Wardrobe.drawOn(c, pose.wear, t);

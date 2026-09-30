@@ -48,10 +48,10 @@
   put(roots, 16, 29, 'n'); put(roots, 25, 30, 'R');
   room('nr', -30, 'Root Hollow', roots, 'roots');
 
-  // The courtyard entrance leads into the four-direction hedge maze.
-  // World.tile closes its only doorway until the finale and all 12 cats.
+  // A quiet path left of home. Once all 12 cats are found a rainbow
+  // appears here; its picture choice opens the separate maze game.
   const maze = Array.from({ length: H }, () => Array(W).fill('#'));
-  for (let y = 28; y < 32; y++) for (let x = 26; x < 30; x++) maze[y][x] = '.';
+  for (let y = 28; y < 32; y++) for (let x = 1; x < 30; x++) maze[y][x] = '.';
   BB.room({ id: 'nm', zone: 0, x: -180, y: -18, name: 'Pawprint Maze',
     neighbourhood: 'maze', maze: true, cameraGroup: 'home-neighbourhood',
     mazeStars: [[12,31],[18,31],[25,31],[6,24],[16,24],[22,24],[8,17],[15,17],[26,17],[3,10],[5,10],[7,10]],

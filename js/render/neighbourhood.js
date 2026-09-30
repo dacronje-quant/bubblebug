@@ -45,7 +45,35 @@
       c.beginPath(); c.moveTo(X(kind === 'garden' ? 3 : 0), Y(16) + 9);
       c.bezierCurveTo(X(10), Y(16) + 18, X(20), Y(16) + 2, X(30), Y(16) + 9); c.stroke();
     }
-    tree(c, X(15), Y(31), Y(13.5), kind === 'roots', t);
+    if (kind === 'maze') {
+      for (const col of [4, 10, 15]) {
+        c.fillStyle = '#82bc8d'; G().ellipse(X(col), Y(32) - 24, 54, 25, 0, c); c.fill();
+        BB.Tiles.flower(c, X(col), Y(32) - 32, '#fff1c2', 0.8);
+      }
+    } else tree(c, X(15), Y(31), Y(13.5), kind === 'roots', t);
+    if (kind !== 'maze') {
+      // Flower beds, little flags and spinning pinwheels make the walk
+      // feel like a shared garden even before its first friend arrives.
+      for (let col = 3; col < 29; col += 3) {
+        c.fillStyle = '#85c27a'; G().ellipse(X(col), Y(31) - 5, 29, 10, 0, c); c.fill();
+        for (let i = -1; i <= 1; i++) BB.Tiles.flower(c, X(col) + i * 14, Y(31) - 16 - (i === 0 ? 6 : 0), ['#ffe5a1', '#ffb3d1', '#cec0f4'][(col + i + 3) % 3], 0.7);
+      }
+      c.strokeStyle = '#c3a486'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(X(10), Y(17.3)); c.quadraticCurveTo(X(18), Y(19.3), X(26), Y(17.3)); c.stroke();
+      for (let i = 0; i < 7; i++) {
+        const u = (i + 0.5) / 7, px = X(10 + u * 16), py = Y(17.3 + 4 * u * (1 - u));
+        c.fillStyle = ['#ffb3d1', '#ffe5a1', '#a8dce3', '#cec0f4'][i % 4];
+        c.beginPath(); c.moveTo(px - 8, py); c.lineTo(px + 8, py); c.lineTo(px + Math.sin(t * 0.025 + i) * 3, py + 15); c.closePath(); c.fill();
+      }
+      const px = X(kind === 'garden' ? 24 : kind === 'pond' ? 4 : 26), py = Y(31) - 55;
+      c.strokeStyle = '#c3a486'; c.lineWidth = 3; c.beginPath(); c.moveTo(px, py); c.lineTo(px, Y(31)); c.stroke();
+      c.save(); c.translate(px, py); c.rotate(t * 0.014);
+      for (let i = 0; i < 4; i++) {
+        c.rotate(TAU / 4); c.fillStyle = ['#ffb3d1', '#ffe5a1', '#a8dce3', '#cec0f4'][i];
+        c.beginPath(); c.moveTo(0, 0); c.lineTo(17, -7); c.lineTo(12, 13); c.closePath(); c.fill();
+      }
+      c.fillStyle = '#fff8ef'; G().circle(0, 0, 4, c); c.fill(); c.restore();
+    }
     if (kind === 'garden') {
       // The porch belongs to the real house on this room's left edge.
       c.fillStyle = '#d8b68c'; G().rrect(X(0), Y(27), 34, 4 * T, 6, c); c.fill();
@@ -88,29 +116,6 @@
       }
     }
     // A few petals sit at the feet, clear of the kitten and touch buttons.
-    if (room.def.neighbourhood === 'maze') {
-      const open = BB.GardenMaze.available(BB.Play.save), x = X(29.5), floor = Y(32);
-      c.fillStyle = '#367953'; c.fillRect(X(0), Y(0), room.pw, room.ph);
-      for (let row = 24; row < 34; row++) for (let col = 26; col < 30; col++) {
-        c.fillStyle = (row + col) % 2 ? '#55945b' : '#65a464';
-        G().ellipse(X(col + 0.5), Y(row + 0.5), 21, 18, 0.1, c); c.fill();
-        if ((row * 3 + col) % 4 === 0) BB.Cosmetics.flower(c, X(col + 0.5), Y(row + 0.4), 5, '#ffd1e8');
-      }
-      c.fillStyle = '#274b41'; G().rrect(x - 19, floor - 94, 38, 96, 18, c); c.fill();
-      c.strokeStyle = open ? '#efca76' : '#829d91'; c.lineWidth = 4;
-      c.beginPath(); c.moveTo(x - 22, floor); c.lineTo(x - 22, floor - 72);
-      c.arc(x, floor - 72, 22, Math.PI, 0); c.lineTo(x + 22, floor); c.stroke();
-      if (!open) {
-        for (let i = -1; i <= 1; i++) { c.beginPath(); c.moveTo(x + i * 11, floor); c.lineTo(x + i * 11, floor - 80); c.stroke(); }
-        c.fillStyle = '#efca76'; G().rrect(x - 7, floor - 53, 14, 17, 4, c); c.fill();
-      } else G().drawGlow(x, floor - 50, 42, '#efc3fc', 0.6, c);
-      BB.Kittens.draw(c, 'rainbow', { mode: 'sit', t }, x - 3, floor - 107, 0.85, 1);
-      const cats = BB.Home.familyOrder().filter(id => BB.Play.save.family[id]).length;
-      G().text(open ? 'Secret Garden' : `Homecoming + ${cats}/12 cats`, x + 62, floor - 140, 16, '#fff9db', null, 'center', c);
-      for (let i = 0; i < 12; i++) {
-        c.fillStyle = i < cats ? '#ffcb65' : '#86a98a'; G().circle(x - 12 + (i % 6) * 6, floor - 173 + Math.floor(i / 6) * 8, 2.3, c); c.fill();
-      }
-    }
     for (const col of [3, 9, 17, 27]) BB.Tiles.flower(c, X(col), Y(room.def.neighbourhood === 'maze' ? 32 : 31) + 4, '#ffd1e8', 0.65);
     c.restore();
   }

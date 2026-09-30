@@ -148,6 +148,7 @@
   // l5 ─ Coral Garden: a seashell waits among the corals
   BB.room({
     id: 'l5', zone: 6, x: 961, y: -157, needs: 'swim', toy: 'shell',
+    glasses: [{ id: 'starshades', x: 17, y: 28 }],
     map: [
       '##########~~~~~~~~~~~~~~~~~~~#',
       '#~~~~~~~~~~~~~~~~~~~~~~~~~~~~#',

@@ -165,6 +165,7 @@
   //      grotto — Marshmallow's Papa is here — which winds on to the Echo Shaft
   BB.room({
     id: 'c6', zone: 2, x: 375, y: 17, family: 'papaBirman', dark: 0.45,
+    glasses: [{ id: 'disguise', x: 3, y: 9 }],
     map: [
       '########################################..##################',
       '##.........................................................#',

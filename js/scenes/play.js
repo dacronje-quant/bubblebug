@@ -78,7 +78,7 @@
       }
       // the kitten, at the save point
       let x, y;
-      if (save.room === 'nm' && !BB.GardenMaze.available(save)) { save.room = 'hm'; save.x = -148 * T + 6; save.y = 14 * T - C.PH; }
+      if (save.inMaze && !BB.GardenMaze.available(save)) { save.inMaze = false; save.mazeReturn = null; save.mazePosition = null; }
       if (save.x != null && W().roomAtPx(save.x + 10, save.y + 12)) { x = save.x; y = save.y; }
       else {
         const s = W().findThings('S')[0];
@@ -120,6 +120,7 @@
       this.wardrobe = null; this.outfitCard = null; this.mirrorHold = 0; this.toyBounce = {}; this.toyNear = {};
       this.gardenChoice = null; this.gardenHold = 0; this.celebrationT = 0; this.gardenLock = null; this.fountainCd = 0; this.mirrorLock = false;
       this.maze = null;
+      this.portalChoice = null; this.journeyHold = 0; this.journeyLock = null; this.replayStarting = false;
       document.body.classList.remove('in-maze');
       // (the elephant's rain hat became a unicorn horn)
       if (save.outfits && save.outfits.rainhat) { delete save.outfits.rainhat; save.outfits.horn = 1; }
@@ -144,13 +145,14 @@
       this.activeBoss = null; this.bossCard = null; this.bossMusic = false;
       this.homeVisitors = [];
       this.refreshHomeVisitors();
+      this.gardenFun = null; this.funHold = 0; this.funLock = null;
       this.signFade = {};
       this.enterZone(this.room.zone);
       if (!save.introDone && this.room.def.home) this.startIntro();
       BB.Bubbles.clear(); PT().clear(); BB.Bosses.clear();
       this.t = 0;
       this.writeSave();
-      if (this.room.def.maze) this.openMaze();
+      if (save.inMaze) this.openMaze();
     },
 
     enterZone(z) {
@@ -549,6 +551,7 @@
         },
         onFriend(b) {
           self.save.friends[b.key] = b.kind;
+          if (self.save.residents[b.kind]) self.refreshHomeVisitors();
           self.joy = 1;
           self.pl.happyT = 60;
           // making a friend makes you happier too
@@ -571,6 +574,13 @@
           self.pl.happyT = 90;
           PT().burst('confetti', th.x, th.y, 30, { speed: 4, g: 0.08, life: 70 });
           PT().burst('spark', th.x, th.y, 16, { color: '#ffffff', speed: 3, life: 40 });
+          BB.Save.write();
+        },
+        onGlasses(th) {
+          self.save.glassesFound[th.item] = 1; self.save.outfits[th.item] = 1;
+          self.save.wear.face = th.item; self.save.wardrobeNew = 1;
+          self.outfitCard = { id: th.item, t: 0 }; self.pl.happyT = 90;
+          S().outfit(); PT().burst('spark', th.x, th.y, 16, { color: '#efcaff', speed: 2, life: 40 });
           BB.Save.write();
         },
         onElder(th) { self.startGift(th); },
@@ -742,7 +752,9 @@
       this.t++;
       G().t++;
       const I = BB.Input;
+      if (this.replayStarting) return;
       if (this.maze) { this.updateMaze(); return; }
+      if (this.portalChoice) { this.updateJourneyChoice(); PT().update(); return; }
       if (this.wardrobe) { this.updateWardrobe(); PT().update(); return; }
       if (this.gardenChoice) { this.updateGardenChoice(); PT().update(); return; }
       if (I.pressed.pause && !this.gift && this.pl.state !== 'sad') { BB.Main.go('pause'); return; }
@@ -834,7 +846,6 @@
           this.leaveRoom(this.room);
           this.prevRoom = this.room;
           this.room = r;
-          if (r.def.maze) { this.openMaze(); return; }
           this.save.visited[r.id] = 1;
           if (this.prevRoom.def.home && r.id === 'ng') this.save.leftHome = 1;
           if (r.def.neighbourhood === 'garden') this.refreshHomeVisitors();
@@ -879,7 +890,9 @@
       this.updateHomeToys();
       this.updateFirstExit();
       this.updateHomeVisitors();
+      this.updateGardenFun();
       this.updateGarden();
+      this.updateJourney();
 
       // ── bubbles ──
       const targets = [];
@@ -887,6 +900,7 @@
         if (bug.state === 'bubbled') continue;
         targets.push({ x: bug.x, y: bug.y, r: bug.r, homing: bug.state === 'gloomy', hit: () => BB.Bugs.hit(bug, ctx) });
       }
+      for (const visitor of this.homeVisitors) if (visitor.room === this.room.id) targets.push({ x: visitor.x, y: visitor.y + visitor.hop, r: visitor.r, hit: () => this.petHomeVisitor(visitor) });
       for (const bs of e.bosses) { const tg = BB.Bosses.target(bs, ctx); if (tg) targets.push(tg); }
       for (const tg of BB.Bosses.hazardTargets()) targets.push(tg);
       for (const th of e.things) { const tg = BB.Things.target(th, ctx); if (tg) targets.push(tg); }
@@ -992,7 +1006,14 @@
       for (const r of visible) if (r.def.neighbourhood) BB.Neighbourhood.drawBack(c, r, cam, t);
       for (const r of visible) if (r.def.home) { BB.Home.drawBack(c, r, cam, t, this); BB.Home.drawMirror(c, r, cam, t, this); }
       for (const r of visible) if (r.def.arena) BB.Arenas.drawBack(c, r, cam, t, this);
-      for (const r of visible) BB.Tiles.drawStatic(c, r, cam, 0);
+      for (const r of visible) {
+        // The separate maze is behind a quiet outdoor rainbow door.
+        // Its containment walls stay in physics, outside the scenery.
+        if (r.def.maze) {
+          c.save(); c.beginPath(); c.rect(r.px - cam.x, (r.y + 32) * C.TILE - cam.y, r.pw, r.ph); c.clip();
+          BB.Tiles.drawStatic(c, r, cam, 0); c.restore();
+        } else BB.Tiles.drawStatic(c, r, cam, 0);
+      }
       for (const r of visible) BB.Tiles.drawLive(c, r, cam, t, env);
       for (const r of visible) if (r.def.arena) BB.Arenas.drawFront(c, r, cam, t);
       BB.Fx.drawGround(c, visible, cam, t, this.pl.body);
@@ -1027,7 +1048,9 @@
         for (const bug of e.bugs) BB.Bugs.draw(c, bug, cam);
       }
       this.drawHomeVisitors(c, cam, visible);
+      for (const r of visible) this.drawGardenFun(c, r, cam, t);
       for (const r of visible) this.drawGarden(c, r, cam, t);
+      for (const r of visible) this.drawJourney(c, r, cam, t);
       for (const h of this.hopHome) this.drawHopHome(c, h, cam);
       for (const f of this.followers) BB.Things.draw(c, f, cam, ctx);
       BB.Food.drawDrops(c, cam);
@@ -1109,6 +1132,7 @@
       if (this.mapOn && !(this.gift && this.gift.card > 0)) BB.MapView.draw(c, 'overlay', t);
       if (this.wardrobe) this.drawWardrobe(c, t);
       if (this.gardenChoice) this.drawGardenChoice(c, t);
+      if (this.portalChoice) this.drawJourneyChoice(c, t);
       this.drawIris(c, cam);
     },
 

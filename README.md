@@ -56,7 +56,7 @@ Both kittens are painted from photos of two real cats:
 
 Both move the same way. They differ in voice (a synthesized *mew*), idle habits and bubble style.
 
-After the homecoming and finding all twelve cats, solve the Secret Garden maze to unlock **Rainbow**, a magical kitten with pastel fur, a rainbow mane and a golden unicorn horn. Choose any of the three as your playable kitten, then change again at the mirror. Your adventure progress and outfits carry over.
+Find all twelve family cats to open the rainbow door left of home. Solve the Secret Garden maze to rescue **Rainbow**, a magical kitten with a flowing rainbow tail, a rainbow mane and a golden unicorn horn. Choose any of the three as your playable kitten, then change again at the mirror. Your adventure progress and outfits carry over.
 
 ## 🗺 The Rainbow Kingdom
 
@@ -89,12 +89,16 @@ The house and the opening garden share one moving camera: no teleport, fade or f
 
 | New room | Size | Connection and play | Extra stars |
 |---|---|---|---|
-| Front Garden | 30 × 34 tiles | Walk east from the house; invite earned critter species at the picture paw ring; leaf steps lead to the upper loop | 8 |
-| Pond Walk | 30 × 34 tiles | A safe wooden bridge on the lower path, a branch above, and no dangerous water | 8 |
-| Root Hollow | 30 × 34 tiles | Walk into Sparkle Gardens; bubble two sleepy buds to open an optional star nook upstairs | 8 |
-| Secret Garden / Pawprint Maze | 29 × 15 maze cells | After the homecoming and finding all twelve cats, walk west from the house into a four-direction hedge labyrinth with loops and dead ends; touch three paw stones to unlock the kitten chooser | 12 |
+| Front Garden | 30 × 34 tiles | Invite rescued friends at the outdoor welcome board and play ball; leaf steps lead to the upper loop | 8 |
+| Pond Walk | 30 × 34 tiles | A safe wooden bridge, a branch above and bubble play with garden friends | 8 |
+| Root Hollow | 30 × 34 tiles | Dance with friends; bubble two sleepy buds to open an optional star nook upstairs; walk east into Sparkle Gardens | 8 |
+| Secret Garden / Pawprint Maze | 29 × 15 maze cells | Twelve family portraits unlock a quiet rainbow door left of home; enter the separate hedge maze and touch three paw stones to rescue Rainbow | 12 |
 
-The maze opens only after both the homecoming and all twelve family cats. It has no enemies or jumps: use all four arrows, WASD, a D-pad or its on-screen direction buttons. Its house-picture exit is always available. Three paw stones unlock a choice of Marshmallow, Phoebe or Rainbow, a magical unicorn kitten, as your playable character. Choose again at the mirror's cat tab after solving the maze. Stars and paw stones collected in the earlier maze stay earned. The root nook remains an optional adventure bonus.
+The rainbow door opens when all twelve family cats have been found. Its twelve portraits match the family wall, so missing cats are visible without reading. Stand on its paw ring or press Confirm/Bubble there, then choose the green check to enter the maze. The maze has no enemies or jumps: use all four arrows, WASD, a D-pad or its on-screen direction buttons. Its house-picture exit returns to the door and is always available. Three paw stones release Rainbow and offer a choice of Marshmallow, Phoebe or Rainbow as your playable character. The mirror's cat tab stays unlocked afterwards, including in replays. Existing maze stars, paw stones and saved positions keep their progress.
+
+Every rescued critter of an invited species comes to live in the Front Garden, Pond Walk or Root Hollow, including later rescues of that species. Invite each species once for one heart at the outdoor welcome board. All 65 rescued critters can live along the garden floor and upper branches. Flower beds, flags and pinwheels decorate the path from the start. Stand on the ball, bubble-wand or dancing-paw ring, or press Confirm/Bubble there, to play together for eight seconds. Games, petting and blowing bubbles at visitors are free and never award another collectible heart. Step away to play again.
+
+After rescuing Rainbow, a sad cloud appears near the rainbow door. Its picture choice offers a **fresh adventure as Rainbow**, with Cancel selected first. Confirming makes the family wander off again and resets critters, bosses, puzzles, stars, hearts, toys, exploration, invitations and the fountain. Movement skills, learned tricks, clothing, styles and the unlocked Rainbow character carry over. Reunite all twelve cats and rescue Rainbow again to reveal the cloud for another replay. Ordinary Continue and save migration preserve the current adventure; only a confirmed sad-cloud choice restarts it.
 
 ### 🏠 The Cat House
 
@@ -107,7 +111,7 @@ The adventure starts at home, and nobody's there. The kitten wakes on its bed, s
 - **The front door** opens straight onto the Front Garden at the right of the living room. Keep walking east through the pond and roots to reach Sparkle Gardens. At the left of the living room is the optional Pawprint Maze.
 - **Family come home.** Each family member you find hops off home. Their frame on the family wall fills in with their face, and next time you're home they're napping on their own cushion (and wake up for a cuddle when you come close). Your own Mama waits by the front door.
 - **The homecoming party.** Slide home down the Rainbow Slide and the party starts in the living room. Only the family you actually found come: they dance in a ring around your kitten (the grannies sway, the babies bounce). Every friend you made floats in on a little cloud, and every boss you cheered up waves from the landing upstairs. Then a big card fills in the family frames one by one and shows how many you found, like **9 / 12**. Find all twelve and the card turns rainbow, with extra fireworks. Afterwards you can keep playing and go back out for anyone you missed.
-- **Dressing up.** Every boss still gives its original free present: a bonnet, mushroom hat, tiara, honey crown, unicorn horn, cloud collar, sailor hat, sun hat, bobble hat, scarf, nightcap or bunny ears. Stand still at the pink-and-gold mirror to choose extra outfits, bubble/trail styles or earned boss presents. A fourth kitten tab appears after solving the maze. A hat, neck item and scuba mask can be worn together.
+- **Dressing up.** Every boss still gives its original free present: a bonnet, mushroom hat, tiara, honey crown, unicorn horn, cloud collar, sailor hat, sun hat, bobble hat, scarf, nightcap or bunny ears. Hidden corners also hold Googly glasses in Ladybug Hill, a silly nose-and-moustache disguise in the crystal grotto and star shades in the coral garden. Discoveries are free, equip on pickup and join the mirror's presents tab, which has pages for all earned treasures. Stand still at the pink-and-gold mirror to choose outfits, bubble/trail styles or presents. Up focuses categories; Left/Right changes category; Down returns to items. A fourth kitten tab appears after rescuing Rainbow. A hat, neck item and face accessory can be worn together.
 - **Toys come home too.** Every hidden toy you find turns up somewhere in the house: the yarn ball on the rug, the jingle bell hanging from a cat tree, the paper boat on the windowsill, the star cushion on the sofa… Walk into one to bat it about and hear its own sound. The spots for toys you haven't found yet show a faint outline.
 - The house has its own gentle music-box tune. The party tune plays only while you're at the party; step out of the house and the music changes with you.
 
@@ -122,7 +126,8 @@ Stars unlock permanent milestones from the total collected; equipping never spen
 | Mirror · clothes picture | Sparkly collar / jingle collar / scuba mask & snorkel | Collect 150 / 175 / 200 stars |
 | Mirror · bubble picture | Heart / star / flower bubbles | Collect 40 / 80 / 140 stars |
 | Mirror · bubble picture | Tiny paw trail / rainbow trail | Collect 60 / 250 stars |
-| Front Garden · critter picture | One resident of a species you have befriended | 1 heart per species |
+| Front Garden · welcome board | All rescued critters of an invited species, including later rescues | 1 heart per species |
+| Outdoor play rings | Ball play, bubbles and dancing with garden friends | Free; step away to repeat |
 | Living room · heart fountain | Unlock fireworks, family dancing and the extra twirl trick | 1 heart once; every repeat is free |
 
 At the mirror, tap a picture to preview it; tap the selected picture again to equip it if unlocked. Keyboard/gamepad users press Up from the first item row to focus categories, Left/Right to change category, then Down to browse its pictures. Jump, bubble or Enter equips. The original bubbles and trail remain free options, and earned boss presents remain free to wear. Styles change appearance only. The jingle collar uses an existing bell sound when running.
@@ -165,7 +170,7 @@ Marshmallow's family are Birmans and Siamese-pointed cats in cream, lilac and ch
 
 Bunnies and frogs hop, birds, bats, owls and bees flutter, fish and jellyfish swim, spiders dangle on silk, and everyone else waddles. Every friend you make comes to the rainbow party.
 
-The world has 87 interconnected rooms (the Cat House included), 716 sparkles, 65 gloomy critters, 12 bosses, the original 12 picture puzzles plus the new maze, 12 hidden cat tricks plus the fountain twirl, 70 fishy treats, 13 food bowls, 25 cozy benches (your own bed at home among them), 24 cat flaps (two per zone), 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
+The world has 87 interconnected rooms (the Cat House included), 716 sparkles, 65 gloomy critters, 12 bosses, the original 12 picture puzzles plus the new maze, 12 hidden cat tricks plus the fountain twirl, three hidden funny glasses, 70 fishy treats, 13 food bowls, 25 cozy benches (your own bed at home among them), 24 cat flaps (two per zone), 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
 
 ### ✨ Little touches
 
@@ -315,8 +320,9 @@ js/entities/            player · bubbles · bugs (all gloomy critters) · bosse
                         wardrobe (boss presents and extra clothes) · cosmetics (bubble and trail styles)
                         links (cat flaps, Cat House doors, the Rainbow Lift) · things (sparkles, benches, elders, the slide…)
 js/scenes/              title (Continue / New Game) · select · play (suns, save points, travel, bosses, party)
-                        play-home (mirror, presents, toys) · play-garden (invitations and fountain)
-                        play-maze (hedge labyrinth and kitten rewards) · pause (+ map)
+                        play-home (mirror, presents, toys, visitors) · play-garden (invitations and fountain)
+                        play-garden-fun (ball, bubbles, dancing) · play-journey (rainbow door and confirmed replay)
+                        play-maze (hedge labyrinth and kitten rescue) · pause (+ map)
 js/main.js              fixed 60 Hz loop, scene switching, adaptive quality
 tools/                  verify-world.js + dev playtest/screenshot helpers (optional, need Node)
 tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (see the note at the top of Launcher.cs)
@@ -325,18 +331,22 @@ tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (
 - **One continuous world grid.** Rooms are placed at world coordinates (Hollow-Knight style), so walking off any edge leads straight into the neighbouring room, and the camera glides across.
 - **Pure physics.** `BB.Physics.step(body, input, abilities, easy = false)` runs in play and in the verifier. Medium and Hard use the original movement; only Easy passes the assistance flag.
 - **Adaptive music.** Each biome has an 8-bar song in layers (pad, bass, lead, arpeggio, percussion, twinkles). Running swells the arps and percussion, benches fade to a music box, a new friend adds a twinkle layer, dark caves warm the mix, and boss arenas get their own bouncy tune.
-- **Saves.** Progress lives in browser local storage and is written on every room change, save point, friend, gate and reward. Difficulty and sound are separate device settings. Schema v7 restores the full collected-star total, keeps old purchased items, and adds maze position/completion and face accessories. Older maze saves resume safely beside the new entrance with their collectibles intact. The v4 home relocation changes only resume/bench coordinates inside the old house. Older migrations still open new gates behind an existing adventure and carry pre-ring collectibles into their current rooms. The rewards preview keeps progress entirely in memory.
+- **Saves.** Progress lives in browser local storage and is written on every room change, save point, friend, gate and reward. Difficulty and sound are separate device settings. Schema v8 retains all existing progress and adds hidden-glasses discoveries, the maze return point, permanent Rainbow unlock and replay count. Older maze rescues and positions stay earned; earlier migrations restore the full star total and purchased items, relocate only old-house resume/bench coordinates and keep older world collectibles. A confirmed sad-cloud replay writes one complete fresh world while carrying skills and clothing. The rewards preview keeps progress entirely in memory.
 
 ### Zero softlocks, proven
 
 ```
 node tools/test-neighbourhood.js       # real scene/physics, migration, routes, puzzles and save checks
 node tools/test-rewards.js             # milestones, held inputs, reload, fountain and Easy regressions
-node tools/test-maze.js                # entire maze graph, completion gate, character changes and reload
+node tools/test-maze.js                # entire maze graph, twelve-cat door, character changes and reload
+node tools/test-journey.js             # hidden glasses, migration and three rescue/cloud/replay cycles
+node tools/test-garden.js              # all 65 visitors, later rescues, repeated games, music and reload
 node tools/test-difficulty.js          # mode migration, picker inputs, movement and bumps
 node tools/test-browser.js            # optional Chromium keyboard/mouse/touch checks (needs Playwright)
 node tools/verify-world.js --jobs 4    # all stages, original Medium / Hard movement
 node tools/verify-world.js --easy --jobs 4 # all stages, new Easy movement
+node tools/verify-world.js --replay    # fresh home with all skills and every boss/puzzle gate closed
+node tools/verify-world.js --easy --replay # the same fresh replay with Easy movement
 node tools/verify-world.js --stage 10  # just one story stage (0 = start … 10 = the slide home)
 node tools/verify-world.js --map g3    # also print a room with reachable air marked •
 ```
@@ -348,17 +358,19 @@ The verifier loads the real game modules and simulates hundreds of button patter
 3. every boss and puzzle gate you can walk up to opens: the boss can be reached and bubbled where it sits to sniffle, every paw pad can be stepped on, every lost baby can be walked home to Mama, the key can be carried to its keyhole, and every bell can be bubbled. Gates open mid-search as their wishes come true, and the search carries on through them;
 4. every power gate holds: rooms marked `needs:` a power can't be reached before you have it;
 5. with all powers, every spot can travel back home (free backtracking) and every gate in the kingdom can be opened;
-6. every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack, cat trick, cat flap and lift can be reached, and every bud can be bubbled.
+6. every sparkle, hidden glasses, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack, cat trick, cat flap and lift can be reached, and every bud can be bubbled.
 
 Gates stay open once opened (the save remembers), so a stage that starts in a later zone begins with every gate behind it (along the ring) already open; the earlier stages prove each of those gates can be opened on the way. The boss moves themselves don't change the map, and every arena's way on is plain floor and ledges.
+
+The separate `--replay` check starts at a fresh Cat House with all learned movement skills and every gate closed. It proves the entire adventure, all twelve family cats, hidden glasses, bosses and puzzles can be reached and completed again, with a route home from every reachable spot. Run it with both movement variants after changing replay or world progression.
 
 A too-sad pop-back only ever returns the kitten to a spot it has already stood on, which it left using its own moves, so the happy suns can't create a softlock either.
 
 Before any of that, a quick map check makes sure every pool has a floor and walls, so once you can swim, water is safe everywhere (no pool may sit over mist or the edge of the world).
 
-The starting-stage check requires all 24 adventure neighbourhood stars to be reachable without elder powers. The separate maze check proves every post-game corridor, paw stone, star and exit reachable with four-direction movement. The world contains 87 rooms and 716 stars, with the original 65 critters, 12 toys, 12 family members, 25 benches, 12 bosses and 24 cat flaps retained.
+The starting-stage check requires all 24 adventure neighbourhood stars to be reachable without elder powers. The separate maze check proves every maze corridor, paw stone, star and exit reachable with four-direction movement. Three successive rescue/replay cycles check rebuilt entities, fresh gates, retained powers/clothes, rediscoveries and reload. Garden checks repeat all three games with all 65 visitors and verify the heart ledger stays unchanged. The world contains 87 rooms and 716 stars, with the original 65 critters, 12 toys, 12 family members, 25 benches, 12 bosses and 24 cat flaps retained.
 
-The browser check opens the real HTML files, chooses modes and mirror categories with keyboard and pointer events, equips milestone styles and the scuba mask, walks the neighbourhood, checks maze controls, reloads progress, checks preview save protection, and uses emulated tablet touch for invitations and fountain repeats. Set `BUBBLEPAWS_BROWSER` if using a custom Chromium executable. Physical gamepad and tablet comfort still need a human playtest.
+The browser check opens the real HTML files, chooses modes and mirror categories with keyboard and pointer events, equips styles/scuba/glasses, walks the neighbourhood, plays with all 65 garden friends, checks the rainbow door/maze, confirms or cancels replays, reloads progress and protects the normal save in preview. Emulated tablet touch covers invitations, all three garden games, fountain repeats, maze controls and confirmed replays. Set `BUBBLEPAWS_BROWSER` if using a custom Chromium executable. Physical gamepad and tablet comfort still need a human playtest.
 
 ### Editing rooms
 

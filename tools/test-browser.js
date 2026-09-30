@@ -31,8 +31,10 @@ async function place(page, id, col, floor) {
     const P = BB.Play, r = BB.World.byId[id];
     if (P.room !== r) P.leaveRoom(P.room);
     P.room = r; P.prevRoom = null; P.enterZone(r.zone);
-    P.wardrobe = null; P.gardenChoice = null; P.gardenHold = 0;
-    P.pl.state = 'play'; P.intro = null; P.traveling = null; P.linkLock = null;
+    P.wardrobe = null; P.gardenChoice = null; P.gardenHold = 0; P.portalChoice = null;
+    P.maze = null; P.journeyLock = null; P.journeyHold = 0;
+    document.body.classList.remove('in-maze');
+    P.pl.state = 'play'; P.intro = null; P.iris = null; P.traveling = null; P.linkLock = null;
     P.pl.body = BB.Physics.newBody((r.x + col) * 32 + 6, (r.y + floor) * 32 - 24);
     P.pl.body.grounded = true; P.pl.body.groundKind = 1;
     P.checkpoint = { x: P.pl.body.x, y: P.pl.body.y }; P.pendingCP = false;
@@ -119,7 +121,7 @@ async function shot(page, name) {
     // Completed save fixture: changing the playable kitten through the
     // real keyboard category navigation must also survive Continue.
     await page.evaluate(() => {
-      BB.Play.save.finale = true; BB.Play.save.mazeSolved = true;
+      BB.Play.save.finale = true; BB.Play.save.mazeSolved = true; BB.Play.save.rainbowUnlocked = true;
       BB.Home.familyOrder().forEach(id => { BB.Play.save.family[id] = 1; });
     });
     await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
@@ -130,11 +132,34 @@ async function shot(page, name) {
     await page.keyboard.press('ArrowRight'); await pause(page); await page.keyboard.press('ArrowRight'); await pause(page);
     await page.keyboard.press('Enter'); await pause(page);
     assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
-    await shot(page, 'mirror-kittens'); await tap(page, 776, 438);
+    await shot(page, 'mirror-kittens');
+    await page.evaluate(() => {
+      BB.Wardrobe.LIST.filter(item => item.boss || item.discover).forEach(item => { BB.Play.save.outfits[item.id] = 1; });
+      BB.Play.save.wear.head = null; BB.Play.wardrobeTab(2);
+    });
+    await tap(page, 780, 308); await tap(page, 505, 246); await tap(page, 505, 246);
+    assert.equal(await page.evaluate(() => BB.Play.save.wear.face), 'googly');
+    await shot(page, 'mirror-glasses'); await tap(page, 776, 438);
     await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
     await page.keyboard.press('Space'); await page.waitForFunction(() => BB.Main.name === 'play');
     assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
     assert.equal(await page.evaluate(() => Object.keys(BB.Play.save.sparkles).length), saved.stars.length);
+    // The existing picture confirmation starts a complete replay once,
+    // then Continue keeps Rainbow and the earned movement abilities.
+    await page.evaluate(() => {
+      Object.keys(BB.Play.save.abilities).forEach(key => { BB.Play.save.abilities[key] = true; });
+      BB.Play.save.outfits.googly = 1; BB.Play.save.wear.face = 'googly';
+    });
+    await place(page, 'nm', 26, 32); await page.waitForFunction(() => BB.Play.portalChoice?.t > 10);
+    assert.equal(await page.evaluate(() => BB.Play.portalChoice.focus), 1);
+    await shot(page, 'cloud-replay');
+    await page.keyboard.press('ArrowLeft'); await pause(page);
+    await page.keyboard.down('Enter'); await page.waitForFunction(() => BB.Play.save.replayCount === 1 && !BB.Play.replayStarting); await page.keyboard.up('Enter');
+    assert.deepEqual(await page.evaluate(() => ({ cat: BB.Play.pl.cat, cats: Object.keys(BB.Play.save.family).length, bosses: Object.keys(BB.Play.save.bosses).length, stars: Object.keys(BB.Play.save.sparkles).length, skills: Object.values(BB.Play.save.abilities).every(Boolean), glasses: BB.Play.save.wear.face })), { cat: 'rainbow', cats: 0, bosses: 0, stars: 0, skills: true, glasses: 'googly' });
+    await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
+    await page.keyboard.press('Space'); await page.waitForFunction(() => BB.Main.name === 'play');
+    assert.equal(await page.evaluate(() => BB.Play.save.replayCount), 1);
+    assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
     const normal = await page.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2'));
     await page.goto(pathToFileURL(path.join(ROOT, 'try-rewards.html')).href);
     await page.waitForFunction(() => BB.Save.preview && BB.Main.name === 'play');
@@ -142,13 +167,34 @@ async function shot(page, name) {
     await tap(page, 505, 150); await tap(page, 776, 438); await page.reload();
     await page.waitForFunction(() => BB.Save.preview);
     assert.equal(await page.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2')), normal);
-    await place(page, 'hm', 2, 32); await page.keyboard.down('ArrowLeft');
-    await page.waitForFunction(() => BB.Play.maze !== null); await page.keyboard.up('ArrowLeft');
+    // The outdoor welcome spot fills all three rooms with the rescued
+    // critters. Each original picture activity runs in the real browser.
+    await place(page, 'ng', 16, 31); await page.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
+    await page.keyboard.press('Enter'); await pause(page);
+    assert.ok(await page.evaluate(() => BB.Play.homeVisitors.length > 0));
+    await page.evaluate(() => {
+      const P = BB.Play;
+      for (let i = 0; i < P.gardenChoice.kinds.length; i++) { P.gardenChoice.sel = i; P.chooseGarden(); }
+    });
+    await tap(page, 678, 145); assert.equal(await page.evaluate(() => BB.Play.homeVisitors.length), 65);
+    for (const [id, col, kind] of [['ng', 8, 'ball'], ['np', 14, 'bubbles'], ['nr', 10, 'dance']]) {
+      await place(page, id, col, 31); await page.keyboard.press('Enter');
+      await page.waitForFunction(kind => BB.Play.gardenFun?.kind === kind && BB.Play.gardenFun.t > 60 && !BB.Play.zoneCard, kind);
+      await shot(page, 'garden-' + kind);
+    }
+    await page.evaluate(() => { BB.Play.save.family = Object.fromEntries(BB.Home.familyOrder().slice(0, 3).map(id => [id, 1])); });
+    await place(page, 'nm', 17, 32); await page.waitForTimeout(500); await shot(page, 'rainbow-door-locked');
+    assert.equal(await page.evaluate(() => BB.Play.portalChoice), null);
+    await page.evaluate(() => BB.Home.familyOrder().forEach(id => { BB.Play.save.family[id] = 1; }));
+    await place(page, 'nm', 17, 32); await page.waitForTimeout(400); await shot(page, 'rainbow-path');
+    await place(page, 'nm', 21, 32); await page.waitForFunction(() => BB.Play.portalChoice?.t > 10);
+    await shot(page, 'rainbow-entry');
+    await page.keyboard.press('Enter'); await page.waitForFunction(() => BB.Play.maze !== null);
     await shot(page, 'hedge-maze');
     await page.evaluate(() => { BB.Play.maze.choice = true; BB.Play.maze.choiceT = 10; BB.Play.maze.sel = 2; });
     await shot(page, 'kitten-choices');
     await page.evaluate(() => BB.Play.closeMaze());
-    console.log('✓ Chromium: keyboard categories, free milestones, hedge maze, styles, continuous walk, reload and safe preview');
+    console.log('✓ Chromium: original menus, glasses, 65 garden friends, outdoor games, rainbow door, replay, reload and safe preview');
     await context.close();
 
     const tablet = await browser.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true });
@@ -178,14 +224,29 @@ async function shot(page, name) {
     assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 2);
     assert.equal(await touch.evaluate(() => BB.Play.save.fountainUses), 2);
     assert.equal(await touch.evaluate(() => document.body.classList.contains('touch')), true);
-    await touch.evaluate(() => { BB.Play.room = BB.World.byId.nm; BB.Play.openMaze(); });
+    for (const [id, col, kind] of [['ng', 8, 'ball'], ['np', 14, 'bubbles'], ['nr', 10, 'dance']]) {
+      await place(touch, id, col, 31);
+      await touch.waitForFunction(kind => BB.Play.gardenFun?.kind === kind, kind);
+      assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 2);
+    }
+    await place(touch, 'nm', 21, 32); await touch.waitForFunction(() => BB.Play.portalChoice?.t > 10);
+    await tap(touch, 385, 405, true); await touch.waitForFunction(() => BB.Play.maze !== null);
     await tap(touch, 448, 506, true);
     await touch.waitForFunction(() => BB.Play.maze.y === 12);
     await tap(touch, 850, 30, true);
-    assert.equal(await touch.evaluate(() => BB.Play.room.id), 'hm');
+    assert.equal(await touch.evaluate(() => BB.Play.room.id), 'nm');
     assert.equal(await touch.evaluate(() => BB.Play.maze), null);
+    // Touch cancelling a replay keeps the same adventure; confirming
+    // in the preview restarts only its in-memory world.
+    await touch.evaluate(() => { BB.Play.save.mazeSolved = true; BB.Play.save.rainbowUnlocked = true; });
+    await place(touch, 'nm', 26, 32); await touch.waitForFunction(() => BB.Play.portalChoice?.t > 10);
+    await tap(touch, 575, 405, true); assert.equal(await touch.evaluate(() => BB.Play.save.replayCount), 0);
+    await place(touch, 'nm', 26, 32); await touch.waitForFunction(() => BB.Play.portalChoice?.t > 10);
+    await tap(touch, 385, 405, true); await touch.waitForFunction(() => BB.Play.save.replayCount === 1 && !BB.Play.replayStarting);
+    assert.equal(await touch.evaluate(() => BB.Play.pl.cat), 'rainbow');
+    assert.equal(await touch.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2')), null);
     assert.deepEqual(errors, []);
-    console.log('✓ Chromium touch: scuba mask, milestones, maze directions, invitations, free fountain repeat and zero page errors');
+    console.log('✓ Chromium touch: scuba, milestones, outdoor invitations/play, fountain, maze, confirmed replay and zero page errors');
     await tablet.close();
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

@@ -48,17 +48,18 @@ function checks(g) {
   console.log('✓ star milestones, free reuse, keyboard category focus, scuba mask and reload');
 
   // Invitations require an earned species and one heart, exactly once.
+  const visitorCount = () => B.World.rooms.flatMap(r => B.Play.ents[r.id].bugs).filter(b => save.friends[b.key] && save.residents[b.kind]).length;
   place('ng', 16, 31); tick(50); assert.equal(B.Play.gardenChoice.kind, 'friends');
   assert.equal(save.heartsSpent, 0); assert.equal(B.Play.homeVisitors.length, 0);
-  tick(50, ['KeyX']); assert.equal(save.heartsSpent, 1); assert.equal(B.Play.homeVisitors.length, 1);
+  tick(50, ['KeyX']); assert.equal(save.heartsSpent, 1); assert.equal(B.Play.homeVisitors.length, visitorCount());
   tick(); tick(1, ['KeyX']); assert.equal(save.heartsSpent, 1); tick();
   tick(1, ['ArrowRight']); tick(); tick(1, ['KeyX']); tick();
-  assert.equal(save.heartsSpent, 2); assert.equal(B.Play.homeVisitors.length, 2);
+  assert.equal(save.heartsSpent, 2); assert.equal(B.Play.homeVisitors.length, visitorCount());
   tick(1, ['Escape']); tick(); assert.equal(B.Play.gardenChoice, null); assert.equal(B.Main.scene, B.Play);
   place('ng', 4, 31); tick(240); assert.equal(save.heartsSpent, 2);
   assert.equal(JSON.stringify(save.friends), hearts);
   B.Play.writeSave(); B.Save.load(); B.Main.set('play', {}); save = B.Play.save;
-  assert.equal(B.Play.homeVisitors.length, 2); assert.equal(save.heartsSpent, 2);
+  assert.equal(B.Play.homeVisitors.length, visitorCount()); assert.equal(save.heartsSpent, 2);
   console.log('✓ heart invitations charge once; petting and reloading never duplicate hearts');
 
   // A held button is one toss. The first costs one heart; repeats are free,
@@ -155,7 +156,8 @@ function residents(g) {
   B.Play.closeGardenChoice();
   B.Play.openGardenChoice('fountain'); assert.equal(B.Play.chooseGarden(), true);
   assert.equal(B.Play.save.heartsSpent, 40); assert.equal(B.Economy.balance(B.Play.save, 'hearts'), 25);
-  assert.equal(B.Play.homeVisitors.length, 39);
+  assert.equal(B.Play.homeVisitors.length, 65);
+  assert.equal(new Set(B.Play.homeVisitors.map(v => v.sourceKey)).size, 65);
   for (const id of ['ng', 'np', 'nr']) {
     place(id, 28, 31);
     const walking = B.Play.homeVisitors.filter(v => v.room === id && ['walk', 'hop'].includes(v.behavior));
@@ -166,7 +168,7 @@ function residents(g) {
     }
     walking.forEach((v, j) => assert.ok(ranges[j][1] - ranges[j][0] > 5, v.kind + ' wanders on its garden floor'));
   }
-  console.log('✓ all 39 species and the fountain fit the heart budget; every walking/hopping resident roams');
+  console.log('✓ all 65 rescued critters live across the garden; 39 species and the fountain fit the heart budget');
 }
 
 function milestones() {
@@ -196,7 +198,7 @@ function milestones() {
   const migrated = bootGame(null, { storage: [['bubblebug_kingdom_v2', JSON.stringify(old)]] });
   migrated.BB.Main.set('play', {});
   const s = migrated.BB.Play.save;
-  assert.equal(s.v, 7); assert.equal(s.starsSpent, 0); assert.equal(s.outfits.wizard, 1);
+  assert.equal(s.v, 8); assert.equal(s.starsSpent, 0); assert.equal(s.outfits.wizard, 1);
   assert.equal(s.purchases['trail-rainbow'], 1); assert.equal(s.cosmetics.trail, 'rainbow');
   assert.equal(s.sparkles['-168,13'], 1); assert.equal(s.pads['-173,13'], 1);
   assert.equal(s.finale, true); assert.equal(migrated.BB.Save.count(s.family), 12);

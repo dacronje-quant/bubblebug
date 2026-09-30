@@ -62,9 +62,9 @@ function bootGame(canvasFactory, options = {}) {
     if (P.room !== r) P.leaveRoom(P.room);
     P.room = r; P.prevRoom = null;
     P.enterZone(r.zone);
-    P.wardrobe = null; P.gardenChoice = null; P.gardenHold = 0; P.maze = null;
+    P.wardrobe = null; P.gardenChoice = null; P.gardenHold = 0; P.maze = null; P.portalChoice = null;
     context.document.body.classList.remove('in-maze');
-    P.pl.state = 'play'; P.intro = null; P.traveling = null; P.linkLock = null;
+    P.pl.state = 'play'; P.intro = null; P.iris = null; P.traveling = null; P.linkLock = null;
     P.pl.body = B.Physics.newBody((r.x + col) * 32 + 6, (r.y + floor) * 32 - 24);
     P.pl.body.grounded = true; P.pl.body.groundKind = 1;
     P.checkpoint = { x: P.pl.body.x, y: P.pl.body.y };
@@ -88,7 +88,7 @@ function checks(game) {
   old.abilities.doubleJump = true;
   storage.set(SAVE_KEY, JSON.stringify(old));
   assert.equal(B.Save.load(), true);
-  assert.equal(B.Save.data.v, 7);
+  assert.equal(B.Save.data.v, 8);
   assert.equal(B.Save.data.x, old.x - 630 * 32);
   assert.equal(B.Save.data.y, old.y + 100 * 32);
   assert.deepEqual(plain(B.Save.data.bench), { x: old.bench.x - 630 * 32, y: old.bench.y + 100 * 32 });
@@ -102,7 +102,7 @@ function checks(game) {
   assert.equal(B.Save.data.bench.x, old.bench.x - 630 * 32);
   for (const v of [2, 3]) {
     storage.set(SAVE_KEY, JSON.stringify({ ...outside, v }));
-    assert.equal(B.Save.load(), true); assert.equal(B.Save.data.v, 7);
+    assert.equal(B.Save.load(), true); assert.equal(B.Save.data.v, 8);
   }
   console.log('✓ v2/v3/v4 saves migrate; home moves once and progress survives');
 
@@ -133,8 +133,8 @@ function checks(game) {
   console.log('✓ continuous, jump-free walk from home through all three rooms and back');
   place('hm', 3, 32);
   tick(120, ['ArrowLeft']);
-  assert.equal(B.Play.room.id, 'hm'); assert.equal(B.Play.maze, null);
-  console.log('✓ the secret maze is closed during the adventure');
+  assert.equal(B.Play.room.id, 'nm'); assert.equal(B.Play.maze, null); assert.equal(B.Play.portalChoice, null);
+  console.log('✓ the garden path stays open but its rainbow game is locked before 12 cats');
 
   // The two original progression gates remain closed until solved.
   place('g1', 26, 14); tick(180, ['ArrowRight']);

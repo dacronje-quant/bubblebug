@@ -35,12 +35,43 @@
     { id: 'sparkly', name: 'Sparkly collar', slot: 'neck', stars: 150 },
     { id: 'jingle', name: 'Jingle collar', slot: 'neck', stars: 175 },
     { id: 'scuba', name: 'Scuba mask & snorkel', slot: 'face', stars: 200 },
+    { id: 'googly', name: 'Googly glasses', slot: 'face', discover: 'Ladybug Hill' },
+    { id: 'disguise', name: 'Silly disguise', slot: 'face', discover: 'the hidden crystal grotto' },
+    { id: 'starshades', name: 'Star shades', slot: 'face', discover: 'the coral garden' },
   ];
   const BY = Object.fromEntries(LIST.map(a => [a.id, a]));
   const BY_BOSS = Object.fromEntries(LIST.filter(a => a.boss).map(a => [a.boss, a]));
 
   // ──── Drawing each thing (head space) ────
   const ART = {
+    googly(c, t) {
+      c.strokeStyle = '#8b69b3'; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(-10, -2); c.lineTo(11, -2); c.stroke();
+      for (const x of [-4.7, 5.3]) {
+        c.fillStyle = '#fffef6'; G().circle(x, -1, 4.8, c); c.fill(); c.stroke();
+        c.fillStyle = '#474258'; G().circle(x + Math.sin(t * 0.1 + x) * 1.3, -0.2 + Math.cos(t * 0.08) * 0.8, 1.8, c); c.fill();
+        c.fillStyle = '#ffffff'; G().circle(x + 0.7, -1.4, 0.7, c); c.fill();
+      }
+    },
+    disguise(c) {
+      c.fillStyle = 'rgba(193,230,255,0.3)'; c.strokeStyle = '#4f445d'; c.lineWidth = 1.3;
+      for (const x of [-4.8, 5.2]) { G().circle(x, -2, 4.4, c); c.fill(); c.stroke(); }
+      c.beginPath(); c.moveTo(-0.4, -2); c.lineTo(0.8, -2); c.stroke();
+      c.fillStyle = '#f2b28c'; G().ellipse(1.5, 3, 2.6, 3.5, -0.1, c); c.fill();
+      c.fillStyle = '#675167';
+      for (const d of [-1, 1]) { c.beginPath(); c.moveTo(1.5, 5); c.quadraticCurveTo(1.5 + d * 7, 2, 1.5 + d * 7, 6); c.quadraticCurveTo(1.5 + d * 3, 9, 1.5, 5); c.fill(); }
+      c.lineWidth = 2.3;
+      for (const x of [-5, 5]) { c.beginPath(); c.moveTo(x - 3, -7); c.lineTo(x + 3, -7); c.stroke(); }
+    },
+    starshades(c) {
+      c.strokeStyle = '#ba7fae'; c.lineWidth = 1.1;
+      c.beginPath(); c.moveTo(-10, -2); c.lineTo(11, -2); c.stroke();
+      for (const [x, color] of [[-4.5, '#ffa7da'], [5.5, '#9cdfff']]) {
+        c.fillStyle = color; G().star(x, -1, 5.6, 5, 0.55, -Math.PI / 2, c); c.fill(); c.stroke();
+        c.strokeStyle = '#ffffff'; c.lineWidth = 0.7; c.beginPath(); c.moveTo(x - 1.3, -3); c.lineTo(x + 1, -3.8); c.stroke();
+        c.strokeStyle = '#ba7fae'; c.lineWidth = 1.1;
+      }
+    },
     scuba(c, t) {
       // Transparent lenses leave the eyes visible; the snorkel curls up
       // beside the ear. It can be worn with a hat and collar.

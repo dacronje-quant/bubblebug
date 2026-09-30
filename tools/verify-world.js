@@ -20,14 +20,15 @@
 //  With every power it also checks you can always travel home to the start
 //  (for backtracking to secrets), that every gate can be opened, and that
 //  every collectible, critter, boss, puzzle piece, snack, cat trick and
-//  hidden family member is reachable. (A too-sad pop-back only returns the kitten to a spot it
+//  hidden glasses and family member is reachable. (A too-sad pop-back only returns the kitten to a spot it
 //  already stood on, so it can't create a softlock.)
 //
 //  Stages start at the previous elder, so they're independent and run in
 //  parallel worker threads (one per CPU core).
 //
-//  Usage: node tools/verify-world.js [--easy] [--jobs N] [--map ID] [--stage N]
+//  Usage: node tools/verify-world.js [--easy] [--replay] [--jobs N] [--map ID] [--stage N]
 //  Default: Medium / Hard's original movement. --easy uses Easy's assists.
+//  --replay starts with all powers at home and every gate still closed.
 //  Exit code 0 = every check passed.
 // ════════════════════════════════════════════════════════════════
 'use strict';
@@ -56,6 +57,7 @@ const W = BB.World.build();
 const C = BB.CFG, T = C.TILE;
 const P = BB.Physics, FX = BB.FX;
 const EASY = isMainThread ? process.argv.includes('--easy') : !!workerData.easy;
+const REPLAY = isMainThread ? process.argv.includes('--replay') : !!workerData.replay;
 
 // The order elders give their gifts in
 const POWERS = ['doubleJump', 'wallClimb', 'glow', 'float', 'swim', 'dig', 'spring', 'rings', 'bubbleBounce', 'wings'];
@@ -459,7 +461,7 @@ function goalThing(goal) {
 }
 
 function startFor(stage) {
-  if (stage.i === 0) { const s = W.findThings('S')[0]; return s ? spotFor(s.tx, s.ty) : null; }
+  if (stage.i === 0 || REPLAY) { const s = W.findThings('S')[0]; return s ? spotFor(s.tx, s.ty) : null; }
   const prev = goalThing(POWERS[stage.i - 1]);
   return prev ? spotFor(prev.tx, prev.ty) : null;
 }
@@ -488,7 +490,7 @@ function runStage(stage, mapRoom) {
   if (!th) { fail(`goal "${stage.goal}" is not placed in the world`); return { out, failures }; }
 
   const startRoom = W.roomAtPx(start.x + 10, start.y + 12);
-  const res = exploreWithGates([start], ab, stage.i === 0 ? null : startRoom);
+  const res = exploreWithGates([start], ab, stage.i === 0 || REPLAY ? null : startRoom);
   out.push(`  explored ${res.nodes.size} standing spots (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
   const keys = [];
   for (const n of res.nodes.values()) {
@@ -546,7 +548,7 @@ function runStage(stage, mapRoom) {
       if (room.def.maze) continue; // post-game four-direction search: tools/test-maze.js
       for (const t of room.things) {
         const at = `in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`;
-        if ('*TBnfy&eWjhuv'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
+        if ('*TBnfy&eWjhuva'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' || t.ch === 'a' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
         if ('bc'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 4)) missing.push(`critter ${at}`);
         if ('PdAkZVO'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 1)) missing.push(`puzzle piece ${t.ch} ${at}`);
         if ('QK'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 3)) missing.push(`boss ${at}`);
@@ -585,7 +587,7 @@ function runStage(stage, mapRoom) {
 if (isMainThread) {
   const args = process.argv.slice(2);
   const mapRoom = args.includes('--map') ? args[args.indexOf('--map') + 1] : null;
-  const only = args.includes('--stage') ? +args[args.indexOf('--stage') + 1] : null;
+    const only = args.includes('--stage') ? +args[args.indexOf('--stage') + 1] : REPLAY ? POWERS.length : null;
   const todo = STAGES.filter(s => only == null || s.i === only);
   const t0 = Date.now();
   const results = new Array(STAGES.length);
@@ -598,7 +600,7 @@ if (isMainThread) {
     while (running < cores && next < todo.length) {
       const stage = todo[next++];
       running++;
-      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom, easy: EASY } });
+      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom, easy: EASY, replay: REPLAY } });
       w.on('message', r => {
         results[stage.i] = r;
         console.log(`  · ${r.failures ? 'FAILED' : 'passed'}: ${NAMES[stage.goal]} (${((Date.now() - t0) / 1000).toFixed(0)}s)`);

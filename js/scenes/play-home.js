@@ -23,21 +23,37 @@
     // reloading never awards another heart. Read actual earned friends so
     // older saves containing 1 instead of a species name work as well.
     refreshHomeVisitors() {
-      const kinds = this.earnedFriendKinds().filter(kind => this.save.residents[kind]);
-      const old = new Map((this.homeVisitors || []).map(v => [v.kind, v]));
-      this.homeVisitors = kinds.map((kind, i) => {
-        if (old.has(kind)) return old.get(kind);
+      const friends = BB.World.rooms.flatMap(r => this.ents[r.id].bugs).filter(b => !b.king && this.save.friends[b.key] && this.save.residents[b.kind]);
+      const old = new Map((this.homeVisitors || []).map(v => [v.sourceKey, v]));
+      this.homeVisitors = friends.map((friend, i) => {
+        if (old.has(friend.key)) return old.get(friend.key);
+        const kind = friend.kind;
         const room = BB.World.byId[['ng', 'np', 'nr'][i % 3]];
-        const th = { tx: room.x + 4 + Math.floor(i / 3) * 2, ty: room.y + 30, ch: 'b' };
+        const local = Math.floor(i / 3), upper = local % 3 === 2;
+        const floor = upper ? 16 : 31, lo = upper ? 4 : 3, hi = upper && room.id === 'nr' ? 17 : 28;
+        const col = lo + (local * 5 + i % 3 * 3) % (hi - lo);
+        const th = { tx: room.x + col, ty: room.y + floor - 1, ch: 'b' };
         const key = th.tx + ',' + th.ty;
         const visitor = BB.Bugs.create(th, room, { friends: { [key]: 1 } }, 0, kind);
-        if (visitor.behavior === 'hop') visitor.y = visitor.homeY = (room.y + 31) * T - 16;
+        visitor.sourceKey = friend.key; visitor.gardenFloor = (room.y + floor) * T;
+        if (visitor.behavior === 'hop') visitor.y = visitor.homeY = visitor.gardenFloor - 16;
+        if (visitor.behavior === 'dangle') visitor.anchorY = visitor.homeY - 65;
         // Different-sized visitors need their own floor probe. Keep the
         // original adventure critters' movement rules unchanged.
-        visitor.footOffset = (room.y + 31) * T - visitor.y + 1;
-        visitor.petNear = false;
+        visitor.footOffset = visitor.gardenFloor - visitor.y + 1;
+        visitor.roamLo = (room.x + lo) * T; visitor.roamHi = (room.x + hi) * T;
+        visitor.petNear = false; visitor.petCd = 0;
         return visitor;
       });
+    },
+
+    petHomeVisitor(visitor) {
+      if (visitor.petCd > 0) return false;
+      visitor.petCd = 90; visitor.hopV = -3; visitor.danceT = 60;
+      S().purr();
+      for (let i = 0; i < 3; i++) PT().heart(visitor.x, visitor.y - 20);
+      this.pl.happyT = Math.max(this.pl.happyT, 40);
+      return false; // play bubbles pass through visitors to reach buds and music flowers
     },
 
     updateHomeVisitors() {
@@ -45,19 +61,15 @@
       const ctx = this.ctx(), b = this.pl.body, room = this.room;
       for (const visitor of this.homeVisitors) {
         if (visitor.room !== room.id) continue;
+        if (visitor.petCd > 0) visitor.petCd--;
         BB.Bugs.update(visitor, ctx);
-        const lo = room.px + 3 * T, hi = room.px + room.pw - 2 * T;
+        const lo = visitor.roamLo, hi = visitor.roamHi;
         if (visitor.x < lo || visitor.x > hi) {
           visitor.x = BB.clamp(visitor.x, lo, hi);
           visitor.facing = visitor.x === lo ? 1 : -1;
         }
         const near = this.pl.state === 'play' && Math.hypot(b.x + b.w / 2 - visitor.x, b.y + b.h / 2 - visitor.y) < 42;
-        if (near && !visitor.petNear) {
-          visitor.hopV = -3; visitor.danceT = 60;
-          S().purr();
-          for (let i = 0; i < 3; i++) PT().heart(visitor.x, visitor.y - 20);
-          this.pl.happyT = Math.max(this.pl.happyT, 40);
-        }
+        if (near && !visitor.petNear) this.petHomeVisitor(visitor);
         if (near) visitor.petNear = true;
         else if (Math.hypot(b.x + b.w / 2 - visitor.x, b.y + b.h / 2 - visitor.y) > 80) visitor.petNear = false;
       }
@@ -133,10 +145,10 @@
       const tab = this.wardrobe.tab;
       if (tab === 1) return BB.Cosmetics.LIST;
       if (tab === 3) return BB.GardenMaze.CATS.map(id => ({ id, name: BB.CATS[id].name, slot: 'cat' }));
-      return BB.Wardrobe.LIST.filter(a => tab === 0 ? !!a.stars : !!a.boss && !!this.save.outfits[a.id]);
+      return BB.Wardrobe.LIST.filter(a => tab === 0 ? !!a.stars : !!a.discover || !!a.boss && !!this.save.outfits[a.id]);
     },
 
-    wardrobeTabs() { return this.save.mazeSolved ? 4 : 3; },
+    wardrobeTabs() { return this.save.rainbowUnlocked ? 4 : 3; },
     wardrobeTabX(i) { return 505 + i * (this.wardrobeTabs() === 4 ? 100 : 116); },
 
     wardrobeTab(tab) {
@@ -188,14 +200,16 @@
       } else {
         if (I.pressed.left && n) { w.sel = (w.sel + n - 1) % n; S().select(); }
         if (I.pressed.right && n) { w.sel = (w.sel + 1) % n; S().select(); }
-        if (I.pressed.up) { if (w.sel < 4 || !n) w.focus = 'tabs'; else w.sel -= 4; S().select(); }
+        if (I.pressed.up) { if (w.sel % 8 < 4 || !n) w.focus = 'tabs'; else w.sel -= 4; S().select(); }
         if (n && I.pressed.down) { w.sel = Math.min(n - 1, w.sel + 4); S().select(); }
         if (!I.pressed.up && !I.pressed.down && !I.pressed.left && !I.pressed.right && (I.pressed.jump || I.pressed.bubble || I.pressed.confirm)) this.toggleOutfit(w.sel);
       }
       for (const p of I.takePointers()) {
         if (Math.hypot(p.x - DONE.x, p.y - DONE.y) < DONE.r + 10) return this.closeWardrobe();
         for (let i = 0; i < this.wardrobeTabs(); i++) if (Math.hypot(p.x - this.wardrobeTabX(i), p.y - 88) < 32) { this.wardrobeTab(i); w.focus = 'items'; return; }
-        for (let i = 0; i < this.wardrobeItems().length; i++) { const q = cell(i); if (Math.hypot(p.x - q.x, p.y - q.y) < q.r + 8) { if (w.sel === i && w.focus === 'items') this.toggleOutfit(i); else { w.sel = i; w.focus = 'items'; S().select(); } break; } }
+        const list = this.wardrobeItems(), page = Math.floor(w.sel / 8), pages = Math.ceil(list.length / 8);
+        if (pages > 1) for (const [x, d] of [[480, -1], [780, 1]]) if (Math.hypot(p.x - x, p.y - 308) < 23) { w.sel = ((page + d + pages) % pages) * 8; w.focus = 'items'; S().select(); return; }
+        for (let i = page * 8; i < Math.min(list.length, page * 8 + 8); i++) { const q = cell(i % 8); if (Math.hypot(p.x - q.x, p.y - q.y) < q.r + 8) { if (w.sel === i && w.focus === 'items') this.toggleOutfit(i); else { w.sel = i; w.focus = 'items'; S().select(); } break; } }
       }
     },
 
@@ -235,9 +249,11 @@
       c.fillStyle = '#ffd84a'; G().star(244, 85, 10, 5, 0.5, -Math.PI / 2, c); c.fill();
       G().text(String(BB.Economy.balance(save, 'stars')), 287, 85, 23, '#795830', null, 'center', c);
       // Every milestone stays visible; unlocked choices glow.
+      const page = Math.floor(w.sel / 8), pages = Math.ceil(list.length / 8);
       list.forEach((it, i) => {
+        if (Math.floor(i / 8) !== page) return;
         const style = w.tab === 1;
-        const q = cell(i), have = it.slot === 'cat' ? save.mazeSolved : BB.Economy.unlocked(save, it);
+        const q = cell(i % 8), have = it.slot === 'cat' ? save.rainbowUnlocked : BB.Economy.unlocked(save, it);
         const worn = it.slot === 'cat' ? save.cat === it.id : style ? save.cosmetics[it.slot] === it.value : (save.wear || {})[it.slot] === it.id, sel = i === w.sel && w.focus === 'items';
         const afford = have;
         const k = sel ? 1.1 + Math.sin(t * 0.15) * 0.04 : 1;
@@ -260,9 +276,14 @@
         }
         c.restore();
       });
+      if (pages > 1) {
+        G().text('‹', 480, 308, 27, '#998097', null, 'center', c); G().text('›', 780, 308, 27, '#998097', null, 'center', c);
+        for (let i = 0; i < pages; i++) { c.fillStyle = i === page ? '#ffb35c' : '#d8c8d8'; G().circle(625 + (i - (pages - 1) / 2) * 20, 308, 4, c); c.fill(); }
+      }
       const next = BB.Economy.milestones(save), total = BB.Economy.balance(save, 'stars');
-      G().text(selected ? selected.name : 'Boss presents', 625, 351, 18, '#795830', null, 'center', c);
-      const target = selected && selected.slot !== 'cat' && !BB.Economy.unlocked(save, selected) ? selected : next;
+      G().text(selected ? selected.name : 'Found treasures', 625, 351, 18, '#795830', null, 'center', c);
+      if (selected && selected.discover && !BB.Economy.unlocked(save, selected)) G().text('Hidden in ' + selected.discover, 625, 372, 12, '#998097', null, 'center', c);
+      const target = selected && Number.isFinite(selected.stars) && !BB.Economy.unlocked(save, selected) ? selected : next;
       const bx = 467, by = 392, bw = 242;
       c.fillStyle = '#e8deea'; G().rrect(bx, by, bw, 15, 7, c); c.fill();
       c.fillStyle = '#ffd665'; G().rrect(bx, by, bw * (target ? Math.min(1, total / target.stars) : 1), 15, 7, c); c.fill();

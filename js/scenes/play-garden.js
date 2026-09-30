@@ -26,10 +26,10 @@
         if (this.room.id === this.gardenLock.room && Math.hypot(b.x + b.w / 2 - this.gardenLock.x, b.y + b.h - this.gardenLock.y) < 60) { this.gardenHold = 0; return; }
         this.gardenLock = null;
       }
-      if (!sp || this.mapOn || this.wardrobe || this.party || this.traveling || this.pl.state !== 'play') { this.gardenHold = 0; return; }
+      if (!sp || this.mapOn || this.iris || this.wardrobe || this.party || this.traveling || this.pl.state !== 'play') { this.gardenHold = 0; return; }
       const near = b.grounded && Math.abs(b.x + b.w / 2 - sp.x) < 18 && Math.abs(b.y + b.h - sp.y) < 6 && Math.abs(b.vx) < 0.3;
       this.gardenHold = near ? (this.gardenHold || 0) + 1 : Math.max(0, (this.gardenHold || 0) - 3);
-      if (this.gardenHold >= BB.Links.HOLD) this.openGardenChoice(sp.kind);
+      if (near && (this.gardenHold >= BB.Links.HOLD || BB.Input.pressed.confirm || BB.Input.pressed.bubble)) this.openGardenChoice(sp.kind);
     },
     updateCelebration() {
       if (this.celebrationT > 0) {
@@ -143,11 +143,20 @@
           G().ellipse(x, y - 12, 16 + (t % 35), 3 + (t % 35) * 0.1, 0, c); c.stroke();
         }
       } else {
-        c.fillStyle = '#d8b589'; G().rrect(x - 22, y - 53, 44, 33, 6, c); c.fill();
-        BB.Critters.drawBug(c, 'bunny', x, y - 28, { t, mood: 0, facing: 1, scale: 0.9, joy: true });
-        c.fillStyle = '#ff7eb6'; G().heart(x + 17, y - 51, 5, c); c.fill();
+        // An outdoor welcome board connects the rescued friend picture
+        // to a little garden home, before opening the familiar choice.
+        c.fillStyle = '#d8b589'; G().rrect(x - 40, y - 111, 80, 66, 12, c); c.fill();
+        c.fillStyle = '#fff8ef'; G().rrect(x - 34, y - 105, 68, 54, 9, c); c.fill();
+        BB.Critters.drawBug(c, 'bunny', x - 15, y - 70, { t, mood: 0, facing: 1, scale: 0.75, joy: true });
+        BB.HUD.zoneIcon(c, BB.HOME_ZONE, x + 19, y - 72, 0.55);
+        c.strokeStyle = '#a28c6d'; c.lineWidth = 2; c.beginPath(); c.moveTo(x - 1, y - 80); c.lineTo(x + 7, y - 80); c.stroke();
+        c.fillStyle = '#a28c6d'; c.fillRect(x - 4, y - 45, 8, 31);
+        G().text('Friends live here', x, y - 136, 15, '#786080', null, 'center', c);
+        if (this.earnedFriendKinds().some(kind => !this.save.residents[kind])) {
+          c.fillStyle = '#ffb35c'; G().circle(x + 33, y - 105, 8 + Math.sin(t * 0.06), c); c.fill();
+        }
       }
-      if (cost) BB.Economy.pips(c, 'hearts', cost, x, y - (sp.kind === 'fountain' ? 103 : 77), afford);
+      if (cost) BB.Economy.pips(c, 'hearts', cost, x, y - (sp.kind === 'fountain' ? 103 : 120), afford);
       BB.Links.hintRing(c, x, y - 4, t);
       if (this.room === room && this.gardenHold > 0) BB.Links.holdRing(c, x, y - 30, this.gardenHold / BB.Links.HOLD);
       c.restore();
@@ -160,14 +169,17 @@
       c.fillStyle = 'rgba(30,18,40,0.38)'; c.fillRect(0, 0, G().W, G().H);
       c.fillStyle = '#fff8f0'; c.strokeStyle = '#ffb3cf'; c.lineWidth = 5;
       G().rrect(255, 116, 450, 326, 55, c); c.fill(); c.stroke();
+      if (w.kind === 'friends') G().text('Bring a friend home', 480, 194, 18, '#82629c', null, 'center', c);
       c.fillStyle = '#ffd5e8'; G().circle(480, 265, 82, c); c.fill();
       if (w.kind === 'friends') {
+        c.fillStyle = '#c9e6b7'; G().ellipse(480, 308, 65, 16, 0, c); c.fill();
         if (kind) BB.Critters.drawBug(c, kind, 480, 280, { t, mood: 0, facing: 1, scale: 3, joy: have });
         else { BB.Critters.drawBug(c, 'bunny', 450, 280, { t, mood: 0, facing: 1, scale: 2 }); BB.HUD.buttonIcon(c, 'bubble', 522, 265, 1.2, 0); }
         if (w.kinds.length > 1) for (const [x, d] of [[310, -1], [650, 1]]) {
           c.fillStyle = '#ffffff'; G().circle(x, 267, 32, c); c.fill();
           BB.HUD.buttonIcon(c, d < 0 ? 'left' : 'right', x, 267, 0.9, 0);
         }
+        G().text(kind ? have ? 'Your rescued friends live in the garden' : 'Invite this kind of friend to the garden' : 'Cheer up critters on your adventure first', 480, 345, 13, '#82629c', null, 'center', c);
       } else {
         c.fillStyle = '#ff7eb6'; G().heart(480, 260, 42 + Math.sin(t * 0.08) * 3, c); c.fill();
         if (this.celebrationT) BB.Gestures.drawPaw(c, 575, 205, 1.6, '#ffd84a', '#b8860b');

@@ -26,7 +26,7 @@
   const S = () => BB.Audio.sfx;
   const TAU = Math.PI * 2;
 
-  const TYPE = { '*': 'sparkle', B: 'bench', R: 'sign', L: 'sign', U: 'sign', D: 'sign', f: 'firefly', T: 'toy', y: 'yarn', n: 'flower', o: 'bud', E: 'elder', F: 'finale', '&': 'family' };
+  const TYPE = { '*': 'sparkle', B: 'bench', R: 'sign', L: 'sign', U: 'sign', D: 'sign', f: 'firefly', T: 'toy', a: 'glasses', y: 'yarn', n: 'flower', o: 'bud', E: 'elder', F: 'finale', '&': 'family' };
   const DIR = { R: [1, 0], L: [-1, 0], U: [0, -1], D: [0, 1] };
   const FLOWER_TUNE = [72, 74, 76, 79, 81, 79, 76, 74];
   let flowerNote = 0;
@@ -53,6 +53,7 @@
     switch (type) {
       case 'sparkle': if (save.sparkles[key]) return null; break;
       case 'toy': th.toy = room.def.toy; if (!th.toy || save.toys[th.toy]) return null; break;
+      case 'glasses': th.item = thing.item; if (!BB.Wardrobe.BY[th.item] || save.glassesFound[th.item]) return null; break;
       case 'bench': case 'sign': case 'flower': th.y = floorBelow(thing.tx, thing.ty); th.dir = DIR[thing.ch]; break;
       case 'bench_': break;
       case 'firefly': th.homeX = th.x; th.homeY = th.y; th.fly = 0; break;
@@ -117,6 +118,9 @@
       }
       case 'toy':
         if (dist < 30 && ctx.pl.state !== 'rescue') { th.dead = true; ctx.onToy(th); }
+        break;
+      case 'glasses':
+        if (dist < 24 && ctx.pl.state === 'play') { th.dead = true; ctx.onGlasses(th); }
         break;
       case 'yarn': updateYarn(th, ctx, dx, dy); break;
       case 'flower':
@@ -251,6 +255,14 @@
         G().bubble(x, y + by, 20, '#d8f4ff', 0.8, c);
         if (t % 20 === 0) PT().burst('spark', x + cam.x + (Math.random() - 0.5) * 30, y + cam.y + by + (Math.random() - 0.5) * 30, 1, { color: '#ffffff', speed: 0.3, life: 30 });
         ctx.light(x, y + by, 110, '#ffe8a8', 0.8);
+        break;
+      }
+      case 'glasses': {
+        const by = Math.sin(t * 0.05) * 4;
+        G().drawGlow(x, y + by, 32, '#f6d1ff', 0.55, c);
+        G().bubble(x, y + by, 18, '#dfc9ff', 0.8, c);
+        BB.Wardrobe.icon(c, th.item, x, y + by, 1.8, t);
+        ctx.light(x, y, 85, '#f6d1ff', 0.7);
         break;
       }
       case 'yarn':

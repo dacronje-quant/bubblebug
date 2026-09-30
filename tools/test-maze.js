@@ -7,11 +7,8 @@ const fs = require('fs');
 const path = require('path');
 const { bootGame } = require('./test-neighbourhood');
 
-function check(g) {
-  const { BB: B, tick, place } = g, M = B.GardenMaze;
-  B.Save.data = B.Save.fresh(); B.Save.data.introDone = 1; B.Main.set('play', {});
-  let save = B.Play.save;
-  const walkTo = target => {
+function walkMaze(g, target) {
+    const { BB: B, tick } = g, M = B.GardenMaze;
     const start = B.Play.maze, queue = [{ x: start.x, y: start.y, steps: [] }], seen = new Set();
     let route;
     for (let i = 0; i < queue.length; i++) {
@@ -28,20 +25,29 @@ function check(g) {
       assert.equal(B.Play.maze.x, step.x); assert.equal(B.Play.maze.y, step.y);
     }
     g.keys([]);
-  };
-  // Neither completion alone nor the cats alone opens the only entrance.
-  for (const state of ['fresh', 'finale', 'cats', 'eleven']) {
+}
+
+function check(g) {
+  const { BB: B, tick, place } = g, M = B.GardenMaze;
+  B.Save.data = B.Save.fresh(); B.Save.data.introDone = 1; B.Main.set('play', {});
+  let save = B.Play.save;
+  const walkTo = target => walkMaze(g, target);
+  // Walking into the courtyard never launches a game. Its rainbow needs
+  // all twelve real family IDs, even when the old finale/gate is saved.
+  for (const state of ['fresh', 'finale', 'eleven']) {
     save.finale = state === 'finale' || state === 'eleven'; save.family = {};
-    if (state === 'cats' || state === 'eleven') B.Home.familyOrder().slice(0, state === 'eleven' ? 11 : 12).forEach(id => { save.family[id] = 1; });
-    place('hm', 2, 32); tick(100, ['ArrowLeft']);
-    assert.equal(B.Play.room.id, 'hm'); assert.equal(B.Play.maze, null);
+    if (state === 'eleven') B.Home.familyOrder().slice(0, 11).forEach(id => { save.family[id] = 1; });
+    place('nm', 21, 32); tick(60);
+    assert.equal(B.Play.room.id, 'nm'); assert.equal(B.Play.maze, null); assert.equal(B.Play.portalChoice, null);
     assert.equal(M.available(save), false);
     // Old maze gate flags cannot accidentally unlock the new entrance.
-    save.gates.nm = 1; assert.equal(B.World.tile(-151, 13), '#');
+    save.gates.nm = 1; assert.equal(B.Play.openJourneyChoice('rainbow'), false);
   }
-  save.finale = true; B.Home.familyOrder().forEach(id => { save.family[id] = 1; });
+  save.finale = false; B.Home.familyOrder().forEach(id => { save.family[id] = 1; });
   const earned = JSON.stringify({ friends: save.friends, family: save.family, abilities: save.abilities, bosses: save.bosses, finale: save.finale });
-  place('hm', 2, 32); tick(100, ['ArrowLeft']);
+  place('nm', 21, 32); tick(60);
+  assert.equal(B.Play.maze, null); assert.equal(B.Play.portalChoice.kind, 'rainbow');
+  tick(1, ['Enter']); tick();
   assert.ok(B.Play.maze); assert.equal(B.Play.pl.state, 'maze');
   assert.equal(B.Play.chooseMazeCat('rainbow'), false);
   const maze = B.Play.maze;
@@ -50,7 +56,7 @@ function check(g) {
   assert.equal(B.Main.name, 'pause'); assert.equal(B.Play.maze, maze);
   g.context.navigator.getGamepads = () => []; tick(); tick(1, ['Enter']); tick();
   assert.equal(B.Main.name, 'play'); assert.equal(B.Play.maze, maze);
-  console.log('✓ maze entrance requires the finale AND all 12 cats, including old gate saves');
+  console.log('✓ twelve cats reveal the rainbow; only its picture interaction enters the maze');
 
   // Exhaustive graph check: every path, branch, collectible, pad and the
   // exit belongs to one component. Undirected edges guarantee a way back.
@@ -91,7 +97,7 @@ function check(g) {
   console.log('✓ walking, gamepad pause/back, reload and rainbow kitten rewards work without spending');
 
   B.Play.closeMaze();
-  assert.equal(B.Play.lastZone, B.Play.room.zone); assert.equal(B.Music.wanted, B.ZONES[B.HOME_ZONE].key);
+  assert.equal(B.Play.lastZone, B.Play.room.zone); assert.equal(B.Music.wanted, B.ZONES[B.Play.room.zone].key);
   place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(50);
   assert.equal(B.Play.wardrobeTabs(), 4);
   B.Play.wardrobeTab(3);
@@ -102,10 +108,10 @@ function check(g) {
   B.Play.closeWardrobe();
   B.Play.writeSave(); B.Save.load(); B.Main.set('play', {}); save = B.Play.save;
   assert.equal(save.cat, 'rainbow'); assert.equal(B.Play.pl.cat, 'rainbow'); assert.equal(save.mazeSolved, true);
-  assert.equal(B.Save.count(save.sparkles), total); assert.equal(save.finale, true);
-  place('hm', 2, 32); tick(100, ['ArrowLeft']); assert.ok(B.Play.maze);
+  assert.equal(B.Save.count(save.sparkles), total); assert.equal(save.finale, false);
+  place('nm', 21, 32); tick(60); tick(1, ['Enter']); tick(); assert.ok(B.Play.maze);
   walkTo(M.START);
-  tick(9, ['ArrowRight']); assert.equal(B.Play.maze, null); assert.equal(B.Play.room.id, 'hm');
+  tick(9, ['ArrowRight']); assert.equal(B.Play.maze, null); assert.equal(B.Play.room.id, 'nm');
   console.log('✓ all three playable kittens can be chosen again at the mirror, persist, and keep progress');
   return g;
 }
@@ -122,4 +128,4 @@ if (require.main === module) {
     fs.writeFileSync(path.join(dir, 'kitten-choices.png'), B.G.canvas.toBuffer('image/png'));
   }
 }
-module.exports = { check };
+module.exports = { check, walkMaze };

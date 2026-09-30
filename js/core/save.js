@@ -83,7 +83,7 @@
 
   function fresh() {
     return {
-      v: 7,
+      v: 8,
       cat: 'marshmallow',
       room: null, x: null, y: null,        // resume spot (world px)
       bench: null,                          // last bench rested at {x,y}
@@ -114,6 +114,10 @@
       fountainUses: 0,
       mazeSolved: false,
       mazePosition: null,                  // top-down garden cell, separate from world save point
+      inMaze: false, mazeReturn: null,
+      rainbowUnlocked: false,             // rescued character survives a Rainbow replay
+      replayCount: 0,
+      glassesFound: {},                   // discoveries in this adventure; clothing stays earned
       doors: {},                            // zone → 1 once its cat flap is found (a door opens at home)
       introDone: 0,                         // the wake-up scene has played
       leftHome: 0,                          // been out of the front door
@@ -153,11 +157,15 @@
             if (d.bench && d.bench.x >= -180 * T && d.bench.x < -150 * T) d.bench = null;
           }
           if (d && d.v === 7) {
+            d.v = 8; d.rainbowUnlocked = !!d.mazeSolved || d.cat === 'rainbow';
+            d.inMaze = d.room === 'nm'; // old nm saves were inside the maze game
+          }
+          if (d && d.v === 8) {
             this.data = Object.assign(fresh(), d);
             this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
             this.data.wear = Object.assign(fresh().wear, d.wear || {});
             this.data.cosmetics = Object.assign(fresh().cosmetics, d.cosmetics || {});
-            for (const field of ['outfits', 'purchases', 'residents']) this.data[field] = Object.assign({}, d[field] || {});
+            for (const field of ['outfits', 'purchases', 'residents', 'glassesFound']) this.data[field] = Object.assign({}, d[field] || {});
             return true;
           }
         }
@@ -175,6 +183,22 @@
       this.data.cat = cat;
       if (this.preview) return;
       try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
+    },
+    rainbowReplay() {
+      const old = this.data;
+      if (!old.mazeSolved || !old.rainbowUnlocked) return false;
+      const next = fresh();
+      next.cat = 'rainbow'; next.rainbowUnlocked = true;
+      next.replayCount = (Number.isSafeInteger(old.replayCount) && old.replayCount >= 0 ? old.replayCount : 0) + 1;
+      for (const key of Object.keys(next.abilities)) next.abilities[key] = !!old.abilities[key];
+      for (const field of ['outfits', 'wear', 'cosmetics', 'gestures']) next[field] = Object.assign({}, next[field], old[field] || {});
+      // Clothes/styles stay earned; invitations and the fountain belong
+      // to the new world and must never leave an old heart debt behind.
+      const styles = new Set(BB.Cosmetics.LIST.map(item => item.id));
+      next.purchases = Object.fromEntries(Object.entries(old.purchases || {}).filter(([id]) => BB.Wardrobe.BY[id] || styles.has(id)));
+      this.data = next;
+      this.write(); // one complete replacement, including its new checkpoint defaults
+      return true;
     },
     count(obj) { return Object.keys(obj).length; },
   };

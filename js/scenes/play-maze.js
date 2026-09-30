@@ -1,4 +1,4 @@
-// A quiet post-game hedge labyrinth. Four-direction walking has no
+// An unlockable hedge labyrinth. Four-direction walking has no
 // enemies, timers or jumps. Old star/pad keys
 // remain valid; maze position never replaces the adventure checkpoint.
 (function (BB) {
@@ -30,7 +30,7 @@
      (MAP[y - 1][x] === '.' && MAP[y + 1][x] === '.' && x % 2))) loops.push([x, y]);
   for (let i = 0; i < 9; i++) { const [x, y] = loops.splice(random(loops.length), 1)[0]; MAP[y][x] = '.'; }
   const walkable = (x, y) => Number.isInteger(x) && Number.isInteger(y) && !!MAP[y] && MAP[y][x] === '.';
-  const available = save => !!save && !!save.finale && BB.World.rooms.filter(r => r.def.family).length === 12 &&
+  const available = save => !!save && BB.World.rooms.filter(r => r.def.family).length === 12 &&
     BB.World.rooms.filter(r => r.def.family).every(r => save.family[r.def.family]);
   const starKey = i => { const r = BB.World.byId.nm, p = r.def.mazeStars[i]; return (r.x + p[0]) + ',' + (r.y + p[1]); };
   const ready = save => PADS.every(p => save.pads[p.key]);
@@ -39,29 +39,34 @@
 
   Object.assign(BB.Play, {
     openMaze() {
-      if (!available(this.save)) return this.closeMaze();
+      if (!available(this.save)) return false;
       const pos = this.save.mazePosition;
       this.maze = { x: pos && walkable(pos.x, pos.y) ? pos.x : START.x,
         y: pos && walkable(pos.x, pos.y) ? pos.y : START.y, t: 0, moving: null, facing: -1, choice: false, sel: 0, rewardLock: false };
+      this.save.mazeReturn = this.save.mazeReturn || { x: this.pl.body.x, y: this.pl.body.y };
+      this.save.inMaze = true;
       this.pl.state = 'maze'; this.pl.body.vx = this.pl.body.vy = 0;
-      const r = BB.World.byId.nm;
-      this.pl.body.x = (r.x + 28) * 32 + 6; this.pl.body.y = (r.y + 32) * 32 - BB.CFG.PH;
       this.checkpoint = { x: this.pl.body.x, y: this.pl.body.y }; this.pendingCP = false;
       this.save.visited.nm = 1; this.mapOn = false; this.zoneCard = 0;
-      this.wardrobe = null; this.gardenChoice = null;
+      this.wardrobe = null; this.gardenChoice = null; this.portalChoice = null;
       document.body.classList.add('in-maze');
       BB.Input.takePointers(); BB.Bubbles.clear(); BB.Particles.clear();
       BB.Music.play(BB.ZONES[0].key); S().secret(); this.writeSave();
+      return true;
     },
     closeMaze() {
       this.maze = null; this.save.mazePosition = null;
       document.body.classList.remove('in-maze');
-      const room = BB.World.byId.hm;
+      const back = this.save.mazeReturn, fallback = BB.RainbowJourney.spot('rainbow');
+      const valid = back && BB.World.roomAtPx(back.x + 10, back.y + 12);
+      const room = valid || BB.World.byId.nm;
       this.room = room; this.prevRoom = null; this.pl.state = 'play';
-      this.pl.body = BB.Physics.newBody((room.x + 2) * 32 + 6, (room.y + 32) * 32 - BB.CFG.PH);
+      this.pl.body = BB.Physics.newBody(valid ? back.x : fallback.x - BB.CFG.PW / 2, valid ? back.y : fallback.y - BB.CFG.PH);
       this.pl.body.grounded = true; this.pl.body.groundKind = 1;
       this.checkpoint = { x: this.pl.body.x, y: this.pl.body.y }; this.pendingCP = false;
       this.trail = [];
+      this.save.inMaze = false; this.save.mazeReturn = null;
+      this.journeyLock = 'rainbow'; this.journeyHold = 0;
       BB.Camera.snap(room, this.pl.body); this.lastCam = { x: BB.Camera.x, y: BB.Camera.y };
       this.enterZone(room.zone); this.zoneCard = 0;
       BB.Music.play(this.party || this.celebrationT ? 'party' : BB.ZONES[room.zone].key);
@@ -80,7 +85,7 @@
       this.save.mazePosition = { x: m.x, y: m.y };
       if (m.x !== PRIZE.x || m.y !== PRIZE.y) m.rewardLock = false;
       else if (ready(this.save) && !m.rewardLock) {
-        this.save.mazeSolved = true; this.save.gates.nm = 1;
+        this.save.mazeSolved = true; this.save.rainbowUnlocked = true; this.save.gates.nm = 1;
         m.choice = true; m.choiceT = 0; m.rewardLock = true;
         m.sel = Math.max(0, CATS.indexOf(this.save.cat)); S().party();
       }
@@ -88,7 +93,7 @@
       BB.Save.write();
     },
     chooseMazeCat(id) {
-      if (!this.save.mazeSolved || !available(this.save) || !CATS.includes(id)) return false;
+      if (!this.save.rainbowUnlocked || !CATS.includes(id)) return false;
       this.save.cat = id; this.pl.cat = id;
       BB.Save.write(); S().befriend(); return true;
     },
@@ -184,6 +189,11 @@
       if (ready(this.save)) G().drawGlow(rx, ry, 33, '#ffeab5', 0.5 + Math.sin(t * 0.06) * 0.15, c);
       c.fillStyle = ready(this.save) ? '#f6c9ea' : '#8d9c94'; G().circle(rx, ry, 11, c); c.fill();
       BB.Kittens.draw(c, 'rainbow', { mode: 'sit', t }, rx, ry + 9, 0.52, 1);
+      if (!ready(this.save)) {
+        c.strokeStyle = '#7c9981'; c.lineWidth = 1.5;
+        for (const dx of [-8, 0, 8]) { c.beginPath(); c.moveTo(rx + dx, ry - 16); c.lineTo(rx + dx, ry + 12); c.stroke(); }
+        c.beginPath(); c.arc(rx, ry - 10, 15, Math.PI, 0); c.stroke();
+      }
       BB.HUD.zoneIcon(c, BB.HOME_ZONE, X + (START.x + 0.5) * TILE, Y + (START.y + 0.5) * TILE, 0.52);
       const step = m.moving, k = step ? step.t / 8 : 0;
       const px = X + (m.x + 0.5 + (step ? (step.x - m.x) * k : 0)) * TILE;
@@ -206,7 +216,8 @@
       c.fillStyle = 'rgba(35,61,46,0.6)'; c.fillRect(0, 0, G().W, G().H);
       c.fillStyle = '#fff8ee'; c.strokeStyle = '#dbadf1'; c.lineWidth = 5;
       G().rrect(180, 106, 600, 337, 40, c); c.fill(); c.stroke();
-      G().text('Choose your kitten', 480, 160, 25, '#82629c', null, 'center', c);
+      G().text('Rainbow is safe!', 480, 151, 25, '#82629c', null, 'center', c);
+      G().text('Choose your kitten', 480, 184, 17, '#998097', null, 'center', c);
       CATS.forEach((id, i) => {
         const x = 300 + i * 180;
         c.fillStyle = '#f5e7f9'; c.strokeStyle = m.sel === i ? '#f3b24b' : '#d7c4de'; c.lineWidth = m.sel === i ? 5 : 2;
