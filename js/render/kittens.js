@@ -72,12 +72,12 @@
       acc: { glasses: '#7a5a8a', flower: '#d8b8ff' },
     }),
     bigSisterCocoa: base('marshmallow', {
-      id: 'bigSisterCocoa', name: "Marshmallow's big sister", size: 1.2, voice: 560, cushion: '#c9a6ff',
+      id: 'bigSisterCocoa', name: "Marshmallow's Big Sister", size: 1.2, voice: 560, cushion: '#c9a6ff',
       point: '#8a5a3e', pointDark: '#6a3e28', tail: '#d0b49a', tailTip: '#6a3e28', nose: '#6a4a3e',
       acc: { bow: '#b99cff' },
     }),
     babySnowflake: base('marshmallow', {
-      id: 'babySnowflake', name: "Marshmallow's baby brother", size: 0.9, voice: 760, cushion: '#9ff0e0',
+      id: 'babySnowflake', name: "Marshmallow's Baby Brother", size: 0.9, voice: 760, cushion: '#9ff0e0',
       fur: '#fff8ee', point: '#e8a060', pointDark: '#d07a3a', tail: '#f4d4b0', tailTip: '#d07a3a', nose: '#e89a80',
       acc: { scarf: '#4fc3c8' },
     }),
@@ -101,12 +101,12 @@
       nose: '#d89aa0', acc: { glasses: '#5a4a6a', scarf: '#ff9ec7' },
     }),
     bigBrotherTiger: base('phoebe', {
-      id: 'bigBrotherTiger', name: "Phoebe's big brother", pattern: 'tabby', size: 1.25, voice: 520, cushion: '#ffb35c',
+      id: 'bigBrotherTiger', name: "Phoebe's Big Brother", pattern: 'tabby', size: 1.25, voice: 520, cushion: '#ffb35c',
       fur: '#9a7250', furShade: '#7a5638', stripe: '#3e2818', patch: '#5a3e28', face: '#9a7250', tail: '#9a7250', tailTip: '#3e2818',
       acc: { bandana: '#e84a4a' },
     }),
     babyPatches: base('phoebe', {
-      id: 'babyPatches', name: "Phoebe's baby sister", pattern: 'calico', size: 0.9, voice: 780, cushion: '#ffc6e6',
+      id: 'babyPatches', name: "Phoebe's Baby Sister", pattern: 'calico', size: 0.9, voice: 780, cushion: '#ffc6e6',
       fur: '#fffaf2', furShade: '#ece2d4', patch: '#e8883a', patchLight: '#f0a860', stripe: '#2e2424', face: '#fffaf2',
       tail: '#e8883a', tailTip: '#2e2424', nose: '#ffa0a8', acc: { bow: '#ff7eb6' },
     }),
