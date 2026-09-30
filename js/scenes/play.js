@@ -252,7 +252,10 @@
     updateIntro() {
       const it = this.intro, pl = this.pl;
       it.t++;
-      if (it.t === 70 && pl.state === 'bench') { pl.state = 'play'; pl.idleT = 0; pl.squash = 1.2; BB.Gestures.start(pl, 'stretch'); S().meow(pl.cat); }
+      if (it.t === 70 && pl.state === 'bench') {
+        pl.state = 'play'; pl.idleT = 0; pl.squash = 1.2; BB.Gestures.start(pl, 'stretch'); S().meow(pl.cat);
+        BB.Voice.say("Little kitten, let's find all our family and bring everyone home!");
+      }
       if (it.t > 70 && pl.state === 'play') pl.idleT = 0; // (awake now: no dozing back off on the bed)
       if (it.t > 260 || (it.t > 70 && pl.state === 'play' && (BB.Input.held.left || BB.Input.held.right || BB.Input.held.jump))) {
         this.intro = null; this.save.introDone = 1; BB.Save.write();
