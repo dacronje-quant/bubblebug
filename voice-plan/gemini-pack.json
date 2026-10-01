@@ -4,94 +4,77 @@
     "mamaMallow": {
       "gender": "female",
       "language": "en-GB",
-      "persona": "A loving middle-aged mother in a gentle animated storybook. Warm, rounded female voice with a soft British English accent, natural medium pitch and an affectionate smile.",
-      "style": "Tender relief, reassuring and gently happy; natural conversational pace.",
-      "reuseDesign": "mamaMallow"
+      "persona": "A loving middle-aged mother in a gentle animated storybook. Warm, rounded female voice with a soft British English accent, natural medium pitch and an affectionate smile."
     },
     "papaBirman": {
       "gender": "male",
       "language": "en-US",
-      "persona": "A loving middle-aged father in a gentle animated storybook. Rounded male voice, comfortable lower pitch and a soft American English accent, warm and slightly playful.",
-      "style": "Proud, affectionate and quietly playful; clear, relaxed delivery.",
-      "reuseDesign": "papaBirman"
+      "persona": "A loving middle-aged father in a gentle animated storybook. Rounded male voice, comfortable lower pitch and a soft American English accent, warm and slightly playful."
     },
     "grannyLilac": {
       "gender": "female",
       "language": "en-GB",
-      "persona": "A loving elderly grandmother in a gentle animated storybook. Soft British English accent, lightly textured mature female voice, cozy warmth and clear, patient phrasing.",
-      "style": "Cozy, fond and gently delighted; unhurried natural phrasing.",
-      "reuseDesign": "grannyLilac"
+      "persona": "A loving elderly grandmother in a gentle animated storybook. Soft British English accent, lightly textured mature female voice, cozy warmth and clear, patient phrasing."
     },
     "babySnowflake": {
       "gender": "male",
       "language": "en-US",
       "persona": "Puck, Google's upbeat prebuilt voice, with a soft and playful delivery for Snowflake's spoken introduction. This is a character performance, not a custom toddler voice design.",
-      "style": "Soft, light and playful; rounded vowels, gentle breathiness, small curious pauses and a happy peekaboo lilt. Keep the words clear, with tiny excited mews; avoid a booming narrator delivery.",
       "prebuiltVoice": "Puck"
     },
     "babyPatches": {
       "gender": "female",
       "language": "en-GB",
       "persona": "Leda, Google's youthful prebuilt voice, with a gently giggly and playful delivery for Patches' spoken introduction. This is a character performance, not a custom toddler voice design.",
-      "style": "Soft, light and gently giggly; rounded vowels, little playful pauses and a sweet rising invitation. Say the opening hee hee as a tiny happy giggle, then speak clearly and warmly.",
       "prebuiltVoice": "Leda"
     },
     "bigSisterCocoa": {
       "gender": "female",
       "language": "en-GB",
       "persona": "A youthful older sister with a bright female voice and a light British accent. Friendly, mischievous and lively, with a smile. Naturally youthful without squeaking, shouting or baby talk.",
-      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
       "prebuiltVoice": "Zephyr"
     },
     "grandpaSeal": {
       "gender": "male",
       "language": "en-GB",
-      "persona": "An elderly grandfather with a warm male voice, a soft British accent and a deep comfortable pitch. Slightly gravelly but clear, calm and fond, with a gentle smile. Never stern or booming.",
-      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music."
+      "persona": "An elderly grandfather with a warm male voice, a soft British accent and a deep comfortable pitch. Slightly gravelly but clear, calm and fond, with a gentle smile. Never stern or booming."
     },
     "mamaTortie": {
       "gender": "female",
       "language": "en-CA",
-      "persona": "A loving middle-aged mother with a mellow female voice and a subtle Canadian English accent. Tender and relieved, slightly lower natural pitch, unhurried and comforting.",
-      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music."
+      "persona": "A loving middle-aged mother with a mellow female voice and a subtle Canadian English accent. Tender and relieved, slightly lower natural pitch, unhurried and comforting."
     },
     "papaGinger": {
       "gender": "male",
       "language": "en-AU",
-      "persona": "A middle-aged father with an easygoing male voice and a gentle Australian accent. Warm, sunny and proud; natural middle pitch, friendly energy, never loud.",
-      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music."
+      "persona": "A middle-aged father with an easygoing male voice and a gentle Australian accent. Warm, sunny and proud; natural middle pitch, friendly energy, never loud."
     },
     "grannyGrey": {
       "gender": "female",
       "language": "en-US",
-      "persona": "An elderly grandmother with a soft female voice and a gentle American accent. Warm, slightly husky, quietly amused and affectionate; slower natural phrasing, not an exaggerated old-person imitation.",
-      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music."
+      "persona": "An elderly grandmother with a soft female voice and a gentle American accent. Warm, slightly husky, quietly amused and affectionate; slower natural phrasing, not an exaggerated old-person imitation."
     },
     "bigBrotherTiger": {
       "gender": "male",
       "language": "en-AU",
       "persona": "A youthful older brother with a friendly male voice and a light Australian accent. Playful, energetic and protective, bright natural pitch; no roaring sound effects and no shouting.",
-      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
       "prebuiltVoice": "Sadachbia"
     },
     "grandpaStripes": {
       "gender": "male",
       "language": "en-US",
-      "persona": "An elderly grandfather with a mellow male voice and a gentle American accent. Softly textured, relaxed, affectionate storyteller, medium-low natural pitch with a tiny amused smile.",
-      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music."
+      "persona": "An elderly grandfather with a mellow male voice and a gentle American accent. Softly textured, relaxed, affectionate storyteller, medium-low natural pitch with a tiny amused smile."
     },
     "narrator": {
       "gender": "female",
       "language": "en-GB",
-      "persona": "A warm adult female storybook narrator with a gentle British English accent, clear natural medium pitch and loving, reassuring warmth.",
-      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects."
+      "persona": "A warm adult female storybook narrator with a gentle British English accent, clear natural medium pitch and loving, reassuring warmth."
     },
     "rainbow": {
       "gender": "female",
       "language": "en-GB",
       "prebuiltVoice": "Achernar",
-      "persona": "Achernar, a soft prebuilt voice, performing the magical unicorn kitten Rainbow.",
-      "style": "Soft, magical and tender, with clear flowing phrasing and a gentle smile. No added sound effects or music."
+      "persona": "Achernar, a soft prebuilt voice, performing the magical unicorn kitten Rainbow."
     }
   },
   "clips": [
@@ -99,22 +82,19 @@
       "id": "cat_mamaMallow",
       "speaker": "mamaMallow",
       "text": "You found Marshmallow's Mama! Come here, little kitten. I've saved you a cuddle!",
-      "style": "Tender relief, reassuring and gently happy; natural conversational pace.",
-      "reuseTake": "mamaMallow"
+      "style": "Tender relief, reassuring and gently happy; natural conversational pace."
     },
     {
       "id": "cat_papaBirman",
       "speaker": "papaBirman",
       "text": "I'm Marshmallow's Papa! Well done, brave kitten. That was a purr-fect rescue!",
-      "style": "Proud, affectionate and quietly playful; clear, relaxed delivery.",
-      "reuseTake": "papaBirman"
+      "style": "Proud, affectionate and quietly playful; clear, relaxed delivery."
     },
     {
       "id": "cat_grannyLilac",
       "speaker": "grannyLilac",
       "text": "Oh, my darling! You found Marshmallow's Granny. I've got a cuddle for you!",
-      "style": "Cozy, fond and gently delighted; unhurried natural phrasing.",
-      "reuseTake": "grannyLilac"
+      "style": "Cozy, fond and gently delighted; unhurried natural phrasing."
     },
     {
       "id": "cat_bigSisterCocoa",
@@ -126,8 +106,7 @@
       "id": "cat_babySnowflake",
       "speaker": "babySnowflake",
       "text": "Peekaboo! It's me, Snowflake! Marshmallow's baby brother! Mew mew!",
-      "style": "Soft, light and playful; rounded vowels, gentle breathiness, small curious pauses and a happy peekaboo lilt. Keep the words clear, with tiny excited mews; avoid a booming narrator delivery.",
-      "reuseTake": "babySnowflake"
+      "style": "Soft, light and playful; rounded vowels, gentle breathiness, small curious pauses and a happy peekaboo lilt. Keep the words clear, with tiny excited mews; avoid a booming narrator delivery."
     },
     {
       "id": "cat_grandpaSeal",
@@ -163,8 +142,7 @@
       "id": "cat_babyPatches",
       "speaker": "babyPatches",
       "text": "Hee hee! I'm Patches, Phoebe's baby sister! Wanna play?",
-      "style": "Soft, light and gently giggly; rounded vowels, little playful pauses and a sweet rising invitation. Say the opening hee hee as a tiny happy giggle, then speak clearly and warmly.",
-      "reuseTake": "babyPatches"
+      "style": "Soft, light and gently giggly; rounded vowels, little playful pauses and a sweet rising invitation. Say the opening hee hee as a tiny happy giggle, then speak clearly and warmly."
     },
     {
       "id": "cat_grandpaStripes",

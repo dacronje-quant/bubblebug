@@ -12,6 +12,9 @@ const old = context.window.BB.VOICE_CLIPS;
 if (pack.clips.length !== 20 || new Set(pack.clips.map(c => c.id)).size !== 20 || Object.keys(old).some(id => !pack.clips.some(c => c.id === id))) throw new Error('Pack must cover every game voice exactly once.');
 const prepared = [], retained = [];
 const allowPartial = process.argv.includes('--allow-partial');
+const checkOnly = process.argv.includes('--check');
+const cache = path.resolve(dir, process.argv.find(arg => arg.startsWith('--cache-dir='))?.slice(12) || 'samples/gemini-pack');
+const installed = JSON.parse(await fs.readFile(path.join(root, 'assets/voice/gemini-3.8/manifest.json'), 'utf8'));
 function normalize(original) {
   const bytes = Buffer.from(original);
   if (bytes.toString('ascii', 0, 4) !== 'RIFF' || bytes.toString('ascii', 8, 12) !== 'WAVE') throw new Error('Invalid WAV.');
@@ -39,10 +42,19 @@ function normalize(original) {
 }
 for (const clip of pack.clips) {
   if (old[clip.id]?.text !== clip.text) throw new Error('Dialogue changed: ' + clip.id);
-  const source = path.join(dir, 'samples/gemini-pack', clip.id);
+  const source = path.join(cache, clip.id);
   try { await fs.access(source + '.wav'); }
   catch (error) {
-    if (error.code !== 'ENOENT' || !allowPartial) throw error;
+    if (error.code !== 'ENOENT') throw error;
+    const selected = installed.clips.find(c => c.id === clip.id);
+    if (selected) {
+      if (selected.model !== pack.model || selected.text !== clip.text || selected.style !== clip.style || selected.speaker !== clip.speaker) throw new Error('Installed take differs from the plan: ' + clip.id);
+      const bytes = await fs.readFile(path.join(root, old[clip.id].file));
+      if (crypto.createHash('sha256').update(bytes).digest('hex') !== selected.sha256) throw new Error('Installed WAV checksum differs: ' + clip.id);
+      prepared.push({ clip, metadata: selected, bytes, stats: selected.normalization, sha256: selected.sha256 });
+      continue;
+    }
+    if (!allowPartial) throw new Error('No generated Gemini take for ' + clip.id);
     await fs.access(path.join(root, old[clip.id].file));
     retained.push({ id: clip.id, ...old[clip.id], reason: 'Retained with user approval after Gemini daily quota was reached.' });
     continue;
@@ -53,14 +65,18 @@ for (const clip of pack.clips) {
   prepared.push({ clip, metadata, bytes, stats, sha256: crypto.createHash('sha256').update(bytes).digest('hex') });
 }
 const dest = path.join(root, 'assets/voice/gemini-3.8');
-await fs.mkdir(dest, { recursive: true });
-const manifest = Object.fromEntries(retained.map(({ id }) => [id, old[id]])), provenance = [];
-for (const { clip, metadata, bytes, stats, sha256 } of prepared) {
-  await fs.writeFile(path.join(dest, clip.id + '.wav'), bytes);
-  manifest[clip.id] = { file: 'assets/voice/gemini-3.8/' + clip.id + '.wav', text: clip.text, source: pack.model, speaker: clip.speaker, voice: metadata.voiceId };
-  if (clip.id === 'cat_babySnowflake' || clip.id === 'cat_babyPatches') manifest[clip.id].fallback = false;
-  provenance.push({ ...metadata, normalization: stats, sha256 });
+if (checkOnly) {
+  console.log('Validated ' + prepared.length + ' Gemini recordings and ' + retained.length + ' retained lines; no files changed.');
+} else {
+  await fs.mkdir(dest, { recursive: true });
+  const manifest = Object.fromEntries(retained.map(({ id }) => [id, old[id]])), provenance = [];
+  for (const { clip, metadata, bytes, stats, sha256 } of prepared) {
+    await fs.writeFile(path.join(dest, clip.id + '.wav'), bytes);
+    manifest[clip.id] = { file: 'assets/voice/gemini-3.8/' + clip.id + '.wav', text: clip.text, source: pack.model, speaker: clip.speaker, voice: metadata.voiceId };
+    if (clip.id === 'cat_babySnowflake' || clip.id === 'cat_babyPatches') manifest[clip.id].fallback = false;
+    provenance.push({ ...metadata, normalization: stats, sha256 });
+  }
+  await fs.writeFile(path.join(dest, 'manifest.json'), JSON.stringify({ model: pack.model, installedAt: new Date().toISOString(), normalization: 'Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.', clips: provenance, retainedClips: retained }, null, 2) + '\n');
+  await fs.writeFile(path.join(root, 'js/core/voice-clips.js'), '// Gemini family and story voices, bundled for offline play.' + (retained.length ? ' ' + retained.length + ' existing story lines are retained until Gemini quota is available.' : '') + '\nwindow.BB.VOICE_CLIPS = ' + JSON.stringify(manifest, null, 2) + ';\n');
+  console.log('Installed ' + prepared.length + ' Gemini recordings; retained ' + retained.length + ' existing lines. Dialogue unchanged.');
 }
-await fs.writeFile(path.join(dest, 'manifest.json'), JSON.stringify({ model: pack.model, installedAt: new Date().toISOString(), normalization: 'Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.', clips: provenance, retainedClips: retained }, null, 2) + '\n');
-await fs.writeFile(path.join(root, 'js/core/voice-clips.js'), '// Gemini family and story voices, bundled for offline play.' + (retained.length ? ' ' + retained.length + ' existing story lines are retained until Gemini quota is available.' : '') + '\nwindow.BB.VOICE_CLIPS = ' + JSON.stringify(manifest, null, 2) + ';\n');
-console.log('Installed ' + prepared.length + ' Gemini recordings; retained ' + retained.length + ' existing lines. Dialogue unchanged.');

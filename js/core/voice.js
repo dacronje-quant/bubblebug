@@ -2,7 +2,7 @@
 //  VOICE — a friendly spoken line for the big moments, so little players
 //  who can't read yet still hear what happened: "You found Phoebe's Mama!",
 //  "A jingle bell!", "Hooray! The goose is happy!".
-//  Plays the approved local recordings, with device speech as a fallback.
+//  Plays bundled story and family recordings, with device speech as a fallback.
 //  Lines queue without overlapping and stop on mute or scene changes.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
@@ -60,7 +60,7 @@
     job.fallback = true; detach(job);
     clearTimeout(watchdog);
     watchdog = setTimeout(() => { if (current === job) BB.Voice.stop(); }, 30000);
-    if (!synth || muted() || job.clip.fallback === false || job.clip.source === 'original-game') { finish(job); return; }
+    if (!synth || muted() || job.clip.fallback === false) { finish(job); return; }
     try {
       if (!picked) voice = pick();
       const u = job.utterance = new SpeechSynthesisUtterance(job.clip.text);
@@ -108,7 +108,6 @@
   }
   BB.Voice = {
     play(id, delay = 0) { return enqueue(id, BB.VOICE_CLIPS[id], delay); },
-    say(text, delay = 0) { return enqueue(null, { text }, delay); },
     get currentId() { return current && current.id; },
     get queuedIds() { return queue.map(job => job.id); },
     stop() {

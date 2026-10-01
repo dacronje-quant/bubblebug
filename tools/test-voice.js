@@ -55,6 +55,14 @@ async function lifecycle() {
   assert.equal(new Set(Object.values(clips).filter(c => c.speaker === 'narrator').map(c => c.voice)).size, 1);
   assert.equal(clips.story_rainbow_call.voice, clips.story_rainbow_rescue.voice);
   assert.equal(pack.clips.length + retained.size, 20);
+  const gameRoot = path.join(__dirname, '..');
+  function audioFiles(dir) {
+    return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+      const file = path.join(dir, entry.name);
+      return entry.isDirectory() ? audioFiles(file) : /\.(mp3|wav)$/.test(entry.name) ? [path.relative(gameRoot, file).replace(/\\/g, '/')] : [];
+    });
+  }
+  assert.deepEqual(audioFiles(path.join(gameRoot, 'assets/voice')).sort(), Object.values(clips).map(c => c.file).sort(), 'ship exactly the audio files selected by the game');
   console.log('✓ 20 bundled recordings, selected Gemini pack and retained lines; consistent narrator/Rainbow; queue, duck, cancellation, mute and error fallback');
 }
 function story() {

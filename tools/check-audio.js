@@ -59,7 +59,8 @@ BB.Voice.stop(); assert.equal(clips[2].paused, true);
 staleError(); assert.equal(utterances.length, 0, 'stale load failure must not start speech');
 BB.Voice.play('absent'); clips[3].onerror();
 assert.equal(utterances.length, 1);
-BB.Voice.say('Plain speech'); assert.equal(utterances.length, 1);
+BB.VOICE_CLIPS.speech = { text: 'Plain speech' };
+BB.Voice.play('speech'); assert.equal(utterances.length, 1);
 utterances[0].onend(); assert.equal(utterances.length, 2);
 utterances[1].onend(); assert.equal(music.gain.value, 0.55);
 BB.Voice.play('first'); BB.Voice.play('first'); clips[4].end();
@@ -74,7 +75,7 @@ assert.equal(convolvers[1].outputs[0], music, 'music reverb must follow music at
 const before = oscillators.length;
 BB.Audio.sfx.sparkle(); BB.Audio.sfx.sparkle();
 assert.equal(oscillators.length - before, 2, 'same-frame stars should make one chime');
-BB.Voice.say('Cat talking');
+BB.Voice.play('speech');
 const talking = oscillators.length;
 BB.Audio.sfx.meow('marshmallow'); BB.Audio.sfx.purr();
 assert.equal(oscillators.length, talking, 'meows and purrs must not cover speech');

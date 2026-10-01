@@ -1,13 +1,18 @@
 // Generate every game voice. The API key stays in the process environment.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const pack = JSON.parse(await fs.readFile(path.join(dir, 'gemini-pack.json'), 'utf8'));
-const output = path.join(dir, 'samples/gemini-pack');
+const output = path.resolve(dir, process.argv.find(arg => arg.startsWith('--cache-dir='))?.slice(12) || 'samples/gemini-pack');
+const checkOnly = process.argv.includes('--check');
 const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-if (!key) throw new Error('Configure GEMINI_API_KEY outside chat.');
-await fs.mkdir(output, { recursive: true });
+if (!key && !checkOnly) throw new Error('Configure GEMINI_API_KEY outside chat.');
+if (!checkOnly) await fs.mkdir(output, { recursive: true });
+const installedFile = path.join(dir, '../assets/voice/gemini-3.8/manifest.json');
+const installed = JSON.parse(await fs.readFile(installedFile, 'utf8'));
+let ready = 0, pending = 0;
 const exists = file => fs.access(file).then(() => true, () => false);
 let nextRequestAt = 0, requestGate = Promise.resolve();
 async function post(route, body, attempt = 0) {
@@ -48,10 +53,9 @@ async function voice(speaker) {
   if (spec.prebuiltVoice) return spec.prebuiltVoice;
   const metadata = path.join(output, speaker + '-voice.json');
   if (await exists(metadata)) return JSON.parse(await fs.readFile(metadata, 'utf8')).voiceId;
-  if (spec.reuseDesign) {
-    const earlier = path.join(dir, 'samples/gemini-3.8', spec.reuseDesign + '-voice.json');
-    if (await exists(earlier)) return JSON.parse(await fs.readFile(earlier, 'utf8')).voiceId;
-  }
+  const selected = installed.clips.find(c => c.speaker === speaker && c.model === pack.model);
+  if (selected) return selected.voiceId;
+  if (checkOnly) return null;
   const created = await post('voices', { store: true, voice: {
     model: pack.model, type: 'prompted', display_name: 'Bubble Paws - ' + speaker,
     gender: spec.gender, language_code: spec.language, prompted: { input: spec.persona },
@@ -66,26 +70,26 @@ async function render(clip, voiceId) {
   if (await exists(file)) {
     const info = JSON.parse(await fs.readFile(file.replace(/\.wav$/, '.json'), 'utf8'));
     if (info.text !== clip.text || info.model !== pack.model || info.voiceId !== voiceId || info.style !== clip.style) throw new Error('Cached take differs from the current plan: ' + clip.id);
-    console.log('Keeping ' + clip.id); return;
+    ready++; console.log('Keeping ' + clip.id); return;
   }
-  let bytes, reused = false;
-  if (clip.reuseTake) {
-    const earlier = path.join(dir, 'samples/gemini-3.8', clip.reuseTake);
-    const info = JSON.parse(await fs.readFile(earlier + '.json', 'utf8'));
-    if (info.text !== clip.text || info.model !== pack.model || info.voiceId !== voiceId || info.style !== clip.style) throw new Error('Audition does not match the selected line: ' + clip.id);
-    bytes = wav((await fs.readFile(earlier + '.wav')).toString('base64')); reused = true;
-  } else {
-    const result = await post('interactions', {
-      model: pack.model, input: [{ type: 'user_input', content: [{ type: 'text', text: clip.text, annotations: [{ type: 'speech_metadata', style: clip.style }] }] }],
-      response_format: { type: 'audio', mime_type: 'audio/wav', sample_rate: 24000 },
-      generation_config: { speech_config: [{ voice: voiceId }] }, store: false,
-    });
-    const audio = result.steps?.filter(step => step.type === 'model_output').flatMap(step => step.content || []).filter(part => part.type === 'audio').at(-1);
-    bytes = wav(audio?.data || result.output_audio?.data);
+  const selected = installed.clips.find(c => c.id === clip.id);
+  if (selected) {
+    if (selected.text !== clip.text || selected.model !== pack.model || selected.voiceId !== voiceId || selected.style !== clip.style) throw new Error('Installed take differs from the plan: ' + clip.id);
+    const bytes = await fs.readFile(path.join(dir, '../assets/voice/gemini-3.8', clip.id + '.wav'));
+    if (crypto.createHash('sha256').update(bytes).digest('hex') !== selected.sha256) throw new Error('Installed WAV checksum differs: ' + clip.id);
+    ready++; console.log('Keeping installed ' + clip.id); return;
   }
+  if (checkOnly) { pending++; console.log('Pending ' + clip.id); return; }
+  const result = await post('interactions', {
+    model: pack.model, input: [{ type: 'user_input', content: [{ type: 'text', text: clip.text, annotations: [{ type: 'speech_metadata', style: clip.style }] }] }],
+    response_format: { type: 'audio', mime_type: 'audio/wav', sample_rate: 24000 },
+    generation_config: { speech_config: [{ voice: voiceId }] }, store: false,
+  });
+  const audio = result.steps?.filter(step => step.type === 'model_output').flatMap(step => step.content || []).filter(part => part.type === 'audio').at(-1);
+  const bytes = wav(audio?.data || result.output_audio?.data);
   await fs.writeFile(file, bytes, { flag: 'wx' });
-  await fs.writeFile(file.replace(/\.wav$/, '.json'), JSON.stringify({ ...clip, model: pack.model, voiceId, reusedAudition: reused, generatedAt: new Date().toISOString(), bytes: bytes.length }, null, 2));
-  console.log((reused ? 'Reused ' : 'Generated ') + clip.id);
+  await fs.writeFile(file.replace(/\.wav$/, '.json'), JSON.stringify({ ...clip, model: pack.model, voiceId, generatedAt: new Date().toISOString(), bytes: bytes.length }, null, 2));
+  ready++; console.log('Generated ' + clip.id);
 }
 // Two independent speakers at a time; all lines for a speaker use one identity.
 const speakers = Object.keys(pack.voices);
@@ -100,4 +104,4 @@ async function worker() {
   }
 }
 await Promise.all([worker(), worker()]);
-console.log('Generation ' + (failed ? 'incomplete; completed takes retained.' : 'complete: all 20 game lines ready.'));
+console.log(checkOnly ? 'Checked: ' + ready + ' ready, ' + pending + ' pending.' : 'Generation ' + (failed ? 'incomplete; completed takes retained.' : 'complete: all 20 game lines ready.'));
