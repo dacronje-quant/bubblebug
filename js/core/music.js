@@ -139,7 +139,7 @@
     master.connect(warm); warm.connect(A.musicBus);
     master._warm = warm;
     for (const l of LAYERS) {
-      const g = ctx.createGain(); g.gain.value = target[l] || 0; g.connect(master); busses[l] = g;
+      const g = ctx.createGain(); g._music = true; g.gain.value = target[l] || 0; g.connect(master); busses[l] = g;
     }
     return true;
   }
@@ -205,7 +205,7 @@
       else pendingSong = s;
       if (!timer) timer = setInterval(tick, 30);
     },
-    stop() { if (timer) { clearInterval(timer); timer = null; } song = null; songName = null; },
+    stop() { if (timer) { clearInterval(timer); timer = null; } song = null; pendingSong = null; songName = null; this.wanted = null; },
     get current() { return songName; },
 
     // mood: { energy 0..1, calm bool, joy 0..1, dark 0..1, paused bool }

@@ -53,7 +53,7 @@
   for (const [y, x] of [[19, 23], [22, 19], [25, 23], [28, 19]]) ledge(roots, y, x);
   for (const [x, y] of [[5, 30], [14, 30], [25, 24], [21, 27], [4, 15], [15, 15], [23, 15], [26, 15]]) put(roots, x, y, '*');
   put(roots, 16, 29, 'n'); put(roots, 25, 30, 'R');
-  room('nr', -30, 'Root Hollow', roots, 'roots');
+  room('nr', -30, 'Root Hollow', roots, 'roots', { glasses: [{ id: 'googly', x: 25, y: 15 }] });
 
   // A quiet path left of home. Once all 12 cats are found a rainbow
   // appears here; its picture choice opens the separate maze game.

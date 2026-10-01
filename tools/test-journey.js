@@ -14,6 +14,14 @@ function discoveries(g) {
   B.Save.data = B.Save.fresh(); B.Save.data.introDone = 1; B.Main.set('play', {});
   const save = B.Play.save;
   place('g2', 4, 14); tick(40, ['ArrowRight']); tick();
+  assert.equal(save.glassesFound.googly, undefined, 'the old Ladybug Hill spot is empty');
+  assert.equal(B.World.findThings('a').filter(th => th.item === 'googly').length, 1, 'one original pair in the world');
+  place('nr', 3, 16);
+  for (const bud of B.Play.ents.nr.things.filter(th => th.type === 'bud')) {
+    B.Bubbles.blow(bud.x - 12, bud.y, 1, 0, B.Play.pl.cat); tick(60);
+  }
+  assert.equal(save.gates.nr, 1);
+  place('nr', 25, 16); tick();
   assert.equal(save.glassesFound.googly, 1); assert.equal(save.wear.face, 'googly');
   place('c6', 3, 10); tick();
   assert.equal(save.glassesFound.disguise, 1); assert.equal(save.wear.face, 'disguise');
@@ -108,7 +116,8 @@ function cycles(g) {
     assert.equal(save.replayCount, cycle); assert.equal(save.cat, 'rainbow'); assert.deepEqual(plain(save.abilities), abilities);
     assert.notEqual(B.Play.ents.g6.bosses[0].state, 'happy');
     // Clothes are retained, but their hidden pickups can be found anew.
-    place('g2', 7, 14); tick(); assert.equal(save.glassesFound.googly, 1);
+    B.World.openGates(B.World.byId.nr);
+    place('nr', 25, 16); tick(); assert.equal(save.glassesFound.googly, 1);
   }
   console.log('✓ three maze/rescue/cloud/replay cycles rebuild every run, survive reload and retain skills/clothes');
   return g;

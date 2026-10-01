@@ -43,6 +43,6 @@ const { chromium } = (() => {
     await page.waitForTimeout(80);
     assert.equal(await page.evaluate(() => __recordedVoices.length), before);
     assert.deepEqual(errors, []);
-    console.log('✓ real browser decodes all 20 bundled clips; original baby WAV, queued completion, mute and pause cancel safely');
+    console.log('✓ real browser decodes all 20 selected clips; Gemini baby introduction, queued completion, mute and pause cancel safely');
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });

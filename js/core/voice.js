@@ -9,7 +9,7 @@
   'use strict';
   const synth = typeof window !== 'undefined' && window.speechSynthesis;
   let voice = null, picked = false;
-  let current = null, timer = null, generation = 0, ducked = false;
+  let current = null, timer = null, watchdog = null, generation = 0, ducked = false;
   const queue = [];
 
   // the most natural-sounding English voice the device has: the newer
@@ -36,11 +36,11 @@
   if (synth && 'onvoiceschanged' in synth) synth.onvoiceschanged = () => { voice = pick(); };
 
   const muted = () => BB.Audio && BB.Audio.muted;
-  function duck(seconds) {
-    if (BB.Audio) { BB.Audio.duck(0.32, seconds + 0.3); ducked = true; }
+  function duck() {
+    if (BB.Audio) { BB.Audio.setSpeechActive(true); ducked = true; }
   }
   function restore() {
-    if (ducked && BB.Audio) BB.Audio.duck(1, 0);
+    if (ducked && BB.Audio) BB.Audio.setSpeechActive(false);
     ducked = false;
   }
   function detach(job) {
@@ -52,19 +52,22 @@
   }
   function finish(job) {
     if (current !== job) return;
+    clearTimeout(watchdog); watchdog = null;
     detach(job); current = null; restore(); pump();
   }
   function fallback(job) {
     if (current !== job || job.generation !== generation || job.fallback) return;
     job.fallback = true; detach(job);
-    if (!synth || muted() || job.clip.source === 'original-game') { finish(job); return; }
+    clearTimeout(watchdog);
+    watchdog = setTimeout(() => { if (current === job) BB.Voice.stop(); }, 30000);
+    if (!synth || muted() || job.clip.fallback === false || job.clip.source === 'original-game') { finish(job); return; }
     try {
       if (!picked) voice = pick();
       const u = job.utterance = new SpeechSynthesisUtterance(job.clip.text);
       if (voice) u.voice = voice;
       u.lang = voice ? voice.lang : 'en-GB'; u.rate = 0.95; u.pitch = 1.05; u.volume = 1;
       u.onend = u.onerror = () => finish(job);
-      duck(Math.max(3, job.clip.text.length / 13)); synth.speak(u);
+      duck(); synth.speak(u);
     } catch (e) { finish(job); }
   }
   function pump() {
@@ -74,13 +77,19 @@
     const start = () => {
       timer = null;
       if (current !== job || job.generation !== generation || muted()) return;
+      watchdog = setTimeout(() => { if (current === job) BB.Voice.stop(); }, 30000);
       if (!job.clip.file || typeof window.Audio !== 'function') { fallback(job); return; }
       try {
         const a = job.audio = new window.Audio(job.clip.file);
         a.preload = 'auto'; a.volume = 0.95;
         a.onended = () => finish(job);
         a.onerror = () => fallback(job);
-        a.onplaying = () => { if (current === job) duck(Number.isFinite(a.duration) ? a.duration : 8); };
+        a.onplaying = () => {
+          if (current !== job) return;
+          duck();
+          clearTimeout(watchdog);
+          watchdog = setTimeout(() => { if (current === job) BB.Voice.stop(); }, (Number.isFinite(a.duration) ? a.duration + 5 : 30) * 1000);
+        };
         const playing = a.play();
         if (playing && playing.catch) playing.catch(error => {
           if (current !== job || job.generation !== generation) return;
@@ -94,6 +103,7 @@
   }
   function enqueue(id, clip, delay) {
     if (!clip || !clip.text || muted() || (!synth && typeof window.Audio !== 'function')) return false;
+    if ((current && current.id === id && current.clip.text === clip.text) || queue.some(job => job.id === id && job.clip.text === clip.text)) return false;
     queue.push({ id, clip, delay: Math.max(0, delay || 0), generation }); pump(); return true;
   }
   BB.Voice = {
@@ -104,6 +114,7 @@
     stop() {
       generation++; queue.length = 0;
       if (timer !== null) clearTimeout(timer);
+      clearTimeout(watchdog); watchdog = null;
       timer = null;
       if (current) detach(current);
       current = null;

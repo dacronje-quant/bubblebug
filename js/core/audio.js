@@ -13,7 +13,10 @@
 (function (BB) {
   'use strict';
 
-  let ctx = null, master, comp, sfxBus, musicBus, reverb, reverbSend, noiseBuf;
+  let ctx = null, master, comp, sfxBus, musicBus, reverb, reverbSend, musicReverbSend, noiseBuf;
+  let speechActive = false, duckUntil = 0, duckAmount = 1, duckTimer = null;
+  const lastEffect = {};
+  const effectGap = { meow: 0.58, purr: 3, sparkle: 0.055, flower: 0.12, firefly: 0.15 };
   let muted = false;
   try { muted = localStorage.getItem('bubblebug_muted') === '1'; } catch (e) { /* private mode */ }
 
@@ -35,7 +38,8 @@
     master.connect(comp);
 
     sfxBus = ctx.createGain(); sfxBus.gain.value = 0.8; sfxBus.connect(master);
-    musicBus = ctx.createGain(); musicBus.gain.value = 0.55; musicBus.connect(master);
+    musicBus = ctx.createGain(); musicBus.gain.value = speechActive ? 0.55 * 0.18 : 0.55; musicBus.connect(master);
+    sfxBus.gain.value = speechActive ? 0.8 * 0.4 : 0.8;
 
     // Generated hall reverb: two channels of exponentially decaying noise
     reverb = ctx.createConvolver();
@@ -47,7 +51,11 @@
     }
     reverb.buffer = ir;
     reverbSend = ctx.createGain(); reverbSend.gain.value = 0.35;
-    reverbSend.connect(reverb); reverb.connect(master);
+    reverbSend.connect(reverb); reverb.connect(sfxBus);
+    // Music's wet signal follows the same ducking as its dry signal.
+    const musicReverb = ctx.createConvolver(); musicReverb.buffer = ir;
+    musicReverbSend = ctx.createGain(); musicReverbSend.gain.value = 0.35;
+    musicReverbSend.connect(musicReverb); musicReverb.connect(musicBus);
 
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
     const nd = noiseBuf.getChannelData(0);
@@ -100,7 +108,7 @@
     }
     out.connect(o.bus || sfxBus);
     if (o.verb) {
-      const s = ctx.createGain(); s.gain.value = o.verb; out.connect(s); s.connect(reverbSend);
+      const s = ctx.createGain(); s.gain.value = o.verb; out.connect(s); s.connect(o.bus && o.bus._music ? musicReverbSend : reverbSend);
     }
     osc.start(t0);
     osc.stop(t0 + dur + 0.05);
@@ -122,7 +130,7 @@
     g.gain.linearRampToValueAtTime(o.vol || 0.1, t0 + (o.attack || 0.004));
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
     src.connect(f); f.connect(g); g.connect(o.bus || sfxBus);
-    if (o.verb) { const s = ctx.createGain(); s.gain.value = o.verb; g.connect(s); s.connect(reverbSend); }
+    if (o.verb) { const s = ctx.createGain(); s.gain.value = o.verb; g.connect(s); s.connect(o.bus && o.bus._music ? musicReverbSend : reverbSend); }
     src.start(t0, Math.random() * 0.5);
     src.stop(t0 + o.dur + 0.05);
   }
@@ -245,7 +253,7 @@
       inst.pad([midi(48), midi(55), midi(64)], t, 1.5, 0.08, sfxBus, 800);
     },
     purr() {
-      if (!ctx || muted) return;
+      if (!ctx || muted || speechActive) return;
       const t = ctx.currentTime;
       const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = 26;
       const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 220;
@@ -261,7 +269,7 @@
     },
     // A synthesised "mew": a buzzy source through a moving vowel filter
     meow(cat) {
-      if (!ctx || muted) return;
+      if (!ctx || muted || speechActive) return;
       const t = ctx.currentTime;
       const base = (BB.CATS && BB.CATS[cat] && BB.CATS[cat].voice) || 560;
       const osc = ctx.createOscillator(); osc.type = 'sawtooth';
@@ -589,6 +597,24 @@
     },
   };
 
+  function mix() {
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const eventAmount = t < duckUntil ? duckAmount : 1;
+    musicBus.gain.cancelScheduledValues(t);
+    musicBus.gain.setTargetAtTime(0.55 * Math.min(eventAmount, speechActive ? 0.18 : 1), t, speechActive ? 0.06 : eventAmount < 1 ? 0.08 : 0.6);
+    sfxBus.gain.cancelScheduledValues(t);
+    sfxBus.gain.setTargetAtTime(0.8 * (speechActive ? 0.4 : 1), t, speechActive ? 0.06 : 0.35);
+  }
+
+  function finishDuck() {
+    clearTimeout(duckTimer);
+    if (!ctx) return;
+    const left = duckUntil - ctx.currentTime;
+    if (left > 0) duckTimer = setTimeout(finishDuck, left * 1000 + 20);
+    else { duckAmount = 1; duckTimer = null; mix(); }
+  }
+
   BB.Audio = {
     init,
     get ctx() { return ctx; },
@@ -598,7 +624,13 @@
     sfx: new Proxy(sfx, {
       get(target, name) {
         const fn = target[name];
-        return (...args) => { if (ctx && !muted && fn) { try { fn(...args); } catch (e) { /* never crash on sound */ } } };
+        return (...args) => {
+          if (!ctx || muted || !fn || (speechActive && (name === 'meow' || name === 'purr'))) return;
+          const t = ctx.currentTime;
+          if (effectGap[name] && lastEffect[name] != null && t - lastEffect[name] < effectGap[name]) return;
+          lastEffect[name] = t;
+          try { fn(...args); } catch (e) { /* never crash on sound */ }
+        };
       },
     }),
     setMuted(m) {
@@ -608,13 +640,15 @@
       if (master) master.gain.setTargetAtTime(m ? 0 : 0.9, ctx.currentTime, 0.05);
     },
     toggle() { this.setMuted(!muted); return muted; },
-    // Duck the music under big moments (unlock fanfares, etc.)
+    setSpeechActive(active) { speechActive = !!active; mix(); },
+    // Event ducks can overlap, but never lift the music during speech.
     duck(amount, seconds) {
       if (!ctx) return;
       const t = ctx.currentTime;
-      musicBus.gain.cancelScheduledValues(t);
-      musicBus.gain.setTargetAtTime(0.55 * amount, t, 0.08);
-      musicBus.gain.setTargetAtTime(0.55, t + seconds, 0.6);
+      duckAmount = t < duckUntil ? Math.min(duckAmount, amount) : amount;
+      duckUntil = Math.max(duckUntil, t + seconds);
+      mix();
+      finishDuck();
     },
   };
 })(window.BB);

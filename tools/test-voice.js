@@ -15,15 +15,15 @@ async function lifecycle() {
   const synth = { getVoices: () => [], speak: u => spoken.push(u), cancel() {} };
   const context = { console, setTimeout, clearTimeout, Audio, speechSynthesis: synth,
     SpeechSynthesisUtterance: function(text) { this.text = text; },
-    BB: { Audio: { get muted() { return muted; }, duck: (...args) => ducked.push(args) } } };
+    BB: { Audio: { get muted() { return muted; }, setSpeechActive: active => ducked.push(active) } } };
   context.window = context; vm.createContext(context);
   for (const file of ['voice-clips.js', 'voice.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/core', file), 'utf8'), context);
   const V = context.BB.Voice;
   V.play('cat_babySnowflake'); V.play('story_family_complete');
   assert.ok(created[0].src.endsWith('cat_babySnowflake.wav')); assert.equal(created.length, 1);
   assert.equal(V.queuedIds[0], 'story_family_complete'); created[0].end();
-  assert.equal(created.length, 2); assert.ok(created[1].src.endsWith('story_family_complete.mp3'));
-  assert.ok(ducked.some(([amount]) => amount === 0.32));
+  assert.equal(created.length, 2); assert.equal(created[1].src, context.BB.VOICE_CLIPS.story_family_complete.file);
+  assert.ok(ducked.includes(true));
   V.stop(); assert.ok(created[1].paused); assert.equal(V.currentId, null);
   const before = created.length;
   V.play('story_welcome', 20); V.stop(); await wait(35); assert.equal(created.length, before);
@@ -36,9 +36,26 @@ async function lifecycle() {
   staleEnded(); assert.equal(V.currentId, 'story_rainbow_rescue');
   V.stop(); assert.ok(created.at(-1).paused);
   V.play('cat_babyPatches'); created.at(-1).onerror();
-  assert.equal(spoken.length, 1); assert.equal(V.currentId, null); // never replace an original baby with device speech
+  assert.equal(spoken.length, 1); assert.equal(V.currentId, null); // preserve the baby's character rather than using a generic device voice
   assert.equal(V.play('unknown'), false);
-  console.log('✓ recordings queue without overlap; original baby WAV; duck, cancellation, mute and error fallback');
+  const clips = context.BB.VOICE_CLIPS;
+  const pack = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/voice/gemini-3.8/manifest.json'), 'utf8'));
+  const retained = new Set(pack.retainedClips.map(c => c.id));
+  assert.equal(Object.keys(clips).length, 20);
+  for (const [id, clip] of Object.entries(clips)) {
+    if (retained.has(id)) { assert.equal(clip.source, 'gpt-4o-mini-tts', id); assert.ok(fs.existsSync(path.join(__dirname, '..', clip.file)), id); continue; }
+    assert.equal(clip.source, 'gemini-3.8-flash-tts', id);
+    assert.ok(clip.file.startsWith('assets/voice/gemini-3.8/'), id);
+    const bytes = fs.readFileSync(path.join(__dirname, '..', clip.file));
+    assert.equal(bytes.toString('ascii', 0, 4), 'RIFF', id);
+    assert.equal(bytes.toString('ascii', 8, 12), 'WAVE', id);
+  }
+  assert.equal(clips.cat_babySnowflake.voice, 'Puck');
+  assert.equal(clips.cat_babyPatches.voice, 'Leda');
+  assert.equal(new Set(Object.values(clips).filter(c => c.speaker === 'narrator').map(c => c.voice)).size, 1);
+  assert.equal(clips.story_rainbow_call.voice, clips.story_rainbow_rescue.voice);
+  assert.equal(pack.clips.length + retained.size, 20);
+  console.log('✓ 20 bundled recordings, selected Gemini pack and retained lines; consistent narrator/Rainbow; queue, duck, cancellation, mute and error fallback');
 }
 function story() {
   const g = bootGame(), B = g.BB, P = B.Play, heard = [];

@@ -1,0 +1,409 @@
+{
+  "model": "gemini-3.8-flash-tts",
+  "installedAt": "2026-10-01T09:23:18.432Z",
+  "normalization": "Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.",
+  "clips": [
+    {
+      "id": "cat_mamaMallow",
+      "speaker": "mamaMallow",
+      "text": "You found Marshmallow's Mama! Come here, little kitten. I've saved you a cuddle!",
+      "style": "Tender relief, reassuring and gently happy; natural conversational pace.",
+      "reuseTake": "mamaMallow",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_n3lku4kbyxz2",
+      "reusedAudition": true,
+      "generatedAt": "2026-10-01T07:36:04.206Z",
+      "bytes": 388148,
+      "normalization": {
+        "seconds": 7.96,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7090812288401989,
+        "inputPeak": 0.85205078125,
+        "inputSpeechRms": 0.16923307953910544,
+        "outputPeak": 0.6041732150030015,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "8806444bb202c10a44f44ec95fedd7f30d71d89a34a76a92c5ef419db62a14b7"
+    },
+    {
+      "id": "cat_papaBirman",
+      "speaker": "papaBirman",
+      "text": "I'm Marshmallow's Papa! Well done, brave kitten. That was a purr-fect rescue!",
+      "style": "Proud, affectionate and quietly playful; clear, relaxed delivery.",
+      "reuseTake": "papaBirman",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_3icggwdkjkh3",
+      "reusedAudition": true,
+      "generatedAt": "2026-10-01T07:36:04.205Z",
+      "bytes": 424628,
+      "normalization": {
+        "seconds": 8.72,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7860629867529191,
+        "inputPeak": 0.981689453125,
+        "inputSpeechRms": 0.1526595222295071,
+        "outputPeak": 0.7716697435872772,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "e222b92850287f84eafd6194d8a712be89193cad26117426d60db31cc2a8373d"
+    },
+    {
+      "id": "cat_grannyLilac",
+      "speaker": "grannyLilac",
+      "text": "Oh, my darling! You found Marshmallow's Granny. I've got a cuddle for you!",
+      "style": "Cozy, fond and gently delighted; unhurried natural phrasing.",
+      "reuseTake": "grannyLilac",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_7h79bgq0gk1u",
+      "reusedAudition": true,
+      "generatedAt": "2026-10-01T07:36:04.211Z",
+      "bytes": 418868,
+      "normalization": {
+        "seconds": 8.6,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.9221568659100192,
+        "inputPeak": 0.713714599609375,
+        "inputSpeechRms": 0.13012970399735566,
+        "outputPeak": 0.6581568183300055,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "546d3017644ce5f326553ffee195e3ee4b69040066b4bd6ea5c746f135c775b8"
+    },
+    {
+      "id": "cat_bigSisterCocoa",
+      "speaker": "bigSisterCocoa",
+      "text": "Ta-da! I'm Cocoa, Marshmallow's big sister! You found me! Let's play!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Zephyr",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T07:36:08.009Z",
+      "bytes": 370868,
+      "normalization": {
+        "seconds": 7.6,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7638272651263691,
+        "inputPeak": 0.788604736328125,
+        "inputSpeechRms": 0.157103582810895,
+        "outputPeak": 0.6023577990152131,
+        "outputSpeechRms": 0.11999999999999998
+      },
+      "sha256": "175169163776097377c08d2e9388bc015b32202f6ad7b4f99776bc8d8f964857"
+    },
+    {
+      "id": "cat_babySnowflake",
+      "speaker": "babySnowflake",
+      "text": "Peekaboo! It's me, Snowflake! Marshmallow's baby brother! Mew mew!",
+      "style": "Soft, light and playful; rounded vowels, gentle breathiness, small curious pauses and a happy peekaboo lilt. Keep the words clear, with tiny excited mews; avoid a booming narrator delivery.",
+      "reuseTake": "babySnowflake",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Puck",
+      "reusedAudition": true,
+      "generatedAt": "2026-10-01T07:36:04.210Z",
+      "bytes": 330548,
+      "normalization": {
+        "seconds": 6.76,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7163695012605461,
+        "inputPeak": 0.83331298828125,
+        "inputSpeechRms": 0.1675113189336568,
+        "outputPeak": 0.5969600098089743,
+        "outputSpeechRms": 0.12000000000000001
+      },
+      "sha256": "e91213a2cff55026d49c2ee7dc38c010f63a86976bd391bdad624331635e9a30"
+    },
+    {
+      "id": "cat_grandpaSeal",
+      "speaker": "grandpaSeal",
+      "text": "I'm Marshmallow's Grandpa! Well done, little explorer. You made my whiskers smile!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_mq74r9ttpgcl",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T07:36:26.489Z",
+      "bytes": 436148,
+      "normalization": {
+        "seconds": 8.96,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.8944454678561299,
+        "inputPeak": 0.82830810546875,
+        "inputSpeechRms": 0.13416133717757492,
+        "outputPeak": 0.7408764309250206,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "c83243f0d36740b2a16aca93330832b54982e433d3dd8a5989aa00d107fc6206"
+    },
+    {
+      "id": "cat_mamaTortie",
+      "speaker": "mamaTortie",
+      "text": "You found Phoebe's Mama! Oh, clever kitten. Come and get your snuggle!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_zjin575lu7p6",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T07:36:30.429Z",
+      "bytes": 326708,
+      "normalization": {
+        "seconds": 6.68,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7413850501216784,
+        "inputPeak": 0.890350341796875,
+        "inputSpeechRms": 0.16185921199827974,
+        "outputPeak": 0.6600924327789297,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "0b8cd0067cc5b4236302fd69fc2c74bec45a8b87c7fbc275a1c6efcf3d46e33a"
+    },
+    {
+      "id": "cat_papaGinger",
+      "speaker": "papaGinger",
+      "text": "I'm Phoebe's Papa! Well done, little sunshine! Cuddle time!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r2c0v9zbvlkn",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T07:36:50.944Z",
+      "bytes": 336308,
+      "normalization": {
+        "seconds": 6.88,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.859686361823013,
+        "inputPeak": 0.730194091796875,
+        "inputSpeechRms": 0.13958579003804747,
+        "outputPeak": 0.6277379022015146,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "16c937631269ad64860361f84d2f9aec62496c7bf25fbe7de6f393f570f4c162"
+    },
+    {
+      "id": "cat_grannyGrey",
+      "speaker": "grannyGrey",
+      "text": "Oh, my whiskers! You found Phoebe's Granny. I knitted you a great big hug!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_osl8nni2gttx",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T07:36:54.761Z",
+      "bytes": 376628,
+      "normalization": {
+        "seconds": 7.72,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7137071333521227,
+        "inputPeak": 0.84759521484375,
+        "inputSpeechRms": 0.1681361925533613,
+        "outputPeak": 0.6049347510291093,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "51277a4233e30712cde9ebc5c574e70ed88232f4595fc01943779a89cde52183"
+    },
+    {
+      "id": "cat_bigBrotherTiger",
+      "speaker": "bigBrotherTiger",
+      "text": "I'm Tiger, Phoebe's big brother! That was roar-some! Let's explore!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Sadachbia",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T08:22:41.914Z",
+      "bytes": 288308,
+      "normalization": {
+        "seconds": 5.88,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.8481947712884665,
+        "inputPeak": 0.821533203125,
+        "inputSpeechRms": 0.14147693909703274,
+        "outputPeak": 0.6968201673304907,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "29d5a044276fefb8ebcff284e045b43b302bbff4c615e8a717552795178fc6ca"
+    },
+    {
+      "id": "cat_babyPatches",
+      "speaker": "babyPatches",
+      "text": "Hee hee! I'm Patches, Phoebe's baby sister! Wanna play?",
+      "style": "Soft, light and gently giggly; rounded vowels, little playful pauses and a sweet rising invitation. Say the opening hee hee as a tiny happy giggle, then speak clearly and warmly.",
+      "reuseTake": "babyPatches",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Leda",
+      "reusedAudition": true,
+      "generatedAt": "2026-10-01T07:36:04.238Z",
+      "bytes": 263348,
+      "normalization": {
+        "seconds": 5.36,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.5512001108136195,
+        "inputPeak": 0.92645263671875,
+        "inputSpeechRms": 0.21770677771248903,
+        "outputPeak": 0.510660796022945,
+        "outputSpeechRms": 0.11999999999999998
+      },
+      "sha256": "7e6fe083d80389c5a310b7df29274abaf7fdc47a319aebf823c1f71185744899"
+    },
+    {
+      "id": "cat_grandpaStripes",
+      "speaker": "grandpaStripes",
+      "text": "You found Phoebe's Grandpa! Hello, little adventurer. I've got a story just for you!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_47s3assl2p34",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T08:23:45.623Z",
+      "bytes": 403508,
+      "normalization": {
+        "seconds": 8.28,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.9043020073249161,
+        "inputPeak": 0.820281982421875,
+        "inputSpeechRms": 0.13269903088568943,
+        "outputPeak": 0.7417826432765631,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "97a77ecc1aa07e897d6bee21448d03377cbb4539dace50829a824c5244704f40"
+    },
+    {
+      "id": "story_welcome",
+      "speaker": "narrator",
+      "text": "Little kitten, let's find all our family and bring everyone home!",
+      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T08:24:07.176Z",
+      "bytes": 324788,
+      "normalization": {
+        "seconds": 6.64,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.600523563420858,
+        "inputPeak": 0.81414794921875,
+        "inputSpeechRms": 0.19982563101508438,
+        "outputPeak": 0.4889150276166275,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "8f7e9b6689a47055991abc25c4525ddee2e5923072e302718ee6e862be9ecb6d"
+    },
+    {
+      "id": "story_big_friend",
+      "speaker": "narrator",
+      "text": "You did it! A little kindness brought a big smile!",
+      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T08:24:48.125Z",
+      "bytes": 278708,
+      "normalization": {
+        "seconds": 5.68,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6241891848420373,
+        "inputPeak": 0.826141357421875,
+        "inputSpeechRms": 0.1922494059719542,
+        "outputPeak": 0.5156685004534544,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "1344a403b2efa88a6d5587bb94058be805ec0bbec9df9354d5036cacba723d4d"
+    },
+    {
+      "id": "story_homecoming",
+      "speaker": "narrator",
+      "text": "Welcome home, little hero! Let's celebrate with our friends!",
+      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T08:26:05.424Z",
+      "bytes": 265268,
+      "normalization": {
+        "seconds": 5.4,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.603133829350442,
+        "inputPeak": 0.924774169921875,
+        "inputSpeechRms": 0.19896081791538137,
+        "outputPeak": 0.5577625863893568,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "e4ad390cb0a34e43a0243101fb7391edbea3d05830e8bdf87ac005c80ec2c803"
+    },
+    {
+      "id": "story_rainbow_call",
+      "speaker": "rainbow",
+      "text": "Is someone there? My rainbow has lost its sparkle. Could you help me?",
+      "style": "Soft, magical and tender, with clear flowing phrasing and a gentle smile. No added sound effects or music. Lonely and hopeful, gently asking for help.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Achernar",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T08:24:27.058Z",
+      "bytes": 319028,
+      "normalization": {
+        "seconds": 6.52,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.8559977441073412,
+        "inputPeak": 0.58721923828125,
+        "inputSpeechRms": 0.14018728533582692,
+        "outputPeak": 0.5026583432651812,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "6d8e70017d5590736b94829be01756627c9c72ad2f609b1c66170e651fc5e5fe"
+    },
+    {
+      "id": "story_rainbow_rescue",
+      "speaker": "rainbow",
+      "text": "You found me! Thank you, little friend. My rainbow is shining again!",
+      "style": "Soft, magical and tender, with clear flowing phrasing and a gentle smile. No added sound effects or music. Relieved, grateful and gently joyful.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Achernar",
+      "reusedAudition": false,
+      "generatedAt": "2026-10-01T08:25:09.110Z",
+      "bytes": 353588,
+      "normalization": {
+        "seconds": 7.24,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.846424340905888,
+        "inputPeak": 0.646087646484375,
+        "inputSpeechRms": 0.14177286049166504,
+        "outputPeak": 0.5468643103429734,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "1d44c59dd8ea3b274cad5d54bab94986ef470356d1b531a92c99597ab6e2f49f"
+    }
+  ],
+  "retainedClips": [
+    {
+      "id": "story_family_complete",
+      "file": "assets/voice/story_family_complete.mp3",
+      "text": "The whole family is together! A rainbow surprise is waiting for you!",
+      "source": "gpt-4o-mini-tts",
+      "reason": "Retained with user approval after Gemini daily quota was reached."
+    },
+    {
+      "id": "story_replay_choice",
+      "file": "assets/voice/story_replay_choice.mp3",
+      "text": "Play again as Rainbow? Our friends will need help again. You keep your skills and outfits!",
+      "source": "gpt-4o-mini-tts",
+      "reason": "Retained with user approval after Gemini daily quota was reached."
+    },
+    {
+      "id": "story_replay_start",
+      "file": "assets/voice/story_replay_start.mp3",
+      "text": "Here we go, Rainbow! A new adventure, with all your magic!",
+      "source": "gpt-4o-mini-tts",
+      "reason": "Retained with user approval after Gemini daily quota was reached."
+    }
+  ]
+}

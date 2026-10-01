@@ -586,7 +586,7 @@
         onToy(th) {
           self.save.toys[th.toy] = 1;
           S().toy();
-          setTimeout(() => S().toySound(th.toy), 450);
+          self.later(27, () => S().toySound(th.toy));
           self.pl.happyT = 90;
           PT().burst('confetti', th.x, th.y, 30, { speed: 4, g: 0.08, life: 70 });
           PT().burst('spark', th.x, th.y, 16, { color: '#ffffff', speed: 3, life: 40 });
@@ -646,8 +646,8 @@
           self.heal(C.MOOD_MAX, th.x, th.y - 30);
           S().familyFound();
           S().meow(self.pl.cat);
-          setTimeout(() => S().meow(th.fam), 350);
-          BB.Voice.play('cat_' + th.fam, 600);
+          self.later(36, () => S().meow(th.fam));
+          BB.Voice.play('cat_' + th.fam, 1200);
           if (BB.GardenMaze.available(self.save)) self.sayStory('story_family_complete');
           for (let i = 0; i < 14; i++) PT().heart(th.x + (Math.random() - 0.5) * 50, th.y - 20 - Math.random() * 30);
           PT().burst('confetti', th.x, th.y - 30, 24, { speed: 3.5, g: 0.08, life: 70 });
@@ -740,7 +740,7 @@
       BB.Music.play('party');
       S().party();
       if (mama && this.save.family[mama]) {
-        setTimeout(() => S().meow(mama), 500);
+        this.later(30, () => S().meow(mama));
         for (let i = 0; i < 10; i++) PT().heart(cx + (Math.random() - 0.5) * 60, b.y - 10 - Math.random() * 30);
       }
     },

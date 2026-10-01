@@ -1,5 +1,8 @@
 # Preserve earlier auditions locally; ship only the approved recordings.
 *.zip
+gemini-comparison.html
+samples/gemini-3.8/
+samples/gemini-pack/
 review-*.png
 review-pack*/
 expanded-voice-audit.*

@@ -35,7 +35,7 @@
     { id: 'sparkly', name: 'Sparkly collar', slot: 'neck', stars: 150 },
     { id: 'jingle', name: 'Jingle collar', slot: 'neck', stars: 175 },
     { id: 'scuba', name: 'Scuba mask & snorkel', slot: 'face', stars: 200 },
-    { id: 'googly', name: 'Googly glasses', slot: 'face', discover: 'Ladybug Hill' },
+    { id: 'googly', name: 'Googly glasses', slot: 'face', discover: 'Root Hollow' },
     { id: 'disguise', name: 'Silly disguise', slot: 'face', discover: 'the hidden crystal grotto' },
     { id: 'starshades', name: 'Star shades', slot: 'face', discover: 'the coral garden' },
     { id: 'heartshades', name: 'Heart glasses', slot: 'face', stars: 300 },
