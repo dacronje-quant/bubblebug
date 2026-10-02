@@ -133,6 +133,17 @@
     // A picture of the sad kitten explains who waits beyond the door.
     G().drawGlow(x, y - 165, 46, happy ? '#fff5b7' : '#b29ad1', 0.3, c);
     const hunt = RF().hunting(save), mama = RF().mamaReady(save);
+    // (the sky's clouds go behind the doorway's picture sign)
+    for (let i = 0; i < 6; i++) {
+      const cx = left + 52 + i * 167 + Math.sin(t * 0.007 + i) * 5, cy = y - 377 - Math.sin(i * 1.4) * 32;
+      if (!happy) {
+        BB.Critters.moodCloud(c, cx, cy, 1, t + i * 40, 2.4);
+        if (i % 2 === 0) BB.Critters.face(c, cx, cy + 9, 1.3, 1, { t, lid: '#697084' });
+      } else {
+        c.fillStyle = 'rgba(255,255,255,0.85)'; G().ellipse(cx, cy, 47, 16, 0, c); c.fill();
+        G().circle(cx - 17, cy - 9, 19, c); c.fill(); G().circle(cx + 9, cy - 12, 23, c); c.fill();
+      }
+    }
     if (hunt || mama) {
       // Mama waits beyond the doorway, grey and sad, until she's rescued
       BB.Kittens.draw(c, BB.Kittens.fadedId('rbMama', 1), { mode: 'sit', sad: 0.9, t }, x, y - 138, 1.45, 1);
@@ -147,16 +158,6 @@
         c.fillStyle = '#e8c77d'; G().rrect(x - 14, y - 71, 28, 23, 6, c); c.fill();
       }
     } else BB.Kittens.draw(c, 'rainbow', { mode: 'sit', sad: happy ? 0 : 0.9, happy, t }, x, y - 138, 1.7, 1);
-    for (let i = 0; i < 6; i++) {
-      const cx = left + 52 + i * 167 + Math.sin(t * 0.007 + i) * 5, cy = y - 377 - Math.sin(i * 1.4) * 32;
-      if (!happy) {
-        BB.Critters.moodCloud(c, cx, cy, 1, t + i * 40, 2.4);
-        if (i % 2 === 0) BB.Critters.face(c, cx, cy + 9, 1.3, 1, { t, lid: '#697084' });
-      } else {
-        c.fillStyle = 'rgba(255,255,255,0.85)'; G().ellipse(cx, cy, 47, 16, 0, c); c.fill();
-        G().circle(cx - 17, cy - 9, 19, c); c.fill(); G().circle(cx + 9, cy - 12, 23, c); c.fill();
-      }
-    }
     if (happy) { rainbow(c, left + 280, y - 150, t, 2.7); G().drawGlow(left + 126, y - 408, 95, '#fff3af', 0.6, c); }
     for (let i = 0; i < 15; i++) {
       const fx = left + 27 + i * 62, fy = y - 13;
