@@ -9,7 +9,7 @@
 
   // r1 ─ Mossy Columns
   BB.room({
-    id: 'r1', zone: 4, x: 705, y: -34, rain: true,
+    id: 'r1', zone: 4, x: 150, y: -69, flip: true, rain: true,
     map: [
       '..............................',
       '..............................',
@@ -33,7 +33,7 @@
 
   // r2 ─ Rain Court: a quiet pool, a bench, and a hollow old wall
   BB.room({
-    id: 'r2', zone: 4, x: 735, y: -34, rain: true, toy: 'boat',
+    id: 'r2', zone: 4, x: 90, y: -69, flip: true, rain: true, toy: 'boat',
     map: [
       '............................................................',
       '............................................------..........',
@@ -57,7 +57,7 @@
 
   // r3 ─ Broken Tower: hop up through the collapsed floors
   BB.room({
-    id: 'r3', zone: 4, x: 795, y: -51, rain: true,
+    id: 'r3', zone: 4, x: 60, y: -86, flip: true, rain: true,
     map: [
       '##############################',
       '##............................',
@@ -98,7 +98,7 @@
 
   // r4 ─ Dandelion Rest: the Dandelion Elder waits in the drizzle
   BB.room({
-    id: 'r4', zone: 4, x: 825, y: -51, rain: true, elder: 'float',
+    id: 'r4', zone: 4, x: 30, y: -86, flip: true, rain: true, elder: 'float',
     map: [
       '..............................',
       '..............................',
@@ -122,7 +122,7 @@
 
   // r5 ─ Wide Rain-Pools: hold jump to drift across on dandelion fluff
   BB.room({
-    id: 'r5', zone: 4, x: 855, y: -51, rain: true,
+    id: 'r5', zone: 4, x: -30, y: -86, flip: true, rain: true,
     map: [
       '............................................................',
       '............................................................',
@@ -146,7 +146,7 @@
   // r6 ─ Bell Tower Roof: hop up past the hollow wall onto the rooftops,
   //      where Marshmallow's Granny is watching the rain
   BB.room({
-    id: 'r6', zone: 4, x: 735, y: -51, family: 'grannyLilac', rain: true,
+    id: 'r6', zone: 4, x: 90, y: -86, flip: true, family: 'grannyLilac', rain: true,
     map: [
       '............................................................',
       '............................................................',
@@ -171,7 +171,7 @@
   // r7 ─ Elephant Fountain: a weepy elephant sprays rain from her trunk
   //      and stomps little ripples across the old stones
   BB.room({
-    id: 'r7', zone: 4, x: 915, y: -51, boss: 'elephant', rain: true, arena: {name: 'Rainy Courtyard', flood: true},
+    id: 'r7', zone: 4, x: -60, y: -86, flip: true, boss: 'elephant', rain: true, arena: {name: 'Rainy Courtyard', flood: true},
     map: [
       '............................##',
       '............................##',

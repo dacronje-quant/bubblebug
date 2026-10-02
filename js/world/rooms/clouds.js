@@ -10,7 +10,7 @@
 
   // k1 ─ Breezeway: ride the updraft up into the clouds
   BB.room({
-    id: 'k1', zone: 5, x: 945, y: -68,
+    id: 'k1', zone: 5, x: -60, y: -137,
     map: [
       '##............................',
       '##............................',
@@ -51,7 +51,7 @@
 
   // k2 ─ Sky Bridges: petals, breezes and long glides over the mist
   BB.room({
-    id: 'k2', zone: 5, x: 975, y: -68, toy: 'star',
+    id: 'k2', zone: 5, x: -30, y: -137, toy: 'star',
     map: [
       '.......................................P...................#',
       '.....................................------................#',
@@ -75,7 +75,7 @@
 
   // k3 ─ The Cloud King's Throne: cheer up the grumpy king!
   BB.room({
-    id: 'k3', zone: 5, x: 1035, y: -68, arena: {name: 'Windy Cloud Top'},
+    id: 'k3', zone: 5, x: 30, y: -137, arena: {name: 'Windy Cloud Top'},
     map: [
       '............................##',
       '............................##',
@@ -99,7 +99,7 @@
 
   // k4 ─ Rainbow Bridge: past the King's gate, a guide firefly points on
   BB.room({
-    id: 'k4', zone: 5, x: 1065, y: -68, kin: [{ id: 'rbGranny', x: 15, y: 5 }], // Rainbow's Granny, on a high cloud ledge
+    id: 'k4', zone: 5, x: 60, y: -137, kin: [{ id: 'rbGranny', x: 15, y: 5 }], // Rainbow's Granny, on a high cloud ledge
     map: [
       '..............................',
       '..............................',
@@ -123,7 +123,7 @@
   // k5 ─ Rainbow Falls: now that the Cloud King is smiling, the rainbow
   //      carries you down, down, down to the sea (cloud stairs lead back up)
   BB.room({
-    id: 'k5', zone: 5, x: 1095, y: -68,
+    id: 'k5', zone: 5, x: 90, y: -137,
     map: [
       '............................##',
       '............................##',
@@ -182,7 +182,7 @@
   // k6 ─ Star Balcony: above the sky bridges, Phoebe's Granny knits by the
   //      stars
   BB.room({
-    id: 'k6', zone: 5, x: 975, y: -85, family: 'grannyGrey',
+    id: 'k6', zone: 5, x: -30, y: -154, family: 'grannyGrey',
     map: [
       '............................................................',
       '............................................................',

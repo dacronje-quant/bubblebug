@@ -12,6 +12,24 @@
   const ledge = (m, y, x0, x1) => fill(m, x0, y, x1, y, '-');
   const link = (def, m) => BB.room(Object.assign({ link: true }, def, { map: m.map(r => r.join('')) }));
 
+  // a climbing shaft one cell wide: in through `from` and out through `to`
+  // ({ side: 'L' | 'R', top: first open row, floor: the floor row under
+  // it }), with ledges every four rows to hop or climb between
+  function shaft(h, from, to) {
+    const m = box(15, h);
+    const lo = Math.max(from.floor, to.floor), hi = Math.min(from.top, to.top);
+    fill(m, 1, hi, 13, lo - 1, '.');
+    for (const d of [from, to]) fill(m, d.side === 'L' ? 0 : 14, d.top, d.side === 'L' ? 0 : 14, d.floor - 1, '.');
+    // the landing by each door, then ledges zig-zagging between
+    for (const d of [from, to]) if (d.floor < lo) ledge(m, d.floor, d.side === 'L' ? 1 : 6, d.side === 'L' ? 8 : 13);
+    let left = true;
+    for (let y = lo - 4; y > hi + 1; y -= 4) {
+      if ([from, to].some(d => Math.abs(d.floor - y) < 2)) continue;
+      ledge(m, y, left ? 1 : 6, left ? 8 : 13); left = !left;
+    }
+    return m;
+  }
+
   // ── The Golden Tower: one shaft (columns 12–17) from the Crystal
   // Caverns' pillar (c5) up to the Hive (h1). Its walls are sheer: only
   // Sticky Paws climb them. The glen path and the garden path cross it
@@ -78,4 +96,9 @@
     m[13][10] = '*'; m[21][3] = '*'; m[29][10] = '*'; m[38][4] = '*'; m[47][9] = '*';
     link({ id: 'gd', zone: 0, x: 165, y: -17, name: 'Leafy Drop' }, m);
   }
+
+  // hl ─ the Rainy Steps: up from the Queen Bee's hall to the Rainy Ruins
+  link({ id: 'hl', zone: 4, x: 180, y: -69, name: 'Rainy Steps' }, shaft(34, { side: 'L', top: 27, floor: 31 }, { side: 'L', top: 10, floor: 14 }));
+  // rl ─ the Cloud Ladder: up from the Elephant's courtyard to the Cloud Castles
+  link({ id: 'rl', zone: 5, x: -75, y: -120, name: 'Cloud Ladder' }, shaft(51, { side: 'R', top: 44, floor: 48 }, { side: 'R', top: 10, floor: 14 }));
 })(window.BB);
