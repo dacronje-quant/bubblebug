@@ -40,6 +40,8 @@ All runtime voice files are selected by `js/core/voice-clips.js`. Old audition p
 
 `tutorial-pack.json` contains the nine approved opening guidance lines: the revised welcome and eight first-time cues. They are installed in the main pack. `play-guidance.js` plays cues once per adventure, saves heard cues when playback starts, and cancels hints when the action succeeds or the kitten moves away. Family introductions take priority. Jump help waits for hesitation, and jump/bubble controls appear beside the kitten during those instructions. Rainbow replay resets the heard cues.
 
+Story lines are once per adventure, but a line only counts as heard when it plays to the end. If walking into another room, the map, pausing, muting or closing a menu cuts it short, it stays unheard: a line for a one-off moment (welcome, homecoming, Rainbow's rescue, her family's news) is kept in the save and tried again once nobody is talking, and a line tied to a place or card (the doorway calls, the Cloud Maze and happy-maze hints) plays again the next time that opens.
+
 ```text
 node voice-plan/generate-gemini-pack.mjs --plan=tutorial-pack.json --check
 node --env-file=/path/to/local/.env voice-plan/generate-gemini-pack.mjs --plan=tutorial-pack.json

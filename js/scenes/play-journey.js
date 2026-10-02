@@ -201,9 +201,9 @@
       this.portalChoice = { kind, t: 0, focus: kind === 'cloud' ? 1 : 0 };
       this.pl.state = 'homechoice'; this.pl.body.vx = 0; this.journeyHold = 0;
       BB.Input.takePointers(); S().select();
-      if (kind === 'cloud') this.sayStory('story_replay_choice');
-      else if (RF().mamaReady(this.save)) this.sayStory('kin_mama_call');
-      else if (!this.save.mazeSolved) this.sayStory('story_rainbow_call');
+      if (kind === 'cloud') this.sayStory('story_replay_choice', 0, false);
+      else if (RF().mamaReady(this.save)) this.sayStory('kin_mama_call', 0, false);
+      else if (!this.save.mazeSolved) this.sayStory('story_rainbow_call', 0, false);
       return true;
     },
     closeJourneyChoice() {

@@ -123,6 +123,7 @@
       rainbowUnlocked: false,             // rescued character survives a Rainbow replay
       replayCount: 0,
       voiceStory: {},                     // spoken story milestones in this adventure only
+      storyPending: [],                   // story lines cut short before the end (tried again)
       glassesFound: {},                   // discoveries in this adventure; clothing stays earned
       doors: {},                            // zone → 1 once its cat flap is found (a door opens at home)
       introDone: 0,                         // the wake-up scene has played

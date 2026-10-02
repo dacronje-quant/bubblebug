@@ -51,6 +51,10 @@ async function lifecycle() {
   V.play('cat_papaBirman'); V.cancel('tutorial_sleepy_buds');
   assert.equal(hintAudio.paused, true); assert.equal(starts, 1);
   assert.equal(V.currentId, 'cat_papaBirman'); V.stop();
+  // onEnd only when a line plays to the end (not when it is stopped)
+  let ends = 0;
+  V.play('story_homecoming', 0, { onEnd: () => ends++ }); created.at(-1).end(); assert.equal(ends, 1);
+  V.play('story_homecoming', 0, { onEnd: () => ends++ }); V.stop(); assert.equal(ends, 1);
   const clips = context.BB.VOICE_CLIPS;
   const pack = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/voice/gemini-3.8/manifest.json'), 'utf8'));
   const retained = new Set(pack.retainedClips.map(c => c.id));
@@ -92,7 +96,7 @@ async function lifecycle() {
 }
 function story() {
   const g = bootGame(), B = g.BB, P = B.Play, heard = [];
-  B.Voice.play = id => { heard.push(id); return true; };
+  B.Voice.play = (id, d, o = {}) => { heard.push(id); if (o.onEnd) o.onEnd(); return true; }; // (each line plays to the end)
   B.Save.data = B.Save.fresh(); B.Main.set('play', { cat: 'phoebe' }); g.tick(70);
   assert.equal(heard.filter(id => id === 'story_welcome').length, 1);
   g.tick(200); assert.equal(heard.filter(id => id === 'story_welcome').length, 1);
@@ -142,6 +146,25 @@ function story() {
   assert.equal(heard.length, 1); // never talks over a story line
   busy = null; for (let i = 0; i < 150; i++) P.updateFamilyPokes();
   P.pokeFamily(spots[0].id, spots[0].x, spots[0].y); assert.equal(heard.length, 2);
+  // a story line cut short (walking on, pause, mute, a menu) is not lost:
+  // it stays unheard, survives a reload and is tried again once it's quiet
+  let ended = null;
+  B.Voice.play = (id, d, o = {}) => { heard.push(id); ended = o.onEnd; return true; };
+  P.save.voiceStory = {}; P.storyPending = []; P.pl.state = 'play'; P.portalChoice = P.gardenChoice = P.wardrobe = P.party = null;
+  assert.equal(P.sayStory('story_homecoming'), true); ended = null; // (stopped before the end)
+  assert.equal(P.save.voiceStory.story_homecoming, undefined);
+  assert.equal(JSON.stringify(P.save.storyPending), '["story_homecoming"]');
+  const kept = P.save; B.Save.write(); B.Save.load(); assert.equal(JSON.stringify(B.Save.data.storyPending), '["story_homecoming"]'); B.Save.data = kept;
+  const tries = heard.length;
+  busy = 'cat_mamaMallow'; P.updateStory(); assert.equal(heard.length, tries, 'waits while someone is talking');
+  busy = null; for (let i = 0; i < 5; i++) P.updateStory();
+  assert.equal(heard.length, tries + 1, 'tried again once, when quiet');
+  ended(); assert.equal(P.save.voiceStory.story_homecoming, 1); assert.equal(P.save.storyPending.length, 0);
+  assert.equal(P.sayStory('story_homecoming'), false, 'heard to the end: once only');
+  // a line tied to a place just plays again the next time it opens
+  assert.equal(P.sayStory('kin_cloud_maze', 0, false), true); ended = null;
+  assert.equal(P.save.storyPending.length, 0); assert.equal(P.sayStory('kin_cloud_maze', 0, false), true);
+  console.log('✓ cut-short story lines stay unheard, survive reload and are retried when quiet; place lines replay on reopening');
   console.log('✓ all 12 greetings, queued family completion, once-only story cues, reload and three Rainbow replay openings');
 }
 (async () => { await lifecycle(); story(); })().catch(e => { console.error(e); process.exitCode = 1; });

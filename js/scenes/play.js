@@ -144,6 +144,8 @@
       this.followers = []; this.trail = [];
       this.timers = []; this.orbs = []; this.hopHome = []; this.healFx = [];
       this.guidance = { jobs: {}, next: 0 };
+      // story lines cut short last time are tried again once things are quiet
+      this.storyPending = (Array.isArray(save.storyPending) ? save.storyPending : []).map(id => ({ id, until: 60 * 90, next: 150 }));
       this.shakeT = 0; this.shakeAmp = 0;
       this.activeBoss = null; this.bossCard = null; this.bossMusic = false;
       this.homeVisitors = [];
@@ -243,13 +245,39 @@
     },
 
     // ──── A new adventure: waking up alone in the Cat House ────
-    sayStory(id, delay = 0) {
+    // A once-per-adventure story line. It only counts as heard once it has
+    // played to the end: walking on, pausing, muting or a menu can cut a
+    // line short, and then it isn't lost. A line tied to a place or a card
+    // (retry false) simply plays again the next time that opens; a line
+    // for a one-off moment is tried again shortly, once things are quiet.
+    sayStory(id, delay = 0, retry = true) {
       const heard = this.save.voiceStory = this.save.voiceStory || {};
       if (heard[id]) return false;
-      heard[id] = 1;
-      BB.Voice.play(id, delay);
-      BB.Save.write();
+      const pend = this.storyPending || (this.storyPending = []);
+      if (retry && !pend.some(p => p.id === id)) { pend.push({ id, until: this.t + 60 * 90, next: 0 }); this.keepPending(); }
+      this.playStory(id, delay);
       return true;
+    },
+    playStory(id, delay) {
+      const save = this.save;
+      return BB.Voice.play(id, delay, { onEnd: () => {
+        if (this.save !== save) return; // (a new adventure began meanwhile)
+        (save.voiceStory = save.voiceStory || {})[id] = 1;
+        if (this.storyPending) this.storyPending = this.storyPending.filter(p => p.id !== id);
+        this.keepPending();
+        BB.Save.write();
+      } });
+    },
+    keepPending() { this.save.storyPending = (this.storyPending || []).map(p => p.id); },
+    updateStory() {
+      const pend = this.storyPending;
+      if (!pend || !pend.length) return;
+      const V = BB.Voice, p = pend[0], heard = this.save.voiceStory || {};
+      if (heard[p.id] || this.t > p.until) { pend.shift(); this.keepPending(); BB.Save.write(); return; }
+      if (V.currentId || V.queuedIds.length || this.t < p.next) return;
+      if (this.pl.state !== 'play' || this.portalChoice || this.gardenChoice || this.wardrobe || this.party) return;
+      p.next = this.t + 240; // (cut short again? wait a little before the next try)
+      this.playStory(p.id, 400);
     },
     startIntro() {
       const pl = this.pl, b = pl.body, h = this.room;
@@ -931,6 +959,7 @@
       this.updateGarden();
       this.updateJourney();
       this.updateRainbowFamily();
+      this.updateStory();
 
       // ── bubbles ──
       const targets = [];

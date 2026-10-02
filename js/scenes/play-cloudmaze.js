@@ -104,7 +104,7 @@
       document.body.classList.add('in-maze');
       BB.Input.takePointers(); BB.Bubbles.clear(); BB.Particles.clear();
       BB.Music.play(BB.ZONES[5].key); S().secret();
-      this.sayStory('kin_cloud_maze', 500);
+      this.sayStory('kin_cloud_maze', 500, false);
       this.writeSave();
       return true;
     },

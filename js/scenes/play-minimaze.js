@@ -174,7 +174,7 @@
       document.body.classList.add('in-maze');
       BB.Input.takePointers(); BB.Bubbles.clear();
       S().secret();
-      this.sayStory('kin_minimaze', 500);
+      this.sayStory('kin_minimaze', 500, false);
       return true;
     },
     closeMini(happy) {

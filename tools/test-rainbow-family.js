@@ -11,7 +11,7 @@ const { bootGame } = require('./test-neighbourhood');
 
 const g = bootGame(), B = g.BB, P = B.Play, RF = B.RainbowFamily;
 const heard = [];
-B.Voice.play = id => { heard.push(id); return true; };
+B.Voice.play = (id, d, o = {}) => { heard.push(id); if (o.onEnd) o.onEnd(); return true; }; // (each line plays to the end)
 const kinThings = () => B.World.rooms.flatMap(r => P.ents[r.id].things.filter(th => th.type === 'kin'));
 const plain = v => JSON.parse(JSON.stringify(v));
 

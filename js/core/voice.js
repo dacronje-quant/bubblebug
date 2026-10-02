@@ -55,8 +55,10 @@
     }
     if (job.utterance) job.utterance.onstart = job.utterance.onend = job.utterance.onerror = null;
   }
-  function finish(job) {
+  // ended = the line was played to the end (not stopped, cancelled or failed)
+  function finish(job, ended) {
     if (current !== job) return;
+    if (ended && job.options.onEnd) { try { job.options.onEnd(); } catch (e) { /* caller */ } }
     clearTimeout(watchdog); watchdog = null;
     detach(job); current = null; restore(); pump();
   }
@@ -71,7 +73,8 @@
       const u = job.utterance = new SpeechSynthesisUtterance(job.clip.text);
       if (voice) u.voice = voice;
       u.lang = voice ? voice.lang : 'en-GB'; u.rate = 0.95; u.pitch = 1.05; u.volume = 1;
-      u.onend = u.onerror = () => finish(job);
+      u.onend = () => finish(job, true);
+      u.onerror = () => finish(job);
       u.onstart = () => started(job);
       duck(); synth.speak(u);
     } catch (e) { finish(job); }
@@ -89,7 +92,7 @@
       try {
         const a = job.audio = new window.Audio(job.clip.file);
         a.preload = 'auto'; a.volume = 0.95;
-        a.onended = () => finish(job);
+        a.onended = () => finish(job, true);
         a.onerror = () => fallback(job);
         a.onplaying = () => {
           if (current !== job) return;
