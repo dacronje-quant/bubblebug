@@ -14,7 +14,8 @@
 //   family &    a member of the kittens' own family, napping somewhere
 //               secret — find them all and they come to the party
 //   kin @       one of Rainbow's own rainbow-coloured relatives (after
-//               Rainbow is rescued): grey and lost until you find them,
+//               Rainbow is rescued): grey and lost until you cheer them
+//               up in their own little maze (play-minimaze.js),
 //               then they ride a rainbow home to the Cat House
 //  (puzzle pieces live in puzzles.js, cat food in food.js and the golden
 //  smiling-cat bubbles that teach cat tricks in gestures.js)
@@ -180,7 +181,9 @@
   function updateKin(th, ctx, dx, dist) {
     if (!th.found) {
       if (dist < 300) th.facing = dx > 0 ? 1 : -1;
-      if (dist < 110 && ctx.pl.state === 'play') { th.found = true; th.hopV = -4.5; ctx.onKin(th); }
+      // (after leaving their maze early, step away before trying again)
+      if (th.wait && dist > 170) th.wait = false;
+      if (dist < 110 && !th.wait && ctx.pl.state === 'play') ctx.onKin(th);
       return;
     }
     th.foundT++;

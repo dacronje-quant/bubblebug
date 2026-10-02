@@ -54,7 +54,7 @@ async function lifecycle() {
   const clips = context.BB.VOICE_CLIPS;
   const pack = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/voice/gemini-3.8/manifest.json'), 'utf8'));
   const retained = new Set(pack.retainedClips.map(c => c.id));
-  assert.equal(Object.keys(clips).length, 40);
+  assert.equal(Object.keys(clips).length, 41);
   for (const [id, clip] of Object.entries(clips)) {
     if (retained.has(id)) { assert.equal(clip.source, 'gpt-4o-mini-tts', id); assert.ok(fs.existsSync(path.join(__dirname, '..', clip.file)), id); continue; }
     assert.equal(clip.source, 'gemini-3.8-flash-tts', id);
@@ -67,7 +67,7 @@ async function lifecycle() {
   assert.equal(clips.cat_babyPatches.voice, 'Leda');
   assert.equal(new Set(Object.values(clips).filter(c => c.speaker === 'narrator').map(c => c.voice)).size, 1);
   assert.equal(clips.story_rainbow_call.voice, clips.story_rainbow_rescue.voice);
-  assert.equal(pack.clips.length + retained.size, 40);
+  assert.equal(pack.clips.length + retained.size, 41);
   // each of Rainbow's relatives keeps one voice; Mama's call, greeting and thanks match
   for (const id of ['rbGrandpa', 'rbPapa', 'rbGranny', 'rbSplash', 'rbPumpkin', 'rbTwinkle', 'rbMama']) assert.equal(clips['kin_' + id].speaker, id);
   assert.equal(clips.kin_mama_call.voice, clips.kin_rbMama.voice); assert.equal(clips.kin_complete.voice, clips.kin_rbMama.voice);
@@ -82,7 +82,7 @@ async function lifecycle() {
     });
   }
   assert.deepEqual(audioFiles(path.join(gameRoot, 'assets/voice')).sort(), Object.values(clips).map(c => c.file).sort(), 'ship exactly the audio files selected by the game');
-  console.log('✓ 40 bundled recordings; consistent narrator/Rainbow/rainbow family; queue, duck, cancellation, mute and error fallback');
+  console.log('✓ 41 bundled recordings; consistent narrator/Rainbow/rainbow family; queue, duck, cancellation, mute and error fallback');
 }
 function story() {
   const g = bootGame(), B = g.BB, P = B.Play, heard = [];

@@ -368,6 +368,12 @@
       "speaker": "narrator",
       "text": "Touch each of Rainbow's family to get their colour. Then the bridge with the same colour opens!",
       "style": "Warm, reassuring storybook guidance for a young child. Clear words and patient, concise natural pace, with a small pause between the two sentences. Light emphasis on same colour. Gentle conversational volume. No added words, music or sound effects."
+    },
+    {
+      "id": "kin_minimaze",
+      "speaker": "narrator",
+      "text": "Help them find their three favourite things. Then they'll be happy again!",
+      "style": "Warm, reassuring storybook guidance for a young child. Clear words and patient, concise natural pace, with a small pause between the two sentences. Gentle conversational volume. No added words, music or sound effects."
     }
   ]
 }

@@ -17,9 +17,9 @@ A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wa
 **Mac / Linux / tablets:** open `index.html` in Chrome, Edge, Safari or Firefox.
 **Online:** enable GitHub Pages (Settings → Pages → deploy from `main`, `/ (root)`).
 
-There's no install, no Node.js and no build step. Music and sound effects are generated in the browser; all 40 story and family voice recordings are bundled with the game, so playing never needs an API key.
+There's no install, no Node.js and no build step. Music and sound effects are generated in the browser; all 41 story and family voice recordings are bundled with the game, so playing never needs an API key.
 
-All 40 spoken recordings use Gemini 3.8 Flash TTS: the twelve family greetings, the story moments, the first-time guidance cues and twelve lines for Rainbow's family. Every character keeps one voice for all of their lines; the narrator lines share one voice. Recording volumes are matched; music becomes quiet during speech. Mute stops voices immediately, and leaving a scene cancels queued lines. See [the voice pack notes](voice-plan/GEMINI-VOICES.md).
+All 41 spoken recordings use Gemini 3.8 Flash TTS: the twelve family greetings, the story moments, the first-time guidance cues and thirteen lines for Rainbow's family. Every character keeps one voice for all of their lines; the narrator lines share one voice. Recording volumes are matched; music becomes quiet during speech. Mute stops voices immediately, and leaving a scene cancels queued lines. See [the voice pack notes](voice-plan/GEMINI-VOICES.md).
 
 **Quick test of Rainbow's family:** open `try-rainbow-family.html`. It starts at home just after Rainbow's rescue, with every power, so you can go straight out to find her relatives and then Mama's Cloud Maze. Like the rewards preview, it never writes to or erases the normal adventure.
 
@@ -121,7 +121,19 @@ Rescue Rainbow and she thanks you, then shares her news: the gloom cloud took th
 | 💗 pink | Rainbow's Mama | the Cloud Maze, behind the courtyard doorway (last) |
 
 - **Lost and grey.** A lost relative sits drained of colour under a little rain cloud, now and then wiping a tear. Walk into a room where one is lost and a soft chime plays while little guiding stars float toward them.
-- **Found!** Walk up to them: their colour floods back in a ring of the rainbow, they say hello in their own voice, then hop onto a cloud and ride a rainbow up and away, back to the beginning: the Cat House.
+- **A happy maze for each one.** Walk up to a lost relative and their own little maze opens. They sit grey and sad in a corner, and three of their favourite things are hidden in the maze; gather all three (they fill in at the top), then reach them. Every maze is a different place with its own small twist:
+
+  | Relative | Their maze | Favourite things | The twist |
+  |---|---|---|---|
+  | Grandpa | Lily Pond | flowers | none: a gentle first maze |
+  | Papa | Honeycomb | honey pots | friendly bees buzz up and down two corridors; wait a moment for one to fly past |
+  | Granny | Knitting Basket | yarn balls | slippery wool: you slide until something stops you |
+  | Splash | Coral Reef | shells | currents carry you along their arrows |
+  | Pumpkin | Misty Wood | acorns | mist: only the path near you shows (walked paths stay lit) |
+  | Twinkle | Starry Sky | stars | each star you find makes a starry bridge appear |
+
+  Nothing can hurt you and you can't get stuck; leave with the house button and they wait for another try (step away and come back).
+- **Found!** Their colour floods back under a little rainbow and they say hello in their own voice. Back in the kingdom they hop onto a cloud and ride a rainbow up and away, back to the beginning: the Cat House.
 - **The Rainbow Nest.** Over the Cat House stairwell stands a big seven-band rainbow with a cloud cushion for each relative. Each band lights up in its colour when its cat comes home.
 - **Easy to follow.** A little rainbow next to the stars and hearts at the top fills in band by band. On the map, every lost relative flashes in their own colour where they wait; ones off to the side flash at the edge of the map with an arrow (tap one to glide there). The Continue button on the title screen shows the little rainbow too.
 - **The courtyard doorway waits for them.** While any of the six is lost, the tall doorway is shut: their six faces hang above it, grey until each one is home, and Mama waits sadly inside. With all six home, Rainbow says so, Mama calls for help, and the doorway opens.
@@ -361,7 +373,7 @@ js/scenes/              title (Continue / New Game) · select · play (suns, sav
                         play-home (mirror, presents, toys, visitors) · play-garden (invitations and fountain)
                         play-garden-fun (ball, bubbles, dancing) · play-journey (rainbow door and confirmed replay)
                         play-maze (hedge labyrinth and kitten rescue) · play-rainbow (Rainbow's family and nest)
-                        play-cloudmaze (Mama's colour-bridge Cloud Maze)
+                        play-cloudmaze (Mama's colour-bridge Cloud Maze) · play-minimaze (a happy maze per relative)
                         pause (+ map)
 js/main.js              fixed 60 Hz loop, scene switching, adaptive quality
 tools/                  verify-world.js + dev playtest/screenshot helpers (optional, need Node)
@@ -380,7 +392,7 @@ node tools/test-neighbourhood.js       # real scene/physics, migration, routes, 
 node tools/test-rewards.js             # milestones, held inputs, reload, fountain and Easy regressions
 node tools/test-maze.js                # entire maze graph, twelve-cat door, character changes and reload
 node tools/test-journey.js             # hidden glasses, migration and three rescue/cloud/replay cycles
-node tools/test-rainbow-family.js      # Rainbow's family after the rescue, Cloud Maze solved by keys, one map
+node tools/test-rainbow-family.js      # Rainbow's family after the rescue, all six happy mazes and the Cloud Maze solved by keys, one map
 node tools/test-garden.js              # all 65 visitors, later rescues, repeated games, music and reload
 node tools/test-garden-route.js        # wider climb, high hops, trampoline and ball across all three gardens
 node tools/test-rainbow-garden.js       # indoor gate, lantern sequence, rescue exit and legacy routes

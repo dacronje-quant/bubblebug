@@ -1,6 +1,6 @@
 {
   "model": "gemini-3.8-flash-tts",
-  "installedAt": "2026-10-02T12:29:07.654Z",
+  "installedAt": "2026-10-02T13:30:24.815Z",
   "normalization": "Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.",
   "clips": [
     {
@@ -872,6 +872,27 @@
         "outputSpeechRms": 0.11999999999999998
       },
       "sha256": "5935adb6984d4e47aae3b1b4ccba6f9823d7d2f4f195b9a9c5c3ee7c434793fc"
+    },
+    {
+      "id": "kin_minimaze",
+      "speaker": "narrator",
+      "text": "Help them find their three favourite things. Then they'll be happy again!",
+      "style": "Warm, reassuring storybook guidance for a young child. Clear words and patient, concise natural pace, with a small pause between the two sentences. Gentle conversational volume. No added words, music or sound effects.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T13:17:06.409Z",
+      "bytes": 299828,
+      "normalization": {
+        "seconds": 6.12,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6470112402900708,
+        "inputPeak": 0.7845458984375,
+        "inputSpeechRms": 0.18546818436446497,
+        "outputPeak": 0.5076100148125349,
+        "outputSpeechRms": 0.12000000000000001
+      },
+      "sha256": "fc3b44b62446b39f1e824263c1b7fb3d2b35b9dd3871673bbccc90d0889e2c9b"
     }
   ],
   "retainedClips": []

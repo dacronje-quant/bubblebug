@@ -282,5 +282,12 @@ window.BB.VOICE_CLIPS = {
     "source": "gemini-3.8-flash-tts",
     "speaker": "narrator",
     "voice": "voice_r8b6ppg0ri8o"
+  },
+  "kin_minimaze": {
+    "file": "assets/voice/gemini-3.8/kin_minimaze.wav",
+    "text": "Help them find their three favourite things. Then they'll be happy again!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
   }
 };

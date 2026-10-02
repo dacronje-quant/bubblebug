@@ -64,7 +64,8 @@
       const save = this.save;
       if (!hunting(save) || save.kin[th.kin]) return;
       this.cancelGuidance();
-      this.foundKin(th.kin, th.x, th.y, 500);
+      // their own little maze: find their favourite things to cheer them up
+      this.openMini(th);
     },
     foundKin(id, x, y, delay) {
       const save = this.save;

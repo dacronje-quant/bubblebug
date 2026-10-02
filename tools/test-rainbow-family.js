@@ -49,18 +49,69 @@ assert.equal(B.RainbowJourney.unlocked(P.save, 'cloud'), false);
 assert.equal(P.openJourneyChoice('rainbow'), false);
 
 // 4. Walk up to Grandpa: found, colour back, rides home.
+// Each relative's own happy maze, solved with real key presses: the
+// shortest route from the solver, retrying if a friendly bee is in the way.
+const HM = B.HappyMaze, KEY = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown' };
+function plan(def) {
+  const s = HM.find(def, 'S'), k = HM.find(def, 'K'), start = [s.x, s.y, 0].join();
+  const prev = new Map([[start, null]]), q = [[s.x, s.y, 0]];
+  let end = null;
+  while (q.length && !end) {
+    const [x, y, m] = q.shift();
+    for (const d of Object.keys(KEY)) {
+      const n = HM.move(def, x, y, m, d); if (!n) continue;
+      const key = [n.x, n.y, n.mask].join(); if (prev.has(key)) continue;
+      prev.set(key, { from: [x, y, m].join(), d }); q.push([n.x, n.y, n.mask]);
+      if (n.x === k.x && n.y === k.y) { end = key; break; }
+    }
+  }
+  assert.ok(end, def.name + ' can be solved');
+  const dirs = []; for (let key = end; prev.get(key); key = prev.get(key).from) dirs.unshift(prev.get(key).d);
+  // no stuck states: from every reachable state the relative can still be reached
+  for (const key of prev.keys()) {
+    const [x0, y0, m0] = key.split(',').map(Number), seen = new Set([key]), qq = [[x0, y0, m0]]; let ok = false;
+    while (qq.length && !ok) { const [x, y, m] = qq.shift(); for (const d of Object.keys(KEY)) { const n = HM.move(def, x, y, m, d); if (!n) continue; if (n.x === k.x && n.y === k.y) ok = true; const kk = [n.x, n.y, n.mask].join(); if (!seen.has(kk)) { seen.add(kk); qq.push([n.x, n.y, n.mask]); } } }
+    assert.ok(ok, def.name + ' has no stuck state at ' + key);
+  }
+  return dirs;
+}
+function solveMini() {
+  const m = P.mini; assert.ok(m, 'a happy maze is open');
+  for (const d of plan(m.def)) {
+    for (let tries = 0; ; tries++) {
+      assert.ok(tries < 30, 'a bee never blocks for long');
+      const before = [m.x, m.y].join();
+      g.tick(1, [KEY[d]]); g.tick(1);
+      while (P.mini && P.mini.moving) g.tick(1);
+      if (!P.mini || P.mini.done || [m.x, m.y].join() !== before) break;
+      g.tick(17);
+    }
+  }
+  assert.ok(P.mini && P.mini.done, 'the relative is reached');
+  g.tick(140); assert.equal(P.mini, null);
+}
+const names = new Set(Object.values(HM.MAZES).map(d => d.name));
+assert.equal(names.size, 6, 'six different mazes');
+assert.deepEqual(Object.keys(HM.MAZES).sort(), [...RF.WORLD()].sort());
 const grandpa = kinThings().find(th => th.kin === 'rbGrandpa'), np = B.World.byId.np;
 g.place('np', grandpa.x / 32 - np.x - 4, Math.round(grandpa.y / 32) - np.y);
-for (let i = 0; i < 90 && !P.save.kin.rbGrandpa; i++) g.tick(1, ['ArrowRight']);
-g.tick(1);
+for (let i = 0; i < 90 && !P.mini; i++) g.tick(1, ['ArrowRight']);
+assert.equal(P.mini.id, 'rbGrandpa', "walking up to Grandpa opens his lily-pond maze"); assert.ok(heard.includes('kin_minimaze'));
+assert.equal(P.save.kin.rbGrandpa, undefined, 'not home until he is cheered up');
+// leaving early keeps him waiting; step away and come back to try again
+P.closeMini(false); assert.equal(P.mini, null); g.tick(5); assert.equal(P.mini, null, 'no instant re-open');
+g.place('np', 2, 31); g.tick(2); // (far away on the lower path)
+g.place('np', grandpa.x / 32 - np.x - 4, Math.round(grandpa.y / 32) - np.y);
+for (let i = 0; i < 120 && !P.mini; i++) g.tick(1, ['ArrowRight']);
+solveMini();
 assert.equal(P.save.kin.rbGrandpa, 1); assert.ok(heard.includes('kin_rbGrandpa'));
 g.tick(400);
 assert.ok(!P.ents.np.things.some(th => th.type === 'kin'), 'Grandpa rode home');
 P.writeSave(); B.Save.load(); B.Main.set('play', {});
 assert.equal(P.save.kin.rbGrandpa, 1); assert.equal(kinThings().length, 5); assert.equal(P.kinCard, null, 'the goal card shows once');
 
-// 5. The others: the sixth brings Rainbow's hint and opens the doorway to Mama.
-for (const th of kinThings()) P.ctx().onKin(th);
+// 5. The others, each through their own maze: the sixth brings Rainbow's hint.
+for (const th of kinThings()) { P.ctx().onKin(th); assert.equal(P.mini.id, th.kin); solveMini(); }
 assert.equal(RF.count(P.save), 6); assert.equal(RF.mamaReady(P.save), true);
 assert.ok(heard.includes('kin_six_home')); assert.ok(!heard.includes('kin_complete'));
 g.place('nm', 21, 32);

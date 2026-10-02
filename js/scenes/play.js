@@ -118,7 +118,7 @@
       this.gardenChoice = null; this.gardenHold = 0; this.celebrationT = 0; this.gardenLock = null; this.fountainCd = 0; this.mirrorLock = false;
       this.maze = null;
       this.portalChoice = null; this.journeyHold = 0; this.journeyLock = null; this.replayStarting = false;
-      this.rainbowGateOpen = null; this.kinRoom = null; this.kinPulse = 0; this.kinCard = null; this.cloud = null;
+      this.rainbowGateOpen = null; this.kinRoom = null; this.kinPulse = 0; this.kinCard = null; this.cloud = null; this.mini = null;
       // An old checkpoint outside the newly locked door must still
       // allow its kitten to walk home before the door closes behind it.
       this.rainbowExitPass = x < (W().byId.hm.x + 2) * T;
@@ -784,6 +784,7 @@
       if (this.replayStarting) return;
       if (this.maze) { this.updateMaze(); return; }
       if (this.cloud) { this.updateCloud(); return; }
+      if (this.mini) { this.updateMini(); return; }
       if (this.portalChoice) { this.updateJourneyChoice(); PT().update(); return; }
       if (this.wardrobe) { this.updateWardrobe(); PT().update(); return; }
       if (this.gardenChoice) { this.updateGardenChoice(); PT().update(); return; }
@@ -1015,6 +1016,7 @@
     draw(c) {
       if (this.maze) { this.drawMaze(c); return; }
       if (this.cloud) { this.drawCloud(c); return; }
+      if (this.mini) { this.drawMini(c); return; }
       const cam0 = Cam();
       const sc = G().scale;
       let sx = 0, sy = 0;
