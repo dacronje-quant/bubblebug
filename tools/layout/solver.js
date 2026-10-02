@@ -59,6 +59,7 @@ function solve(opt) {
     return cs;
   }
   function tryPlace(occ, id, x, y, flip) {
+    if (opt.pin && opt.pin[id] && (opt.pin[id][0] !== x || opt.pin[id][1] !== y)) return null;
     const cs = roomCells(id, x, y, flip), cells = [];
     for (const [, rx, ry, w, h] of cs) for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) {
       if (!free(rx + i, ry + j, occ)) return null;
@@ -73,6 +74,7 @@ function solve(opt) {
     const { w, h } = size(id);
     for (const flip of opt.noFlip ? [false] : [false, true]) for (const e of segsOf(id)) {
       if (!starts(id, e)) continue;
+      if (opt.nativeIn && opt.nativeIn.includes(id) && e !== natIn) continue;
       // the exits this entry allows
       const exits = natOut == null ? [null] : fl.includes('x') ? [natOut] : segsOf(id);
       const okExits = exits.filter(x => x == null || (x !== e && reach(id, e, x, fl.includes('p'))));

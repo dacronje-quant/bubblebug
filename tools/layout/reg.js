@@ -4,7 +4,7 @@ const parse = spec => { const out = []; if (!spec) return out; for (const part o
 const [zone, spec, ent, ex, ml, occ, into] = process.argv.slice(2);
 const reg = parse(spec);
 const pe = s => { if (!s || s === '-') return null; const [c, r, d] = s.split(','); return { c: +c, r: +r, d }; };
-const res = solve({ zone, region: reg, entry: pe(ent), exit: pe(ex), maxLinks: ml == null ? 2 : +ml, budget: 3e7, occupied: parse(occ), exitInto: into ? parse(into) : null });
+const res = solve({ zone, region: reg, entry: pe(ent), exit: pe(ex), maxLinks: ml == null ? 2 : +ml, budget: 3e7, occupied: parse(occ), exitInto: into ? parse(into) : null, nativeIn: process.env.NATIVE ? process.env.NATIVE.split(',') : null, pin: process.env.PIN ? JSON.parse(process.env.PIN) : null });
 console.log(res.tried, res.best && { left: res.best.left, links: res.best.links, cost: res.best.cost });
 console.log(draw(res, reg, parse(occ)));
 if (res.best) { console.log(JSON.stringify(res.best.plan.rooms)); console.log('EXIT', JSON.stringify(res.best.plan.lastExit)); }
