@@ -282,17 +282,27 @@
     }
     last.family = fam;
 
+    // Rainbow's family (Rainbow adventures): a little rainbow, one band
+    // lighting up for each relative who is home
+    let next = x0 + (fam > 0 ? 90 : 0);
+    if (s.kin && BB.RainbowFamily) {
+      pill(next, 64);
+      BB.RainbowFamily.miniArc(c, next + 32, 27, 1.15, s.kin, t, s.kinPulse || 0);
+      next += 72;
+    }
+
     // cat tricks learned: the smiling-cat symbol and a count
-    const tricks = s.tricks || 0;
+    // (hidden during a boss fight, where the boss's own picture takes the top)
+    const tricks = s.boss ? 0 : s.tricks || 0;
     if (tricks > 0) {
       if (last.tricks >= 0 && tricks > last.tricks) bounce.tricks = 1;
       bounce.tricks = (bounce.tricks || 0) * 0.9;
-      const px = x0 + (fam > 0 ? 90 : 0);
+      const px = next;
       pill(px, 82);
       BB.Gestures.drawIcon(c, px + 22, 32, 0.95 * (1 + bounce.tricks * 0.5));
       G.text(String(tricks), px + 58, 32, 22 * (1 + bounce.tricks * 0.2), '#fff4c2', 'rgba(40,20,60,0.6)');
     }
-    last.tricks = tricks;
+    if (!s.boss) last.tricks = tricks;
 
     // abilities, then toys, along the second row
     let x = 26;

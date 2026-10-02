@@ -151,14 +151,22 @@
     BB.Save.load();
     Main.set('title');
     // Developer shortcut (never needed to play): index.html#play=phoebe&room=c4&ab=all
-    // jumps straight into a room, optionally with every power. demo=rewards
+    // jumps straight into a room, optionally with every power; replay=1 makes
+    // it a Rainbow adventure (Rainbow's family is lost). demo=rewards
     // seeds a save-free preview so a grown-up can try the optional extras.
     const h = location.hash;
     const m = /play=(\w+)/.exec(h);
     if (m) {
       const room = /room=(\w+)/.exec(h), all = /ab=all/.test(h);
       const demo = /(?:^#|&)demo=rewards(?:&|$)/.test(h);
-      if (room || all || demo) BB.Save.data = BB.Save.fresh();
+      // demo=rainbow: a save-free Rainbow adventure, to meet her family
+      const rainbowDemo = /(?:^#|&)demo=rainbow(?:&|$)/.test(h);
+      if (room || all || demo || rainbowDemo) BB.Save.data = BB.Save.fresh();
+      if (rainbowDemo) {
+        BB.Save.preview = true;
+        Object.assign(BB.Save.data, { replayCount: 1, rainbowUnlocked: true, introDone: 1, leftHome: 1 });
+        Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
+      }
       if (demo) {
         BB.Save.preview = true;
         BB.World.build();
@@ -170,6 +178,7 @@
         s.introDone = 1; s.leftHome = 1; s.finale = true;
       }
       if (all) Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
+      if (/replay=1/.test(h)) Object.assign(BB.Save.data, { replayCount: 1, rainbowUnlocked: true, introDone: 1, leftHome: 1 });
       if (room) {
         BB.World.build();
         const r = BB.World.byId[room[1]];

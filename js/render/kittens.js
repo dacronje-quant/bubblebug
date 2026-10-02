@@ -18,7 +18,16 @@
   const G = BB.G;
   const TAU = Math.PI * 2;
   const RAINBOW = ['#ff77b5', '#ffa870', '#ffe575', '#91e6a6', '#76dbea', '#849fff', '#c293f4'];
-  const rainbowColor = s => { const p = Math.min(5.999, s * 6), i = Math.floor(p); return BB.mix(RAINBOW[i], RAINBOW[i + 1], p - i); };
+  BB.RAINBOW = RAINBOW;
+  // A magical cat's tail and mane run through its own colours: the whole
+  // rainbow for Rainbow, one soft colour for each of her relatives.
+  const spectrum = cat => cat.spectrum || RAINBOW;
+  const rainbowColor = (s, cols = RAINBOW) => {
+    const n = cols.length - 1, p = Math.min(n - 0.001, s * n), i = Math.floor(p);
+    return BB.mix(cols[i], cols[i + 1], p - i);
+  };
+  const mane = cat => Array.from({ length: 7 }, (_, i) => spectrum(cat)[i % spectrum(cat).length]);
+  const GOLD = ['#fffbea', '#ffdf7c', '#e6b554', '#bf9250'];
 
   const CATS = BB.CATS = {
     marshmallow: {
@@ -121,6 +130,50 @@
   BB.FAMILY = ['mamaMallow', 'mamaTortie', 'papaBirman', 'papaGinger', 'grannyLilac', 'grannyGrey',
     'bigSisterCocoa', 'bigBrotherTiger', 'babySnowflake', 'babyPatches', 'grandpaSeal', 'grandpaStripes'];
 
+  // ──── Rainbow's own family (second adventure onwards) ────
+  // One relative for each colour of her rainbow, in rainbow order. Each is
+  // a little unicorn cat like Rainbow, tinted all over in its own colour.
+  const kin = (id, name, size, voice, hue, over) => {
+    const [main, light, deep] = hue;
+    return base('rainbow', Object.assign({
+      id, name, size, voice, kin: true, cushion: light,
+      fur: BB.mix(light, '#ffffff', 0.72), furShade: BB.mix(light, '#ffffff', 0.25), belly: '#ffffff',
+      point: main, pointDark: deep, tail: light, tailTip: deep, earInner: BB.mix(main, '#ffffff', 0.4),
+      paw: BB.mix(light, '#ffffff', 0.6), nose: BB.mix(deep, '#ff8fb0', 0.4), outline: BB.mix(deep, '#3a2a4a', 0.55),
+      spectrum: [light, main, deep, main], trailColor: main,
+    }, over));
+  };
+  Object.assign(CATS, {
+    rbMama: kin('rbMama', "Rainbow's Mama", 1.6, 480, ['#ff77b5', '#ffb3d6', '#e0559a'], { acc: { flower: '#fff07a' } }),
+    rbPumpkin: kin('rbPumpkin', "Rainbow's Big Brother", 1.25, 540, ['#ffa870', '#ffcaa3', '#ea7f3e'], { acc: { bandana: '#5fc781' }, iris: '#7fc94a', irisLight: '#dcf7a8', irisDark: '#3f7a18' }),
+    rbPapa: kin('rbPapa', "Rainbow's Papa", 1.75, 370, ['#ffd84a', '#fff0a6', '#d9a520'], { acc: { bowtie: '#ff77b5' }, iris: '#e3a032', irisLight: '#fff0a0', irisDark: '#93600c' }),
+    rbGrandpa: kin('rbGrandpa', "Rainbow's Grandpa", 1.7, 330, ['#6fd08c', '#b3efc2', '#3fa05f'], { acc: { glasses: '#2f5a3c', bowtie: '#ffa870' }, horn: ['#ffffff', '#e6e9f2', '#bfc6d6', '#8f97aa'] }),
+    rbSplash: kin('rbSplash', "Rainbow's Big Sister", 1.2, 600, ['#4fcbe0', '#a8eef6', '#2ea2b8'], { acc: { bow: '#c293f4' } }),
+    rbGranny: kin('rbGranny', "Rainbow's Granny", 1.5, 420, ['#7c97ff', '#c2d0ff', '#5a72dc'], { acc: { glasses: '#4a5694', scarf: '#ffb3d6' }, horn: ['#ffffff', '#e6e9f2', '#bfc6d6', '#8f97aa'] }),
+    rbTwinkle: kin('rbTwinkle', "Rainbow's Baby Sister", 0.9, 800, ['#b98af2', '#e2cdff', '#8f5fd6'], { acc: { bow: '#ffe575' } }),
+  });
+  BB.RAINBOW_KIN = ['rbMama', 'rbPumpkin', 'rbPapa', 'rbGrandpa', 'rbSplash', 'rbGranny', 'rbTwinkle'];
+
+  // A lost relative's colour has drained away (they are grey and sad
+  // until found). Faded copies are made once per step and kept.
+  const GREY = '#c4bfcc';
+  function fade(value, k) {
+    if (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)) return BB.mix(value, GREY, k);
+    if (Array.isArray(value)) return value.map(v => fade(v, k));
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, v]) => [key, fade(v, k)]));
+    return value;
+  }
+  function fadedId(id, k) {
+    const step = Math.round(BB.clamp(k, 0, 1) * 8);
+    if (!step || !CATS[id]) return id;
+    const key = id + '~' + step;
+    if (!CATS[key]) {
+      const src = CATS[id], amount = step / 8 * 0.85;
+      CATS[key] = Object.assign(fade(src, amount), { id: key, faded: step / 8, horn: fade(src.horn || GOLD, amount), spectrum: fade(spectrum(src), amount), outline: BB.mix(src.outline, '#6a6476', amount) });
+    }
+    return key;
+  }
+
   // ──── small helpers ────
   function limb(c, x0, y0, len, ang, w, color, outline, pawColor) {
     const x1 = x0 + Math.sin(ang) * len, y1 = y0 + Math.cos(ang) * len;
@@ -173,7 +226,7 @@
           const s = i / count;
           const [px, py] = bez(s);
           const r = (3.2 + Math.sin(s * Math.PI) * 2.6) * (pose.mode === 'sit' || pose.mode === 'sleep' ? 0.72 : 1);
-          c.fillStyle = pass === 0 ? cat.outline : cat.magical ? rainbowColor(s) : BB.mix(cat.tail, cat.tailTip, Math.pow(s, 1.6));
+          c.fillStyle = pass === 0 ? cat.outline : cat.magical ? rainbowColor(s, spectrum(cat)) : BB.mix(cat.tail, cat.tailTip, Math.pow(s, 1.6));
           G.circle(px, py, pass === 0 ? r + 0.9 : r, c); c.fill();
         }
       }
@@ -210,7 +263,7 @@
       c.fillStyle = cat.belly; G.ellipse(rx * 0.75, ry * 0.2, rx * 0.45, ry * 0.9, 0, c); c.fill();
       if (cat.magical) {
         const rainbow = c.createLinearGradient(-rx, -ry, rx, ry);
-        RAINBOW.forEach((color, i) => rainbow.addColorStop(i / 6, color));
+        spectrum(cat).forEach((color, i, all) => rainbow.addColorStop(i / (all.length - 1), color));
         c.fillStyle = rainbow; c.globalAlpha = 0.85;
         G.ellipse(-rx * 0.15, -ry * 0.3, rx * 0.9, ry * 0.75, -0.25, c); c.fill(); c.globalAlpha = 1;
       }
@@ -464,14 +517,15 @@
     }
     if (cat.acc) drawAccessories(c, cat);
     if (cat.magical && BB.Wardrobe) {
-      G.drawGlow(-1, -16, 18, '#ffefb1', 0.22, c);
-      for (const [i, color] of RAINBOW.entries()) {
+      G.drawGlow(-1, -16, 18, cat.faded ? '#d8d2e2' : '#ffefb1', cat.faded ? 0.1 : 0.22, c);
+      for (const [i, color] of mane(cat).entries()) {
         c.fillStyle = color; G.ellipse(-8 + i * 1.5, -10 - Math.sin(i * 0.5) * 2, 2.5, 5, -0.4, c); c.fill();
       }
       c.save();
+      const horn = cat.horn || GOLD;
       const gold = c.createLinearGradient(-3, -30, 4, -9);
-      gold.addColorStop(0, '#fffbea'); gold.addColorStop(0.45, '#ffdf7c'); gold.addColorStop(1, '#e6b554');
-      c.fillStyle = gold; c.strokeStyle = '#bf9250'; c.lineWidth = 0.8;
+      gold.addColorStop(0, horn[0]); gold.addColorStop(0.45, horn[1]); gold.addColorStop(1, horn[2]);
+      c.fillStyle = gold; c.strokeStyle = horn[3]; c.lineWidth = 0.8;
       c.beginPath(); c.moveTo(-4, -9); c.lineTo(0, -30); c.lineTo(4, -9); c.quadraticCurveTo(0, -7, -4, -9); c.fill(); c.stroke();
       c.clip(); c.strokeStyle = '#fff7d0'; c.lineWidth = 1;
       for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(-5, -12 - i * 4); c.lineTo(5, -15 - i * 4); c.stroke(); }
@@ -675,5 +729,5 @@
     }
   }
 
-  BB.Kittens = { draw: drawKitten, CATS };
+  BB.Kittens = { draw: drawKitten, CATS, fadedId };
 })(window.BB);

@@ -23,7 +23,9 @@ function check(g) {
     gestures: B.Gestures.LIST.length,
     bosses: B.World.rooms.filter(r => r.def.boss || r.things.some(th => th.ch === 'K')).length,
     rainbow: 1,
+    kin: B.RAINBOW_KIN.length, // six in the world and Mama in the replay maze
   };
+  assert.equal(B.World.findThings('@').length + 1, B.RAINBOW_KIN.length);
   B.Save.data = B.Save.fresh(); B.Save.data.introDone = 1; B.Main.set('play', {});
   available.friends = B.World.rooms.flatMap(r => B.Play.ents[r.id].bugs).length;
   for (const item of all.filter(a => a.unlock)) assert.ok(available[item.unlock.kind] >= item.unlock.count, item.id + ' is achievable with the actual game content');

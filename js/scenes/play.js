@@ -118,7 +118,7 @@
       this.gardenChoice = null; this.gardenHold = 0; this.celebrationT = 0; this.gardenLock = null; this.fountainCd = 0; this.mirrorLock = false;
       this.maze = null;
       this.portalChoice = null; this.journeyHold = 0; this.journeyLock = null; this.replayStarting = false;
-      this.rainbowGateOpen = null;
+      this.rainbowGateOpen = null; this.kinRoom = null; this.kinPulse = 0;
       // An old checkpoint outside the newly locked door must still
       // allow its kitten to walk home before the door closes behind it.
       this.rainbowExitPass = x < (W().byId.hm.x + 2) * T;
@@ -262,7 +262,7 @@
       it.t++;
       if (it.t === 70 && pl.state === 'bench') {
         pl.state = 'play'; pl.idleT = 0; pl.squash = 1.2; BB.Gestures.start(pl, 'stretch'); S().meow(pl.cat);
-        this.sayStory(this.save.replayCount ? 'story_replay_start' : 'story_welcome');
+        this.sayStory(this.save.replayCount ? 'story_replay_kin_start' : 'story_welcome');
       }
       if (it.t > 70 && pl.state === 'play') pl.idleT = 0; // (awake now: no dozing back off on the bed)
       if (it.t > 260 || (it.t > 70 && pl.state === 'play' && (BB.Input.held.left || BB.Input.held.right || BB.Input.held.jump))) {
@@ -642,6 +642,7 @@
           self.showTrickButton();
           BB.Save.write();
         },
+        onKin: th => self.onKin(th),
         onFamily(th) {
           if (self.save.family[th.fam]) return;
           self.cancelGuidance();
@@ -739,7 +740,10 @@
       const mama = this.mamaId();
       const fam = BB.Home.familyOrder().filter(id => this.save.family[id]);
       fam.sort((a, c) => (c === mama) - (a === mama));
-      fam.forEach((id, i) => guests.push({ cat: id, ring: true, ang: Math.PI / 2 + (i + 0.5) / fam.length * Math.PI * 2, t: Math.random() * 100 }));
+      // (in a Rainbow adventure, her own relatives who are home dance too)
+      const kin = BB.RainbowFamily.active(this.save) ? BB.RAINBOW_KIN.filter(id => this.save.kin[id]) : [];
+      const ring = fam.concat(kin);
+      ring.forEach((id, i) => guests.push({ cat: id, ring: true, ang: Math.PI / 2 + (i + 0.5) / ring.length * Math.PI * 2, t: Math.random() * 100 }));
       this.party = { t: 0, guests, card: 0, cx, floor, found: fam.length, total: BB.Home.familyOrder().length };
       this.heal(C.MOOD_MAX);
       this.pl.happyT = 400;
@@ -752,7 +756,7 @@
     },
 
     // the kitten's own Mama (she's the one waiting by the door)
-    mamaId() { return this.pl.cat === 'phoebe' ? 'mamaTortie' : 'mamaMallow'; },
+    mamaId() { return this.pl.cat === 'phoebe' ? 'mamaTortie' : this.pl.cat === 'rainbow' ? null : 'mamaMallow'; },
 
     updateParty() {
       const p = this.party, W0 = G().W;
@@ -922,6 +926,7 @@
       this.updateGardenFun();
       this.updateGarden();
       this.updateJourney();
+      this.updateRainbowFamily();
 
       // ── bubbles ──
       const targets = [];
@@ -1065,7 +1070,7 @@
         const e = this.ents[r.id];
         for (const th of e.things) if (th.type !== 'elder') BB.Things.draw(c, th, cam, ctx);
       }
-      for (const r of visible) if (r.def.home) { BB.Home.drawToys(c, r, cam, t, this); BB.Home.drawFamily(c, r, cam, t, this); }
+      for (const r of visible) if (r.def.home) { this.drawRainbowNest(c, r, cam, t); BB.Home.drawToys(c, r, cam, t, this); BB.Home.drawFamily(c, r, cam, t, this); }
       if (room.def.home && !this.wardrobe) {
         const mx = (room.x + BB.Home.MIRROR_COL) * T, my = (room.y + 32) * T, pb = this.pl.body;
         if (this.mirrorHold <= 0 && !(this.save.used || {}).mirror && Math.abs(pb.x + pb.w / 2 - mx) < 80 && Math.abs(pb.y + pb.h - my) < 40) BB.Links.hintRing(c, mx - cam.x, my - cam.y - 186, t);
@@ -1141,6 +1146,8 @@
         mood: this.mood, moodMax: C.MOOD_MAX, cat: this.pl.cat, hurtT: this.hurtT, healT: this.healT,
         hard: BB.Settings.hard, munchT: this.munchT,
         tricks: BB.Save.count(this.save.gestures || {}),
+        kin: BB.RainbowFamily.active(this.save) ? this.save : null, kinPulse: this.kinPulse || 0,
+        boss: !!(this.activeBoss && this.activeBoss.state !== 'happy' && this.activeBoss.room === this.room.id),
       }, t);
       for (const f of this.healFx) {
         // a heart flies from a new friend up to your happy suns
@@ -1155,6 +1162,9 @@
       if (this.outfitCard) this.drawOutfitCard(c, t);
       if (this.trickHint > 0) this.drawTrickHint(c, cam);
       this.drawGuidance(c, cam);
+      // (a lesson or present card takes the top of the screen: the zone
+      // name steps aside instead of overlapping it)
+      if (this.trickCard || this.outfitCard) this.zoneCard = Math.min(this.zoneCard, 12);
       BB.HUD.drawZoneCard(c, this.cardZone, this.zoneCard / 40, t);
       if (this.gift && this.gift.card > 0) {
         c.fillStyle = `rgba(20,10,40,${0.35 * this.gift.card})`; c.fillRect(0, 0, G().W, G().H);
@@ -1259,7 +1269,7 @@
           const rp = this.ringPos(g);
           if (rp.back !== back) continue;
           const m = BB.CATS[g.cat] || {}, sz = (m.size || 1.4) * (rp.back ? 0.9 : 1);
-          const baby = (m.size || 1.4) < 1.2, old = /granny|grandpa/.test(g.cat);
+          const baby = (m.size || 1.4) < 1.2, old = /granny|grandpa/i.test(g.cat);
           const hop = baby ? Math.abs(Math.sin(g.t * 0.16)) * -12 : old ? 0 : Math.abs(Math.sin(g.t * 0.12)) * -5;
           const dance = g.t % 160;
           const pose = dance < 110 ? { mode: 'run', happy: true, t: g.t * 0.6 } : { mode: 'sit', happy: true, t: g.t };
@@ -1329,8 +1339,17 @@
       });
       // the big count
       const ny = cy + 100;
-      BB.MapView.catFace(c, cx - 70, ny, 2.6, '#fff1dc', '#9a7a64');
-      G().text(shown + ' / ' + p.total, cx + 30, ny + 2, 44, all ? '#d8407a' : '#8a5a3a', null);
+      if (BB.RainbowFamily.active(this.save)) {
+        // a Rainbow adventure: her own rainbow family beside the cats
+        const kin = BB.RainbowFamily.count(this.save), whole = BB.RainbowFamily.complete(this.save);
+        BB.MapView.catFace(c, cx - 190, ny, 2.4, '#fff1dc', '#9a7a64');
+        G().text(shown + ' / ' + p.total, cx - 102, ny + 2, 38, all ? '#d8407a' : '#8a5a3a', null);
+        BB.RainbowFamily.miniArc(c, cx + 62, ny - 4, 1.6, this.save, t);
+        G().text(kin + ' / ' + BB.RAINBOW_KIN.length, cx + 150, ny + 2, 38, whole ? '#d8407a' : '#8a5a3a', null);
+      } else {
+        BB.MapView.catFace(c, cx - 70, ny, 2.6, '#fff1dc', '#9a7a64');
+        G().text(shown + ' / ' + p.total, cx + 30, ny + 2, 44, all ? '#d8407a' : '#8a5a3a', null);
+      }
       // other treasures: stars, friends, bosses
       const y = cy + 158;
       c.fillStyle = '#ffd84a'; c.strokeStyle = '#c28a14'; c.lineWidth = 2;

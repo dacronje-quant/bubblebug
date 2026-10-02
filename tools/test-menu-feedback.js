@@ -75,7 +75,7 @@ function render(dir) {
     ['hm', B.Home.MIRROR_COL - 0.5, 32, 'wardrobe'], ['ng', 16, 31, 'garden'],
     ['np', 14, 31, 'pond'], ['nm', 21, 32, 'rainbow'],
   ]) {
-    place(id, col, floor); B.Play.journeyLock = null; B.Play.funLock = null; B.Play.mirrorLock = false;
+    place(id, col, floor); B.Play.journeyLock = null; B.Play.funLock = null; B.Play.mirrorLock = false; B.Play.mirrorHold = 0; // (clear the step-away cooldown left by closing the wardrobe)
     tick(B.Links.HOLD / 2); B.Play.zoneCard = 0; calls.length = 0;
     shot(name + '-wait');
     const rings = calls.filter(v => typeof v === 'object'); assert.equal(rings.length, 1, name);

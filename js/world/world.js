@@ -26,6 +26,8 @@
 //   1–9 fairy rings: each digit appears exactly twice in the world; with
 //      the Badger's gift, stepping into one pops you out at its twin
 //   &  a lost member of the kittens' family (hidden down a side passage)
+//   @  (from a room's `kin:` list, not the map) one of Rainbow's own
+//      rainbow-coloured relatives, lost in the second adventure onwards
 //   Q  a zone's big gloomy boss (the room's `boss:` says who) — cheer
 //      them up and the room's gate opens
 //   puzzles (each opens its room's G gate when solved):
@@ -101,6 +103,9 @@
         // its original collectible keys for old saves and the kingdom map.
         for (const [x, y] of def.mazeStars || []) room.things.push({ ch: '*', tx: def.x + x, ty: def.y + y });
         for (const drop of def.glasses || []) room.things.push({ ch: 'a', item: drop.id, tx: def.x + drop.x, ty: def.y + drop.y });
+        // Rainbow's lost relatives (second adventure onwards): `kin` lists
+        // who waits where, so the ASCII maps stay the same for every run.
+        for (const k of def.kin || []) room.things.push({ ch: '@', kin: k.id, tx: def.x + k.x, ty: def.y + k.y });
         if (this.byId[room.id]) throw new Error(`Duplicate room id ${room.id}`);
         this.rooms.push(room);
         this.byId[room.id] = room;

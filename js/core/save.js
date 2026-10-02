@@ -92,6 +92,7 @@
         swim: false, dig: false, spring: false, rings: false, bubbleBounce: false, wings: false,
       },
       family: {},                           // family member id → 1 (found)
+      kin: {},                              // Rainbow's relatives found this adventure (replays only)
       sparkles: {},                         // key → 1
       friends: {},                          // key → 1
       toys: {},                             // toy id → 1
@@ -168,7 +169,7 @@
             this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
             this.data.wear = Object.assign(fresh().wear, d.wear || {});
             this.data.cosmetics = Object.assign(fresh().cosmetics, d.cosmetics || {});
-            for (const field of ['outfits', 'purchases', 'residents', 'hiddenResidents', 'glassesFound', 'voiceStory']) this.data[field] = Object.assign({}, d[field] || {});
+            for (const field of ['outfits', 'purchases', 'residents', 'hiddenResidents', 'glassesFound', 'voiceStory', 'kin']) this.data[field] = Object.assign({}, d[field] || {});
             // An older active maze can finish its existing route. New
             // entries use the lantern gates, keeping every pad/star key.
             if (d.inMaze && !d.mazePuzzleVersion) this.data.mazeLegacyAccess = true;

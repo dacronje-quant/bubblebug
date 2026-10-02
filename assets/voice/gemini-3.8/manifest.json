@@ -1,6 +1,6 @@
 {
   "model": "gemini-3.8-flash-tts",
-  "installedAt": "2026-10-02T09:44:10.232Z",
+  "installedAt": "2026-10-02T11:30:41.274Z",
   "normalization": "Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.",
   "clips": [
     {
@@ -404,48 +404,6 @@
       "sha256": "1d44c59dd8ea3b274cad5d54bab94986ef470356d1b531a92c99597ab6e2f49f"
     },
     {
-      "id": "story_replay_choice",
-      "speaker": "narrator",
-      "text": "Play again as Rainbow? Our friends will need help again. You keep your skills and outfits!",
-      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects. Pause after the opening question and explain patiently.",
-      "model": "gemini-3.8-flash-tts",
-      "voiceId": "voice_r8b6ppg0ri8o",
-      "generatedAt": "2026-10-02T09:26:04.996Z",
-      "bytes": 376628,
-      "normalization": {
-        "seconds": 7.72,
-        "sampleRate": 24000,
-        "channels": 1,
-        "gain": 0.6638789908064191,
-        "inputPeak": 0.794189453125,
-        "inputSpeechRms": 0.18075583300841475,
-        "outputPeak": 0.5272456926497269,
-        "outputSpeechRms": 0.12
-      },
-      "sha256": "f12ea6fb16f46ea79a1d7bc2af8eae5e56aa1a53ae6906b7be7610a7fc0d0185"
-    },
-    {
-      "id": "story_replay_start",
-      "speaker": "narrator",
-      "text": "Here we go, Rainbow! A new adventure, with all your magic!",
-      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects.",
-      "model": "gemini-3.8-flash-tts",
-      "voiceId": "voice_r8b6ppg0ri8o",
-      "generatedAt": "2026-10-02T09:27:10.435Z",
-      "bytes": 299828,
-      "normalization": {
-        "seconds": 6.12,
-        "sampleRate": 24000,
-        "channels": 1,
-        "gain": 0.7618192545473038,
-        "inputPeak": 0.80010986328125,
-        "inputSpeechRms": 0.1575176779580186,
-        "outputPeak": 0.609539099600867,
-        "outputSpeechRms": 0.12
-      },
-      "sha256": "3931beaea096d9f7b8c0cf5dd8fdd3acdae955a7441e79ddcd97fd27f0bbd28c"
-    },
-    {
       "id": "tutorial_jump",
       "speaker": "narrator",
       "text": "Let's hop! Press jump to reach the next step.",
@@ -620,6 +578,237 @@
         "outputSpeechRms": 0.12
       },
       "sha256": "9e22395fef159c7257992a48a0e2dc9930b8fcac668806d641f1700ea291906a"
+    },
+    {
+      "id": "story_replay_kin",
+      "speaker": "narrator",
+      "text": "Play again as Rainbow? Rainbow's family is lost all over the kingdom! You keep your skills and outfits.",
+      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects. Pause after the opening question and explain patiently.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T11:21:13.796Z",
+      "bytes": 478388,
+      "normalization": {
+        "seconds": 9.84,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7433388652540153,
+        "inputPeak": 0.81817626953125,
+        "inputSpeechRms": 0.16143377618092572,
+        "outputPeak": 0.6081822197711227,
+        "outputSpeechRms": 0.12000000000000001
+      },
+      "sha256": "b8d2c9b61b95bd823478bb3236402cb4700bbe3f70ca2762b7c45ff59d9b719e"
+    },
+    {
+      "id": "story_replay_kin_start",
+      "speaker": "narrator",
+      "text": "Here we go, Rainbow! Your rainbow family is lost. Let's find them and send them home!",
+      "style": "Tender, reassuring and softly excited. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T11:23:23.705Z",
+      "bytes": 353588,
+      "normalization": {
+        "seconds": 7.24,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6259324328767254,
+        "inputPeak": 0.788421630859375,
+        "inputSpeechRms": 0.19171398332642953,
+        "outputPeak": 0.4934986695364441,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "ebe00edc95b06aafc9f10017c390c573c0a30697eec3d13aa50c401862f8c4e1"
+    },
+    {
+      "id": "kin_rbGrandpa",
+      "speaker": "rbGrandpa",
+      "text": "Hello, little one! I'm Rainbow's Grandpa. My green is back! I'll ride the rainbow home.",
+      "style": "Fond, gently delighted and a little twinkly; unhurried natural phrasing, clear words. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Algenib",
+      "generatedAt": "2026-10-02T11:27:14.753Z",
+      "bytes": 453428,
+      "normalization": {
+        "seconds": 9.32,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7092463742779358,
+        "inputPeak": 0.828399658203125,
+        "inputSpeechRms": 0.1691936742322704,
+        "outputPeak": 0.5875394540336477,
+        "outputSpeechRms": 0.12000000000000001
+      },
+      "sha256": "c3efeb10b36953dd1f0d64d9eee167abc5a8aa2d3647387d3d1b7ae7330b3dc1"
+    },
+    {
+      "id": "kin_rbPapa",
+      "speaker": "rbPapa",
+      "text": "I'm Rainbow's Papa! You found me! I'll zoom home on a rainbow and wait for you!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Achird",
+      "generatedAt": "2026-10-02T11:25:18.054Z",
+      "bytes": 274868,
+      "normalization": {
+        "seconds": 5.6,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.8095472639564664,
+        "inputPeak": 0.628875732421875,
+        "inputSpeechRms": 0.14823099940271434,
+        "outputPeak": 0.5091046285507478,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "c682220bdb87a8145344189db1d4f44ea323c666ea98312cf9cfe00b35e62e07"
+    },
+    {
+      "id": "kin_rbGranny",
+      "speaker": "rbGranny",
+      "text": "Oh, my darling! I'm Rainbow's Granny. My blue is shining again! See you at home!",
+      "style": "Cozy, fond and gently delighted; unhurried natural phrasing. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Vindemiatrix",
+      "generatedAt": "2026-10-02T11:26:23.811Z",
+      "bytes": 407348,
+      "normalization": {
+        "seconds": 8.36,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6448382414228163,
+        "inputPeak": 0.86590576171875,
+        "inputSpeechRms": 0.18609318165626093,
+        "outputPeak": 0.558369148624603,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "f266591969e99570dffa6600ca29485db4110a5df10e80c0120d7769d5643cfd"
+    },
+    {
+      "id": "kin_rbSplash",
+      "speaker": "rbSplash",
+      "text": "Splish splash! I'm Splash, Rainbow's big sister! Thanks for finding me! Race you home!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Laomedeia",
+      "generatedAt": "2026-10-02T11:28:19.462Z",
+      "bytes": 345908,
+      "normalization": {
+        "seconds": 7.08,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6343518888812314,
+        "inputPeak": 0.891265869140625,
+        "inputSpeechRms": 0.18916945326928378,
+        "outputPeak": 0.5653761875847279,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "16cda0da57744677df8c7c47ac411bcadf288bbca906bcb54895f7a37c5a833a"
+    },
+    {
+      "id": "kin_rbPumpkin",
+      "speaker": "rbPumpkin",
+      "text": "Yippee! I'm Pumpkin, Rainbow's big brother! I'm all orange again! Wheee, rainbow ride!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Fenrir",
+      "generatedAt": "2026-10-02T11:29:23.450Z",
+      "bytes": 393908,
+      "normalization": {
+        "seconds": 8.08,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7638310179180865,
+        "inputPeak": 0.830810546875,
+        "inputSpeechRms": 0.15710281094249676,
+        "outputPeak": 0.6345988657166134,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "0f9a25d620cf24a12474feffc873a3bfd28890485a2b8187e8772a93354b4819"
+    },
+    {
+      "id": "kin_rbTwinkle",
+      "speaker": "rbTwinkle",
+      "text": "Hee hee! I'm Twinkle, Rainbow's baby sister! Rainbow ride! Wheee!",
+      "style": "Soft, light and gently giggly; rounded vowels, little playful pauses. Say the opening hee hee as a tiny happy giggle, then speak clearly and warmly.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Aoede",
+      "generatedAt": "2026-10-02T11:30:10.142Z",
+      "bytes": 351668,
+      "normalization": {
+        "seconds": 7.2,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.875528480362373,
+        "inputPeak": 0.84222412109375,
+        "inputSpeechRms": 0.13706007593303318,
+        "outputPeak": 0.7373912048657462,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "dc08c095f7b0fbff3cee5ff1e513556ae493c81c07e4924e5dac790a89ebf38f"
+    },
+    {
+      "id": "kin_rbMama",
+      "speaker": "rbMama",
+      "text": "You found me! I'm Rainbow's Mama. Thank you, little star. Let's go home together!",
+      "style": "Tender relief, reassuring and gently happy; natural conversational pace. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Sulafat",
+      "generatedAt": "2026-10-02T11:18:25.963Z",
+      "bytes": 353588,
+      "normalization": {
+        "seconds": 7.24,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6274697139791778,
+        "inputPeak": 0.82745361328125,
+        "inputSpeechRms": 0.19124429008534125,
+        "outputPeak": 0.5192020820566232,
+        "outputSpeechRms": 0.11999999999999998
+      },
+      "sha256": "5d15e63dcdfaa81c2ea0aa706b123e1d26857f4a55b5a4db77aedf435e1066b3"
+    },
+    {
+      "id": "kin_mama_call",
+      "speaker": "rbMama",
+      "text": "Hello? Is someone there? I'm Rainbow's Mama, and I'm lost in the maze. Can you help me?",
+      "style": "Soft, a little faraway and hopeful, never frightened; gentle, slow and clear. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Sulafat",
+      "generatedAt": "2026-10-02T11:22:18.875Z",
+      "bytes": 393908,
+      "normalization": {
+        "seconds": 8.08,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7186566284131076,
+        "inputPeak": 0.710052490234375,
+        "inputSpeechRms": 0.16697821359412832,
+        "outputPeak": 0.510283928628167,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "3c58eb5db8b3607b44c54c251dd3db69c8e5987d60e2048adb08bff774c80f07"
+    },
+    {
+      "id": "kin_complete",
+      "speaker": "rbMama",
+      "text": "Our whole rainbow family is home! Thank you! Look how bright our rainbow shines!",
+      "style": "Joyful, tender and amazed; clear words, natural pace with a happy lift at the end. No added sound effects or music.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Sulafat",
+      "generatedAt": "2026-10-02T11:24:12.895Z",
+      "bytes": 324788,
+      "normalization": {
+        "seconds": 6.64,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6666141801904273,
+        "inputPeak": 0.737335205078125,
+        "inputSpeechRms": 0.1800141724643787,
+        "outputPeak": 0.4915181032586949,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "dd04d88316401dc5140412b93a2a31be6decc89be5553e18e64d96a49a353bbf"
     }
   ],
   "retainedClips": []

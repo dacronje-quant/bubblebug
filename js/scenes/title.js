@@ -118,6 +118,7 @@
         stars: BB.Economy.balance(BB.Save.data, 'stars'),
         hearts: BB.Economy.balance(BB.Save.data, 'hearts'),
         family: BB.Save.count(BB.Save.data.family || {}),
+        kin: BB.RainbowFamily.active(BB.Save.data) ? { kin: Object.assign({}, BB.Save.data.kin) } : null,
       } : null;
       this.focus = this.hasSave ? 0 : 1;
       this.modeFocus = MODES.indexOf(BB.Settings.difficulty);
@@ -334,7 +335,8 @@
         BB.Kittens.draw(c, this.summary.cat, { mode: 'sit', t, happy: (t % 200) > 150 }, b.x - 58, b.y - 30, 1.5, 1);
         // the saved tallies, in a little pill beside the button
         const fam = this.summary.family;
-        const w = fam ? 204 : 140, px = b.x - b.r - 14 - w, py = b.y + 22;
+        const kin = this.summary.kin;
+        const w = (fam ? 204 : 140) + (kin ? 54 : 0), px = b.x - b.r - 14 - w, py = b.y + 22;
         c.fillStyle = 'rgba(30,20,50,0.45)'; G.rrect(px, py, w, 34, 17, c); c.fill();
         c.fillStyle = '#ffd84a'; G.star(px + 20, py + 17, 9, 5, 0.5, -Math.PI / 2, c); c.fill();
         G.text(String(this.summary.stars), px + 48, py + 18, 17, '#fff6d6', null);
@@ -344,6 +346,8 @@
           BB.MapView.catFace(c, px + 150, py + 18, 1.05, '#fff1dc', '#9a7a64');
           G.text(String(fam), px + 178, py + 18, 17, '#fff1dc', null);
         }
+        // a Rainbow adventure: how much of her rainbow family is home
+        if (kin) BB.RainbowFamily.miniArc(c, px + w - 30, py + 15, 1, kin, t);
       }
       c.restore();
       c.globalAlpha = 1;

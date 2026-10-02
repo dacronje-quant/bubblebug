@@ -128,20 +128,6 @@ window.BB.VOICE_CLIPS = {
     "speaker": "rainbow",
     "voice": "Achernar"
   },
-  "story_replay_choice": {
-    "file": "assets/voice/gemini-3.8/story_replay_choice.wav",
-    "text": "Play again as Rainbow? Our friends will need help again. You keep your skills and outfits!",
-    "source": "gemini-3.8-flash-tts",
-    "speaker": "narrator",
-    "voice": "voice_r8b6ppg0ri8o"
-  },
-  "story_replay_start": {
-    "file": "assets/voice/gemini-3.8/story_replay_start.wav",
-    "text": "Here we go, Rainbow! A new adventure, with all your magic!",
-    "source": "gemini-3.8-flash-tts",
-    "speaker": "narrator",
-    "voice": "voice_r8b6ppg0ri8o"
-  },
   "tutorial_jump": {
     "file": "assets/voice/gemini-3.8/tutorial_jump.wav",
     "text": "Let's hop! Press jump to reach the next step.",
@@ -197,5 +183,83 @@ window.BB.VOICE_CLIPS = {
     "source": "gemini-3.8-flash-tts",
     "speaker": "narrator",
     "voice": "voice_r8b6ppg0ri8o"
+  },
+  "story_replay_kin": {
+    "file": "assets/voice/gemini-3.8/story_replay_kin.wav",
+    "text": "Play again as Rainbow? Rainbow's family is lost all over the kingdom! You keep your skills and outfits.",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "story_replay_kin_start": {
+    "file": "assets/voice/gemini-3.8/story_replay_kin_start.wav",
+    "text": "Here we go, Rainbow! Your rainbow family is lost. Let's find them and send them home!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "kin_rbGrandpa": {
+    "file": "assets/voice/gemini-3.8/kin_rbGrandpa.wav",
+    "text": "Hello, little one! I'm Rainbow's Grandpa. My green is back! I'll ride the rainbow home.",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rbGrandpa",
+    "voice": "Algenib"
+  },
+  "kin_rbPapa": {
+    "file": "assets/voice/gemini-3.8/kin_rbPapa.wav",
+    "text": "I'm Rainbow's Papa! You found me! I'll zoom home on a rainbow and wait for you!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rbPapa",
+    "voice": "Achird"
+  },
+  "kin_rbGranny": {
+    "file": "assets/voice/gemini-3.8/kin_rbGranny.wav",
+    "text": "Oh, my darling! I'm Rainbow's Granny. My blue is shining again! See you at home!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rbGranny",
+    "voice": "Vindemiatrix"
+  },
+  "kin_rbSplash": {
+    "file": "assets/voice/gemini-3.8/kin_rbSplash.wav",
+    "text": "Splish splash! I'm Splash, Rainbow's big sister! Thanks for finding me! Race you home!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rbSplash",
+    "voice": "Laomedeia"
+  },
+  "kin_rbPumpkin": {
+    "file": "assets/voice/gemini-3.8/kin_rbPumpkin.wav",
+    "text": "Yippee! I'm Pumpkin, Rainbow's big brother! I'm all orange again! Wheee, rainbow ride!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rbPumpkin",
+    "voice": "Fenrir"
+  },
+  "kin_rbTwinkle": {
+    "file": "assets/voice/gemini-3.8/kin_rbTwinkle.wav",
+    "text": "Hee hee! I'm Twinkle, Rainbow's baby sister! Rainbow ride! Wheee!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rbTwinkle",
+    "voice": "Aoede",
+    "fallback": false
+  },
+  "kin_rbMama": {
+    "file": "assets/voice/gemini-3.8/kin_rbMama.wav",
+    "text": "You found me! I'm Rainbow's Mama. Thank you, little star. Let's go home together!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rbMama",
+    "voice": "Sulafat"
+  },
+  "kin_mama_call": {
+    "file": "assets/voice/gemini-3.8/kin_mama_call.wav",
+    "text": "Hello? Is someone there? I'm Rainbow's Mama, and I'm lost in the maze. Can you help me?",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rbMama",
+    "voice": "Sulafat"
+  },
+  "kin_complete": {
+    "file": "assets/voice/gemini-3.8/kin_complete.wav",
+    "text": "Our whole rainbow family is home! Thank you! Look how bright our rainbow shines!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rbMama",
+    "voice": "Sulafat"
   }
 };

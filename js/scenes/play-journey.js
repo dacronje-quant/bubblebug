@@ -126,7 +126,9 @@
     }
     // A picture of the sad kitten explains who waits beyond the door.
     G().drawGlow(x, y - 165, 46, happy ? '#fff5b7' : '#b29ad1', 0.3, c);
-    BB.Kittens.draw(c, 'rainbow', { mode: 'sit', sad: happy ? 0 : 0.9, happy, t }, x, y - 138, 1.7, 1);
+    const prize = BB.RainbowFamily.prize(save);
+    if (prize === 'rainbow') BB.Kittens.draw(c, 'rainbow', { mode: 'sit', sad: happy ? 0 : 0.9, happy, t }, x, y - 138, 1.7, 1);
+    else BB.Kittens.draw(c, BB.Kittens.fadedId(prize, happy ? 0 : 1), { mode: 'sit', sad: happy ? 0 : 0.9, happy, t }, x, y - 138, 1.45, 1);
     for (let i = 0; i < 6; i++) {
       const cx = left + 52 + i * 167 + Math.sin(t * 0.007 + i) * 5, cy = y - 377 - Math.sin(i * 1.4) * 32;
       if (!happy) {
@@ -181,8 +183,8 @@
       this.portalChoice = { kind, t: 0, focus: kind === 'cloud' ? 1 : 0 };
       this.pl.state = 'homechoice'; this.pl.body.vx = 0; this.journeyHold = 0;
       BB.Input.takePointers(); S().select();
-      if (kind === 'cloud') this.sayStory('story_replay_choice');
-      else if (!this.save.mazeSolved) this.sayStory('story_rainbow_call');
+      if (kind === 'cloud') this.sayStory('story_replay_kin');
+      else if (!this.save.mazeSolved) this.sayStory(BB.RainbowFamily.prize(this.save) === 'rainbow' ? 'story_rainbow_call' : 'kin_mama_call');
       return true;
     },
     closeJourneyChoice() {
@@ -234,15 +236,19 @@
       c.save(); c.fillStyle = 'rgba(35,28,56,0.6)'; c.fillRect(0, 0, G().W, G().H);
       c.fillStyle = '#fff8ee'; c.strokeStyle = '#ff9ec7'; c.lineWidth = 5;
       G().rrect(200, 107, 560, 351, 36, c); c.fill(); c.stroke();
-      G().text(replay ? 'Replay as Rainbow?' : 'Rescue Rainbow', 480, 156, 26, '#82629c', null, 'center', c);
+      const prize = BB.RainbowFamily.prize(this.save);
+      G().text(replay ? 'Replay as Rainbow?' : prize === 'rainbow' ? 'Rescue Rainbow' : "Rainbow's Mama", 480, 156, 26, '#82629c', null, 'center', c);
       if (replay) {
-        BB.Kittens.draw(c, 'rainbow', { mode: 'sit', happy: true, t, wear: this.save.wear }, 354, 296, 2.7, 1);
+        BB.Kittens.draw(c, 'rainbow', { mode: 'sit', happy: true, t, wear: this.save.wear }, 354, 314, 2.4, 1);
         sadCloud(c, 599, 243, t, 2.3);
-        BB.HUD.zoneIcon(c, BB.HOME_ZONE, 599, 291, 0.8);
+        // the family wanders off again, and Rainbow's rainbow family too
+        BB.HUD.zoneIcon(c, BB.HOME_ZONE, 566, 291, 0.8);
+        BB.RainbowFamily.miniArc(c, 640, 290, 1.3, { kin: {} }, t);
         G().text('Restart adventure · Keep skills and outfits', 480, 339, 15, '#82629c', null, 'center', c);
       } else {
         rainbow(c, 392, 291, t, 1.15);
-        BB.Kittens.draw(c, 'rainbow', { mode: 'sit', t }, 391, 282, 1.7, 1);
+        if (prize === 'rainbow') BB.Kittens.draw(c, 'rainbow', { mode: 'sit', t }, 391, 282, 1.7, 1);
+        else BB.Kittens.draw(c, BB.Kittens.fadedId(prize, 1), { mode: 'sit', sad: 0.9, t }, 391, 282, 1.45, 1);
         c.fillStyle = '#55945b'; G().rrect(528, 201, 116, 91, 12, c); c.fill();
         c.strokeStyle = '#eaddb4'; c.lineWidth = 8;
         c.beginPath(); c.moveTo(630, 280); c.lineTo(555, 280); c.lineTo(555, 252); c.lineTo(612, 252); c.lineTo(612, 217); c.lineTo(543, 217); c.stroke();

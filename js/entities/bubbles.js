@@ -23,6 +23,7 @@
     BB.Particles.ring(b.x, b.y, '#ffffff', b.r + 4);
     BB.Particles.burst('dot', b.x, b.y, 6, { color: '#e8fbff', speed: 2, life: 16, size: 1.8 });
     if (b.style === 'flower') BB.Particles.burst('flower', b.x, b.y, 5, { color: '#ffb3cf', speed: 1.5, life: 32, size: 4 });
+    if (b.style === 'rainbow') for (const col of BB.RAINBOW) BB.Particles.burst('spark', b.x, b.y, 1, { color: col, speed: 2.2, life: 28 });
   }
 
   // targets: [{ x, y, r, homing, hit(bubble) → true if consumed }]

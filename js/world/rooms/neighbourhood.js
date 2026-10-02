@@ -40,7 +40,7 @@
   put(pond, 7, 30, 'n'); put(pond, 22, 15, 'n'); put(pond, 27, 30, 'R');
   // The pond is painted below a walkable timber bridge. Children can
   // cross the neighbourhood with movement alone, before learning jump.
-  room('np', -60, 'Pond Walk', pond, 'pond');
+  room('np', -60, 'Pond Walk', pond, 'pond', { kin: [{ id: 'rbGrandpa', x: 13, y: 15 }] });
 
   const roots = blank();
   ledge(roots, 16, 0, 19);

@@ -72,14 +72,14 @@ if (checkOnly) {
   for (const { clip, metadata, bytes, stats, sha256 } of prepared) {
     await fs.writeFile(path.join(dest, clip.id + '.wav'), bytes);
     manifest[clip.id] = { file: 'assets/voice/gemini-3.8/' + clip.id + '.wav', text: clip.text, source: pack.model, speaker: clip.speaker, voice: metadata.voiceId };
-    if (clip.id === 'cat_babySnowflake' || clip.id === 'cat_babyPatches') manifest[clip.id].fallback = false;
+    if (['cat_babySnowflake', 'cat_babyPatches', 'kin_rbTwinkle'].includes(clip.id)) manifest[clip.id].fallback = false;
     provenance.push({ ...metadata, normalization: stats, sha256 });
   }
   await fs.writeFile(path.join(dest, 'manifest.json'), JSON.stringify({ model: pack.model, installedAt: new Date().toISOString(), normalization: 'Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.', clips: provenance, retainedClips: retained }, null, 2) + '\n');
   await fs.writeFile(path.join(root, 'js/core/voice-clips.js'), '// Gemini family and story voices, bundled for offline play.' + (retained.length ? ' ' + retained.length + ' existing story lines are retained until Gemini quota is available.' : '') + '\nwindow.BB.VOICE_CLIPS = ' + JSON.stringify(manifest, null, 2) + ';\n');
   const selected = new Set(Object.values(manifest).map(c => c.file));
   const voiceRoot = path.join(root, 'assets/voice') + path.sep;
-  for (const clip of Object.values(old)) if (!selected.has(clip.file)) {
+  for (const clip of Object.values(old)) if (clip.file && !selected.has(clip.file)) {
     const obsolete = path.resolve(root, clip.file);
     if (!obsolete.startsWith(voiceRoot) || !/\.(mp3|wav)$/.test(obsolete)) throw new Error('Unsafe obsolete voice path.');
     await fs.unlink(obsolete).catch(e => { if (e.code !== 'ENOENT') throw e; });

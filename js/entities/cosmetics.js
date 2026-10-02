@@ -7,6 +7,7 @@
     { id: 'bubble-heart', name: 'Heart bubbles', slot: 'bubble', value: 'heart', stars: 40 },
     { id: 'bubble-star', name: 'Star bubbles', slot: 'bubble', value: 'star', stars: 80 },
     { id: 'bubble-flower', name: 'Flower bubbles', slot: 'bubble', value: 'flower', stars: 140 },
+    { id: 'bubble-rainbow', name: 'Rainbow bubbles', slot: 'bubble', value: 'rainbow', unlock: { kind: 'kin', count: 7 } },
     { id: 'trail-classic', name: 'Classic trail', slot: 'trail', value: 'classic', stars: 0 },
     { id: 'trail-rainbow', name: 'Rainbow trail', slot: 'trail', value: 'rainbow', stars: 250 },
     { id: 'trail-paw', name: 'Tiny paw trail', slot: 'trail', value: 'paw', stars: 60 },
@@ -27,6 +28,13 @@
     if (style === 'heart') { BB.G.heart(x, y + 1, r * 0.55, c); c.fill(); }
     if (style === 'star') { BB.G.star(x, y, r * 0.6, 5, 0.5, -Math.PI / 2 + Math.sin(t * 0.06) * 0.15, c); c.fill(); }
     if (style === 'flower') flower(c, x, y, r * 0.6, '#ffb3cf');
+    if (style === 'rainbow') {
+      // Rainbow's family's own: a little rainbow inside every bubble
+      c.lineWidth = Math.max(1, r * 0.12); c.lineCap = 'round';
+      (BB.RAINBOW || COLORS).forEach((col, i, all) => {
+        c.strokeStyle = col; c.beginPath(); c.arc(x, y + r * 0.32, r * (0.66 - i * 0.48 / all.length), Math.PI * 1.06, Math.PI * 1.94); c.stroke();
+      });
+    }
     c.restore();
   }
   function icon(c, item, x, y, s, t) {

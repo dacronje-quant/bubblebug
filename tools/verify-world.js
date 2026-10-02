@@ -548,7 +548,7 @@ function runStage(stage, mapRoom) {
       if (room.def.maze) continue; // post-game four-direction search: tools/test-maze.js
       for (const t of room.things) {
         const at = `in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`;
-        if ('*TBnfy&eWjhuva'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' || t.ch === 'a' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
+        if ('*TBnfy&@eWjhuva'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' || t.ch === 'a' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
         if ('bc'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 4)) missing.push(`critter ${at}`);
         if ('PdAkZVO'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 1)) missing.push(`puzzle piece ${t.ch} ${at}`);
         if ('QK'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 3)) missing.push(`boss ${at}`);
@@ -558,12 +558,12 @@ function runStage(stage, mapRoom) {
     const unvisited = W.rooms.filter(r => !r.def.maze && !roomTouched(res.cover, r));
     if (unvisited.length) fail('rooms never entered: ' + unvisited.map(r => r.id).join(', '));
     if (missing.length) { fail(`${missing.length} collectible(s)/landmark(s) out of reach:`); missing.forEach(m => out.push('      ' + m)); }
-    else pass('every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack, cat trick, cat flap and lift is reachable');
+    else pass('every sparkle, toy, bench, flower, firefly, critter, family member, rainbow relative, boss, puzzle piece, snack, cat trick, cat flap and lift is reachable');
     const shut = W.rooms.filter(r => r.grid.some(row => row.includes('G')));
     if (shut.length) fail('gates that never opened: ' + shut.map(r => r.id).join(', '));
     else pass('every gate can be opened (all bosses cheered up, all puzzles solvable)');
     out.push(`  (${W.rooms.length} rooms · ${W.findThings('*').length} sparkles · ${W.findThings('b').length + W.findThings('c').length} gloomy critters · ` +
-      `${W.findThings('T').length} toys · ${W.findThings('&').length} family members · ${W.findThings('B').length} benches · ` +
+      `${W.findThings('T').length} toys · ${W.findThings('&').length} family members · ${W.findThings('@').length} of Rainbow's relatives · ${W.findThings('B').length} benches · ` +
       `${W.findThings('Q').length + W.findThings('K').length} bosses · ${W.rooms.filter(r => r.things.some(t => 'PAZV'.includes(t.ch))).length} puzzles · ` +
       `${W.findThings('e').length} treats · ${W.findThings('W').length} food bowls · ${W.findThings('j').length} cat tricks)`);
 

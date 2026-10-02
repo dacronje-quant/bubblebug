@@ -165,6 +165,9 @@
         const m = BB.CATS[r.def.family];
         catFace(c, x + w / 2 + (r.def.elder ? 14 * s : 0), y + h / 2, 0.9 * s, m ? m.fur : '#fff', m ? (m.pointDark || m.fur) : '#ccc');
       }
+      // where one of Rainbow's relatives was found (Rainbow adventures)
+      // (a grey face with a "?" where one is still lost, once you've been there)
+      if (BB.RainbowFamily.active(save)) for (const k of r.def.kin || []) BB.RainbowFamily.face(c, k.id, x + w / 2 - 14 * s, y + h / 2, 0.85 * s, !!save.kin[k.id]);
       if (r.def.toy && save.toys[r.def.toy]) BB.HUD.toyIcon(c, r.def.toy, x + 8 * s, y + 8 * s, 0.55 * s, t);
       const boss = r.def.boss || (r.things.some(th => th.ch === 'K') ? 'king' : null);
       if (boss) bossMark(c, boss, x + w / 2, y + h / 2 + 4 * s, s, !!(save.bosses && save.bosses[r.id]), t);

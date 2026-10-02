@@ -108,7 +108,8 @@
         G().bubble(s.x + (i ? -120 : 120), s.y - 150 + Math.sin(t * 0.05 + i) * 8, 16, cat.bubbleTint, 0.9, c);
         G().bubble(s.x + (i ? -100 : 100), s.y - 118 + Math.sin(t * 0.05 + i + 1) * 8, 9, cat.bubbleTint2, 0.9, c);
         if (on && !this.chosen) {
-          BB.UI.selectionPaw(c, s.x + 94, s.y - 156, 2.3);
+          // (beside the kitten's tail, so it never covers a face)
+          BB.UI.selectionPaw(c, s.x + (i ? 104 : -104), s.y - 176, 2.1);
         }
       }
 

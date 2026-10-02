@@ -43,6 +43,7 @@
       }
       if (kind === 'bosses') { BB.Critters.moodCloud(c, x - 9, y - 4, 0.5, t, 0.65); BB.Critters.rainbow(c, x + 7, y + 2, 1, 0.7); }
       if (kind === 'rainbow' || item.slot === 'cat') BB.Kittens.draw(c, 'rainbow', { mode: 'sit', happy: true, t }, x, y + 15, 0.75, 1);
+      if (kind === 'kin') BB.RainbowFamily.miniArc(c, x, y - 2, 0.85, { kin: Object.fromEntries(BB.RAINBOW_KIN.map(id => [id, 1])) }, t);
     }
     c.restore();
   }
