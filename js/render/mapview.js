@@ -160,19 +160,82 @@
     return out;
   }
 
+  // ──── Room miniatures: each room's real shape in its own colours ────
+  // (sky, ground with a grassy top, ledges, water and mist), painted once
+  // into a small picture and reused; gates are painted open.
+  const PX = 4, minis = new Map();
+  const SOLID = '#IXHGgM';
+  function miniature(r) {
+    if (minis.has(r.id)) return minis.get(r.id);
+    let cv = null;
+    try {
+      cv = document.createElement('canvas'); cv.width = r.w * PX; cv.height = r.h * PX;
+      const m = cv.getContext && cv.getContext('2d');
+      if (!m || !m.fillRect || !m.createLinearGradient) cv = null;
+      else {
+        const Z = BB.ZONES[r.zone], tile = (x, y) => (r.grid[y] && r.grid[y][x]) || '#';
+        const sky = m.createLinearGradient(0, 0, 0, cv.height);
+        sky.addColorStop(0, Z.sky[0]); sky.addColorStop(1, Z.sky[2] || Z.sky[1]);
+        m.fillStyle = sky; m.fillRect(0, 0, cv.width, cv.height);
+        for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) {
+          const ch = tile(x, y), X = x * PX, Y = y * PX;
+          if (ch === '~') { m.fillStyle = Z.water; m.globalAlpha = 0.8; m.fillRect(X, Y, PX, PX); m.globalAlpha = 1; }
+          else if (ch === '%') { m.fillStyle = 'rgba(235,225,255,0.7)'; m.fillRect(X, Y, PX, PX); }
+          else if (ch === '-' || ch === ':') { m.fillStyle = Z.ledge; m.fillRect(X, Y, PX, PX * 0.45); }
+          else if (ch === 'M') { m.fillStyle = Z.accent; m.fillRect(X, Y, PX, PX); }
+          else if ('#IXH'.includes(ch)) {
+            const open = !SOLID.includes(tile(x, y - 1)) && tile(x, y - 1) !== '~';
+            m.fillStyle = ch === 'I' ? '#d8eefa' : open ? Z.top : y % 2 ? Z.ground : Z.groundDark;
+            m.fillRect(X, Y, PX, PX);
+          }
+        }
+      }
+    } catch (e) { cv = null; }
+    minis.set(r.id, cv);
+    return cv;
+  }
+
+  // a soft cloud with a "?" over an unexplored room next to explored ones
+  function mystery(c, x, y, w, h, t, i) {
+    c.save(); c.globalAlpha = 0.9;
+    const cx = x + w / 2, cy = y + h / 2 + Math.sin(t * 0.03 + i) * 2, k = Math.min(1, Math.min(w, h) / 40);
+    c.fillStyle = '#f4ecff';
+    for (const [dx, dy, rr] of [[-18, 4, 13], [-4, -6, 17], [14, 2, 14], [0, 8, 12]]) { G().circle(cx + dx * k, cy + dy * k, rr * k, c); c.fill(); }
+    c.globalAlpha = 1;
+    G().text('?', cx, cy + 1, 16 * k, '#b49ad6', null, 'center', c);
+    c.restore();
+  }
+
   // every visited room, with its pictures, at scale sc (screen = o + tile·sc)
   function drawRooms(c, seen, sc, ox, oy, t) {
     const W = BB.World, P = BB.Play, save = P.save;
     const mk = s => Math.max(0.55, Math.min(1.2, s));
+    // unexplored rooms touching explored ones: puffy "?" clouds
+    const seenSet = new Set(seen.map(r => r.id));
+    const touch = (a, b) => a.x <= b.x + b.w && b.x <= a.x + a.w && a.y <= b.y + b.h && b.y <= a.y + a.h;
+    W.rooms.forEach((r, i) => {
+      if (seenSet.has(r.id) || r.def.maze || !seen.some(v => touch(v, r))) return;
+      const x = ox + r.x * sc, y = oy + r.y * sc;
+      if (x > G().W || y > G().H || x + r.w * sc < 0 || y + r.h * sc < 0) return;
+      mystery(c, x, y, r.w * sc, r.h * sc, t, i);
+    });
+    // a soft shadow under the explored kingdom
+    c.save(); c.fillStyle = 'rgba(120,80,40,0.16)';
+    for (const r of seen) { const x = ox + r.x * sc, y = oy + r.y * sc; if (x > G().W || y > G().H || x + r.w * sc < 0 || y + r.h * sc < 0) continue; G().rrect(x + 3, y + 4, r.w * sc, r.h * sc, 6, c); c.fill(); }
+    c.restore();
     for (const r of seen) {
       const x = ox + r.x * sc, y = oy + r.y * sc, w = r.w * sc, h = r.h * sc;
       if (x > G().W || y > G().H || x + w < 0 || y + h < 0) continue;
       const Z = BB.ZONES[r.zone];
       c.globalAlpha = 1;
-      c.fillStyle = BB.mix(Z.sky[1], Z.top, 0.45);
-      G().rrect(x + 1, y + 1, w - 2, h - 2, Math.min(6, w / 5), c); c.fill();
-      c.strokeStyle = BB.mix(Z.topDark, '#5a3a24', 0.4);
-      c.lineWidth = 2; c.stroke();
+      const pic = miniature(r);
+      c.save(); G().rrect(x + 1, y + 1, w - 2, h - 2, Math.min(6, w / 5), c); c.clip();
+      if (pic) { c.imageSmoothingEnabled = true; c.drawImage(pic, x, y, w, h); }
+      else { c.fillStyle = BB.mix(Z.sky[1], Z.top, 0.45); c.fillRect(x, y, w, h); }
+      c.restore();
+      G().rrect(x + 1, y + 1, w - 2, h - 2, Math.min(6, w / 5), c);
+      c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 3; c.stroke();
+      c.strokeStyle = BB.mix(Z.topDark, '#5a3a24', 0.5); c.lineWidth = 1.2; c.stroke();
       c.globalAlpha = 1;
       const s = mk(sc / 2.2);
       const stars = r.things.filter(th => th.ch === '*');
@@ -323,6 +386,54 @@
     c.fillStyle = '#ff7eb6'; G().circle(kx, ky, 3 + Math.sin(t * 0.15) * 0.8, c); c.fill();
   }
 
+  // a storybook map: warm paper with speckles, a rainbow-trimmed double
+  // border, heart corners and a little compass
+  function drawParchment(c, t) {
+    const W0 = G().W, H0 = G().H;
+    const g = c.createLinearGradient(0, 40, 0, H0 - 40);
+    g.addColorStop(0, '#fff8e6'); g.addColorStop(1, '#fbe8c4');
+    c.fillStyle = g; c.strokeStyle = '#c99550'; c.lineWidth = 6;
+    G().rrect(40, 40, W0 - 80, H0 - 80, 30, c); c.fill(); c.stroke();
+    c.fillStyle = 'rgba(170,120,60,0.08)';
+    for (let i = 0; i < 140; i++) { const h = BB.hash(i, 7, 3), k = BB.hash(i, 11, 5); G().circle(50 + h * (W0 - 100), 50 + k * (H0 - 100), 1 + BB.hash(i, 3, 9) * 2.2, c); c.fill(); }
+    ['#ff9ec7', '#ffd27a', '#9fe0a6', '#8fcff0', '#c4a4f0'].forEach((col, i) => {
+      c.strokeStyle = col; c.lineWidth = 2; G().rrect(48 + i * 2.6, 48 + i * 2.6, W0 - 96 - i * 5.2, H0 - 96 - i * 5.2, 24 - i, c); c.stroke();
+    });
+    for (const [x, y] of [[62, 62], [W0 - 62, 62], [62, H0 - 62], [W0 - 62, H0 - 62]]) {
+      if (x > W0 / 2 && y < H0 / 2) continue; // (the ✕ lives there)
+      c.fillStyle = '#ff8fb8'; G().heart(x, y + 2, 7, c); c.fill();
+    }
+    // compass rose, bottom right
+    const cx = W0 - 112, cy = H0 - 84;
+    c.save(); c.translate(cx, cy); c.rotate(Math.sin(t * 0.02) * 0.05);
+    c.fillStyle = 'rgba(255,248,232,0.9)'; G().circle(0, 0, 22, c); c.fill();
+    c.strokeStyle = '#c99550'; c.lineWidth = 1.5; c.stroke();
+    for (let i = 0; i < 4; i++) {
+      c.fillStyle = i ? '#d9b07a' : '#ff8fb8';
+      c.beginPath(); c.moveTo(0, -19); c.lineTo(5, 0); c.lineTo(-5, 0); c.closePath(); c.fill();
+      c.rotate(Math.PI / 2);
+    }
+    c.fillStyle = '#fff6c2'; G().circle(0, 0, 3.5, c); c.fill();
+    c.restore();
+  }
+  // the space between rooms: a soft sea with drifting waves and clouds,
+  // moving gently with the map so browsing feels alive
+  function drawSea(c, f, ox, oy, sc, t) {
+    const g = c.createLinearGradient(0, f.y, 0, f.y + f.h);
+    g.addColorStop(0, '#e3f4fb'); g.addColorStop(1, '#f6efdc');
+    c.fillStyle = g; c.fillRect(f.x, f.y, f.w, f.h);
+    c.strokeStyle = 'rgba(120,180,210,0.28)'; c.lineWidth = 1.5; c.lineCap = 'round';
+    const step = 46, sx = ((ox * 0.5) % step + step) % step, sy = ((oy * 0.5) % step + step) % step;
+    for (let y = f.y - step + sy; y < f.y + f.h + step; y += step) for (let x = f.x - step + sx; x < f.x + f.w + step; x += step) {
+      const o = Math.sin(t * 0.03 + x * 0.05 + y * 0.03) * 2, j = ((Math.round(y / step) % 2) + 2) % 2 * step / 2;
+      c.beginPath(); c.arc(x + j, y + o, 5, Math.PI * 1.1, Math.PI * 1.9); c.arc(x + j + 10, y + o, 5, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
+    }
+    for (let i = 0; i < 4; i++) {
+      const x = f.x + ((i * 233 + t * 0.12 + ox * 0.2) % (f.w + 160) + f.w + 160) % (f.w + 160) - 80;
+      BB.Backdrops.cloud(c, x, f.y + 40 + i * 70, 0.32, 'rgba(255,255,255,0.6)');
+    }
+  }
+
   function draw(c, mode, t) {
     const P = BB.Play;
     const seen = seenRooms();
@@ -331,14 +442,11 @@
     const f0 = FRAME();
     const ox = f0.x + f0.w / 2 - view.cx * sc, oy = f0.y + f0.h / 2 - view.cy * sc;
     c.save();
-    // parchment, with the zoomed-in part clipped to its frame
-    c.fillStyle = '#fff6de'; c.strokeStyle = '#d9a95a'; c.lineWidth = 6;
-    G().rrect(40, 40, G().W - 80, G().H - 80, 30, c); c.fill(); c.stroke();
+    drawParchment(c, t);
     const f = FRAME();
-    c.strokeStyle = 'rgba(217,169,90,0.35)'; c.lineWidth = 2; c.setLineDash([6, 8]);
-    G().rrect(f.x, f.y, f.w, f.h, 22, c); c.stroke(); c.setLineDash([]);
     c.save();
     G().rrect(f.x, f.y, f.w, f.h, 22, c); c.clip();
+    drawSea(c, f, ox, oy, sc, t);
     drawRooms(c, seen, sc, ox, oy, t);
     drawZoneTags(c, seen, sc, ox, oy);
     for (const e of edgeMarks(ox, oy, sc)) {
