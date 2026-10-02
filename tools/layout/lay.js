@@ -13,8 +13,9 @@ at('g6', 135, 17, { flip: true });        // Goose Green, down in the glen
 link('tg', 0, -18, 30, 35, 3);            // crosses the garden path
 link('tx', 0, 17, 30, 17, 1);             // crosses the glen
 // ── Mushroom Meadow: the glowing glen under the gardens and the house
-at('m1', 105, 17, { flip: true }); at('m2', 75, 17); at('m3', 45, 17);
-link('mg', 30, 17, 15, 17, 1);
+at('m1', 105, 17, { flip: true }); at('m2', 75, 17); at('m3', 45, 34);   // Rainy Hollow sits a floor down
+link('mg', 30, 17, 15, 34, 1);            // the mushroom stair back up to the glen path
+// the Mushroom Canopy now sits beside Glowpond Cliffs
 at('m4', -60, 17); at('m6', -90, 17); link('mh', -120, 17, 30, 17, 1); at('m7', -150, 17, { flip: true });
 at('m5', -180, 17);
 // ── Crystal Caverns: under the house

@@ -8,7 +8,7 @@
 
   // h1 ─ Hive Door: pop up out of the caverns into the warm hive
   BB.room({
-    id: 'h1', zone: 3, x: 525, y: -17,
+    id: 'h1', zone: 3, x: 0, y: -35,
     map: [
       '##############################',
       '##############################',
@@ -32,7 +32,7 @@
 
   // h2 ─ Hive Tower: climb the golden shelves
   BB.room({
-    id: 'h2', zone: 3, x: 555, y: -34, toy: 'mouse',
+    id: 'h2', zone: 3, x: 30, y: -52, toy: 'mouse',
     map: [
       '##############################',
       '##...........................#',
@@ -73,7 +73,7 @@
 
   // h3 ─ Firefly Chamber: a dark, snug room lit by the Firefly Elder
   BB.room({
-    id: 'h3', zone: 3, x: 585, y: -34, elder: 'glow', dark: 0.62,
+    id: 'h3', zone: 3, x: 60, y: -52, elder: 'glow', dark: 0.62,
     map: [
       '##############################',
       '##############################',
@@ -97,7 +97,7 @@
 
   // h4 ─ Honey Pools: glow-petals only open for a glowing kitten
   BB.room({
-    id: 'h4', zone: 3, x: 615, y: -34, kin: [{ id: 'rbPapa', x: 30, y: 8 }], // Rainbow's Papa, on a perch above the honey island
+    id: 'h4', zone: 3, x: 90, y: -52, kin: [{ id: 'rbPapa', x: 30, y: 8 }], // Rainbow's Papa, on a perch above the honey island
     map: [
       '############################################################',
       '############################################################',
@@ -121,7 +121,7 @@
   // h5 ─ Wax Loft: the long golden ledge in the Hive Tower leads through a
   //      gap in the wall to Phoebe's Papa, snoozing among the honey jars
   BB.room({
-    id: 'h5', zone: 3, x: 525, y: -34, family: 'papaGinger',
+    id: 'h5', zone: 3, x: 0, y: -52, family: 'papaGinger',
     map: [
       '##############################',
       '##############################',
@@ -146,7 +146,7 @@
   // h6 ─ The Queen's Chamber: the Queen Bee is so sad her crown slipped.
   //      Dodge the sticky honey drops and her grumpy little drones
   BB.room({
-    id: 'h6', zone: 3, x: 675, y: -34, boss: 'queenbee', arena: {name: 'Honeycomb Tower'},
+    id: 'h6', zone: 3, x: 150, y: -52, boss: 'queenbee', arena: {name: 'Honeycomb Tower'},
     map: [
       '#...........................##',
       '#...........................##',
