@@ -17,7 +17,7 @@ A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wa
 **Mac / Linux / tablets:** open `index.html` in Chrome, Edge, Safari or Firefox.
 **Online:** enable GitHub Pages (Settings → Pages → deploy from `main`, `/ (root)`).
 
-There's no install, no Node.js and no build step. Music and sound effects are generated in the browser; all 53 story and family voice recordings are bundled with the game, so playing never needs an API key.
+There's no install, no Node.js and no build step. Each region has its own recorded, seamlessly looping score (made with Lyria 3.5) and sound effects are generated in the browser; all 53 story and family voice recordings are bundled with the game, so playing never needs an API key.
 
 All 53 spoken recordings use Gemini 3.8 Flash TTS: the twelve family greetings, a funny line from each family member when you bubble them at home, the story moments, the first-time guidance cues and thirteen lines for Rainbow's family. Every character keeps one voice for all of their lines; the narrator lines share one voice. Recording volumes are matched; music becomes quiet during speech. Mute stops voices immediately, and leaving a scene cancels queued lines. See [the voice pack notes](voice-plan/GEMINI-VOICES.md).
 
@@ -155,7 +155,7 @@ The adventure starts at home, and nobody's there. The kitten wakes on its bed, s
 - **The homecoming party.** Slide home down the Rainbow Slide and the party starts in the living room. Only the family you actually found come: they dance in a ring around your kitten (the grannies sway, the babies bounce). Every friend you made floats in on a little cloud, and every boss you cheered up waves from the landing upstairs. Then a big card fills in the family frames one by one and shows how many you found, like **9 / 12**. Find all twelve and the card turns rainbow, with extra fireworks. Afterwards you can keep playing and go back out for anyone you missed.
 - **Dressing up.** Every boss still gives its original free present: a bonnet, mushroom hat, tiara, honey crown, unicorn horn, cloud collar, sailor hat, sun hat, bobble hat, scarf, nightcap or bunny ears. Hidden corners also hold Googly glasses inside Root Hollow's two-bud nook, a silly nose-and-moustache disguise in the crystal grotto and star shades in the coral garden. Discoveries are free and equip on pickup. The mirror has five picture tabs: Hats, Necklaces, Glasses, Bubbles and Trails. Earned presents join their matching clothing category; hidden glasses and scuba gear share Glasses. Page dots browse longer categories. Up focuses categories; Left/Right changes category; Down returns to items. A sixth kitten tab appears after rescuing Rainbow. A hat, neck item and face accessory can be worn together.
 - **Toys come home too.** Every hidden toy you find turns up somewhere in the house: the yarn ball on the rug, the jingle bell hanging from a cat tree, the paper boat on the windowsill, the star cushion on the sofa… Walk into one to bat it about and hear its own sound. The spots for toys you haven't found yet show a faint outline.
-- The house has its own gentle music-box tune. The party tune plays only while you're at the party; step out of the house and the music changes with you.
+- The house has its own gentle music-box score. The party tune plays only while you're at the party; step out of the house and the music changes with you.
 
 ### ⭐ Stars for you, hearts for friends
 
@@ -382,7 +382,8 @@ tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (
 
 - **One continuous world grid.** Rooms are placed at world coordinates (Hollow-Knight style), so walking off any edge leads straight into the neighbouring room, and the camera glides across.
 - **Pure physics.** `BB.Physics.step(body, input, abilities, easy = false)` runs in play and in the verifier. Medium and Hard use the original movement; only Easy passes the assistance flag.
-- **Adaptive music.** Each biome has an 8-bar song in layers (pad, bass, lead, arpeggio, percussion, twinkles). Running swells the arps and percussion, benches fade to a music box, a new friend adds a twinkle layer, dark caves warm the mix, and boss arenas get their own bouncy tune.
+- **Region music.** Every region, the Cat House included, has a calm recorded score in the spirit of a fantasy adventure's quiet field music: soft orchestral and acoustic instruments, no drums or singing, made with Lyria 3.5 and cut into a seamless loop of about 1 to 1½ minutes. Crossing into another region fades the old music out while the new one fades in, and each region picks up where it left off. The files load only when a region is first heard (`assets/music/`; tools and prompts in `music-plan/`). Voices still turn the music down while they speak.
+- **Adaptive music.** Boss arenas, parties and the title keep layered songs; each has an 8-bar song in layers (pad, bass, lead, arpeggio, percussion, twinkles). Running swells the arps and percussion, benches fade to a music box, a new friend adds a twinkle layer, dark caves warm the mix, and boss arenas get their own bouncy tune.
 - **Saves.** Progress lives in browser local storage and is written on every room change, save point, friend, gate and reward. Difficulty and sound are separate device settings. Schema v8 retains all existing progress and adds hidden-glasses discoveries, the maze return point, permanent Rainbow unlock and replay count. Older maze rescues and positions stay earned; earlier migrations restore the full star total and purchased items, relocate only old-house resume/bench coordinates and keep older world collectibles. A confirmed sad-cloud replay writes one complete fresh world while carrying skills and clothing. The rewards preview keeps progress entirely in memory.
 
 ### Zero softlocks, proven
@@ -393,6 +394,7 @@ node tools/test-rewards.js             # milestones, held inputs, reload, founta
 node tools/test-maze.js                # entire maze graph, twelve-cat door, character changes and reload
 node tools/test-journey.js             # hidden glasses, migration and three rescue/cloud/replay cycles
 node tools/test-rainbow-family.js      # Rainbow's family after the rescue, all six happy mazes and the Cloud Maze solved by keys, one map
+node tools/test-music-browser.js       # recorded region music: loads from disk, loudness, crossfade without a gap, boss hand-over
 node tools/test-garden.js              # all 65 visitors, later rescues, repeated games, music and reload
 node tools/test-garden-route.js        # wider climb, high hops, trampoline and ball across all three gardens
 node tools/test-rainbow-garden.js       # indoor gate, lantern sequence, rescue exit and legacy routes

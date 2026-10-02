@@ -9,6 +9,12 @@
 //    • just made a friend  → a sparkly twinkle layer joins for a while
 //    • deep dark caverns   → the whole mix gets softer and warmer
 //  Changing zones crossfades to the new song on the next bar.
+//
+//  Each region also has a recorded score (Lyria 3.5, assets/music/<key>.js,
+//  a seamless loop). When one exists it is used instead of the layered
+//  song: the old region's music fades out while the new one fades in, and
+//  each region resumes where it left off. Boss, party and lullaby tunes
+//  stay layered. A region's file is only loaded when it is first heard.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -125,7 +131,12 @@
   };
 
   const LAYERS = ['pad', 'bass', 'lead', 'arp', 'perc', 'twinkle'];
+  // regions with a recorded score (keys of BB.ZONES)
+  const RECORDED = ['gardens', 'meadow', 'caves', 'hive', 'ruins', 'clouds', 'lagoon', 'dunes', 'frost', 'autumn', 'springs', 'starlight', 'home'];
+  const FADE_OUT = 2.2, FADE_IN = 2.8, REC_LEVEL = 0.62, KEEP = 3;
   const busses = {};
+  let procGain = null, procOff = null, rec = null, recToken = 0;
+  const buffers = new Map(), loading = {}, resumeAt = {};
   let song = null, pendingSong = null, songName = null;
   let step = 0, nextTime = 0, timer = null;
   const target = { pad: 1, bass: 1, lead: 1, arp: 0.3, perc: 0.2, twinkle: 0 };
@@ -138,10 +149,86 @@
     const warm = ctx.createBiquadFilter(); warm.type = 'lowpass'; warm.frequency.value = 12000;
     master.connect(warm); warm.connect(A.musicBus);
     master._warm = warm;
+    procGain = ctx.createGain(); procGain.gain.value = 1; procGain.connect(master);
     for (const l of LAYERS) {
-      const g = ctx.createGain(); g._music = true; g.gain.value = target[l] || 0; g.connect(master); busses[l] = g;
+      const g = ctx.createGain(); g._music = true; g.gain.value = target[l] || 0; g.connect(procGain); busses[l] = g;
     }
     return true;
+  }
+
+  // ──── recorded region scores ────
+  function decode(name) {
+    const d = window.BB_MUSIC && window.BB_MUSIC[name];
+    if (!d) return Promise.resolve(null);
+    const bin = atob(d.mp3), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Promise(resolve => {
+      try {
+        const p = A.ctx.decodeAudioData(bytes.buffer, b => resolve(b), () => resolve(null));
+        if (p && p.catch) p.catch(() => resolve(null));
+      } catch (e) { resolve(null); }
+    }).then(b => {
+      if (!b) return null;
+      b._loopEnd = Math.min(b.duration, d.frames / d.rate);
+      delete window.BB_MUSIC[name]; // the decoded copy is all we need now
+      return b;
+    });
+  }
+  function load(name) {
+    if (buffers.has(name)) { const b = buffers.get(name); buffers.delete(name); buffers.set(name, b); return Promise.resolve(b); }
+    if (loading[name]) return loading[name];
+    loading[name] = new Promise(resolve => {
+      if (window.BB_MUSIC && window.BB_MUSIC[name]) { resolve(); return; }
+      if (typeof document === 'undefined') { resolve(); return; }
+      const el = document.createElement('script');
+      el.src = 'assets/music/' + name + '.js';
+      el.onload = el.onerror = () => { el.remove(); resolve(); };
+      document.head.appendChild(el);
+    }).then(() => decode(name)).then(b => {
+      delete loading[name];
+      if (b) {
+        buffers.set(name, b);
+        // keep only the last few regions decoded (each is ~30 MB of samples)
+        while (buffers.size > KEEP) { const old = buffers.keys().next().value; if (rec && rec.name === old) break; buffers.delete(old); }
+      }
+      return b;
+    });
+    return loading[name];
+  }
+  function fadeOutRecorded() {
+    if (!rec) return;
+    const r = rec, t = A.ctx.currentTime;
+    resumeAt[r.name] = (r.offset + t - r.start) % r.buffer._loopEnd;
+    r.gain.gain.cancelScheduledValues(t);
+    r.gain.gain.setValueAtTime(r.gain.gain.value, t);
+    r.gain.gain.linearRampToValueAtTime(0, t + FADE_OUT);
+    try { r.src.stop(t + FADE_OUT + 0.1); } catch (e) { /* already stopped */ }
+    rec = null;
+  }
+  function startRecorded(name, buffer) {
+    const ctx = A.ctx, t = ctx.currentTime;
+    const src = ctx.createBufferSource(), gain = ctx.createGain();
+    src.buffer = buffer; src.loop = true; src.loopStart = 0; src.loopEnd = buffer._loopEnd;
+    gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(REC_LEVEL, t + FADE_IN);
+    src.connect(gain); gain.connect(master);
+    const offset = resumeAt[name] || 0;
+    src.start(t, offset);
+    rec = { name, src, gain, buffer, start: t, offset };
+  }
+  function fadeProcedural(on) {
+    const t = A.ctx.currentTime;
+    procGain.gain.cancelScheduledValues(t);
+    procGain.gain.setValueAtTime(procGain.gain.value, t);
+    procGain.gain.linearRampToValueAtTime(on ? 1 : 0, t + (on ? FADE_IN : FADE_OUT));
+    clearTimeout(procOff);
+    // (the layered song stops scheduling once it has faded away)
+    if (!on) procOff = setTimeout(() => { if (rec || recToken) { song = null; pendingSong = null; if (timer) { clearInterval(timer); timer = null; } } }, FADE_OUT * 1000 + 300);
+  }
+  function startProcedural(name) {
+    const s = SONGS[name] || SONGS.gardens;
+    if (!song) { song = s; step = 0; nextTime = A.ctx.currentTime + 0.1; }
+    else pendingSong = s;
+    if (!timer) timer = setInterval(tick, 30);
   }
 
   const VOL = { pad: 0.16, bass: 0.2, lead: 0.13, arp: 0.07, perc: 0.05, twinkle: 0.04 };
@@ -195,17 +282,33 @@
   BB.Music = {
     SONGS,
     wanted: null,
+    RECORDED,
     play(name) {
       this.wanted = name;
       if (!ensureBusses()) return; // no audio yet — started once the player taps/presses
       if (name === songName) return;
       songName = name;
-      const s = SONGS[name] || SONGS.gardens;
-      if (!song) { song = s; step = 0; nextTime = A.ctx.currentTime + 0.1; }
-      else pendingSong = s;
-      if (!timer) timer = setInterval(tick, 30);
+      const token = ++recToken;
+      fadeOutRecorded(); // the old region's music fades away…
+      if (RECORDED.includes(name)) {
+        fadeProcedural(false);
+        load(name).then(buffer => {
+          if (token !== recToken || songName !== name) return;
+          if (buffer) startRecorded(name, buffer); // …while the new one fades in
+          else { recToken = 0; fadeProcedural(true); startProcedural(name); } // (no file: the layered song)
+        });
+      } else {
+        recToken = 0;
+        fadeProcedural(true);
+        startProcedural(name);
+      }
     },
-    stop() { if (timer) { clearInterval(timer); timer = null; } song = null; pendingSong = null; songName = null; this.wanted = null; },
+    stop() {
+      if (timer) { clearInterval(timer); timer = null; } song = null; pendingSong = null; songName = null; this.wanted = null;
+      if (rec) { try { rec.src.stop(); } catch (e) { /* stopped */ } rec = null; }
+      recToken = 0;
+    },
+    get recording() { return rec ? rec.name : null; },
     get current() { return songName; },
 
     // mood: { energy 0..1, calm bool, joy 0..1, dark 0..1, paused bool }
@@ -221,7 +324,8 @@
       target.perc = calm ? 0 : 0.15 + 0.85 * (m.energy || 0);
       target.twinkle = calm ? 0.8 : Math.min(1, 0.2 + (m.joy || 0));
       for (const l of LAYERS) busses[l].gain.setTargetAtTime(target[l], t, 0.4);
-      const cutoff = m.paused ? 900 : 12000 - (m.dark || 0) * 8000;
+      // (recorded scores already suit their region, so darkness only softens the layered songs)
+      const cutoff = m.paused ? 900 : rec ? 12000 : 12000 - (m.dark || 0) * 8000;
       master._warm.frequency.setTargetAtTime(cutoff, t, 0.3);
       master.gain.setTargetAtTime(m.paused ? 0.6 : 1, t, 0.3);
     },
