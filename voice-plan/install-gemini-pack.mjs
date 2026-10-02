@@ -9,7 +9,7 @@ const pack = JSON.parse(await fs.readFile(path.join(dir, 'gemini-pack.json'), 'u
 const context = vm.createContext({ window: { BB: {} } });
 vm.runInContext(await fs.readFile(path.join(root, 'js/core/voice-clips.js'), 'utf8'), context);
 const old = context.window.BB.VOICE_CLIPS;
-if (pack.clips.length !== 20 || new Set(pack.clips.map(c => c.id)).size !== 20 || Object.keys(old).some(id => !pack.clips.some(c => c.id === id))) throw new Error('Pack must cover every game voice exactly once.');
+if (new Set(pack.clips.map(c => c.id)).size !== pack.clips.length || Object.keys(old).some(id => !pack.clips.some(c => c.id === id))) throw new Error('Pack must cover every game voice exactly once.');
 const prepared = [], retained = [];
 const allowPartial = process.argv.includes('--allow-partial');
 const checkOnly = process.argv.includes('--check');
@@ -41,7 +41,6 @@ function normalize(original) {
   return { bytes, stats: { seconds, sampleRate: format.rate, channels: format.channels, gain, inputPeak: peak, inputSpeechRms: rms, outputPeak: peak * gain, outputSpeechRms: rms * gain } };
 }
 for (const clip of pack.clips) {
-  if (old[clip.id]?.text !== clip.text) throw new Error('Dialogue changed: ' + clip.id);
   const source = path.join(cache, clip.id);
   try { await fs.access(source + '.wav'); }
   catch (error) {
@@ -78,5 +77,12 @@ if (checkOnly) {
   }
   await fs.writeFile(path.join(dest, 'manifest.json'), JSON.stringify({ model: pack.model, installedAt: new Date().toISOString(), normalization: 'Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.', clips: provenance, retainedClips: retained }, null, 2) + '\n');
   await fs.writeFile(path.join(root, 'js/core/voice-clips.js'), '// Gemini family and story voices, bundled for offline play.' + (retained.length ? ' ' + retained.length + ' existing story lines are retained until Gemini quota is available.' : '') + '\nwindow.BB.VOICE_CLIPS = ' + JSON.stringify(manifest, null, 2) + ';\n');
-  console.log('Installed ' + prepared.length + ' Gemini recordings; retained ' + retained.length + ' existing lines. Dialogue unchanged.');
+  const selected = new Set(Object.values(manifest).map(c => c.file));
+  const voiceRoot = path.join(root, 'assets/voice') + path.sep;
+  for (const clip of Object.values(old)) if (!selected.has(clip.file)) {
+    const obsolete = path.resolve(root, clip.file);
+    if (!obsolete.startsWith(voiceRoot) || !/\.(mp3|wav)$/.test(obsolete)) throw new Error('Unsafe obsolete voice path.');
+    await fs.unlink(obsolete).catch(e => { if (e.code !== 'ENOENT') throw e; });
+  }
+  console.log('Installed ' + prepared.length + ' Gemini recordings; retained ' + retained.length + ' existing lines.');
 }

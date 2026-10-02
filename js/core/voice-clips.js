@@ -1,20 +1,5 @@
-// Gemini family and story voices, bundled for offline play. Three existing story lines are retained until Gemini quota is available.
+// Gemini family and story voices, bundled for offline play.
 window.BB.VOICE_CLIPS = {
-  "story_family_complete": {
-    "file": "assets/voice/story_family_complete.mp3",
-    "text": "The whole family is together! A rainbow surprise is waiting for you!",
-    "source": "gpt-4o-mini-tts"
-  },
-  "story_replay_choice": {
-    "file": "assets/voice/story_replay_choice.mp3",
-    "text": "Play again as Rainbow? Our friends will need help again. You keep your skills and outfits!",
-    "source": "gpt-4o-mini-tts"
-  },
-  "story_replay_start": {
-    "file": "assets/voice/story_replay_start.mp3",
-    "text": "Here we go, Rainbow! A new adventure, with all your magic!",
-    "source": "gpt-4o-mini-tts"
-  },
   "cat_mamaMallow": {
     "file": "assets/voice/gemini-3.8/cat_mamaMallow.wav",
     "text": "You found Marshmallow's Mama! Come here, little kitten. I've saved you a cuddle!",
@@ -103,7 +88,7 @@ window.BB.VOICE_CLIPS = {
   },
   "story_welcome": {
     "file": "assets/voice/gemini-3.8/story_welcome.wav",
-    "text": "Little kitten, let's find all our family and bring everyone home!",
+    "text": "Little kitten, let's find our family! Walk through the glowing door to start.",
     "source": "gemini-3.8-flash-tts",
     "speaker": "narrator",
     "voice": "voice_r8b6ppg0ri8o"
@@ -122,6 +107,13 @@ window.BB.VOICE_CLIPS = {
     "speaker": "narrator",
     "voice": "voice_r8b6ppg0ri8o"
   },
+  "story_family_complete": {
+    "file": "assets/voice/gemini-3.8/story_family_complete.wav",
+    "text": "The whole family is together! A rainbow surprise is waiting for you!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
   "story_rainbow_call": {
     "file": "assets/voice/gemini-3.8/story_rainbow_call.wav",
     "text": "Is someone there? My rainbow has lost its sparkle. Could you help me?",
@@ -135,5 +127,75 @@ window.BB.VOICE_CLIPS = {
     "source": "gemini-3.8-flash-tts",
     "speaker": "rainbow",
     "voice": "Achernar"
+  },
+  "story_replay_choice": {
+    "file": "assets/voice/gemini-3.8/story_replay_choice.wav",
+    "text": "Play again as Rainbow? Our friends will need help again. You keep your skills and outfits!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "story_replay_start": {
+    "file": "assets/voice/gemini-3.8/story_replay_start.wav",
+    "text": "Here we go, Rainbow! A new adventure, with all your magic!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "tutorial_jump": {
+    "file": "assets/voice/gemini-3.8/tutorial_jump.wav",
+    "text": "Let's hop! Press jump to reach the next step.",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "tutorial_paw_pads": {
+    "file": "assets/voice/gemini-3.8/tutorial_paw_pads.wav",
+    "text": "Step on both glowing paw pads to open the gate!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "tutorial_sad_bug": {
+    "file": "assets/voice/gemini-3.8/tutorial_sad_bug.wav",
+    "text": "That little bug looks sad. Face it and press the bubble button to cheer it up!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "tutorial_sleepy_buds": {
+    "file": "assets/voice/gemini-3.8/tutorial_sleepy_buds.wav",
+    "text": "Blow bubbles at both sleepy flowers. When they bloom, the gate will open!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "tutorial_googly_glasses": {
+    "file": "assets/voice/gemini-3.8/tutorial_googly_glasses.wav",
+    "text": "Googly-eye glasses! You're wearing them already. What a silly kitten!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "tutorial_first_family": {
+    "file": "assets/voice/gemini-3.8/tutorial_first_family.wav",
+    "text": "They're safe at home now! Let's find the rest of our family.",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "tutorial_goose": {
+    "file": "assets/voice/gemini-3.8/tutorial_goose.wav",
+    "text": "The goose is glowing! Now blow bubbles to cheer her up!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "tutorial_double_jump": {
+    "file": "assets/voice/gemini-3.8/tutorial_double_jump.wav",
+    "text": "You can jump twice now! Jump, then press jump again while you're in the air.",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
   }
 };

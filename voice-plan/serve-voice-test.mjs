@@ -8,7 +8,7 @@ http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const relative = decodeURIComponent(url.pathname).replace(/^\/+/, '') || 'index.html';
   const file = path.resolve(root, relative);
-  const permitted = ['index.html', 'try-rewards.html', 'voice-plan/voice-test.html'].includes(relative) || /^(js|assets)\//.test(relative);
+  const permitted = ['index.html', 'try-rewards.html', 'voice-plan/voice-test.html', 'voice-plan/voice-review.html'].includes(relative) || /^(js|assets)\//.test(relative);
   if (req.method !== 'GET' || !permitted || !file.startsWith(root + path.sep)) { res.writeHead(404); res.end(); return; }
   try {
     const body = await fs.readFile(file);

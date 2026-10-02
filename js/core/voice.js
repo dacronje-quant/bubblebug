@@ -11,6 +11,11 @@
   let voice = null, picked = false;
   let current = null, timer = null, watchdog = null, generation = 0, ducked = false;
   const queue = [];
+  function started(job) {
+    if (current !== job || job.generation !== generation || job.started) return;
+    job.started = true;
+    if (job.options.onStart) job.options.onStart();
+  }
 
   // the most natural-sounding English voice the device has: the newer
   // "natural" / "neural" / "enhanced" voices sound far less robotic than
@@ -48,7 +53,7 @@
       job.audio.onended = job.audio.onerror = job.audio.onplaying = null;
       try { job.audio.pause(); } catch (e) { /* optional audio */ }
     }
-    if (job.utterance) job.utterance.onend = job.utterance.onerror = null;
+    if (job.utterance) job.utterance.onstart = job.utterance.onend = job.utterance.onerror = null;
   }
   function finish(job) {
     if (current !== job) return;
@@ -67,6 +72,7 @@
       if (voice) u.voice = voice;
       u.lang = voice ? voice.lang : 'en-GB'; u.rate = 0.95; u.pitch = 1.05; u.volume = 1;
       u.onend = u.onerror = () => finish(job);
+      u.onstart = () => started(job);
       duck(); synth.speak(u);
     } catch (e) { finish(job); }
   }
@@ -77,6 +83,7 @@
     const start = () => {
       timer = null;
       if (current !== job || job.generation !== generation || muted()) return;
+      if (job.options.valid && !job.options.valid()) { finish(job); return; }
       watchdog = setTimeout(() => { if (current === job) BB.Voice.stop(); }, 30000);
       if (!job.clip.file || typeof window.Audio !== 'function') { fallback(job); return; }
       try {
@@ -86,6 +93,8 @@
         a.onerror = () => fallback(job);
         a.onplaying = () => {
           if (current !== job) return;
+          if (job.options.valid && !job.options.valid()) { finish(job); return; }
+          started(job);
           duck();
           clearTimeout(watchdog);
           watchdog = setTimeout(() => { if (current === job) BB.Voice.stop(); }, (Number.isFinite(a.duration) ? a.duration + 5 : 30) * 1000);
@@ -101,13 +110,22 @@
     };
     if (job.delay) timer = setTimeout(start, job.delay); else start();
   }
-  function enqueue(id, clip, delay) {
+  function enqueue(id, clip, delay, options = {}) {
     if (!clip || !clip.text || muted() || (!synth && typeof window.Audio !== 'function')) return false;
     if ((current && current.id === id && current.clip.text === clip.text) || queue.some(job => job.id === id && job.clip.text === clip.text)) return false;
-    queue.push({ id, clip, delay: Math.max(0, delay || 0), generation }); pump(); return true;
+    queue.push({ id, clip, delay: Math.max(0, delay || 0), generation, options }); pump(); return true;
   }
   BB.Voice = {
-    play(id, delay = 0) { return enqueue(id, BB.VOICE_CLIPS[id], delay); },
+    play(id, delay = 0, options = {}) { return enqueue(id, BB.VOICE_CLIPS[id], delay, options); },
+    cancel(id) {
+      for (let i = queue.length - 1; i >= 0; i--) if (queue[i].id === id) queue.splice(i, 1);
+      if (current && current.id === id) {
+        const job = current;
+        clearTimeout(timer); timer = null;
+        if (job.utterance && synth) { detach(job); synth.cancel(); }
+        finish(job);
+      }
+    },
     get currentId() { return current && current.id; },
     get queuedIds() { return queue.map(job => job.id); },
     stop() {

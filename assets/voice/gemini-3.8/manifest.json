@@ -1,6 +1,6 @@
 {
   "model": "gemini-3.8-flash-tts",
-  "installedAt": "2026-10-01T09:23:18.432Z",
+  "installedAt": "2026-10-02T09:44:10.232Z",
   "normalization": "Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.",
   "clips": [
     {
@@ -275,24 +275,24 @@
     {
       "id": "story_welcome",
       "speaker": "narrator",
-      "text": "Little kitten, let's find all our family and bring everyone home!",
-      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects.",
+      "text": "Little kitten, let's find our family! Walk through the glowing door to start.",
+      "style": "Warm, reassuring storybook guidance for a young child. Clear words, concise natural pace, with a small pause before the instruction. Gentle conversational volume. No added words, music or sound effects.",
+      "trigger": "Replaces the existing first-adventure welcome.",
       "model": "gemini-3.8-flash-tts",
       "voiceId": "voice_r8b6ppg0ri8o",
-      "reusedAudition": false,
-      "generatedAt": "2026-10-01T08:24:07.176Z",
-      "bytes": 324788,
+      "generatedAt": "2026-10-02T06:12:30.134Z",
+      "bytes": 355244,
       "normalization": {
-        "seconds": 6.64,
+        "seconds": 7.4,
         "sampleRate": 24000,
         "channels": 1,
-        "gain": 0.600523563420858,
-        "inputPeak": 0.81414794921875,
-        "inputSpeechRms": 0.19982563101508438,
-        "outputPeak": 0.4889150276166275,
+        "gain": 0.9608711724074535,
+        "inputPeak": 0.5003662109375,
+        "inputSpeechRms": 0.12488666893746136,
+        "outputPeak": 0.4807874677365908,
         "outputSpeechRms": 0.12
       },
-      "sha256": "8f7e9b6689a47055991abc25c4525ddee2e5923072e302718ee6e862be9ecb6d"
+      "sha256": "66979114e4379e1dcca61abb655a7cc3f6cec8f6b997b1e8d8d2d90369708db9"
     },
     {
       "id": "story_big_friend",
@@ -339,6 +339,27 @@
       "sha256": "e4ad390cb0a34e43a0243101fb7391edbea3d05830e8bdf87ac005c80ec2c803"
     },
     {
+      "id": "story_family_complete",
+      "speaker": "narrator",
+      "text": "The whole family is together! A rainbow surprise is waiting for you!",
+      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:25:00.500Z",
+      "bytes": 334388,
+      "normalization": {
+        "seconds": 6.84,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6230313267497049,
+        "inputPeak": 0.811187744140625,
+        "inputSpeechRms": 0.19260668741334175,
+        "outputPeak": 0.5053953764750337,
+        "outputSpeechRms": 0.11999999999999998
+      },
+      "sha256": "5bdcb780e0733afda6a4290d3637e38db236c913a0592c6fb74c8666d76fd32f"
+    },
+    {
       "id": "story_rainbow_call",
       "speaker": "rainbow",
       "text": "Is someone there? My rainbow has lost its sparkle. Could you help me?",
@@ -381,29 +402,225 @@
         "outputSpeechRms": 0.12
       },
       "sha256": "1d44c59dd8ea3b274cad5d54bab94986ef470356d1b531a92c99597ab6e2f49f"
-    }
-  ],
-  "retainedClips": [
-    {
-      "id": "story_family_complete",
-      "file": "assets/voice/story_family_complete.mp3",
-      "text": "The whole family is together! A rainbow surprise is waiting for you!",
-      "source": "gpt-4o-mini-tts",
-      "reason": "Retained with user approval after Gemini daily quota was reached."
     },
     {
       "id": "story_replay_choice",
-      "file": "assets/voice/story_replay_choice.mp3",
+      "speaker": "narrator",
       "text": "Play again as Rainbow? Our friends will need help again. You keep your skills and outfits!",
-      "source": "gpt-4o-mini-tts",
-      "reason": "Retained with user approval after Gemini daily quota was reached."
+      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects. Pause after the opening question and explain patiently.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:26:04.996Z",
+      "bytes": 376628,
+      "normalization": {
+        "seconds": 7.72,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6638789908064191,
+        "inputPeak": 0.794189453125,
+        "inputSpeechRms": 0.18075583300841475,
+        "outputPeak": 0.5272456926497269,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "f12ea6fb16f46ea79a1d7bc2af8eae5e56aa1a53ae6906b7be7610a7fc0d0185"
     },
     {
       "id": "story_replay_start",
-      "file": "assets/voice/story_replay_start.mp3",
+      "speaker": "narrator",
       "text": "Here we go, Rainbow! A new adventure, with all your magic!",
-      "source": "gpt-4o-mini-tts",
-      "reason": "Retained with user approval after Gemini daily quota was reached."
+      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:27:10.435Z",
+      "bytes": 299828,
+      "normalization": {
+        "seconds": 6.12,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7618192545473038,
+        "inputPeak": 0.80010986328125,
+        "inputSpeechRms": 0.1575176779580186,
+        "outputPeak": 0.609539099600867,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "3931beaea096d9f7b8c0cf5dd8fdd3acdae955a7441e79ddcd97fd27f0bbd28c"
+    },
+    {
+      "id": "tutorial_jump",
+      "speaker": "narrator",
+      "text": "Let's hop! Press jump to reach the next step.",
+      "style": "Warm, playful encouragement for a young child. Clear words, concise natural pace and a small pause after Let's hop. Gentle conversational volume. No added words, music or sound effects.",
+      "trigger": "First jump needed, only if the child hesitates.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T06:28:15.610Z",
+      "bytes": 211244,
+      "normalization": {
+        "seconds": 4.4,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.9719669212870222,
+        "inputPeak": 0.570587158203125,
+        "inputSpeechRms": 0.12346099169825961,
+        "outputPeak": 0.5545918434846024,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "9b9cb44f780c25c1a75cc44b3f73b74d52cd4354d252b0fe5ed17c1b68c7f9ca"
+    },
+    {
+      "id": "tutorial_paw_pads",
+      "speaker": "narrator",
+      "text": "Step on both glowing paw pads to open the gate!",
+      "style": "Warm, reassuring guidance for a young child. Clear words and patient, concise natural pace. Light emphasis on both glowing paw pads. Gentle conversational volume. No added words, music or sound effects.",
+      "trigger": "First paw-pad puzzle in Sunrise Lawn.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:27:33.013Z",
+      "bytes": 242228,
+      "normalization": {
+        "seconds": 4.92,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6249296372237724,
+        "inputPeak": 0.8043212890625,
+        "inputSpeechRms": 0.19202161787860744,
+        "outputPeak": 0.5026442113851851,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "6921e8061eeff79a292a9914cee5f1b178eeb0c91af5e453cb5179cee2e5956a"
+    },
+    {
+      "id": "tutorial_sad_bug",
+      "speaker": "narrator",
+      "text": "That little bug looks sad. Face it and press the bubble button to cheer it up!",
+      "style": "Kind, reassuring guidance for a young child. Clear words and concise natural pace, with a short pause between the observation and instruction. Gentle conversational volume. No added words, music or sound effects.",
+      "trigger": "First gloomy little bug, before using bubbles.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:28:38.749Z",
+      "bytes": 338228,
+      "normalization": {
+        "seconds": 6.92,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7177271910797695,
+        "inputPeak": 0.835418701171875,
+        "inputSpeechRms": 0.16719444587221022,
+        "outputPeak": 0.5996027177675991,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "997d8fd7e0c92ec61114aebca98e94917923597932fe091a05d5353455996ffa"
+    },
+    {
+      "id": "tutorial_sleepy_buds",
+      "speaker": "narrator",
+      "text": "Blow bubbles at both sleepy flowers. When they bloom, the gate will open!",
+      "style": "Warm, gently curious guidance for a young child. Clear words and concise natural pace, with a small pause between sentences. Light emphasis on both. Gentle conversational volume. No added words, music or sound effects.",
+      "trigger": "First sleepy buds encountered, in Root Hollow or Lily Pond.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:29:44.298Z",
+      "bytes": 336308,
+      "normalization": {
+        "seconds": 6.88,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7042631082454723,
+        "inputPeak": 0.7872314453125,
+        "inputSpeechRms": 0.1703908647138361,
+        "outputPeak": 0.5544180645843568,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "0dbc1902c3d3686450ef373a2eae08aec3dcb260076513d7c325e27237a1c117"
+    },
+    {
+      "id": "tutorial_googly_glasses",
+      "speaker": "narrator",
+      "text": "Googly-eye glasses! You're wearing them already. What a silly kitten!",
+      "style": "Warm, softly delighted and playfully amused. Clear words, concise natural pace and small expressive pauses. Gentle conversational volume, no loud laughing. No added words, music or sound effects.",
+      "trigger": "Finding the existing googly-eye glasses.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:30:48.711Z",
+      "bytes": 380468,
+      "normalization": {
+        "seconds": 7.8,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.5491384186490957,
+        "inputPeak": 0.872222900390625,
+        "inputSpeechRms": 0.21852413876851887,
+        "outputPeak": 0.4789711042300356,
+        "outputSpeechRms": 0.12000000000000001
+      },
+      "sha256": "41d4b4d6fc6a6dfb81f6b8909c2b0acaf45aec3113a5818a06b2ea2c600529c1"
+    },
+    {
+      "id": "tutorial_first_family",
+      "speaker": "narrator",
+      "text": "They're safe at home now! Let's find the rest of our family.",
+      "style": "Warm, relieved and reassuring, then gently inviting. Clear words, concise natural pace and a small pause between sentences. Gentle conversational volume. No added words, music or sound effects.",
+      "trigger": "After the first found family cat's introduction finishes.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:31:52.848Z",
+      "bytes": 238388,
+      "normalization": {
+        "seconds": 4.84,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6699347338758206,
+        "inputPeak": 0.81048583984375,
+        "inputSpeechRms": 0.17912192625952614,
+        "outputPeak": 0.5429726154258436,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "988869ca553c1cee108eff4436e07a301a801f403a61633e251ee83415cf0bf2"
+    },
+    {
+      "id": "tutorial_goose",
+      "speaker": "narrator",
+      "text": "The goose is glowing! Now blow bubbles to cheer her up!",
+      "style": "Warm, encouraging and gently alert, with concise clear delivery suitable for a timely game cue. Light emphasis on now. Gentle conversational volume, no shouting. No added words, music or sound effects.",
+      "trigger": "First goose encounter, when its gold glow appears.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:32:57.815Z",
+      "bytes": 246068,
+      "normalization": {
+        "seconds": 5,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.5490207051708746,
+        "inputPeak": 0.813201904296875,
+        "inputSpeechRms": 0.2185709917126928,
+        "outputPeak": 0.44646468294336844,
+        "outputSpeechRms": 0.12000000000000001
+      },
+      "sha256": "9bbf9d6cc5c57e4896ac2aaef43c962cb659ffc15bf3a290c1457a25dd987fca"
+    },
+    {
+      "id": "tutorial_double_jump",
+      "speaker": "narrator",
+      "text": "You can jump twice now! Jump, then press jump again while you're in the air.",
+      "style": "Warm, gently delighted guidance for a young child. Clear words and patient, concise natural pace. A small pause after the first sentence and light emphasis on again. Gentle conversational volume. No added words, music or sound effects.",
+      "trigger": "Double-jump gift, alongside its picture demonstration.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:34:03.933Z",
+      "bytes": 351668,
+      "normalization": {
+        "seconds": 7.2,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.5977599069801921,
+        "inputPeak": 0.828643798828125,
+        "inputSpeechRms": 0.20074949590752064,
+        "outputPeak": 0.49533004010721304,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "9e22395fef159c7257992a48a0e2dc9930b8fcac668806d641f1700ea291906a"
     }
-  ]
+  ],
+  "retainedClips": []
 }

@@ -1,3 +1,6 @@
 # Local generation cache and downloadable voice bundles.
 *.zip
 samples/gemini-pack/
+samples/tutorial-pack/
+voice-review.html
+voice-review.jpg

@@ -1,11 +1,12 @@
-// Generate every game voice. The API key stays in the process environment.
+// Generate the selected voice plan. The API key stays in the process environment.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 const dir = path.dirname(fileURLToPath(import.meta.url));
-const pack = JSON.parse(await fs.readFile(path.join(dir, 'gemini-pack.json'), 'utf8'));
-const output = path.resolve(dir, process.argv.find(arg => arg.startsWith('--cache-dir='))?.slice(12) || 'samples/gemini-pack');
+const planFile = path.resolve(dir, process.argv.find(arg => arg.startsWith('--plan='))?.slice(7) || 'gemini-pack.json');
+const pack = JSON.parse(await fs.readFile(planFile, 'utf8'));
+const output = path.resolve(dir, process.argv.find(arg => arg.startsWith('--cache-dir='))?.slice(12) || 'samples/' + path.basename(planFile, '.json'));
 const checkOnly = process.argv.includes('--check');
 const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 if (!key && !checkOnly) throw new Error('Configure GEMINI_API_KEY outside chat.');
@@ -31,13 +32,20 @@ async function post(route, body, attempt = 0) {
     });
   } catch { throw new Error('Gemini network request failed or timed out.'); }
   const result = await response.json();
-  if (response.status === 429 && attempt < 3 && !/requests per day/i.test(String(result.error?.message || ''))) {
+  const rateMessage = String(result.error?.message || '');
+  const retrySeconds = Number(rateMessage.match(/retry in (\d+)s/i)?.[1] || 0);
+  const quotaViolations = (result.error?.details || []).flatMap(detail => detail.violations || []);
+  const dailyQuota = /requests per day/i.test(rateMessage) || quotaViolations.some(v => /perday|per_day|per day/i.test(v.quotaId || v.quotaMetric || ''));
+  // Daily limits take precedence over a generic short retry hint.
+  const retryableRate = !dailyQuota;
+  if (response.status === 429 && attempt < 3 && retryableRate) {
     console.log('Rate limited; waiting before retrying the same request.');
-    const seconds = Number(String(result.error?.message || '').match(/retry in (\d+)s/i)?.[1] || 25);
+    const seconds = retrySeconds || 25;
     await new Promise(resolve => setTimeout(resolve, Math.min(60000, (seconds + 2) * 1000)));
     return post(route, body, attempt + 1);
   }
   if (!response.ok) {
+    if (response.status === 429 && quotaViolations.length) console.error('Quota details: ' + JSON.stringify(quotaViolations.map(v => ({ metric: v.quotaMetric, id: v.quotaId, value: v.quotaValue }))));
     const reason = String(result.error?.message || '').split(key).join('[redacted]').replace(/AIza[A-Za-z0-9_-]+/g, '[redacted]').slice(0, 600);
     throw new Error('Gemini HTTP ' + response.status + ': ' + reason);
   }
@@ -72,10 +80,11 @@ async function render(clip, voiceId) {
     if (info.text !== clip.text || info.model !== pack.model || info.voiceId !== voiceId || info.style !== clip.style) throw new Error('Cached take differs from the current plan: ' + clip.id);
     ready++; console.log('Keeping ' + clip.id); return;
   }
-  const selected = installed.clips.find(c => c.id === clip.id);
+  const selected = installed.clips.find(c => c.id === clip.id ||
+    (clip.id === 'tutorial_welcome' && c.id === 'story_welcome' && c.text === clip.text));
   if (selected) {
     if (selected.text !== clip.text || selected.model !== pack.model || selected.voiceId !== voiceId || selected.style !== clip.style) throw new Error('Installed take differs from the plan: ' + clip.id);
-    const bytes = await fs.readFile(path.join(dir, '../assets/voice/gemini-3.8', clip.id + '.wav'));
+    const bytes = await fs.readFile(path.join(dir, '../assets/voice/gemini-3.8', selected.id + '.wav'));
     if (crypto.createHash('sha256').update(bytes).digest('hex') !== selected.sha256) throw new Error('Installed WAV checksum differs: ' + clip.id);
     ready++; console.log('Keeping installed ' + clip.id); return;
   }
@@ -104,4 +113,4 @@ async function worker() {
   }
 }
 await Promise.all([worker(), worker()]);
-console.log(checkOnly ? 'Checked: ' + ready + ' ready, ' + pending + ' pending.' : 'Generation ' + (failed ? 'incomplete; completed takes retained.' : 'complete: all 20 game lines ready.'));
+console.log(checkOnly ? 'Checked: ' + ready + ' ready, ' + pending + ' pending.' : 'Generation ' + (failed ? 'incomplete; completed takes retained.' : 'complete: all ' + pack.clips.length + ' lines ready.'));

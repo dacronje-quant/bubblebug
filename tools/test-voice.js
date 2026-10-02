@@ -38,10 +38,23 @@ async function lifecycle() {
   V.play('cat_babyPatches'); created.at(-1).onerror();
   assert.equal(spoken.length, 1); assert.equal(V.currentId, null); // preserve the baby's character rather than using a generic device voice
   assert.equal(V.play('unknown'), false);
+  // A stale hint never starts after queued family speech.
+  V.play('cat_mamaMallow');
+  let relevant = true, starts = 0;
+  V.play('tutorial_sleepy_buds', 0, { valid: () => relevant, onStart: () => starts++ });
+  relevant = false; const countBefore = created.length; created.at(-1).end();
+  assert.equal(created.length, countBefore); assert.equal(starts, 0);
+  assert.equal(V.currentId, null);
+  // Completing an action cancels only its hint and advances the next voice.
+  V.play('tutorial_sleepy_buds', 0, { onStart: () => starts++ });
+  const hintAudio = created.at(-1);
+  V.play('cat_papaBirman'); V.cancel('tutorial_sleepy_buds');
+  assert.equal(hintAudio.paused, true); assert.equal(starts, 1);
+  assert.equal(V.currentId, 'cat_papaBirman'); V.stop();
   const clips = context.BB.VOICE_CLIPS;
   const pack = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/voice/gemini-3.8/manifest.json'), 'utf8'));
   const retained = new Set(pack.retainedClips.map(c => c.id));
-  assert.equal(Object.keys(clips).length, 20);
+  assert.equal(Object.keys(clips).length, 28);
   for (const [id, clip] of Object.entries(clips)) {
     if (retained.has(id)) { assert.equal(clip.source, 'gpt-4o-mini-tts', id); assert.ok(fs.existsSync(path.join(__dirname, '..', clip.file)), id); continue; }
     assert.equal(clip.source, 'gemini-3.8-flash-tts', id);
@@ -54,7 +67,7 @@ async function lifecycle() {
   assert.equal(clips.cat_babyPatches.voice, 'Leda');
   assert.equal(new Set(Object.values(clips).filter(c => c.speaker === 'narrator').map(c => c.voice)).size, 1);
   assert.equal(clips.story_rainbow_call.voice, clips.story_rainbow_rescue.voice);
-  assert.equal(pack.clips.length + retained.size, 20);
+  assert.equal(pack.clips.length + retained.size, 28);
   const gameRoot = path.join(__dirname, '..');
   function audioFiles(dir) {
     return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
@@ -63,7 +76,7 @@ async function lifecycle() {
     });
   }
   assert.deepEqual(audioFiles(path.join(gameRoot, 'assets/voice')).sort(), Object.values(clips).map(c => c.file).sort(), 'ship exactly the audio files selected by the game');
-  console.log('✓ 20 bundled recordings, selected Gemini pack and retained lines; consistent narrator/Rainbow; queue, duck, cancellation, mute and error fallback');
+  console.log('✓ 28 bundled recordings; consistent narrator/Rainbow; queue, duck, cancellation, mute and error fallback');
 }
 function story() {
   const g = bootGame(), B = g.BB, P = B.Play, heard = [];

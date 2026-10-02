@@ -143,6 +143,7 @@
       this.iris = { t: 0, close: false };
       this.followers = []; this.trail = [];
       this.timers = []; this.orbs = []; this.hopHome = []; this.healFx = [];
+      this.guidance = { jobs: {}, next: 0 };
       this.shakeT = 0; this.shakeAmp = 0;
       this.activeBoss = null; this.bossCard = null; this.bossMusic = false;
       this.homeVisitors = [];
@@ -508,6 +509,7 @@
       this.heal(C.MOOD_MAX);
       S().bossHappy();
       this.later(40, () => S().bossFriend(b.kind));
+      BB.Voice.cancel('tutorial_goose');
       BB.Voice.play('story_big_friend', 700);
       this.giveOutfit(b.kind);
       BB.Audio.duck(0.3, 4);
@@ -597,6 +599,7 @@
           self.save.wear.face = th.item; self.save.wardrobeNew = 1;
           self.outfitCard = { id: th.item, t: 0 }; self.pl.happyT = 90;
           S().outfit(); PT().burst('spark', th.x, th.y, 16, { color: '#efcaff', speed: 2, life: 40 });
+          if (th.item === 'googly') self.sayGuidance('tutorial_googly_glasses', () => self.save.wear.face === 'googly', 500);
           BB.Save.write();
         },
         onElder(th) { self.startGift(th); },
@@ -641,6 +644,7 @@
         },
         onFamily(th) {
           if (self.save.family[th.fam]) return;
+          self.cancelGuidance();
           self.save.family[th.fam] = 1;
           self.pl.happyT = 120;
           self.heal(C.MOOD_MAX, th.x, th.y - 30);
@@ -648,6 +652,7 @@
           S().meow(self.pl.cat);
           self.later(36, () => S().meow(th.fam));
           BB.Voice.play('cat_' + th.fam, 1200);
+          if (BB.Save.count(self.save.family) === 1) self.sayGuidance('tutorial_first_family', () => BB.Save.count(self.save.family) === 1);
           if (BB.GardenMaze.available(self.save)) self.sayStory('story_family_complete');
           for (let i = 0; i < 14; i++) PT().heart(th.x + (Math.random() - 0.5) * 50, th.y - 20 - Math.random() * 30);
           PT().burst('confetti', th.x, th.y - 30, 24, { speed: 3.5, g: 0.08, life: 70 });
@@ -687,6 +692,7 @@
         this.heal(C.MOOD_MAX);
         BB.Save.write();
       } else if (g.t > 110) {
+        if (g.ability === 'doubleJump') this.sayGuidance('tutorial_double_jump', () => this.gift === g && !g.closing);
         g.card = Math.min(1, g.card + 0.06);
         if ((g.t > 260 && BB.Input.any) || g.t > 900) {
           this.gift.closing = true;
@@ -826,6 +832,11 @@
         });
       }
       // feelings on the kitten itself (for drawing)
+      if (fx & (FX.JUMP | FX.DJUMP)) {
+        this.guidance.jumped = true;
+        this.save.voiceStory = this.save.voiceStory || {};
+        this.save.voiceStory.tutorial_jump = 1;
+      }
       this.pl.invuln = this.invuln;
       this.pl.sad = this.pl.state === 'sad' ? 1 : this.mood <= 1 ? 0.85 : this.mood === 2 ? 0.3 : 0;
 
@@ -923,6 +934,7 @@
       for (const tg of BB.Bosses.hazardTargets()) targets.push(tg);
       for (const th of e.things) { const tg = BB.Things.target(th, ctx); if (tg) targets.push(tg); }
       BB.Bubbles.update(targets);
+      this.updateGuidance();
 
       // ── shy walls ──
       this.updateShy();
@@ -1142,6 +1154,7 @@
       if (this.trickCard) this.drawTrickCard(c, t);
       if (this.outfitCard) this.drawOutfitCard(c, t);
       if (this.trickHint > 0) this.drawTrickHint(c, cam);
+      this.drawGuidance(c, cam);
       BB.HUD.drawZoneCard(c, this.cardZone, this.zoneCard / 40, t);
       if (this.gift && this.gift.card > 0) {
         c.fillStyle = `rgba(20,10,40,${0.35 * this.gift.card})`; c.fillRect(0, 0, G().W, G().H);

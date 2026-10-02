@@ -28,7 +28,7 @@ const { chromium } = (() => {
         a.onerror = () => reject(new Error('Cannot decode ' + c.file)); a.load();
       })));
     });
-    assert.equal(decoded.length, 20); assert.ok(decoded.every(c => c.seconds > 1));
+    assert.equal(decoded.length, 28); assert.ok(decoded.every(c => c.seconds > 1));
     await page.evaluate(() => { BB.Audio.setMuted(false); BB.Voice.play('cat_babySnowflake'); BB.Voice.play('story_family_complete'); });
     await page.waitForFunction(() => window.__recordedVoices[0]?.currentTime > 0);
     assert.ok(await page.evaluate(() => __recordedVoices[0].currentSrc.endsWith('cat_babySnowflake.wav')));
@@ -43,6 +43,6 @@ const { chromium } = (() => {
     await page.waitForTimeout(80);
     assert.equal(await page.evaluate(() => __recordedVoices.length), before);
     assert.deepEqual(errors, []);
-    console.log('✓ real browser decodes all 20 selected clips; Gemini baby introduction, queued completion, mute and pause cancel safely');
+    console.log('✓ real browser decodes all 28 selected clips; Gemini baby introduction, queued completion, mute and pause cancel safely');
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });
