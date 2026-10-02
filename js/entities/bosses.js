@@ -199,7 +199,7 @@
       case 'wait':
         sulk(b);
         // (a few steps in from whichever side the kitten comes)
-        if (ctx.pl.state === 'play' && (BB.zoneDir(b.zone) > 0 ? pcx > A.r.px + C.BOSS_WAKE * T : pcx < A.r.px + A.r.pw - C.BOSS_WAKE * T)) wake(b, ctx);
+        if (ctx.pl.state === 'play' && (BB.roomDir(A.r) > 0 ? pcx > A.r.px + C.BOSS_WAKE * T : pcx < A.r.px + A.r.pw - C.BOSS_WAKE * T)) wake(b, ctx);
         break;
       case 'intro':
         face(b, pcx);

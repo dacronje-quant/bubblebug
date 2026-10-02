@@ -105,7 +105,7 @@
           if (!room.grid.some(r => r.includes('G'))) continue;
           if (!BB.Puzzles.needs(room, save).some(n => n.icon !== 'bud')) continue;
           const zo = z => z === BB.HOME_ZONE ? -1 : z;
-          const before = BB.zoneDir(here.zone) > 0 ? room.x + room.w <= here.x : room.x >= here.x + here.w;
+          const before = BB.storyIndex(room) < BB.storyIndex(here);
           if (zo(room.zone) < zo(here.zone) || (room.zone === here.zone && before)) { save.gates[room.id] = 1; W().openGates(room); }
         }
         delete save.openBehind;

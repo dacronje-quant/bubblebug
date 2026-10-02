@@ -327,7 +327,7 @@ function exploreWithGates(starts, ab, startRoom = null) {
   const behind = room => {
     if (!startRoom) return false;
     if (zoneOrder(room.zone) !== zoneOrder(startRoom.zone)) return zoneOrder(room.zone) < zoneOrder(startRoom.zone);
-    return BB.zoneDir(room.zone) > 0 ? room.x + room.w <= startRoom.x : room.x >= startRoom.x + startRoom.w;
+    return BB.storyIndex(room) < BB.storyIndex(startRoom);
   };
   for (const room of W.rooms) {
     if (behind(room) && room.grid.some(r => r.includes('G'))) { W.openGates(room); opened.add(room.id); }

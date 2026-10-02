@@ -101,7 +101,7 @@
         const h = def.map.length;
         const w = def.map[0].length;
         const room = {
-          def, id: def.id, zone: def.zone,
+          def, id: def.id, zone: def.zone, order: this.rooms.length,
           x: def.x, y: def.y, w, h,
           px: def.x * T, py: def.y * T, pw: w * T, ph: h * T,
           grid: [], things: [], version: 0,

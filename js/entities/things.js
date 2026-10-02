@@ -85,7 +85,7 @@
   function guideDir(th) {
     const room = W().byId[th.room];
     const sign = room.things.find(s => DIR[s.ch]);
-    return sign ? DIR[sign.ch] : [BB.zoneDir(room.zone), 0];
+    return sign ? DIR[sign.ch] : [BB.roomDir(room), 0];
   }
 
   function update(th, ctx) {

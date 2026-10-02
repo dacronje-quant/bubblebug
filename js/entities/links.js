@@ -44,9 +44,10 @@
   const FLAPS = {};
   function flapTiles(zone) {
     if (!FLAPS[zone]) {
-      const d = BB.zoneDir(zone), out = [];
-      for (const r of W().rooms) if (r.zone === zone) for (const t of r.things) if (t.ch === 'h') out.push(t);
-      FLAPS[zone] = out.sort((a, b) => (a.tx - b.tx) * d);
+      const out = [];
+      for (const r of W().rooms) if (r.zone === zone) for (const t of r.things) if (t.ch === 'h') out.push({ t, r });
+      // along the story, then onward inside a room
+      FLAPS[zone] = out.sort((a, b) => BB.storyIndex(a.r) - BB.storyIndex(b.r) || (a.t.tx - b.t.tx) * BB.roomDir(a.r)).map(o => o.t);
     }
     return FLAPS[zone];
   }
