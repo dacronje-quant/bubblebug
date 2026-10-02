@@ -72,7 +72,7 @@ function render(dir) {
     return originalLinkProgress.call(this, c, th, cam, ctx);
   };
   for (const [id, col, floor, name] of [
-    ['hm', B.Home.MIRROR_COL - 0.5, 32, 'wardrobe'], ['ng', 16, 31, 'garden'],
+    ['hm', B.Home.MIRROR_COL - 0.5, 32, 'wardrobe'], ['ng', 24, 31, 'garden'],
     ['np', 14, 31, 'pond'], ['nm', 21, 32, 'rainbow'],
   ]) {
     place(id, col, floor); B.Play.journeyLock = null; B.Play.funLock = null; B.Play.mirrorLock = false; B.Play.mirrorHold = 0; // (clear the step-away cooldown left by closing the wardrobe)
@@ -106,7 +106,7 @@ function render(dir) {
   const friends = Object.values(B.Play.ents).flatMap(e => e.bugs).filter(bug => !bug.king).slice(0, 2);
   for (const bug of friends) B.Play.save.friends[bug.key] = bug.kind;
   B.Play.save.heartsSpent = friends.length;
-  place('ng', 16, 31); tick(B.Links.HOLD + 15); B.Play.zoneCard = 0; shot('critter-switch-no-heart');
+  place('ng', 24, 31); tick(B.Links.HOLD + 15); B.Play.zoneCard = 0; shot('critter-switch-no-heart');
   assert.equal(B.Play.chooseGarden(), false); assert.equal(Object.keys(B.Play.save.residents).length, 0);
   B.Play.save.heartsSpent--; shot('critter-switch-heart-ready');
   assert.equal(B.Play.chooseGarden(), true); shot('critter-switch-on');

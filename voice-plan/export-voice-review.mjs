@@ -18,7 +18,7 @@ const names={
  story_family_complete:'Whole family together',story_rainbow_call:'Rainbow asks for help',
  story_rainbow_rescue:'Rainbow rescued',story_replay_choice:'Play again choice',story_replay_start:'Replay opening',
  tutorial_welcome:'New welcome',tutorial_jump:'First jump',tutorial_paw_pads:'Paw pads',
- tutorial_sad_bug:'Sad bug',tutorial_sleepy_buds:'Sleepy flowers',tutorial_googly_glasses:'Googly-eye glasses',
+ tutorial_sad_animal:'Sad bug',tutorial_sleepy_buds:'Sleepy flowers',tutorial_googly_glasses:'Googly-eye glasses',
  tutorial_first_family:'First family cat found',tutorial_goose:'Glowing goose',tutorial_double_jump:'Double jump'
 };
 function normalize(original){

@@ -1,6 +1,6 @@
 # Game voice pack
 
-The game uses 41 bundled Gemini 3.8 Flash TTS recordings: twelve family greetings, the story moments, eight first-time guidance cues and thirteen lines for Rainbow's family. Snowflake uses Puck and Patches uses Leda, with soft, playful spoken introductions that identify their name and family relationship. Rainbow uses Achernar for both lines; the narrator lines share one designed voice.
+The game uses 53 bundled Gemini 3.8 Flash TTS recordings: twelve family greetings, twelve funny lines for when a family member at home is bubbled (`poke_<cat>`, in that cat's own voice, saying who they are), the story moments, eight first-time guidance cues and thirteen lines for Rainbow's family. Snowflake uses Puck and Patches uses Leda, with soft, playful spoken introductions that identify their name and family relationship. Rainbow uses Achernar for both lines; the narrator lines share one designed voice.
 
 Rainbow's family (found after Rainbow's rescue) use prebuilt voices, one per relative: Mama Sulafat (her greeting, her call from the Cloud Maze and the whole-family thanks), Papa Achird, Grandpa Algenib, Granny Vindemiatrix, Splash Laomedeia, Pumpkin Fenrir and baby Twinkle Aoede. Rainbow (Achernar) has two more lines: her family is lost (`kin_hunt_start`) and only Mama is missing (`kin_six_home`); the narrator explains the colour bridges (`kin_cloud_maze`) and the happy mazes (`kin_minimaze`). All were checked with speech recognition against the script.
 

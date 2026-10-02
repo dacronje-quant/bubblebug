@@ -52,6 +52,23 @@
   const potAt = (x, y) => POTS.includes(MAP[y][x]) ? MAP[y][x] : null;
   // gathered colours, in the order they were gathered (for the parade)
   const gathered = mask => POTS.split('').filter(ch => mask & bit(ch));
+  // the shortest walk to the next relative who can be reached now (or to
+  // Mama once every colour is gathered): a sparkly trail shows it when the
+  // kitten stands still a moment or bumps into a closed bridge
+  function route(x0, y0, mask) {
+    const goal = (x, y) => mask === ALL ? x === MAMA.x && y === MAMA.y : !!potAt(x, y) && !(mask & bit(potAt(x, y)));
+    const from = { [x0 + ',' + y0]: null }, q = [[x0, y0]];
+    while (q.length) {
+      const [x, y] = q.shift();
+      if (goal(x, y)) { const path = []; for (let k = x + ',' + y; k; k = from[k]) path.unshift(k.split(',').map(Number)); return path; }
+      for (const [dx, dy] of Object.values(DIRS)) {
+        const nx = x + dx, ny = y + dy, k = nx + ',' + ny;
+        if (k in from || !walkable(nx, ny, mask)) continue;
+        from[k] = x + ',' + y; q.push([nx, ny]);
+      }
+    }
+    return [];
+  }
 
   // a soft puffy cloud tile
   function puff(c, px, py, n, t) {
@@ -72,7 +89,7 @@
     });
     c.restore();
   }
-  BB.CloudMaze = { MAP, START, MAMA, WHO, POTS, GATES, ALL, walkable, potAt, picture };
+  BB.CloudMaze = { MAP, START, MAMA, WHO, POTS, GATES, ALL, walkable, potAt, picture, route };
 
   Object.assign(BB.Play, {
     openCloud() {
@@ -114,7 +131,7 @@
     cloudStep(x, y) {
       const m = this.cloud, save = this.save;
       m.trail.unshift({ x: m.x, y: m.y }); m.trail.length = Math.min(m.trail.length, 8);
-      m.x = x; m.y = y;
+      m.x = x; m.y = y; m.path = null;
       if (x !== START.x || y !== START.y) m.armed = true;
       const pot = potAt(x, y);
       if (pot && !(save.cloudMask & bit(pot))) {
@@ -151,7 +168,7 @@
       for (const d of CONTROLS) if (I.pressed[d]) m.buffer = d;
       if (dir) m.buffer = dir;
       if (m.moving) {
-        m.exitHold = 0;
+        m.exitHold = 0; m.still = 0;
         if (++m.moving.t >= 8) { const to = m.moving; m.moving = null; this.cloudStep(to.x, to.y); }
         return;
       }
@@ -167,11 +184,12 @@
         } else if (d === m.buffer) {
           // a closed bridge wobbles: its colour shows who opens it
           const ch = MAP[ny] && MAP[ny][nx];
-          if (ch && (GATES.includes(ch) || ch === 'R') && !m.nudge) { m.nudge = { x: nx, y: ny, t: 0 }; S().wobble(); }
+          if (ch && (GATES.includes(ch) || ch === 'R') && !m.nudge) { m.nudge = { x: nx, y: ny, t: 0 }; S().wobble(); m.still = Math.max(m.still || 0, 120); }
           m.buffer = null;
         }
       }
       if (m.nudge && ++m.nudge.t > 24) m.nudge = null;
+      if (!m.moving) m.still = (m.still || 0) + 1;
       // standing back on the start cloud for two seconds goes home
       if (!m.moving && m.armed && m.x === START.x && m.y === START.y && ++m.exitHold >= EXIT_HOLD) this.closeCloud(false);
     },
@@ -201,6 +219,20 @@
         c.fillStyle = (x + y) % 2 ? '#bfe4f7' : '#c9e9f9'; c.fillRect(px, py, TILE, TILE);
         if ((x * 13 + y * 7) % 9 === 0) { c.fillStyle = 'rgba(255,255,255,0.8)'; G().twinkle(px + 9, py + 9, 2.2, c); c.fill(); }
         if (GATES.includes(ch) || ch === 'R') this.drawCloudGate(c, ch, px, py, mask, t);
+      }
+      // the sparkly way to the next relative
+      if (!m.done && !m.moving && m.still > 110) {
+        if (!m.path) m.path = route(m.x, m.y, mask);
+        const a = Math.min(1, (m.still - 110) / 30);
+        m.path.slice(1, -1).forEach(([x, y], i) => {
+          const pulse = Math.max(0, Math.sin(t * 0.12 - i * 0.6));
+          const px = X + (x + 0.5) * TILE, py = Y + (y + 0.5) * TILE;
+          c.globalAlpha = a * (0.6 + pulse * 0.4);
+          G().drawGlow(px, py, 12, '#ffe27a', 0.5, c);
+          c.fillStyle = '#ffc93c'; G().twinkle(px, py, 4.5 + pulse * 3, c); c.fill();
+          c.fillStyle = '#ffffff'; G().circle(px, py, 1.6, c); c.fill();
+        });
+        c.globalAlpha = 1;
       }
       // Mama, grey and sad until everyone reaches her
       const mx = X + (MAMA.x + 0.5) * TILE, my = Y + (MAMA.y + 0.5) * TILE;
@@ -258,6 +290,7 @@
         c.fillStyle = tint; G().rrect(px + 1, py + 1, TILE - 2, TILE - 2, 10, c); c.fill();
         c.strokeStyle = ch === 'R' ? '#c9b6e6' : cols[0]; c.lineWidth = 2.5; c.setLineDash([4, 3]);
         G().rrect(px + 2, py + 2, TILE - 4, TILE - 4, 9, c); c.stroke(); c.setLineDash([]);
+        if (ch !== 'R') { const k = BB.CATS[WHO[POTS[GATES.indexOf(ch)]]]; BB.MapView.catFace(c, cx, cy - 2, 0.62, k.fur, k.pointDark || k.stripe || k.trailColor); }
       } else G().drawGlow(cx, cy, 20, ch === 'R' ? '#fff6c2' : cols[0], 0.45, c);
       cols.forEach((col, i) => {
         c.strokeStyle = col; c.globalAlpha = open ? 1 : 0.9; c.lineWidth = ch === 'R' ? 2.6 : open ? 7 : 4;

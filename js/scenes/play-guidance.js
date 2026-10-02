@@ -9,7 +9,7 @@
     drawGuidance(c, cam) {
       const id = BB.Voice.currentId;
       const action = ['tutorial_jump', 'tutorial_double_jump'].includes(id) ? 'jump' :
-        ['tutorial_sad_bug', 'tutorial_sleepy_buds', 'tutorial_goose'].includes(id) ? 'bubble' : null;
+        ['tutorial_sad_animal', 'tutorial_sleepy_buds', 'tutorial_goose'].includes(id) ? 'bubble' : null;
       if (!action || BB.Audio.muted) return;
       const b = this.pl.body;
       BB.HUD.buttonIcon(c, action, b.x + b.w / 2 - cam.x, b.y - cam.y - 45, 1.1, 0.65 + Math.sin(this.t * .12) * .35);
@@ -46,7 +46,7 @@
       if (this.room.id === 'g1' && pads.some(th => near(th)) &&
           this.sayGuidance('tutorial_paw_pads', () => pads.some(th => !this.save.pads[th.key]) && pads.some(th => near(th)))) return;
       const bug = e.bugs.find(th => th.state === 'gloomy' && near(th, 200));
-      if (this.room.zone === 0 && bug && this.sayGuidance('tutorial_sad_bug', () => bug.state === 'gloomy' && near(bug, 200))) return;
+      if (this.room.zone === 0 && bug && this.sayGuidance('tutorial_sad_animal', () => bug.state === 'gloomy' && near(bug, 200))) return;
       // The first mandatory hop is the gap in Sunrise Lawn. Help only after
       // three seconds of hesitation; successful earlier jumps suppress it.
       if (this.room.id === 'g1' && b.grounded && this.pl.idleT > 180 &&

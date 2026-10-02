@@ -61,9 +61,9 @@ assert.ok(cancelled.includes('tutorial_goose'));
 g.place('g2', 18, 14); const bug = P.ents.g2.bugs.find(th => th.state === 'gloomy');
 P.pl.body.x = bug.x - 10; P.pl.body.y = bug.y - 24;
 current = null; P.guidance.next = 0; P.updateGuidance();
-assert.equal(heard.at(-1), 'tutorial_sad_bug');
+assert.equal(heard.at(-1), 'tutorial_sad_animal');
 bug.state = 'happy'; P.updateGuidance();
-assert.ok(cancelled.includes('tutorial_sad_bug'));
+assert.ok(cancelled.includes('tutorial_sad_animal'));
 // Progress survives loading and the next adventure resets heard cues.
 B.Save.write(); B.Save.load();
 assert.equal(B.Save.data.voiceStory.tutorial_paw_pads, 1);

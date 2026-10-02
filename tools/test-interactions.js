@@ -37,7 +37,7 @@ function check(g) {
   tick(1, ['ArrowRight']); assert.equal(P.mirrorHold, 0);
   place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(wait - 1); assert.equal(P.wardrobe, null);
   tick(); assert.ok(P.wardrobe); P.closeWardrobe();
-  place('ng', 16, 31); tick(wait - 1); assert.equal(P.gardenChoice, null);
+  place('ng', 24, 31); tick(wait - 1); assert.equal(P.gardenChoice, null);
   tick(); assert.equal(P.gardenChoice.kind, 'friends'); P.closeGardenChoice();
   place('nr', 10, 31); tick(wait - 1); assert.equal(P.gardenFun, null);
   tick(); assert.equal(P.gardenFun.kind, 'dance');

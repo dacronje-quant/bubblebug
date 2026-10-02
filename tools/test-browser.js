@@ -246,7 +246,7 @@ async function walkMaze(page, target) {
     assert.equal(await page.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2')), normal);
     // The outdoor welcome spot fills all three rooms with the rescued
     // critters. Each original picture activity runs in the real browser.
-    await place(page, 'ng', 16, 31); await page.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
+    await place(page, 'ng', 24, 31); await page.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
     await page.keyboard.press('Enter'); await pause(page);
     assert.ok(await page.evaluate(() => BB.Play.homeVisitors.length > 0));
     await page.evaluate(() => {
@@ -357,7 +357,7 @@ async function walkMaze(page, target) {
     assert.equal(await touch.locator('#map-btn').isVisible(), true); // remains available to close the map
     await tapMap(); await touch.waitForFunction(() => BB.Main.name === 'play' && !document.body.classList.contains('menu-open'));
     assert.equal(await touch.locator('#touch').isVisible(), true);
-    await place(touch, 'ng', 16, 31); await touch.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
+    await place(touch, 'ng', 24, 31); await touch.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
     assert.equal(await touch.locator('#touch').isVisible(), false);
     await tap(touch, 480, 390, true); assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 1);
     const invitedCount = await touch.evaluate(() => BB.Play.homeVisitors.length);

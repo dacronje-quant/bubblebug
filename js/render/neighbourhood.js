@@ -74,7 +74,7 @@
         c.fillStyle = ['#ffb3d1', '#ffe5a1', '#a8dce3', '#cec0f4'][i % 4];
         c.beginPath(); c.moveTo(px - 8, py); c.lineTo(px + 8, py); c.lineTo(px + Math.sin(t * 0.025 + i) * 3, py + 15); c.closePath(); c.fill();
       }
-      const px = X(kind === 'garden' ? 24 : kind === 'pond' ? 4 : 26), py = Y(31) - 55;
+      const px = X(kind === 'garden' ? 5 : kind === 'pond' ? 4 : 26), py = Y(31) - 55;
       c.strokeStyle = '#c3a486'; c.lineWidth = 3; c.beginPath(); c.moveTo(px, py); c.lineTo(px, Y(31)); c.stroke();
       c.save(); c.translate(px, py); c.rotate(t * 0.014);
       for (let i = 0; i < 4; i++) {

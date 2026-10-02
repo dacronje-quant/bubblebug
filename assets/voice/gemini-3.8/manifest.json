@@ -1,6 +1,6 @@
 {
   "model": "gemini-3.8-flash-tts",
-  "installedAt": "2026-10-02T13:30:24.815Z",
+  "installedAt": "2026-10-02T14:12:57.304Z",
   "normalization": "Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.",
   "clips": [
     {
@@ -448,26 +448,26 @@
       "sha256": "6921e8061eeff79a292a9914cee5f1b178eeb0c91af5e453cb5179cee2e5956a"
     },
     {
-      "id": "tutorial_sad_bug",
+      "id": "tutorial_sad_animal",
       "speaker": "narrator",
-      "text": "That little bug looks sad. Face it and press the bubble button to cheer it up!",
+      "text": "That little animal looks sad. Face it and press the bubble button to cheer it up!",
       "style": "Kind, reassuring guidance for a young child. Clear words and concise natural pace, with a short pause between the observation and instruction. Gentle conversational volume. No added words, music or sound effects.",
-      "trigger": "First gloomy little bug, before using bubbles.",
+      "trigger": "First gloomy little animal, before using bubbles.",
       "model": "gemini-3.8-flash-tts",
       "voiceId": "voice_r8b6ppg0ri8o",
-      "generatedAt": "2026-10-02T09:28:38.749Z",
-      "bytes": 338228,
+      "generatedAt": "2026-10-02T14:12:40.615Z",
+      "bytes": 292148,
       "normalization": {
-        "seconds": 6.92,
+        "seconds": 5.96,
         "sampleRate": 24000,
         "channels": 1,
-        "gain": 0.7177271910797695,
-        "inputPeak": 0.835418701171875,
-        "inputSpeechRms": 0.16719444587221022,
-        "outputPeak": 0.5996027177675991,
+        "gain": 0.6959104845135566,
+        "inputPeak": 0.800201416015625,
+        "inputSpeechRms": 0.1724359708186899,
+        "outputPeak": 0.5568685551278677,
         "outputSpeechRms": 0.12
       },
-      "sha256": "997d8fd7e0c92ec61114aebca98e94917923597932fe091a05d5353455996ffa"
+      "sha256": "86724fb6947ce9701441bf03007afab67e4d4f71b05124afce031ede46190522"
     },
     {
       "id": "tutorial_sleepy_buds",
@@ -893,6 +893,258 @@
         "outputSpeechRms": 0.12000000000000001
       },
       "sha256": "fc3b44b62446b39f1e824263c1b7fb3d2b35b9dd3871673bbccc90d0889e2c9b"
+    },
+    {
+      "id": "poke_mamaMallow",
+      "speaker": "mamaMallow",
+      "text": "Ooh, bubbles! That tickles! It's me, Marshmallow's Mama. Now my whiskers are all fizzy!",
+      "style": "Tender relief, reassuring and gently happy; natural conversational pace. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_n3lku4kbyxz2",
+      "generatedAt": "2026-10-02T13:51:09.099Z",
+      "bytes": 443828,
+      "normalization": {
+        "seconds": 9.12,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6439451632878589,
+        "inputPeak": 0.912078857421875,
+        "inputSpeechRms": 0.186351271569932,
+        "outputPeak": 0.587328768773933,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "d96a9e05297ae67921d56c7bd9668f9f984434aa132421628956691b833dee31"
+    },
+    {
+      "id": "poke_papaBirman",
+      "speaker": "papaBirman",
+      "text": "Pop! Hey, that one landed on my nose! I'm Marshmallow's Papa, and I'm the bubble champion!",
+      "style": "Proud, affectionate and quietly playful; clear, relaxed delivery. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_3icggwdkjkh3",
+      "generatedAt": "2026-10-02T13:52:13.861Z",
+      "bytes": 455348,
+      "normalization": {
+        "seconds": 9.36,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6941582647245668,
+        "inputPeak": 0.89617919921875,
+        "inputSpeechRms": 0.17287124002998722,
+        "outputPeak": 0.6220901978119393,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "9bbd335f5fbf0ffb4f4f8d40d0c458ccb5b3f9fee10362920918ca021a6443c4"
+    },
+    {
+      "id": "poke_grannyLilac",
+      "speaker": "grannyLilac",
+      "text": "Oh my! A bubble on Granny's glasses! I'm Marshmallow's Granny, and now everything looks wobbly!",
+      "style": "Cozy, fond and gently delighted; unhurried natural phrasing. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_7h79bgq0gk1u",
+      "generatedAt": "2026-10-02T13:53:18.870Z",
+      "bytes": 603188,
+      "normalization": {
+        "seconds": 12.44,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7321815433739897,
+        "inputPeak": 0.85626220703125,
+        "inputSpeechRms": 0.1638937789213097,
+        "outputPeak": 0.6269393842769593,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "aebf6ba1c7b9e60867cbae56d836add84dd11cf6fde5da70757bd2fbd5321e2b"
+    },
+    {
+      "id": "poke_bigSisterCocoa",
+      "speaker": "bigSisterCocoa",
+      "text": "Hey! I'm Cocoa, Marshmallow's big sister! Bubble me again, I dare you! Hee hee!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Zephyr",
+      "generatedAt": "2026-10-02T13:55:24.845Z",
+      "bytes": 391988,
+      "normalization": {
+        "seconds": 8.04,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.685697056352525,
+        "inputPeak": 0.8927001953125,
+        "inputSpeechRms": 0.17500439718718375,
+        "outputPeak": 0.6121218961311053,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "c6d6da5f0f7280204de0a1d9f1a25caf5ae3c5f798a7f07e1ecdaff05aa49f3c"
+    },
+    {
+      "id": "poke_babySnowflake",
+      "speaker": "babySnowflake",
+      "text": "Bubba! Bubba pop! It's me, Snowflake! Again, again!",
+      "style": "Soft, light and playful; rounded vowels, gentle breathiness, small curious pauses and a happy peekaboo lilt. Keep the words clear, with tiny excited mews; avoid a booming narrator delivery. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Puck",
+      "generatedAt": "2026-10-02T13:56:28.732Z",
+      "bytes": 295988,
+      "normalization": {
+        "seconds": 6.04,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.8301320253340219,
+        "inputPeak": 0.800628662109375,
+        "inputSpeechRms": 0.14455531932009894,
+        "outputPeak": 0.6646274928173237,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "d70fca28cddf626fcf7c6ca4bc12c2488f7c4b6ef193f2007730f5572357c806"
+    },
+    {
+      "id": "poke_grandpaSeal",
+      "speaker": "grandpaSeal",
+      "text": "Hmm? Who's bubbling Marshmallow's Grandpa? Ho ho! I was only resting my eyes!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_mq74r9ttpgcl",
+      "generatedAt": "2026-10-02T13:57:34.817Z",
+      "bytes": 386228,
+      "normalization": {
+        "seconds": 7.92,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.897875721673859,
+        "inputPeak": 0.731109619140625,
+        "inputSpeechRms": 0.13364878579887512,
+        "outputPeak": 0.6564455769085888,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "8124713bd3b82e160289b62dea6073559db737d82b3735e6d444b86a77fb09b1"
+    },
+    {
+      "id": "poke_mamaTortie",
+      "speaker": "mamaTortie",
+      "text": "Oh, you cheeky kitten! It's me, Phoebe's Mama. Was that a bubble or a kiss?",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_zjin575lu7p6",
+      "generatedAt": "2026-10-02T13:58:20.595Z",
+      "bytes": 342068,
+      "normalization": {
+        "seconds": 7,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.5548773660838616,
+        "inputPeak": 0.881439208984375,
+        "inputSpeechRms": 0.2162640023450943,
+        "outputPeak": 0.48909066664429246,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "ecad3e9555ae219873f63cd91a332bf46477ed625567d9599349bf2d4d8e188b"
+    },
+    {
+      "id": "poke_papaGinger",
+      "speaker": "papaGinger",
+      "text": "Whoa! A bubble shower! I'm Phoebe's Papa, and my tail is all sparkly now!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r2c0v9zbvlkn",
+      "generatedAt": "2026-10-02T13:59:26.462Z",
+      "bytes": 345908,
+      "normalization": {
+        "seconds": 7.08,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.674702179930591,
+        "inputPeak": 0.845458984375,
+        "inputSpeechRms": 0.17785625060874238,
+        "outputPeak": 0.570433019799716,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "596e67e87d9bb46b4f6e3fbab5e3758a43d767e8359635247c99741bb3a5a39c"
+    },
+    {
+      "id": "poke_grannyGrey",
+      "speaker": "grannyGrey",
+      "text": "Goodness me! I'm Phoebe's Granny, and that bubble just popped right on my knitting!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_osl8nni2gttx",
+      "generatedAt": "2026-10-02T14:00:32.260Z",
+      "bytes": 482228,
+      "normalization": {
+        "seconds": 9.92,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7628205364191872,
+        "inputPeak": 0.917694091796875,
+        "inputSpeechRms": 0.15731091950316511,
+        "outputPeak": 0.7000358993732111,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "02e96e7b8dbf664b8e984becde217183f7d3b467e7dd8a12e3e8898797935b58"
+    },
+    {
+      "id": "poke_bigBrotherTiger",
+      "speaker": "bigBrotherTiger",
+      "text": "Bubble attack! I'm Tiger, Phoebe's big brother, and I'm way too fast for bubbles! Ooh, missed!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Sadachbia",
+      "generatedAt": "2026-10-02T14:01:19.761Z",
+      "bytes": 447668,
+      "normalization": {
+        "seconds": 9.2,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.8812262607901165,
+        "inputPeak": 0.902587890625,
+        "inputSpeechRms": 0.13617388103301276,
+        "outputPeak": 0.7953841518899074,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "f778271ca647a8399dcdf0b51e4779928c0b03497992927f356091d6bc1ebb51"
+    },
+    {
+      "id": "poke_babyPatches",
+      "speaker": "babyPatches",
+      "text": "Hee hee! Bubbly! I'm Patches! My nose went pop!",
+      "style": "Soft, light and gently giggly; rounded vowels, little playful pauses and a sweet rising invitation. Say the opening hee hee as a tiny happy giggle, then speak clearly and warmly. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Leda",
+      "generatedAt": "2026-10-02T14:02:24.467Z",
+      "bytes": 330548,
+      "normalization": {
+        "seconds": 6.76,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.5822592211606518,
+        "inputPeak": 0.957183837890625,
+        "inputSpeechRms": 0.2060937734241407,
+        "outputPeak": 0.5573291159577589,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "5923c279de456d83dfd2418df3b5511dc8425c89911b012f53c5c992cac74d8f"
+    },
+    {
+      "id": "poke_grandpaStripes",
+      "speaker": "grandpaStripes",
+      "text": "Well now! I'm Phoebe's Grandpa. In my day, bubbles were twice as big! Ho ho!",
+      "style": "Warm, affectionate and playful, with clear words, natural pauses and gentle conversational volume. No added sound effects or music. Playful and surprised, as if just tickled by a bubble.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_47s3assl2p34",
+      "generatedAt": "2026-10-02T14:03:29.979Z",
+      "bytes": 380468,
+      "normalization": {
+        "seconds": 7.8,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.9620748557337117,
+        "inputPeak": 0.8179931640625,
+        "inputSpeechRms": 0.12473041914029011,
+        "outputPeak": 0.786970655306592,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "94c69289619ad24cf7a3196a54953e07a61774d473496d78c7fe1d49e7887a30"
     }
   ],
   "retainedClips": []

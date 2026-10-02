@@ -105,6 +105,12 @@ g.place('np', grandpa.x / 32 - np.x - 4, Math.round(grandpa.y / 32) - np.y);
 for (let i = 0; i < 120 && !P.mini; i++) g.tick(1, ['ArrowRight']);
 solveMini();
 assert.equal(P.save.kin.rbGrandpa, 1); assert.ok(heard.includes('kin_rbGrandpa'));
+// he finishes saying hello before his cloud comes
+let talking = 'kin_rbGrandpa';
+Object.defineProperty(B.Voice, 'currentId', { configurable: true, get: () => talking });
+g.tick(400);
+const waiting = P.ents.np.things.find(th => th.type === 'kin');
+assert.ok(waiting && !waiting.x0, 'still on the ground while talking'); talking = null;
 g.tick(400);
 assert.ok(!P.ents.np.things.some(th => th.type === 'kin'), 'Grandpa rode home');
 P.writeSave(); B.Save.load(); B.Main.set('play', {});
@@ -196,6 +202,14 @@ g.tick(12); g.tick(1, ['KeyM']); g.tick(1);
 assert.equal(B.Main.name, 'play', 'closing a map opened during play goes straight back to playing');
 B.Main.go('pause'); B.Pause.activate(2); assert.equal(B.Pause.map, true);
 g.tick(12); B.Pause.closeMap(); assert.equal(B.Main.name, 'pause'); assert.equal(B.Pause.map, false);
-console.log("✓ Rainbow's family: lost after Rainbow's rescue (no reset), found on foot, ride home, saved; doorway waits for all six");
+// the sparkle trail always leads somewhere useful: a relative still to find, then Mama
+{ let mask = 0, at = C.START;
+  for (let i = 0; i < 7; i++) {
+    const path = C.route(at.x, at.y, mask); assert.ok(path.length > 1, 'sparkle trail ' + i);
+    const [x, y] = path.at(-1); at = { x, y };
+    if (mask === C.ALL) { assert.deepEqual(at, { x: C.MAMA.x, y: C.MAMA.y }); break; }
+    const pot = C.potAt(x, y); assert.ok(pot); mask |= 1 << C.POTS.indexOf(pot);
+  } }
+console.log("✓ Rainbow's family: lost after Rainbow's rescue (no reset), found on foot, finish talking, then ride home, saved; doorway waits for all six");
 console.log('✓ Cloud Maze: forced colour order, no stuck states, kept colours, real-key walk to Mama, rainbow bubbles, party, replay keeps family');
 console.log('✓ one kingdom map from play or the pause menu');

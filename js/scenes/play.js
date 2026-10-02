@@ -924,6 +924,7 @@
       BB.Food.updateDrops(ctx);
       this.updateMirror();
       this.updateHomeToys();
+      this.updateFamilyPokes();
       this.updateFirstExit();
       this.updateHomeVisitors();
       this.updateGardenFun();
@@ -941,6 +942,9 @@
       for (const bs of e.bosses) { const tg = BB.Bosses.target(bs, ctx); if (tg) targets.push(tg); }
       for (const tg of BB.Bosses.hazardTargets()) targets.push(tg);
       for (const th of e.things) { const tg = BB.Things.target(th, ctx); if (tg) targets.push(tg); }
+      if (this.room.def.home && !this.party) for (const p of BB.Home.familySpots(this.room, this)) {
+        targets.push({ x: p.x, y: p.y - 26, r: 24, hit: () => this.pokeFamily(p.id, p.x, p.y) });
+      }
       BB.Bubbles.update(targets);
       this.updateGuidance();
 

@@ -100,6 +100,24 @@
       return false; // play bubbles pass through visitors to reach buds and music flowers
     },
 
+    // bubble a family member at home: they jump up giggling and say who they are
+    pokeFamily(id, x, y) {
+      const pokes = this.familyPokes || (this.familyPokes = {});
+      if (pokes[id] > 0) return true;
+      pokes[id] = 140;
+      S().meow(id);
+      for (let i = 0; i < 6; i++) PT().heart(x + (Math.random() - 0.5) * 40, y - 40 - Math.random() * 30);
+      PT().burst('spark', x, y - 40, 8, { color: '#fff3b0', speed: 2.4, life: 30 });
+      this.pl.happyT = Math.max(this.pl.happyT, 60);
+      // (never talks over a story line or another cat)
+      if (!BB.Voice.currentId) BB.Voice.play('poke_' + id);
+      return true;
+    },
+    updateFamilyPokes() {
+      const pokes = this.familyPokes;
+      if (pokes) for (const id in pokes) if (pokes[id] > 0) pokes[id]--;
+    },
+
     updateHomeVisitors() {
       if (!['ng', 'np', 'nr'].includes(this.room.id)) return;
       const ctx = this.ctx(), b = this.pl.body, room = this.room;

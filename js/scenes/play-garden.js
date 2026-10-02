@@ -4,7 +4,7 @@
 (function (BB) {
   'use strict';
   const T = BB.CFG.TILE, G = () => BB.G, S = () => BB.Audio.sfx;
-  const SPOTS = { ng: { col: 16, floor: 31, kind: 'friends' }, hm: { col: 24, floor: 32, kind: 'fountain' } };
+  const SPOTS = { ng: { col: 24, floor: 31, kind: 'friends' }, hm: { col: 24, floor: 32, kind: 'fountain' } };
   const CLOSE = { x: 678, y: 145 }, CHOOSE = { x: 480, y: 390 };
   Object.assign(BB.Play, {
     earnedFriendKinds() {

@@ -30,11 +30,11 @@
       "trigger": "First paw-pad puzzle in Sunrise Lawn."
     },
     {
-      "id": "tutorial_sad_bug",
+      "id": "tutorial_sad_animal",
       "speaker": "narrator",
-      "text": "That little bug looks sad. Face it and press the bubble button to cheer it up!",
+      "text": "That little animal looks sad. Face it and press the bubble button to cheer it up!",
       "style": "Kind, reassuring guidance for a young child. Clear words and concise natural pace, with a short pause between the observation and instruction. Gentle conversational volume. No added words, music or sound effects.",
-      "trigger": "First gloomy little bug, before using bubbles."
+      "trigger": "First gloomy little animal, before using bubbles."
     },
     {
       "id": "tutorial_sleepy_buds",

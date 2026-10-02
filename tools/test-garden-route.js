@@ -27,11 +27,11 @@ for (const assists of [false, true]) {
   }
 }
 console.log('✓ wide climbing steps, open upper entrance and every high gap are reachable with ordinary and assisted jumps');
-const trampoline = B.Physics.newBody((r.x + 6.5) * 32 - 10, floor(31) - 24);
+const trampoline = B.Physics.newBody((r.x + 17.5) * 32 - 10, floor(31) - 24);
 trampoline.grounded = true; let height = trampoline.y;
 for (let i = 0; i < 45; i++) { B.Physics.step(trampoline, { jump: false }, B.Save.data.abilities, false); height = Math.min(height, trampoline.y); }
 assert.ok(floor(31) - 24 - height > 150, 'walking onto the flush trampoline gives a proper safe bounce without any gift');
-assert.equal(B.World.tile(r.x + 6, r.y + 31), 'M');
+assert.equal(B.World.tile(r.x + 17, r.y + 31), 'M');
 console.log('✓ bottom trampoline works without jump skills and leaves the continuous lower path intact');
 
 const playSpot = B.GardenFun.spot(r);

@@ -13,7 +13,7 @@ function check(g) {
   const original = B.World.rooms.flatMap(r => P.ents[r.id].bugs);
   const first = original.find(b => original.filter(other => other.kind === b.kind).length > 1);
   save.friends[first.key] = 1;
-  place('ng', 16, 31); tick(B.Links.HOLD + 15); tick(1, ['Enter']); tick();
+  place('ng', 24, 31); tick(B.Links.HOLD + 15); tick(1, ['Enter']); tick();
   assert.equal(save.residents[first.kind], 1); assert.equal(save.heartsSpent, 1); assert.equal(P.homeVisitors.length, 1);
   P.closeGardenChoice();
   const next = original.find(b => b.kind === first.kind && b.key !== first.key);
@@ -85,14 +85,14 @@ function check(g) {
   console.log('✓ all 65 visitors play every game twice; safe floors/reload, no added cost/hearts, and bubbles still reach buds');
   // Visibility is separate from invitations and collected hearts.
   // There is just one switch, for the currently selected critter type.
-  place('ng', 16, 31); tick(B.Links.HOLD + 15);
+  place('ng', 24, 31); tick(B.Links.HOLD + 15);
   const firstKind = P.gardenChoice.kinds[0], count = P.homeVisitors.filter(v => v.kind === firstKind).length;
   tick(1, ['Enter']); tick(); assert.equal(save.hiddenResidents[firstKind], 1);
   assert.equal(P.homeVisitors.length, 65 - count); assert.equal(save.residents[firstKind], 1);
   assert.equal(save.heartsSpent, 1); assert.equal(Object.keys(save.friends).length, 65);
   P.closeGardenChoice(); P.writeSave(); B.Save.load(); B.Main.set('play', {}); P = B.Play; save = P.save;
   assert.equal(save.hiddenResidents[firstKind], 1); assert.equal(P.homeVisitors.length, 65 - count);
-  place('ng', 16, 31); tick(B.Links.HOLD + 15); tick(1, ['Enter']); tick(); assert.equal(P.homeVisitors.length, 65);
+  place('ng', 24, 31); tick(B.Links.HOLD + 15); tick(1, ['Enter']); tick(); assert.equal(P.homeVisitors.length, 65);
   tick(1, ['ArrowUp']); tick(); assert.equal(P.homeVisitors.length, 65);
   B.Input.pointers.push({ x: 610, y: 390 }); tick(); assert.equal(P.homeVisitors.length, 65, 'old All location has no action');
   tick(1, ['Enter']); tick(); assert.equal(P.homeVisitors.length, 65 - count);

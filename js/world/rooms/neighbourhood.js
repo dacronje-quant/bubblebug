@@ -26,11 +26,14 @@
   for (const [x, length] of [[3, 11], [17, 6], [25, 5]]) ledge(garden, 16, x, length);
   for (const [y, x] of [[28, 4], [25, 9], [22, 4], [19, 9]]) ledge(garden, y, x, y === 19 ? 9 : 8);
   // Flush with the main path: walking across never meets a raised wall.
-  for (let x = 5; x < 8; x++) put(garden, x, 31, 'M');
+  // It sits in the middle of the garden, clear of the ball games by the door.
+  for (let x = 16; x < 19; x++) put(garden, x, 31, 'M');
   for (const x of [9, 14, 20, 26]) put(garden, x, 30, '*');
-  for (const [x, y] of [[7, 27], [12, 24], [7, 21], [12, 18]]) put(garden, x, y, '*');
+  for (const [x, y] of [[7, 27], [7, 21], [12, 18]]) put(garden, x, y, '*');
+  // a little treat ledge right above the trampoline: bounce up to its sparkle
+  ledge(garden, 25, 18, 4); put(garden, 20, 24, '*');
   put(garden, 22, 30, 'n'); put(garden, 26, 29, 'f'); put(garden, 28, 30, 'R');
-  room('ng', -90, 'Front Garden', garden, 'garden', { trampoline: { col: 5, row: 31, width: 3 } });
+  room('ng', -90, 'Front Garden', garden, 'garden', { trampoline: { col: 16, row: 31, width: 3 } });
 
   const pond = blank();
   // Short, forgiving hops break up the long upper bridge. The entire
@@ -59,6 +62,9 @@
   // appears here; its picture choice opens the separate maze game.
   const maze = Array.from({ length: H }, () => Array(W).fill('#'));
   for (let y = 28; y < 32; y++) for (let x = 1; x < 30; x++) maze[y][x] = '.';
+  // open sky above the courtyard, so a big (double) jump never bumps an
+  // invisible ceiling; the scenery already shows open air up there
+  for (let y = 4; y < 28; y++) for (let x = 1; x < 29; x++) maze[y][x] = '.';
   BB.room({ id: 'nm', zone: 0, x: -180, y: -18, name: 'Pawprint Maze',
     neighbourhood: 'maze', maze: true, cameraGroup: 'home-neighbourhood',
     mazeStars: [[12,31],[18,31],[25,31],[6,24],[16,24],[22,24],[8,17],[15,17],[26,17],[3,10],[5,10],[7,10]],

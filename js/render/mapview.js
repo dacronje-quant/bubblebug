@@ -39,9 +39,10 @@
     return bd;
   }
   // how far the centre may go on one axis (a little margin past the edges)
+  // (a small kingdom still slides about, so the arrows always do something)
   function range(a, b, half) {
-    const pad = 6;
-    if (b - a + pad * 2 <= half * 2) return [(a + b) / 2, (a + b) / 2];
+    const pad = 10;
+    if (b - a + pad * 2 <= half * 2) return [a, b];
     return [a - pad + half, b + pad - half];
   }
   function limits() {
@@ -317,21 +318,35 @@
   // a name tag with the zone's emblem over each zone you've explored; tags
   // of zones running off the edge stay tucked inside the frame
   function drawZoneTags(c, seen, sc, ox, oy) {
-    const f = FRAME();
+    const f = FRAME(), placed = [];
     const zones = [...new Set(seen.map(r => r.zone))];
+    c.font = `800 15px ${G().FONT}`;
+    const tags = [];
     for (const z of zones) {
       const zr = seen.filter(r => r.zone === z);
       const x0 = Math.min(...zr.map(r => r.x)), x1 = Math.max(...zr.map(r => r.x + r.w)), y0 = Math.min(...zr.map(r => r.y));
       const sx0 = ox + x0 * sc, sx1 = ox + x1 * sc;
       if (sx1 < f.x + 40 || sx0 > f.x + f.w - 40) continue; // not on screen
-      const Z = BB.ZONES[z];
-      c.font = `800 15px ${G().FONT}`;
-      const tw = c.measureText(Z.name).width + 44;
+      const tw = c.measureText(BB.ZONES[z].name).width + 44;
       const cx = BB.clamp((Math.max(sx0, f.x) + Math.min(sx1, f.x + f.w)) / 2, f.x + tw / 2 + 66, f.x + f.w - tw / 2 - 66); // (clear of the arrows)
-      const ty = BB.clamp(oy + y0 * sc - 16, f.y + 18, f.y + f.h - 18);
-      c.fillStyle = 'rgba(90,58,36,0.85)'; G().rrect(cx - tw / 2, ty - 13, tw, 26, 13, c); c.fill();
-      BB.HUD.zoneIcon(c, z, cx - tw / 2 + 16, ty, 0.42);
-      G().text(Z.name, cx + 12, ty + 1, 15, '#fff8e8', null, 'center', c);
+      tags.push({ z, tw, cx, ty: BB.clamp(oy + y0 * sc - 16, f.y + 18, f.y + f.h - 18) });
+    }
+    // neighbouring zones' tags never sit on top of each other: a tag that
+    // would overlap one already placed slides sideways, or else steps down
+    tags.sort((a, b) => a.ty - b.ty || a.cx - b.cx);
+    const hit = g => placed.some(p => Math.abs(p.cx - g.cx) < (p.tw + g.tw) / 2 + 6 && Math.abs(p.ty - g.ty) < 30);
+    for (const g of tags) {
+      const lo = f.x + g.tw / 2 + 66, hi = f.x + f.w - g.tw / 2 - 66, home = g.cx;
+      for (let i = 0; hit(g) && i < 12; i++) {
+        const blocker = placed.find(p => Math.abs(p.cx - g.cx) < (p.tw + g.tw) / 2 + 6 && Math.abs(p.ty - g.ty) < 30);
+        const side = home >= blocker.cx ? 1 : -1, nx = blocker.cx + side * ((blocker.tw + g.tw) / 2 + 8);
+        if (nx >= lo && nx <= hi && Math.abs(nx - home) < 160) g.cx = nx;
+        else { g.cx = home; g.ty = Math.min(f.y + f.h - 18, blocker.ty + 32); }
+      }
+      placed.push(g);
+      c.fillStyle = 'rgba(90,58,36,0.85)'; G().rrect(g.cx - g.tw / 2, g.ty - 13, g.tw, 26, 13, c); c.fill();
+      BB.HUD.zoneIcon(c, g.z, g.cx - g.tw / 2 + 16, g.ty, 0.42);
+      G().text(BB.ZONES[g.z].name, g.cx + 12, g.ty + 1, 15, '#fff8e8', null, 'center', c);
     }
   }
 

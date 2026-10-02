@@ -142,9 +142,9 @@ window.BB.VOICE_CLIPS = {
     "speaker": "narrator",
     "voice": "voice_r8b6ppg0ri8o"
   },
-  "tutorial_sad_bug": {
-    "file": "assets/voice/gemini-3.8/tutorial_sad_bug.wav",
-    "text": "That little bug looks sad. Face it and press the bubble button to cheer it up!",
+  "tutorial_sad_animal": {
+    "file": "assets/voice/gemini-3.8/tutorial_sad_animal.wav",
+    "text": "That little animal looks sad. Face it and press the bubble button to cheer it up!",
     "source": "gemini-3.8-flash-tts",
     "speaker": "narrator",
     "voice": "voice_r8b6ppg0ri8o"
@@ -289,5 +289,91 @@ window.BB.VOICE_CLIPS = {
     "source": "gemini-3.8-flash-tts",
     "speaker": "narrator",
     "voice": "voice_r8b6ppg0ri8o"
+  },
+  "poke_mamaMallow": {
+    "file": "assets/voice/gemini-3.8/poke_mamaMallow.wav",
+    "text": "Ooh, bubbles! That tickles! It's me, Marshmallow's Mama. Now my whiskers are all fizzy!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "mamaMallow",
+    "voice": "voice_n3lku4kbyxz2"
+  },
+  "poke_papaBirman": {
+    "file": "assets/voice/gemini-3.8/poke_papaBirman.wav",
+    "text": "Pop! Hey, that one landed on my nose! I'm Marshmallow's Papa, and I'm the bubble champion!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "papaBirman",
+    "voice": "voice_3icggwdkjkh3"
+  },
+  "poke_grannyLilac": {
+    "file": "assets/voice/gemini-3.8/poke_grannyLilac.wav",
+    "text": "Oh my! A bubble on Granny's glasses! I'm Marshmallow's Granny, and now everything looks wobbly!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "grannyLilac",
+    "voice": "voice_7h79bgq0gk1u"
+  },
+  "poke_bigSisterCocoa": {
+    "file": "assets/voice/gemini-3.8/poke_bigSisterCocoa.wav",
+    "text": "Hey! I'm Cocoa, Marshmallow's big sister! Bubble me again, I dare you! Hee hee!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "bigSisterCocoa",
+    "voice": "Zephyr"
+  },
+  "poke_babySnowflake": {
+    "file": "assets/voice/gemini-3.8/poke_babySnowflake.wav",
+    "text": "Bubba! Bubba pop! It's me, Snowflake! Again, again!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "babySnowflake",
+    "voice": "Puck",
+    "fallback": false
+  },
+  "poke_grandpaSeal": {
+    "file": "assets/voice/gemini-3.8/poke_grandpaSeal.wav",
+    "text": "Hmm? Who's bubbling Marshmallow's Grandpa? Ho ho! I was only resting my eyes!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "grandpaSeal",
+    "voice": "voice_mq74r9ttpgcl"
+  },
+  "poke_mamaTortie": {
+    "file": "assets/voice/gemini-3.8/poke_mamaTortie.wav",
+    "text": "Oh, you cheeky kitten! It's me, Phoebe's Mama. Was that a bubble or a kiss?",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "mamaTortie",
+    "voice": "voice_zjin575lu7p6"
+  },
+  "poke_papaGinger": {
+    "file": "assets/voice/gemini-3.8/poke_papaGinger.wav",
+    "text": "Whoa! A bubble shower! I'm Phoebe's Papa, and my tail is all sparkly now!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "papaGinger",
+    "voice": "voice_r2c0v9zbvlkn"
+  },
+  "poke_grannyGrey": {
+    "file": "assets/voice/gemini-3.8/poke_grannyGrey.wav",
+    "text": "Goodness me! I'm Phoebe's Granny, and that bubble just popped right on my knitting!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "grannyGrey",
+    "voice": "voice_osl8nni2gttx"
+  },
+  "poke_bigBrotherTiger": {
+    "file": "assets/voice/gemini-3.8/poke_bigBrotherTiger.wav",
+    "text": "Bubble attack! I'm Tiger, Phoebe's big brother, and I'm way too fast for bubbles! Ooh, missed!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "bigBrotherTiger",
+    "voice": "Sadachbia"
+  },
+  "poke_babyPatches": {
+    "file": "assets/voice/gemini-3.8/poke_babyPatches.wav",
+    "text": "Hee hee! Bubbly! I'm Patches! My nose went pop!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "babyPatches",
+    "voice": "Leda",
+    "fallback": false
+  },
+  "poke_grandpaStripes": {
+    "file": "assets/voice/gemini-3.8/poke_grandpaStripes.wav",
+    "text": "Well now! I'm Phoebe's Grandpa. In my day, bubbles were twice as big! Ho ho!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "grandpaStripes",
+    "voice": "voice_47s3assl2p34"
   }
 };

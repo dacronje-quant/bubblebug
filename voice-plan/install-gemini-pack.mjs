@@ -72,7 +72,7 @@ if (checkOnly) {
   for (const { clip, metadata, bytes, stats, sha256 } of prepared) {
     await fs.writeFile(path.join(dest, clip.id + '.wav'), bytes);
     manifest[clip.id] = { file: 'assets/voice/gemini-3.8/' + clip.id + '.wav', text: clip.text, source: pack.model, speaker: clip.speaker, voice: metadata.voiceId };
-    if (['cat_babySnowflake', 'cat_babyPatches', 'kin_rbTwinkle'].includes(clip.id)) manifest[clip.id].fallback = false;
+    if (['cat_babySnowflake', 'cat_babyPatches', 'kin_rbTwinkle', 'poke_babySnowflake', 'poke_babyPatches'].includes(clip.id)) manifest[clip.id].fallback = false;
     provenance.push({ ...metadata, normalization: stats, sha256 });
   }
   await fs.writeFile(path.join(dest, 'manifest.json'), JSON.stringify({ model: pack.model, installedAt: new Date().toISOString(), normalization: 'Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.', clips: provenance, retainedClips: retained }, null, 2) + '\n');

@@ -186,6 +186,14 @@
       if (dist < 110 && !th.wait && ctx.pl.state === 'play') ctx.onKin(th);
       return;
     }
+    // they finish saying hello before the cloud comes for them
+    // (a safety cap keeps a stalled voice from holding them forever)
+    const line = 'kin_' + th.kin, V = BB.Voice;
+    const talking = V && (V.currentId === line || V.queuedIds.includes(line));
+    if (th.foundT === KIN_RIDE - 40 && talking && (th.talkT = (th.talkT || 0) + 1) < 900) {
+      if (th.t % 22 === 0) PT().heart(th.x + (Math.random() - 0.5) * 24, th.y - 50);
+      return;
+    }
     th.foundT++;
     const col = BB.CATS[th.kin].trailColor;
     if (th.foundT < KIN_RIDE) {

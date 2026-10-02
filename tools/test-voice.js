@@ -54,7 +54,7 @@ async function lifecycle() {
   const clips = context.BB.VOICE_CLIPS;
   const pack = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/voice/gemini-3.8/manifest.json'), 'utf8'));
   const retained = new Set(pack.retainedClips.map(c => c.id));
-  assert.equal(Object.keys(clips).length, 41);
+  assert.equal(Object.keys(clips).length, 53);
   for (const [id, clip] of Object.entries(clips)) {
     if (retained.has(id)) { assert.equal(clip.source, 'gpt-4o-mini-tts', id); assert.ok(fs.existsSync(path.join(__dirname, '..', clip.file)), id); continue; }
     assert.equal(clip.source, 'gemini-3.8-flash-tts', id);
@@ -67,11 +67,17 @@ async function lifecycle() {
   assert.equal(clips.cat_babyPatches.voice, 'Leda');
   assert.equal(new Set(Object.values(clips).filter(c => c.speaker === 'narrator').map(c => c.voice)).size, 1);
   assert.equal(clips.story_rainbow_call.voice, clips.story_rainbow_rescue.voice);
-  assert.equal(pack.clips.length + retained.size, 41);
+  assert.equal(pack.clips.length + retained.size, 53);
   // each of Rainbow's relatives keeps one voice; Mama's call, greeting and thanks match
   for (const id of ['rbGrandpa', 'rbPapa', 'rbGranny', 'rbSplash', 'rbPumpkin', 'rbTwinkle', 'rbMama']) assert.equal(clips['kin_' + id].speaker, id);
   assert.equal(clips.kin_mama_call.voice, clips.kin_rbMama.voice); assert.equal(clips.kin_complete.voice, clips.kin_rbMama.voice);
   assert.equal(clips.kin_rbTwinkle.fallback, false);
+  // bubbling a family member at home: their own voice says who they are
+  for (const [id, clip] of Object.entries(clips)) if (id.startsWith('cat_')) {
+    const poke = clips['poke_' + clip.speaker];
+    assert.ok(poke, 'poke line for ' + clip.speaker); assert.equal(poke.voice, clip.voice, id);
+  }
+  assert.equal(clips.poke_babyPatches.fallback, false); assert.equal(clips.poke_babySnowflake.fallback, false);
   assert.equal(clips.kin_cloud_maze.voice, clips.story_welcome.voice);
   assert.equal(clips.kin_hunt_start.voice, clips.story_rainbow_call.voice); assert.equal(clips.kin_six_home.voice, clips.story_rainbow_call.voice);
   const gameRoot = path.join(__dirname, '..');
@@ -82,7 +88,7 @@ async function lifecycle() {
     });
   }
   assert.deepEqual(audioFiles(path.join(gameRoot, 'assets/voice')).sort(), Object.values(clips).map(c => c.file).sort(), 'ship exactly the audio files selected by the game');
-  console.log('✓ 41 bundled recordings; consistent narrator/Rainbow/rainbow family; queue, duck, cancellation, mute and error fallback');
+  console.log('✓ 53 bundled recordings; consistent narrator/Rainbow/rainbow family; queue, duck, cancellation, mute and error fallback');
 }
 function story() {
   const g = bootGame(), B = g.BB, P = B.Play, heard = [];
@@ -123,6 +129,19 @@ function story() {
     assert.equal(heard.filter(id => id === 'story_welcome').length, 1);
     P.save.mazeSolved = true; P.save.rainbowUnlocked = true;
   }
+  // bubble the family at home: each jumps up and says their own funny line
+  const home = B.World.byId.hm; P.room = home; heard.length = 0; P.party = null;
+  for (const id of family) P.save.family[id] = 1;
+  const spots = B.Home.familySpots(home, P);
+  assert.equal(spots.length, 12);
+  let busy = null; B.Voice.play = id => { heard.push(id); return true; };
+  Object.defineProperty(B.Voice, 'currentId', { configurable: true, get: () => busy });
+  P.pokeFamily(spots[0].id, spots[0].x, spots[0].y); P.pokeFamily(spots[0].id, spots[0].x, spots[0].y);
+  assert.deepEqual(heard, ['poke_' + spots[0].id]); // once per hop
+  busy = 'story_welcome'; P.pokeFamily(spots[1].id, spots[1].x, spots[1].y);
+  assert.equal(heard.length, 1); // never talks over a story line
+  busy = null; for (let i = 0; i < 150; i++) P.updateFamilyPokes();
+  P.pokeFamily(spots[0].id, spots[0].x, spots[0].y); assert.equal(heard.length, 2);
   console.log('✓ all 12 greetings, queued family completion, once-only story cues, reload and three Rainbow replay openings');
 }
 (async () => { await lifecycle(); story(); })().catch(e => { console.error(e); process.exitCode = 1; });
