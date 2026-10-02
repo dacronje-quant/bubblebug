@@ -54,6 +54,28 @@
   // Rooms register themselves from js/world/rooms/*.js
   BB.room = def => { DEFS.push(def); };
 
+  // A room marked `flip: true` is shown mirror-image, so it runs the other
+  // way round in the kingdom: the same platforms and puzzles, just flipped
+  // (signposts turn round with it). Every column in the definition is
+  // mirrored too; `def.src` keeps the room as it was drawn.
+  const TURN = { L: 'R', R: 'L' };
+  function flipDef(d) {
+    const w = d.map[0].length, mx = x => w - 1 - x;
+    const out = Object.assign({}, d, {
+      src: d,
+      map: d.map.map(row => row.split('').reverse().map(ch => TURN[ch] || ch).join('')),
+    });
+    for (const k of ['glasses', 'finds', 'kin']) if (d[k]) out[k] = d[k].map(o => Object.assign({}, o, { x: mx(o.x) }));
+    if (d.arena) {
+      const a = out.arena = Object.assign({}, d.arena);
+      for (const k of ['mud', 'tree', 'crack']) if (a[k] != null) a[k] = mx(a[k]);
+      for (const k of ['holes', 'bamboo']) if (a[k]) a[k] = a[k].map(mx).reverse();
+      if (a.bowl) a.bowl = [mx(a.bowl[1]), mx(a.bowl[0])];
+      if (a.craters) a.craters = a.craters.map(([p, q]) => [mx(q), mx(p)]).reverse();
+    }
+    return out;
+  }
+
   const BUCKET = 16;
   // char-code → one-character string (0 → null: outside the world)
   const CH = [null];
@@ -74,7 +96,8 @@
       this._last = null;
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
 
-      for (const def of DEFS) {
+      for (const raw of DEFS) {
+        const def = raw.flip ? flipDef(raw) : raw;
         const h = def.map.length;
         const w = def.map[0].length;
         const room = {
@@ -102,7 +125,8 @@
         // The post-game maze has its own four-direction movement. Keep
         // its original collectible keys for old saves and the kingdom map.
         for (const [x, y] of def.mazeStars || []) room.things.push({ ch: '*', tx: def.x + x, ty: def.y + y });
-        for (const drop of def.glasses || []) room.things.push({ ch: 'a', item: drop.id, tx: def.x + drop.x, ty: def.y + drop.y });
+        // hidden finds (any wardrobe item; `glasses` is the older name)
+        for (const drop of (def.glasses || []).concat(def.finds || [])) room.things.push({ ch: 'a', item: drop.id, tx: def.x + drop.x, ty: def.y + drop.y });
         // Rainbow's lost relatives (second adventure onwards): `kin` lists
         // who waits where, so the ASCII maps stay the same for every run.
         for (const k of def.kin || []) room.things.push({ ch: '@', kin: k.id, tx: def.x + k.x, ty: def.y + k.y });

@@ -158,5 +158,7 @@
   ];
   // which way is onward in a zone: the return half of the ring runs west
   BB.zoneDir = z => (BB.ZONES[z] && BB.ZONES[z].dir) || 1;
+  // …and inside one room (a mirror-image room runs the other way round)
+  BB.roomDir = room => BB.zoneDir(room.zone) * (room.def && room.def.flip ? -1 : 1);
   BB.HOME_ZONE = 12;
 })(window.BB);
