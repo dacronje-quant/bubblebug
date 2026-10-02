@@ -1,95 +1,150 @@
 #!/usr/bin/env node
-// Rainbow's family: only lost in Rainbow adventures, found by walking up,
-// ridden home on a rainbow to the Rainbow Nest, saved and reloaded, Mama in
-// the replay maze, rainbow bubbles for the whole family, and replays reset.
+// Rainbow's family: lost only once Rainbow is rescued (no reset), found by
+// walking up, ridden home on a rainbow, saved; the courtyard doorway stays
+// shut until all six are home, then opens Mama's Cloud Maze (colour
+// bridges, solved with real key presses); rainbow bubbles; the replay cloud
+// waits for the whole family, who stay home through replays; one map
+// opened from play or the pause menu.
 'use strict';
 const assert = require('node:assert/strict');
 const { bootGame } = require('./test-neighbourhood');
 
-const g = bootGame(), B = g.BB, P = B.Play;
+const g = bootGame(), B = g.BB, P = B.Play, RF = B.RainbowFamily;
 const heard = [];
 B.Voice.play = id => { heard.push(id); return true; };
 const kinThings = () => B.World.rooms.flatMap(r => P.ents[r.id].things.filter(th => th.type === 'kin'));
+const plain = v => JSON.parse(JSON.stringify(v));
 
-// 1. The first adventure has no rainbow relatives anywhere.
-B.Save.data = B.Save.fresh(); B.Main.set('play', { cat: 'marshmallow' });
-assert.equal(B.World.findThings('@').length, 6, 'six relatives are placed in the world (Mama waits in the maze)');
-assert.equal(kinThings().length, 0, 'nobody is lost in the first adventure');
-assert.equal(B.RainbowFamily.prize(P.save), 'rainbow');
-assert.deepEqual([...B.RAINBOW_KIN].sort(), [...B.RainbowFamily.SEATS].sort());
-for (const id of B.RAINBOW_KIN) {
-  assert.ok(B.CATS[id] && B.CATS[id].magical, id);
-  assert.ok(B.VOICE_CLIPS['kin_' + id], 'voice line for ' + id);
-  const grey = B.CATS[B.Kittens.fadedId(id, 1)];
-  assert.notEqual(grey.fur, B.CATS[id].fur, 'a lost relative is drawn grey: ' + id);
-}
-const placed = new Set(B.World.findThings('@').map(t => t.kin));
-assert.equal(placed.size, 6); assert.ok(!placed.has('rbMama'));
-const zones = new Set(B.World.findThings('@').map(t => B.World.roomAtTile(t.tx, t.ty).zone));
-assert.ok(zones.size >= 6, 'relatives are spread across the kingdom');
-
-// 2. A Rainbow adventure: all six are lost, grey, and found by walking up.
-const fixture = Object.assign(B.Save.fresh(), { replayCount: 1, rainbowUnlocked: true, cat: 'rainbow', introDone: 1, leftHome: 1 });
+// 1. Before Rainbow is rescued, her family is nowhere to be seen.
+const fixture = Object.assign(B.Save.fresh(), { cat: 'phoebe', introDone: 1, leftHome: 1, finale: true });
 Object.keys(fixture.abilities).forEach(k => { fixture.abilities[k] = true; });
-B.Save.data = fixture; B.Main.set('play', { cat: 'rainbow' });
-assert.equal(kinThings().length, 6);
-assert.equal(B.RainbowFamily.prize(P.save), 'rbMama');
-const grandpa = kinThings().find(th => th.kin === 'rbGrandpa');
-const np = B.World.byId.np;
-g.place('np', grandpa.x / 32 - np.x - 4, Math.round(grandpa.y / 32) - np.y);
-for (let i = 0; i < 90 && !P.save.kin.rbGrandpa; i++) g.tick(1, ['ArrowRight']);
-g.tick(1);
-assert.equal(P.save.kin.rbGrandpa, 1, 'walking up to Grandpa finds him');
-assert.ok(heard.includes('kin_rbGrandpa'));
-assert.equal(B.RainbowFamily.count(P.save), 1);
-// He waves, hops on a cloud and rides the rainbow home (the entity leaves).
-g.tick(400);
-assert.ok(!P.ents.np.things.some(th => th.type === 'kin'), 'Grandpa rode home');
-// Found relatives sit on their cloud in the Cat House nest.
-const seat = B.RainbowFamily.seat(B.World.byId.hm, 'rbGrandpa');
-assert.ok(B.World.roomAtPx(seat.x, seat.y).id === 'hm');
+B.Save.data = fixture; B.Main.set('play', { cat: 'phoebe' });
+assert.equal(B.World.findThings('@').length, 6, 'six relatives wait around the kingdom (Mama in the Cloud Maze)');
+assert.equal(kinThings().length, 0); assert.equal(RF.hunting(P.save), false); assert.equal(RF.nest(P.save), false);
+const zones = new Set(B.World.findThings('@').map(t => B.World.roomAtTile(t.tx, t.ty).zone));
+assert.ok(zones.size >= 6, 'spread across the kingdom');
+for (const id of B.RAINBOW_KIN) {
+  assert.ok(B.CATS[id].magical && B.VOICE_CLIPS['kin_' + id], id);
+  assert.notEqual(B.CATS[B.Kittens.fadedId(id, 1)].fur, B.CATS[id].fur, 'lost relatives are grey: ' + id);
+}
 
-// 3. Saved and reloaded: still home, not lost again.
-P.writeSave(); B.Save.load(); B.Main.set('play', {});
-assert.equal(P.save.kin.rbGrandpa, 1);
-assert.equal(kinThings().length, 5);
-
-// 4. Each relative found in its own room; then Mama in the maze completes the rainbow.
-for (const th of kinThings()) P.ctx().onKin(th);
-assert.equal(B.RainbowFamily.count(P.save), 6); assert.ok(!B.RainbowFamily.complete(P.save));
-assert.ok(!(P.save.purchases || {})['bubble-rainbow']);
+// 2. Rescue Rainbow in the hedge maze: the hunt starts at once, no reset.
 B.Home.familyOrder().forEach(id => { P.save.family[id] = 1; });
-assert.equal(P.openJourneyChoice('rainbow'), true);
-assert.ok(heard.includes('kin_mama_call'), "Mama calls from the maze in Rainbow's adventures");
-assert.ok(!heard.includes('story_rainbow_call'));
-P.closeJourneyChoice();
+const stars = Object.keys(P.save.sparkles).length;
+assert.equal(P.openJourneyChoice('rainbow'), true); P.closeJourneyChoice();
 assert.equal(P.openMaze(), true);
 for (const p of B.GardenMaze.PADS) P.save.pads[p.key] = 1;
 Object.assign(P.maze, B.GardenMaze.PRIZE); P.mazeCell();
 assert.equal(P.save.mazeSolved, true);
-assert.equal(P.save.kin.rbMama, 1);
-assert.ok(heard.includes('kin_rbMama')); assert.ok(!heard.includes('story_rainbow_rescue'));
-assert.ok(B.RainbowFamily.complete(P.save));
-assert.equal(heard.filter(id => id === 'kin_complete').length, 1);
-assert.equal(P.save.purchases['bubble-rainbow'], 1, 'the whole family earns rainbow bubbles');
-assert.equal(P.save.cosmetics.bubble, 'rainbow');
-P.ctx().onKin({ kin: 'rbGrandpa', x: 0, y: 0 }); assert.equal(heard.filter(id => id === 'kin_complete').length, 1);
+assert.deepEqual(heard.slice(-2), ['story_rainbow_rescue', 'kin_hunt_start']);
 P.closeMaze(true);
+assert.equal(kinThings().length, 6, 'all six appear in the same world');
+assert.ok(P.kinCard, 'a picture card shows the new goal'); assert.equal(P.save.kinIntro, 1);
+assert.equal(Object.keys(P.save.family).length, 12, 'nothing was reset'); assert.equal(Object.keys(P.save.sparkles).length, stars);
+assert.equal(RF.hunting(P.save), true); assert.equal(RF.nest(P.save), true);
 
-// 5. Homecoming: the rainbow family dances with the cats.
+// 3. The courtyard doorway stays shut (and the replay cloud hidden) while they're lost.
+assert.equal(B.RainbowJourney.unlocked(P.save, 'rainbow'), false);
+assert.equal(B.RainbowJourney.unlocked(P.save, 'cloud'), false);
+assert.equal(P.openJourneyChoice('rainbow'), false);
+
+// 4. Walk up to Grandpa: found, colour back, rides home.
+const grandpa = kinThings().find(th => th.kin === 'rbGrandpa'), np = B.World.byId.np;
+g.place('np', grandpa.x / 32 - np.x - 4, Math.round(grandpa.y / 32) - np.y);
+for (let i = 0; i < 90 && !P.save.kin.rbGrandpa; i++) g.tick(1, ['ArrowRight']);
+g.tick(1);
+assert.equal(P.save.kin.rbGrandpa, 1); assert.ok(heard.includes('kin_rbGrandpa'));
+g.tick(400);
+assert.ok(!P.ents.np.things.some(th => th.type === 'kin'), 'Grandpa rode home');
+P.writeSave(); B.Save.load(); B.Main.set('play', {});
+assert.equal(P.save.kin.rbGrandpa, 1); assert.equal(kinThings().length, 5); assert.equal(P.kinCard, null, 'the goal card shows once');
+
+// 5. The others: the sixth brings Rainbow's hint and opens the doorway to Mama.
+for (const th of kinThings()) P.ctx().onKin(th);
+assert.equal(RF.count(P.save), 6); assert.equal(RF.mamaReady(P.save), true);
+assert.ok(heard.includes('kin_six_home')); assert.ok(!heard.includes('kin_complete'));
+g.place('nm', 21, 32);
+assert.equal(B.RainbowJourney.unlocked(P.save, 'rainbow'), true);
+assert.equal(P.openJourneyChoice('rainbow'), true); assert.ok(heard.includes('kin_mama_call'));
+assert.equal(P.chooseJourney(), true);
+assert.ok(P.cloud, "the doorway opens Mama's Cloud Maze, not the hedge maze"); assert.equal(P.maze, null);
+assert.ok(heard.includes('kin_cloud_maze'));
+
+// 6. The Cloud Maze: closed colour bridges, a forced order, kept colours.
+const C = B.CloudMaze, key = { '-1,0': 'ArrowLeft', '1,0': 'ArrowRight', '0,-1': 'ArrowUp', '0,1': 'ArrowDown' };
+function solve(from, mask, skip) {
+  const start = [from.x, from.y, mask].join(), prev = new Map([[start, null]]), q = [[from.x, from.y, mask]];
+  while (q.length) {
+    const [x, y, m] = q.shift();
+    if (x === C.MAMA.x && y === C.MAMA.y) {
+      const path = []; let k = [x, y, m].join();
+      while (k) { path.push(k.split(',').map(Number)); k = prev.get(k); }
+      return path.reverse();
+    }
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (!C.walkable(nx, ny, m) || C.potAt(nx, ny) === skip) continue;
+      const pot = C.potAt(nx, ny), nm = pot ? m | 1 << C.POTS.indexOf(pot) : m, k = [nx, ny, nm].join();
+      if (!prev.has(k)) { prev.set(k, [x, y, m].join()); q.push([nx, ny, nm]); }
+    }
+  }
+  return null;
+}
+const route = solve(C.START, 0);
+assert.ok(route && route.length > 100, 'Mama can be reached, after a real journey');
+const order = route.map(([x, y]) => C.potAt(x, y)).filter((p, i, a) => p && a.indexOf(p) === i).join('');
+assert.equal(order, 'voygtb', 'each relative opens the way to the next');
+for (const pot of C.POTS) assert.equal(solve(C.START, 0, pot), null, 'every relative is needed: ' + pot);
+assert.equal(C.walkable(3, 2, 0), false, 'the rainbow bridge needs all six colours');
+// every gathered set still leads to Mama: no stuck states
+for (let m = 0; m <= C.ALL; m++) assert.ok(solve(C.START, m), 'reachable from start with colours ' + m);
+const walk = (steps) => {
+  for (const [x, y] of steps) {
+    const c = P.cloud, d = key[[x - c.x, y - c.y].join()];
+    assert.ok(d, 'adjacent step');
+    g.tick(1, [d]); g.tick(9);
+    assert.deepEqual([P.cloud.x, P.cloud.y], [x, y]);
+  }
+};
+const firstLeg = route.slice(1, route.findIndex(([x, y]) => C.potAt(x, y) === 'o') + 1);
+walk(firstLeg);
+assert.equal(P.save.cloudMask, (1 << C.POTS.indexOf('v')) | (1 << C.POTS.indexOf('o')), 'Twinkle and Pumpkin gave their colours');
+// leave early through the way home (header button): colours are kept
+P.closeCloud(false);
+assert.equal(P.cloud, null); assert.equal(P.room.id, 'nm');
+P.writeSave(); B.Save.load(); B.Main.set('play', {});
+assert.equal(P.save.cloudMask, 1 << C.POTS.indexOf('v') | 1 << C.POTS.indexOf('o'));
+g.place('nm', 21, 32); P.openJourneyChoice('rainbow'); P.chooseJourney();
+const rest = solve(C.START, P.save.cloudMask);
+walk(rest.slice(1));
+assert.equal(P.save.kin.rbMama, 1); assert.ok(RF.complete(P.save));
+assert.ok(P.cloud.done > 0); assert.ok(heard.includes('kin_rbMama')); assert.equal(heard.filter(id => id === 'kin_complete').length, 1);
+assert.equal(P.save.purchases['bubble-rainbow'], 1); assert.equal(P.save.cosmetics.bubble, 'rainbow');
+g.tick(430);
+assert.equal(P.cloud, null, 'the celebration ends back in the courtyard'); assert.equal(P.room.id, 'nm');
+
+// 7. The replay cloud appears; replays keep the family home for good.
+assert.equal(B.RainbowJourney.unlocked(P.save, 'cloud'), true);
+assert.equal(B.RainbowJourney.unlocked(P.save, 'rainbow'), true, 'the doorway leads back to the hedge maze');
+g.place('nm', 21, 32); P.openJourneyChoice('rainbow'); P.chooseJourney(); assert.ok(P.maze); P.closeMaze();
 const sk = B.Links.skylightTile(); g.place('hm', sk.tx - B.World.byId.hm.x, sk.ty - B.World.byId.hm.y + 1);
-P.startParty();
-const dancers = P.party.guests.filter(q => q.ring).map(q => q.cat);
-for (const id of B.RAINBOW_KIN) assert.ok(dancers.includes(id), id + ' dances');
+P.save.finale = false; P.startParty();
+for (const id of B.RAINBOW_KIN) assert.ok(P.party.guests.some(q => q.cat === id), id + ' dances at the party');
 P.party = null;
-
-// 6. A further replay: the family is lost again, rainbow bubbles are kept.
-P.save.rainbowUnlocked = true; P.writeSave();
-assert.equal(B.Save.rainbowReplay(), true);
-assert.deepEqual(JSON.parse(JSON.stringify(B.Save.data.kin)), {});
-assert.equal(B.Save.data.purchases['bubble-rainbow'], 1);
+P.writeSave(); assert.equal(B.Save.rainbowReplay(), true);
+assert.deepEqual(Object.keys(plain(B.Save.data.kin)).sort(), [...B.RAINBOW_KIN].sort());
 B.Main.set('play', { cat: 'rainbow' });
-assert.equal(kinThings().length, 6);
-// Mama is never a loose world entity; a missing save field is harmless.
-delete P.save.kin; B.Save.write(); B.Save.load(); assert.deepEqual(JSON.parse(JSON.stringify(B.Save.data.kin)), {});
-console.log("✓ Rainbow's family: absent in the first adventure, six lost relatives found and sent home, saved, Mama in the maze, rainbow bubbles, party and replay reset");
+assert.equal(kinThings().length, 0); assert.equal(RF.hunting(P.save), false); assert.equal(RF.nest(P.save), true);
+assert.equal(P.save.purchases['bubble-rainbow'], 1);
+
+// 8. One map: from play (M) and from the pause menu, the same kingdom map.
+g.place('g2', 10, 14); g.tick(2);
+g.tick(1, ['KeyM']); g.tick(1);
+assert.equal(B.Main.name, 'pause'); assert.equal(B.Pause.map, true);
+g.tick(12); g.tick(1, ['KeyM']); g.tick(1);
+assert.equal(B.Main.name, 'play', 'closing a map opened during play goes straight back to playing');
+B.Main.go('pause'); B.Pause.activate(2); assert.equal(B.Pause.map, true);
+g.tick(12); B.Pause.closeMap(); assert.equal(B.Main.name, 'pause'); assert.equal(B.Pause.map, false);
+console.log("✓ Rainbow's family: lost after Rainbow's rescue (no reset), found on foot, ride home, saved; doorway waits for all six");
+console.log('✓ Cloud Maze: forced colour order, no stuck states, kept colours, real-key walk to Mama, rainbow bubbles, party, replay keeps family');
+console.log('✓ one kingdom map from play or the pause menu');

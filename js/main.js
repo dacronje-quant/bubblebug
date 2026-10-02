@@ -48,7 +48,7 @@
 
     draw() {
       const p = BB.Play;
-      document.body.classList.toggle('menu-open', this.name !== 'play' || !!(p.wardrobe || p.gardenChoice || p.portalChoice || p.mapOn || p.maze && p.maze.choice));
+      document.body.classList.toggle('menu-open', this.name !== 'play' || !!(p.wardrobe || p.gardenChoice || p.portalChoice || p.maze && p.maze.choice || p.cloud && p.cloud.done));
       G.begin();
       const c = G.ctx;
       c.save();
@@ -142,6 +142,8 @@
       e.preventDefault(); e.stopPropagation();
       unlock();
       if (Main.name === 'play') BB.Play.toggleMap();
+      else if (Main.name === 'pause' && BB.Pause.map) BB.Pause.closeMap();
+      else if (Main.name === 'pause') BB.Pause.activate(2);
     });
     // stepping away from the tablet pauses the game
     document.addEventListener('visibilitychange', () => {
@@ -151,22 +153,17 @@
     BB.Save.load();
     Main.set('title');
     // Developer shortcut (never needed to play): index.html#play=phoebe&room=c4&ab=all
-    // jumps straight into a room, optionally with every power; replay=1 makes
-    // it a Rainbow adventure (Rainbow's family is lost). demo=rewards
+    // jumps straight into a room, optionally with every power; hunt=1 starts
+    // just after Rainbow's rescue (her family is lost). demo=rewards
     // seeds a save-free preview so a grown-up can try the optional extras.
     const h = location.hash;
     const m = /play=(\w+)/.exec(h);
     if (m) {
       const room = /room=(\w+)/.exec(h), all = /ab=all/.test(h);
       const demo = /(?:^#|&)demo=rewards(?:&|$)/.test(h);
-      // demo=rainbow: a save-free Rainbow adventure, to meet her family
+      // demo=rainbow: save-free, just after Rainbow's rescue, to find her family
       const rainbowDemo = /(?:^#|&)demo=rainbow(?:&|$)/.test(h);
       if (room || all || demo || rainbowDemo) BB.Save.data = BB.Save.fresh();
-      if (rainbowDemo) {
-        BB.Save.preview = true;
-        Object.assign(BB.Save.data, { replayCount: 1, rainbowUnlocked: true, introDone: 1, leftHome: 1 });
-        Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
-      }
       if (demo) {
         BB.Save.preview = true;
         BB.World.build();
@@ -178,7 +175,13 @@
         s.introDone = 1; s.leftHome = 1; s.finale = true;
       }
       if (all) Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
-      if (/replay=1/.test(h)) Object.assign(BB.Save.data, { replayCount: 1, rainbowUnlocked: true, introDone: 1, leftHome: 1 });
+      const hunt = s => { BB.World.build(); for (const r of BB.World.rooms) if (r.def.family) s.family[r.def.family] = 1;
+        Object.assign(s, { mazeSolved: true, rainbowUnlocked: true, kinIntro: 1, introDone: 1, leftHome: 1, finale: true }); };
+      if (rainbowDemo) {
+        BB.Save.preview = true; hunt(BB.Save.data); BB.Save.data.kinIntro = 0;
+        Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
+      }
+      if (/hunt=1/.test(h)) hunt(BB.Save.data);
       if (room) {
         BB.World.build();
         const r = BB.World.byId[room[1]];

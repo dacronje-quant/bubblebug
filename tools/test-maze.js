@@ -109,6 +109,10 @@ function check(g) {
   B.Play.writeSave(); B.Save.load(); B.Main.set('play', {}); save = B.Play.save;
   assert.equal(save.cat, 'rainbow'); assert.equal(B.Play.pl.cat, 'rainbow'); assert.equal(save.mazeSolved, true);
   assert.equal(B.Save.count(save.sparkles), total); assert.equal(save.finale, false);
+  // while Rainbow's own family is lost the doorway stays shut; with them
+  // all home it leads back into the hedge maze
+  place('nm', 21, 32); tick(B.Links.HOLD + 15); assert.equal(B.Play.portalChoice, null);
+  for (const id of B.RAINBOW_KIN) save.kin[id] = 1;
   place('nm', 21, 32); tick(B.Links.HOLD + 15); tick(1, ['Enter']); tick(); assert.ok(B.Play.maze);
   walkTo(M.START);
   tick(M.EXIT_HOLD, ['ArrowRight']); assert.equal(B.Play.maze, null); assert.equal(B.Play.room.id, 'nm');

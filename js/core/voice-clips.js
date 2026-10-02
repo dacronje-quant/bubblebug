@@ -184,20 +184,6 @@ window.BB.VOICE_CLIPS = {
     "speaker": "narrator",
     "voice": "voice_r8b6ppg0ri8o"
   },
-  "story_replay_kin": {
-    "file": "assets/voice/gemini-3.8/story_replay_kin.wav",
-    "text": "Play again as Rainbow? Rainbow's family is lost all over the kingdom! You keep your skills and outfits.",
-    "source": "gemini-3.8-flash-tts",
-    "speaker": "narrator",
-    "voice": "voice_r8b6ppg0ri8o"
-  },
-  "story_replay_kin_start": {
-    "file": "assets/voice/gemini-3.8/story_replay_kin_start.wav",
-    "text": "Here we go, Rainbow! Your rainbow family is lost. Let's find them and send them home!",
-    "source": "gemini-3.8-flash-tts",
-    "speaker": "narrator",
-    "voice": "voice_r8b6ppg0ri8o"
-  },
   "kin_rbGrandpa": {
     "file": "assets/voice/gemini-3.8/kin_rbGrandpa.wav",
     "text": "Hello, little one! I'm Rainbow's Grandpa. My green is back! I'll ride the rainbow home.",
@@ -261,5 +247,40 @@ window.BB.VOICE_CLIPS = {
     "source": "gemini-3.8-flash-tts",
     "speaker": "rbMama",
     "voice": "Sulafat"
+  },
+  "story_replay_choice": {
+    "file": "assets/voice/gemini-3.8/story_replay_choice.wav",
+    "text": "Play again as Rainbow? Our friends will need help again. You keep your skills and outfits!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "story_replay_start": {
+    "file": "assets/voice/gemini-3.8/story_replay_start.wav",
+    "text": "Here we go, Rainbow! A new adventure, with all your magic!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
+  },
+  "kin_hunt_start": {
+    "file": "assets/voice/gemini-3.8/kin_hunt_start.wav",
+    "text": "Oh no! My rainbow family is lost all over the kingdom. Will you help me find them and send them home?",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rainbow",
+    "voice": "Achernar"
+  },
+  "kin_six_home": {
+    "file": "assets/voice/gemini-3.8/kin_six_home.wav",
+    "text": "Everyone is home except my Mama! She's waiting in the cloud maze. Let's go and find her!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "rainbow",
+    "voice": "Achernar"
+  },
+  "kin_cloud_maze": {
+    "file": "assets/voice/gemini-3.8/kin_cloud_maze.wav",
+    "text": "Touch each of Rainbow's family to get their colour. Then the bridge with the same colour opens!",
+    "source": "gemini-3.8-flash-tts",
+    "speaker": "narrator",
+    "voice": "voice_r8b6ppg0ri8o"
   }
 };

@@ -140,7 +140,7 @@
       }
       const q = spot(this.room), b = this.pl.body;
       if (this.funLock && (this.room.id !== this.funLock.room || Math.hypot(b.x + b.w / 2 - this.funLock.x, b.y + b.h - this.funLock.y) > 64)) this.funLock = null;
-      if (!q || f || this.funLock || this.mapOn || this.iris || this.party || this.traveling || this.pl.state !== 'play') { this.funHold = 0; return; }
+      if (!q || f || this.funLock || this.iris || this.party || this.traveling || this.pl.state !== 'play') { this.funHold = 0; return; }
       const near = b.grounded && Math.abs(b.vx) < 0.3 && Math.abs(b.x + b.w / 2 - q.x) < 18 && Math.abs(b.y + b.h - q.y) < 6;
       this.funHold = near ? this.funHold + 1 : 0;
       if (near && (this.funHold >= BB.Links.HOLD || BB.Input.pressed.confirm || BB.Input.pressed.bubble)) this.startGardenFun();

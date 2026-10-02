@@ -1,8 +1,8 @@
 # Game voice pack
 
-The game uses 37 bundled Gemini 3.8 Flash TTS recordings: twelve family greetings, the story moments, eight first-time guidance cues and eleven lines for Rainbow's family. Snowflake uses Puck and Patches uses Leda, with soft, playful spoken introductions that identify their name and family relationship. Rainbow uses Achernar for both lines; the narrator lines share one designed voice.
+The game uses 40 bundled Gemini 3.8 Flash TTS recordings: twelve family greetings, the story moments, eight first-time guidance cues and twelve lines for Rainbow's family. Snowflake uses Puck and Patches uses Leda, with soft, playful spoken introductions that identify their name and family relationship. Rainbow uses Achernar for both lines; the narrator lines share one designed voice.
 
-Rainbow's family (second adventure onwards) use prebuilt voices, one per relative: Mama Sulafat (her greeting, her call from the maze and the whole-family thanks), Papa Achird, Grandpa Algenib, Granny Vindemiatrix, Splash Laomedeia, Pumpkin Fenrir and baby Twinkle Aoede. The two Rainbow-adventure narrator lines (`story_replay_kin`, `story_replay_kin_start`) replace the old replay choice and start lines and use the narrator's voice. All eleven were checked with speech recognition against the script.
+Rainbow's family (found after Rainbow's rescue) use prebuilt voices, one per relative: Mama Sulafat (her greeting, her call from the Cloud Maze and the whole-family thanks), Papa Achird, Grandpa Algenib, Granny Vindemiatrix, Splash Laomedeia, Pumpkin Fenrir and baby Twinkle Aoede. Rainbow (Achernar) has two more lines: her family is lost (`kin_hunt_start`) and only Mama is missing (`kin_six_home`); the narrator explains the colour bridges (`kin_cloud_maze`). All were checked with speech recognition against the script.
 
 The whole-family and replay lines now use Gemini, and the welcome includes the instruction to walk through the glowing door. All selected audio is WAV; the three superseded MP3 files were removed.
 

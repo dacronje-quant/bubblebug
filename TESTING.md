@@ -1,15 +1,16 @@
-# Trying Rainbow's family (the second adventure)
+# Trying Rainbow's family and Mama's Cloud Maze
 
-Open `try-rainbow-family.html`. It starts a Rainbow adventure at home with every power and never touches the normal saved adventure.
+Open `try-rainbow-family.html`. It starts at home just after Rainbow's rescue, with every power, and never touches the normal saved adventure.
 
-1. Upstairs over the stairwell, the Rainbow Nest is grey with seven empty cloud cushions. The little rainbow beside the stars and hearts at the top is grey too.
-2. Walk out of the front door to Pond Walk and up onto the branch walk. A chime plays and little green stars float toward Rainbow's Grandpa, grey and sad under a rain cloud. Walk up to him: his colour floods back, he says hello, then hops onto a cloud and rides a rainbow away toward home. The green band lights up in the top bar.
-3. Find the others on high perches: Papa (Honeycomb Hive, above the honey island), Granny (Cloud Castles, a high cloud ledge), Splash (Coral Lagoon, over the beach), Pumpkin (Autumn Woods, above Acorn Hollow) and Twinkle (Starlight Sky). Each one has its own voice and rides home.
-4. Go home: each relative sits on their own cloud on the nest, and their band is coloured. Open the map: their faces mark where they were found; rooms you visited with someone still lost show a grey "?" face.
-5. With all twelve cats found, the courtyard shows Rainbow's Mama beyond the doorway and she calls for help. Rescue her in the lantern maze. With all seven home, Mama thanks you, fireworks go up and Rainbow's bubbles turn to rainbow bubbles (also at the mirror's bubble picture).
-6. In normal play, the first adventure has no rainbow relatives anywhere; they only appear after the sad-cloud replay, and each later replay loses them again while rainbow bubbles stay.
+1. A picture card shows six grey relatives and an arrow to the Cat House. Upstairs over the stairwell, the Rainbow Nest is grey with seven empty cloud cushions; the little rainbow at the top is grey too.
+2. Open the map (map button or M): each lost relative flashes in their own colour; ones off to the side flash at the map's edge with an arrow, and tapping one glides there. Close the map: you are straight back in the game.
+3. Walk out to Pond Walk and up onto the branch walk. A chime plays and green stars float toward Rainbow's Grandpa, grey and sad. Walk up to him: his colour floods back, he says hello, then rides a rainbow away toward home. His band lights up at the top and on the nest.
+4. Find the others on high perches: Papa (Honeycomb Hive), Granny (Cloud Castles), Splash (Coral Lagoon), Pumpkin (Autumn Woods) and Twinkle (Starlight Sky).
+5. While any are lost, the courtyard doorway (left of the house) is shut, with their six faces above it. When the sixth is home, Rainbow says only Mama is missing; at the doorway Mama calls for help and the green check opens the **Cloud Maze**.
+6. In the Cloud Maze, touch Twinkle (purple) near the start: the purple bridges turn solid. Each relative's colour opens the way to the next; bumping a closed bridge wobbles it. Leave by standing on the start cloud for two seconds or tapping the house: gathered colours are kept. The rainbow bridge by Mama needs all six. Reach her: the whole family gathers under a rainbow, then fireworks over the courtyard and rainbow bubbles.
+7. Only now does the sad cloud offer a replay. In the replay the family stays home on the nest.
 
-`node tools/test-rainbow-family.js` checks all of this automatically, and `node tools/verify-world.js --replay` proves every relative can be reached with no softlocks.
+`node tools/test-rainbow-family.js` checks all of this (including walking the whole Cloud Maze with real key presses and proving there are no stuck states), and `node tools/verify-world.js --replay` proves every relative's perch can be reached with no softlocks.
 
 # Trying the home neighbourhood and rewards
 
@@ -36,7 +37,7 @@ Family wishes, house decorating and jukebox tunes remain deferred. No recovery b
 
 ## Approved story voices
 
-The game bundles 37 Gemini 3.8 Flash TTS recordings: the twelve family greetings, the story moments, the first-time guidance cues and eleven lines for Rainbow's family (seven greetings, Mama's call from the maze, the whole-family thanks, and the two Rainbow-adventure announcements). Snowflake (Puck) and Patches (Leda) use soft, playful spoken introductions that identify their name and whose baby sibling they are. The Gemini narrator lines share one designed voice, and Rainbow uses Achernar for both lines. No API key or network speech service is needed to play. New recordings use a fixed gain for approximate speech-volume matching, with a peak limit and no pitch or speed change. Music and its reverb stay at 18% of their normal level throughout speech, then fade back up; other effects stay at 40%, with meows and purrs held back while a cat speaks. Overlapping fanfares cannot end the speech duck early.
+The game bundles 40 Gemini 3.8 Flash TTS recordings: the twelve family greetings, the story moments, the first-time guidance cues and twelve lines for Rainbow's family (seven greetings, Rainbow's two lines about her family, Mama's call, the Cloud Maze hint and the whole-family thanks). Snowflake (Puck) and Patches (Leda) use soft, playful spoken introductions that identify their name and whose baby sibling they are. The Gemini narrator lines share one designed voice, and Rainbow uses Achernar for both lines. No API key or network speech service is needed to play. New recordings use a fixed gain for approximate speech-volume matching, with a peak limit and no pitch or speed change. Music and its reverb stay at 18% of their normal level throughout speech, then fade back up; other effects stay at 40%, with meows and purrs held back while a cat speaks. Overlapping fanfares cannot end the speech duck early.
 
 - Start a new adventure: hear the mission once when the kitten wakes.
 - Find each family cat: hear its greeting. The twelfth greeting finishes before the whole-family announcement.
@@ -44,4 +45,4 @@ The game bundles 37 Gemini 3.8 Flash TTS recordings: the twelve family greetings
 - Mute or pause during a line or its short delay: playback and queued lines stop. Walk between rooms or open a menu to check the same cancellation.
 - Replay as Rainbow three times: the new-adventure story line works each time, while skills and outfits stay unlocked. Reload a save to confirm story milestones do not repeat.
 
-Run `node tools/test-voice.js` for queue/cancellation/save checks and `node tools/check-audio.js` for overlapping ducks, effect limits and reverb routing. `node tools/test-voice-browser.js` verifies all 37 bundled files decode and tests real playback, mute and pause in Playwright. `node tools/check-mix-browser.js [screenshot-directory]` checks the existing googly glasses moved from Ladybug Hill into Root Hollow's two-bud nook, saved unlocks, real speech ducking, and mute/pause/end cleanup. Existing glasses stay earned. Use the same optional browser and dependency settings as `tools/test-browser.js`; the new browser check also accepts Playwright through `NODE_PATH`.
+Run `node tools/test-voice.js` for queue/cancellation/save checks and `node tools/check-audio.js` for overlapping ducks, effect limits and reverb routing. `node tools/test-voice-browser.js` verifies all 40 bundled files decode and tests real playback, mute and pause in Playwright. `node tools/check-mix-browser.js [screenshot-directory]` checks the existing googly glasses moved from Ladybug Hill into Root Hollow's two-bud nook, saved unlocks, real speech ducking, and mute/pause/end cleanup. Existing glasses stay earned. Use the same optional browser and dependency settings as `tools/test-browser.js`; the new browser check also accepts Playwright through `NODE_PATH`.

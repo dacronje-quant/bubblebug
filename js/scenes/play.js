@@ -118,7 +118,7 @@
       this.gardenChoice = null; this.gardenHold = 0; this.celebrationT = 0; this.gardenLock = null; this.fountainCd = 0; this.mirrorLock = false;
       this.maze = null;
       this.portalChoice = null; this.journeyHold = 0; this.journeyLock = null; this.replayStarting = false;
-      this.rainbowGateOpen = null; this.kinRoom = null; this.kinPulse = 0;
+      this.rainbowGateOpen = null; this.kinRoom = null; this.kinPulse = 0; this.kinCard = null; this.cloud = null;
       // An old checkpoint outside the newly locked door must still
       // allow its kitten to walk home before the door closes behind it.
       this.rainbowExitPass = x < (W().byId.hm.x + 2) * T;
@@ -157,6 +157,7 @@
       this.t = 0;
       this.writeSave();
       if (save.inMaze) this.openMaze();
+      else this.startHunt(); // (an older finished adventure: Rainbow's family is waiting)
     },
 
     enterZone(z) {
@@ -262,7 +263,7 @@
       it.t++;
       if (it.t === 70 && pl.state === 'bench') {
         pl.state = 'play'; pl.idleT = 0; pl.squash = 1.2; BB.Gestures.start(pl, 'stretch'); S().meow(pl.cat);
-        this.sayStory(this.save.replayCount ? 'story_replay_kin_start' : 'story_welcome');
+        this.sayStory(this.save.replayCount ? 'story_replay_start' : 'story_welcome');
       }
       if (it.t > 70 && pl.state === 'play') pl.idleT = 0; // (awake now: no dozing back off on the bed)
       if (it.t > 260 || (it.t > 70 && pl.state === 'play' && (BB.Input.held.left || BB.Input.held.right || BB.Input.held.jump))) {
@@ -740,8 +741,8 @@
       const mama = this.mamaId();
       const fam = BB.Home.familyOrder().filter(id => this.save.family[id]);
       fam.sort((a, c) => (c === mama) - (a === mama));
-      // (in a Rainbow adventure, her own relatives who are home dance too)
-      const kin = BB.RainbowFamily.active(this.save) ? BB.RAINBOW_KIN.filter(id => this.save.kin[id]) : [];
+      // (Rainbow's own relatives who are home dance too)
+      const kin = BB.RAINBOW_KIN.filter(id => this.save.kin[id]);
       const ring = fam.concat(kin);
       ring.forEach((id, i) => guests.push({ cat: id, ring: true, ang: Math.PI / 2 + (i + 0.5) / ring.length * Math.PI * 2, t: Math.random() * 100 }));
       this.party = { t: 0, guests, card: 0, cx, floor, found: fam.length, total: BB.Home.familyOrder().length };
@@ -782,11 +783,12 @@
       const I = BB.Input;
       if (this.replayStarting) return;
       if (this.maze) { this.updateMaze(); return; }
+      if (this.cloud) { this.updateCloud(); return; }
       if (this.portalChoice) { this.updateJourneyChoice(); PT().update(); return; }
       if (this.wardrobe) { this.updateWardrobe(); PT().update(); return; }
       if (this.gardenChoice) { this.updateGardenChoice(); PT().update(); return; }
       if (I.pressed.pause && !this.gift && this.pl.state !== 'sad') { BB.Main.go('pause'); return; }
-      if (I.pressed.map) this.toggleMap();
+      if (I.pressed.map) { this.toggleMap(); if (BB.Main.name === 'pause') return; }
 
       // timers, orbs, iris, shake
       for (let i = this.timers.length - 1; i >= 0; i--) { if (--this.timers[i].n <= 0) { const f = this.timers[i].fn; this.timers.splice(i, 1); f(); } }
@@ -996,12 +998,11 @@
     },
 
     // the see-through map floats over the game while you keep playing
+    // the one kingdom map (the same as the pause menu's), paused while open
     toggleMap() {
+      if (this.gift || this.party || this.pl.state === 'sad' || this.traveling) return;
       BB.Voice.stop();
-      this.mapOn = !this.mapOn;
-      BB.Audio.sfx.select();
-      const btn = document.getElementById('map-btn');
-      if (btn) btn.classList.toggle('on', this.mapOn);
+      BB.Pause.openMap();
     },
 
     darkness() {
@@ -1013,6 +1014,7 @@
     // ──── Drawing ────
     draw(c) {
       if (this.maze) { this.drawMaze(c); return; }
+      if (this.cloud) { this.drawCloud(c); return; }
       const cam0 = Cam();
       const sc = G().scale;
       let sx = 0, sy = 0;
@@ -1159,12 +1161,13 @@
       if (boss && boss.state !== 'happy' && boss.room === this.room.id) BB.Bosses.drawBossHUD(c, boss, t);
       if (this.bossCard) BB.HUD.drawBossCard(c, this.bossCard.b, this.bossCard.t, t);
       if (this.trickCard) this.drawTrickCard(c, t);
+      if (this.kinCard) this.drawKinCard(c, t);
       if (this.outfitCard) this.drawOutfitCard(c, t);
       if (this.trickHint > 0) this.drawTrickHint(c, cam);
       this.drawGuidance(c, cam);
       // (a lesson or present card takes the top of the screen: the zone
       // name steps aside instead of overlapping it)
-      if (this.trickCard || this.outfitCard) this.zoneCard = Math.min(this.zoneCard, 12);
+      if (this.trickCard || this.outfitCard || this.kinCard) this.zoneCard = Math.min(this.zoneCard, 12);
       BB.HUD.drawZoneCard(c, this.cardZone, this.zoneCard / 40, t);
       if (this.gift && this.gift.card > 0) {
         c.fillStyle = `rgba(20,10,40,${0.35 * this.gift.card})`; c.fillRect(0, 0, G().W, G().H);
@@ -1172,7 +1175,6 @@
       }
       if (this.party && this.party.card > 0) this.drawPartyCard(c, this.party.card);
       if (this.flash > 0) { c.fillStyle = `rgba(255,248,220,${this.flash / 20})`; c.fillRect(0, 0, G().W, G().H); this.flash--; }
-      if (this.mapOn && !(this.gift && this.gift.card > 0)) BB.MapView.draw(c, 'overlay', t);
       if (this.wardrobe) this.drawWardrobe(c, t);
       if (this.gardenChoice) this.drawGardenChoice(c, t);
       if (this.portalChoice) this.drawJourneyChoice(c, t);
@@ -1180,7 +1182,7 @@
     },
 
     drawInteractionProgress(c, cam, visible) {
-      if (this.wardrobe || this.gardenChoice || this.portalChoice || this.mapOn || this.iris) return;
+      if (this.wardrobe || this.gardenChoice || this.portalChoice || this.iris) return;
       const ctx = this.ctx(), room = this.room;
       for (const r of visible) for (const th of this.ents[r.id].things) BB.Links.drawProgress(c, th, cam, ctx);
       if (room.def.home && this.mirrorHold > 0)
@@ -1339,8 +1341,8 @@
       });
       // the big count
       const ny = cy + 100;
-      if (BB.RainbowFamily.active(this.save)) {
-        // a Rainbow adventure: her own rainbow family beside the cats
+      if (BB.RainbowFamily.nest(this.save)) {
+        // once Rainbow is rescued: her own rainbow family beside the cats
         const kin = BB.RainbowFamily.count(this.save), whole = BB.RainbowFamily.complete(this.save);
         BB.MapView.catFace(c, cx - 190, ny, 2.4, '#fff1dc', '#9a7a64');
         G().text(shown + ' / ' + p.total, cx - 102, ny + 2, 38, all ? '#d8407a' : '#8a5a3a', null);

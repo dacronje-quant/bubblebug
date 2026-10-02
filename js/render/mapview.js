@@ -1,16 +1,13 @@
 // ════════════════════════════════════════════════════════════════
 //  MAP VIEW — the kingdom map, drawn from the rooms you've visited.
 //
-//  Both maps use the same comfortable zoom:
-//   • 'full'    — on parchment (pause menu). It opens centred on your
-//                 kitten; browse side to side with ◀ ▶ (▲ ▼ too) held down,
-//                 by dragging, or with the big arrow buttons. A small map
-//                 of the whole ring at the bottom shows where you're looking
-//                 (tap it to jump there); zone name tags float over each
-//                 zone you've explored.
-//   • 'overlay' — a see-through map floating over the game while you keep
-//                 playing (map button, M / Tab, or a gamepad's Select),
-//                 centred on your kitten
+//  One map, on parchment, opened from the pause menu or straight from
+//  play (map button, M / Tab, or a gamepad's Select). It opens centred on
+//  your kitten; browse side to side with ◀ ▶ (▲ ▼ too) held down, by
+//  dragging, or with the big arrow buttons. A small map of the whole ring
+//  at the bottom shows where you're looking (tap it to jump there); zone
+//  name tags float over each zone you've explored. While Rainbow's family
+//  is lost, each lost relative flashes in their own colour where they wait.
 //  Pictures only: each room in its biome colour, a gold star when all its
 //  sparkles are found, a lantern dot for benches, the elder's gift badge,
 //  a cat face where you found family, a toy where you found a toy, each
@@ -97,6 +94,9 @@
   }
   // a tap on the pause map: arrows glide half a screen, the strip jumps there
   function tapFull(p) {
+    // a tap on a flashing edge face glides to that lost relative
+    const f0 = FRAME(), mark = edgeMarks(f0.x + f0.w / 2 - view.cx * ZOOM, f0.y + f0.h / 2 - view.cy * ZOOM, ZOOM).find(e => Math.hypot(p.x - e.x, p.y - e.y) < 24);
+    if (mark) { glideTo(mark.tx, mark.ty); BB.Audio.sfx.select(); return 'kin'; }
     const hit = controlAt(p);
     const f = FRAME();
     if (hit === 'left' || hit === 'right') { glideBy((hit === 'left' ? -1 : 1) * f.w * 0.5 / ZOOM); BB.Audio.sfx.whoosh(); }
@@ -140,19 +140,39 @@
     }
   }
 
+  // Rainbow's relatives still lost (Mama at the courtyard doorway once the
+  // other six are home), in tiles
+  function lostKin(save) {
+    const RF = BB.RainbowFamily, lost = [];
+    if (RF.hunting(save)) for (const th of BB.World.findThings('@')) if (!save.kin[th.kin]) lost.push({ id: th.kin, tx: th.tx, ty: th.ty });
+    if (RF.mamaReady(save)) { const q = BB.RainbowJourney.spot('rainbow'), T0 = BB.CFG.TILE; lost.push({ id: 'rbMama', tx: q.x / T0, ty: q.y / T0 - 2 }); }
+    return lost;
+  }
+  // …and a flashing face at the edge of the map pointing to each one
+  // that is off to the side (tap it to glide there)
+  function edgeMarks(ox, oy, sc) {
+    const f = FRAME(), out = [];
+    lostKin(BB.Play.save).forEach((k, i) => {
+      const lx = ox + (k.tx + 0.5) * sc, ly = oy + (k.ty + 0.5) * sc;
+      if (lx > f.x && lx < f.x + f.w && ly > f.y && ly < f.y + f.h) return;
+      out.push({ ...k, i, x: BB.clamp(lx, f.x + 84, f.x + f.w - 84), y: BB.clamp(ly, f.y + 50, f.y + f.h - 26), dx: lx, dy: ly });
+    });
+    return out;
+  }
+
   // every visited room, with its pictures, at scale sc (screen = o + tile·sc)
-  function drawRooms(c, seen, sc, ox, oy, t, overlay) {
+  function drawRooms(c, seen, sc, ox, oy, t) {
     const W = BB.World, P = BB.Play, save = P.save;
     const mk = s => Math.max(0.55, Math.min(1.2, s));
     for (const r of seen) {
       const x = ox + r.x * sc, y = oy + r.y * sc, w = r.w * sc, h = r.h * sc;
       if (x > G().W || y > G().H || x + w < 0 || y + h < 0) continue;
       const Z = BB.ZONES[r.zone];
-      c.globalAlpha = overlay ? 0.72 : 1;
+      c.globalAlpha = 1;
       c.fillStyle = BB.mix(Z.sky[1], Z.top, 0.45);
       G().rrect(x + 1, y + 1, w - 2, h - 2, Math.min(6, w / 5), c); c.fill();
-      c.strokeStyle = overlay ? 'rgba(255,255,255,0.9)' : BB.mix(Z.topDark, '#5a3a24', 0.4);
-      c.lineWidth = overlay ? 1.5 : 2; c.stroke();
+      c.strokeStyle = BB.mix(Z.topDark, '#5a3a24', 0.4);
+      c.lineWidth = 2; c.stroke();
       c.globalAlpha = 1;
       const s = mk(sc / 2.2);
       const stars = r.things.filter(th => th.ch === '*');
@@ -165,9 +185,8 @@
         const m = BB.CATS[r.def.family];
         catFace(c, x + w / 2 + (r.def.elder ? 14 * s : 0), y + h / 2, 0.9 * s, m ? m.fur : '#fff', m ? (m.pointDark || m.fur) : '#ccc');
       }
-      // where one of Rainbow's relatives was found (Rainbow adventures)
-      // (a grey face with a "?" where one is still lost, once you've been there)
-      if (BB.RainbowFamily.active(save)) for (const k of r.def.kin || []) BB.RainbowFamily.face(c, k.id, x + w / 2 - 14 * s, y + h / 2, 0.85 * s, !!save.kin[k.id]);
+      // where one of Rainbow's relatives was found
+      for (const k of r.def.kin || []) if (save.kin[k.id]) BB.RainbowFamily.face(c, k.id, x + w / 2 - 14 * s, y + h / 2, 0.85 * s, true);
       if (r.def.toy && save.toys[r.def.toy]) BB.HUD.toyIcon(c, r.def.toy, x + 8 * s, y + 8 * s, 0.55 * s, t);
       const boss = r.def.boss || (r.things.some(th => th.ch === 'K') ? 'king' : null);
       if (boss) bossMark(c, boss, x + w / 2, y + h / 2 + 4 * s, s, !!(save.bosses && save.bosses[r.id]), t);
@@ -210,6 +229,17 @@
       }
       c.setLineDash([]);
     }
+
+    // Rainbow's lost relatives flash in their own colours where they wait
+    // (Mama at the courtyard doorway once the other six are home)
+    lostKin(save).forEach((k, i) => {
+      const lx = ox + (k.tx + 0.5) * sc, ly = oy + (k.ty + 0.5) * sc, col = BB.CATS[k.id].trailColor;
+      if (lx < -40 || lx > G().W + 40 || ly < -40 || ly > G().H + 40) return;
+      const f = (Math.sin(t * 0.14 + i * 1.3) + 1) / 2;
+      G().drawGlow(lx, ly, 26 + f * 12, col, 0.45 + f * 0.45, c);
+      c.strokeStyle = col; c.lineWidth = 3; G().circle(lx, ly, 13 + f * 5, c); c.stroke();
+      BB.Kittens.draw(c, BB.Kittens.fadedId(k.id, 1 - f), { mode: 'sit', sad: 0.6 * (1 - f), t: t + i * 9 }, lx, ly + 11, 0.62, 1);
+    });
 
     // you are here
     const cur = P.room, b = P.pl.body, T = BB.CFG.TILE;
@@ -278,6 +308,14 @@
     const vy0 = Math.max(s.y - 4, Y(view.cy - hh)), vy1 = Math.min(s.y + s.h + 4, Y(view.cy + hh));
     c.strokeStyle = '#8a5a34'; c.lineWidth = 2.5;
     G().rrect(vx0, vy0, vx1 - vx0, vy1 - vy0, 4, c); c.stroke();
+    // lost relatives, as little flashing dots in their own colours
+    const save = BB.Play.save;
+    if (BB.RainbowFamily.hunting(save)) BB.World.findThings('@').forEach((th, i) => {
+      if (save.kin[th.kin]) return;
+      const f = (Math.sin(t * 0.14 + i * 1.3) + 1) / 2;
+      c.fillStyle = BB.CATS[th.kin].trailColor; c.globalAlpha = 0.5 + f * 0.5;
+      G().circle(X(th.tx), Y(th.ty), 3 + f * 1.5, c); c.fill(); c.globalAlpha = 1;
+    });
     // the kitten, as a little glowing dot
     const b = BB.Play.pl.body, T = BB.CFG.TILE;
     const kx = X(b.x / T), ky = Y(b.y / T);
@@ -287,30 +325,12 @@
 
   function draw(c, mode, t) {
     const P = BB.Play;
-    const overlay = mode === 'overlay';
     const seen = seenRooms();
     if (!seen.length) return;
-    const b = P.pl.body, T = BB.CFG.TILE;
     const sc = ZOOM;
-    let ox, oy;
-    if (overlay) {
-      // centred on the kitten
-      ox = G().W / 2 - (b.x + b.w / 2) / T * sc;
-      oy = G().H / 2 - (b.y + b.h / 2) / T * sc;
-    } else {
-      const f = FRAME();
-      ox = f.x + f.w / 2 - view.cx * sc;
-      oy = f.y + f.h / 2 - view.cy * sc;
-    }
-
+    const f0 = FRAME();
+    const ox = f0.x + f0.w / 2 - view.cx * sc, oy = f0.y + f0.h / 2 - view.cy * sc;
     c.save();
-    if (overlay) {
-      c.fillStyle = 'rgba(20,12,40,0.32)';
-      c.fillRect(0, 0, G().W, G().H);
-      drawRooms(c, seen, sc, ox, oy, t, true);
-      c.restore();
-      return;
-    }
     // parchment, with the zoomed-in part clipped to its frame
     c.fillStyle = '#fff6de'; c.strokeStyle = '#d9a95a'; c.lineWidth = 6;
     G().rrect(40, 40, G().W - 80, G().H - 80, 30, c); c.fill(); c.stroke();
@@ -319,8 +339,19 @@
     G().rrect(f.x, f.y, f.w, f.h, 22, c); c.stroke(); c.setLineDash([]);
     c.save();
     G().rrect(f.x, f.y, f.w, f.h, 22, c); c.clip();
-    drawRooms(c, seen, sc, ox, oy, t, false);
+    drawRooms(c, seen, sc, ox, oy, t);
     drawZoneTags(c, seen, sc, ox, oy);
+    for (const e of edgeMarks(ox, oy, sc)) {
+      const col = BB.CATS[e.id].trailColor, fl = (Math.sin(t * 0.14 + e.i * 1.3) + 1) / 2;
+      const a = Math.atan2(e.dy - e.y, e.dx - e.x);
+      c.fillStyle = col; c.globalAlpha = 0.55 + fl * 0.45;
+      c.beginPath(); c.moveTo(e.x + Math.cos(a) * 26, e.y + Math.sin(a) * 26);
+      c.lineTo(e.x + Math.cos(a + 2.5) * 15, e.y + Math.sin(a + 2.5) * 15); c.lineTo(e.x + Math.cos(a - 2.5) * 15, e.y + Math.sin(a - 2.5) * 15); c.fill();
+      c.globalAlpha = 1;
+      G().drawGlow(e.x, e.y, 22 + fl * 8, col, 0.5 + fl * 0.4, c);
+      c.fillStyle = '#fff8ee'; c.strokeStyle = col; c.lineWidth = 3; G().circle(e.x, e.y, 15, c); c.fill(); c.stroke();
+      BB.RainbowFamily.face(c, e.id, e.x, e.y + 1, 1.15, fl > 0.5);
+    }
     c.restore();
     drawStrip(c, seen, boundsOf(seen), t);
     drawArrow(c, -1, t, canGo(-1));

@@ -1,6 +1,6 @@
 {
   "model": "gemini-3.8-flash-tts",
-  "installedAt": "2026-10-02T11:30:41.274Z",
+  "installedAt": "2026-10-02T12:29:07.654Z",
   "normalization": "Fixed gain; gated speech RMS target 0.12, peak limit 0.891, no pitch or speed change.",
   "clips": [
     {
@@ -580,48 +580,6 @@
       "sha256": "9e22395fef159c7257992a48a0e2dc9930b8fcac668806d641f1700ea291906a"
     },
     {
-      "id": "story_replay_kin",
-      "speaker": "narrator",
-      "text": "Play again as Rainbow? Rainbow's family is lost all over the kingdom! You keep your skills and outfits.",
-      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects. Pause after the opening question and explain patiently.",
-      "model": "gemini-3.8-flash-tts",
-      "voiceId": "voice_r8b6ppg0ri8o",
-      "generatedAt": "2026-10-02T11:21:13.796Z",
-      "bytes": 478388,
-      "normalization": {
-        "seconds": 9.84,
-        "sampleRate": 24000,
-        "channels": 1,
-        "gain": 0.7433388652540153,
-        "inputPeak": 0.81817626953125,
-        "inputSpeechRms": 0.16143377618092572,
-        "outputPeak": 0.6081822197711227,
-        "outputSpeechRms": 0.12000000000000001
-      },
-      "sha256": "b8d2c9b61b95bd823478bb3236402cb4700bbe3f70ca2762b7c45ff59d9b719e"
-    },
-    {
-      "id": "story_replay_kin_start",
-      "speaker": "narrator",
-      "text": "Here we go, Rainbow! Your rainbow family is lost. Let's find them and send them home!",
-      "style": "Tender, reassuring and softly excited. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects.",
-      "model": "gemini-3.8-flash-tts",
-      "voiceId": "voice_r8b6ppg0ri8o",
-      "generatedAt": "2026-10-02T11:23:23.705Z",
-      "bytes": 353588,
-      "normalization": {
-        "seconds": 7.24,
-        "sampleRate": 24000,
-        "channels": 1,
-        "gain": 0.6259324328767254,
-        "inputPeak": 0.788421630859375,
-        "inputSpeechRms": 0.19171398332642953,
-        "outputPeak": 0.4934986695364441,
-        "outputSpeechRms": 0.12
-      },
-      "sha256": "ebe00edc95b06aafc9f10017c390c573c0a30697eec3d13aa50c401862f8c4e1"
-    },
-    {
       "id": "kin_rbGrandpa",
       "speaker": "rbGrandpa",
       "text": "Hello, little one! I'm Rainbow's Grandpa. My green is back! I'll ride the rainbow home.",
@@ -809,6 +767,111 @@
         "outputSpeechRms": 0.12
       },
       "sha256": "dd04d88316401dc5140412b93a2a31be6decc89be5553e18e64d96a49a353bbf"
+    },
+    {
+      "id": "story_replay_choice",
+      "speaker": "narrator",
+      "text": "Play again as Rainbow? Our friends will need help again. You keep your skills and outfits!",
+      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects. Pause after the opening question and explain patiently.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:26:04.996Z",
+      "bytes": 376628,
+      "normalization": {
+        "seconds": 7.72,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6638789908064191,
+        "inputPeak": 0.794189453125,
+        "inputSpeechRms": 0.18075583300841475,
+        "outputPeak": 0.5272456926497269,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "f12ea6fb16f46ea79a1d7bc2af8eae5e56aa1a53ae6906b7be7610a7fc0d0185"
+    },
+    {
+      "id": "story_replay_start",
+      "speaker": "narrator",
+      "text": "Here we go, Rainbow! A new adventure, with all your magic!",
+      "style": "Tender, reassuring and softly delighted. Clear words, concise natural pace and small expressive pauses. No added words, music or sound effects.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T09:27:10.435Z",
+      "bytes": 299828,
+      "normalization": {
+        "seconds": 6.12,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.7618192545473038,
+        "inputPeak": 0.80010986328125,
+        "inputSpeechRms": 0.1575176779580186,
+        "outputPeak": 0.609539099600867,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "3931beaea096d9f7b8c0cf5dd8fdd3acdae955a7441e79ddcd97fd27f0bbd28c"
+    },
+    {
+      "id": "kin_hunt_start",
+      "speaker": "rainbow",
+      "text": "Oh no! My rainbow family is lost all over the kingdom. Will you help me find them and send them home?",
+      "style": "Soft, magical and tender, with clear flowing phrasing and a gentle smile. No added sound effects or music. A little worried at first, then brave and hopeful, warmly asking for help.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Achernar",
+      "generatedAt": "2026-10-02T12:26:41.799Z",
+      "bytes": 439988,
+      "normalization": {
+        "seconds": 9.04,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6397684834401621,
+        "inputPeak": 0.806732177734375,
+        "inputSpeechRms": 0.18756785166211404,
+        "outputPeak": 0.5161218218915005,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "7405874d1ec7bf8cf217211d29fbba0d79638449f4b3f9235861dedd135f2790"
+    },
+    {
+      "id": "kin_six_home",
+      "speaker": "rainbow",
+      "text": "Everyone is home except my Mama! She's waiting in the cloud maze. Let's go and find her!",
+      "style": "Soft, magical and tender, with clear flowing phrasing and a gentle smile. No added sound effects or music. Happy and excited, with a hopeful lift on the last sentence.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "Achernar",
+      "generatedAt": "2026-10-02T12:28:51.400Z",
+      "bytes": 345908,
+      "normalization": {
+        "seconds": 7.08,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.769284589620473,
+        "inputPeak": 0.625885009765625,
+        "inputSpeechRms": 0.15598908598858333,
+        "outputPeak": 0.48148369288715454,
+        "outputSpeechRms": 0.12
+      },
+      "sha256": "5f465e994e90aab0048791f5f3120c29be03b6e7e1234d757f40ee4208f13624"
+    },
+    {
+      "id": "kin_cloud_maze",
+      "speaker": "narrator",
+      "text": "Touch each of Rainbow's family to get their colour. Then the bridge with the same colour opens!",
+      "style": "Warm, reassuring storybook guidance for a young child. Clear words and patient, concise natural pace, with a small pause between the two sentences. Light emphasis on same colour. Gentle conversational volume. No added words, music or sound effects.",
+      "model": "gemini-3.8-flash-tts",
+      "voiceId": "voice_r8b6ppg0ri8o",
+      "generatedAt": "2026-10-02T12:27:46.173Z",
+      "bytes": 386228,
+      "normalization": {
+        "seconds": 7.92,
+        "sampleRate": 24000,
+        "channels": 1,
+        "gain": 0.6563637263121669,
+        "inputPeak": 0.829315185546875,
+        "inputSpeechRms": 0.1828254597100144,
+        "outputPeak": 0.5443324054728129,
+        "outputSpeechRms": 0.11999999999999998
+      },
+      "sha256": "5935adb6984d4e47aae3b1b4ccba6f9823d7d2f4f195b9a9c5c3ee7c434793fc"
     }
   ],
   "retainedClips": []

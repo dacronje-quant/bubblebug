@@ -92,7 +92,9 @@
         swim: false, dig: false, spring: false, rings: false, bubbleBounce: false, wings: false,
       },
       family: {},                           // family member id → 1 (found)
-      kin: {},                              // Rainbow's relatives found this adventure (replays only)
+      kin: {},                              // Rainbow's relatives who are home (kept through replays)
+      kinIntro: 0,                          // the "find Rainbow's family" card has shown
+      cloudMask: 0,                         // colours gathered in the Cloud Maze (Mama's maze)
       sparkles: {},                         // key → 1
       friends: {},                          // key → 1
       toys: {},                             // toy id → 1
@@ -203,6 +205,8 @@
       next.replayCount = (Number.isSafeInteger(old.replayCount) && old.replayCount >= 0 ? old.replayCount : 0) + 1;
       for (const key of Object.keys(next.abilities)) next.abilities[key] = !!old.abilities[key];
       for (const field of ['outfits', 'wear', 'cosmetics', 'gestures']) next[field] = Object.assign({}, next[field], old[field] || {});
+      // Rainbow's family, once home, stays home (and so does the hunt's card)
+      next.kin = Object.assign({}, old.kin || {}); next.kinIntro = old.kinIntro || 0;
       // Clothes/styles stay earned; invitations and the fountain belong
       // to the new world and must never leave an old heart debt behind.
       const styles = new Set(BB.Cosmetics.LIST.map(item => item.id));

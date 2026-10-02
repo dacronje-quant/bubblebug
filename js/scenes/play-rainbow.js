@@ -1,12 +1,14 @@
 // ════════════════════════════════════════════════════════════════
-//  RAINBOW'S FAMILY — the second adventure onwards.
+//  RAINBOW'S FAMILY — after Rainbow is rescued from the hedge maze.
 //  Rainbow's own relatives, one for each colour of her rainbow, are lost
 //  all over the kingdom: grey and sad under their own rain clouds. Touch
 //  one and the colour floods back; they say hello, hop onto a cloud and
 //  ride a rainbow home to the start of the adventure, the Cat House.
 //  There they sit on cloud cushions along the Rainbow Nest, the arch over
 //  the stairwell, and their own band of its rainbow lights up.
-//  Mama waits in the garden maze, where Rainbow was once lost herself.
+//  With all six home, the courtyard doorway opens onto the Cloud Maze,
+//  where Mama waits (play-cloudmaze.js). Rainbow's family stays home for
+//  good: a later sad-cloud replay never loses them again.
 //  A guiding star drifts toward a lost relative in the same room, so
 //  small players can always find them without reading anything.
 // ════════════════════════════════════════════════════════════════
@@ -17,11 +19,17 @@
   // Seats along the arch, left to right: Mama on top, the baby beside her
   const SEATS = ['rbGrandpa', 'rbPumpkin', 'rbPapa', 'rbMama', 'rbTwinkle', 'rbSplash', 'rbGranny'];
   const ARCH = { col: 30, row: 19.6, rx: 4.3, ry: 6.1 }; // over the stairwell, in Cat House tiles
-  const active = save => !!save && save.replayCount > 0;
-  const count = save => ORDER().filter(id => (save.kin || {})[id]).length;
-  const complete = save => active(save) && count(save) === ORDER().length;
-  // The maze holds Rainbow the first time; afterwards it holds her Mama.
-  const prize = save => active(save) ? 'rbMama' : 'rainbow';
+  const WORLD = () => ORDER().filter(id => id !== 'rbMama'); // the six lost around the kingdom
+  const has = (save, id) => !!(save && save.kin && save.kin[id]);
+  const count = save => ORDER().filter(id => has(save, id)).length;
+  const complete = save => !!save && ORDER().every(id => has(save, id));
+  // the six are lost once Rainbow has been rescued, until each is found
+  const hunting = save => !!save && !!save.mazeSolved && WORLD().some(id => !has(save, id));
+  // all six home: Mama waits in the Cloud Maze
+  const mamaReady = save => !!save && !!save.mazeSolved && WORLD().every(id => has(save, id)) && !has(save, 'rbMama');
+  // the little rainbow on the HUD / title shows while the family is still apart
+  const active = save => !!save && !!save.mazeSolved && !complete(save);
+  const nest = save => !!save && (!!save.mazeSolved || count(save) > 0);
   function seat(room, id) {
     const i = SEATS.indexOf(id), a = Math.PI * (160 - i * 140 / 6) / 180;
     return { x: (room.x + ARCH.col + Math.cos(a) * ARCH.rx) * T, y: (room.y + ARCH.row - Math.sin(a) * ARCH.ry) * T - 6 };
@@ -48,13 +56,13 @@
     c.fillStyle = '#ffdf7c'; c.beginPath(); c.moveTo(x - 1.6 * s, y - 6 * s); c.lineTo(x, y - 13 * s); c.lineTo(x + 1.6 * s, y - 6 * s); c.closePath(); c.fill();
   }
 
-  BB.RainbowFamily = { active, count, complete, prize, seat, miniArc, face, SEATS };
+  BB.RainbowFamily = { active, hunting, mamaReady, nest, count, complete, seat, miniArc, face, SEATS, WORLD };
 
   Object.assign(BB.Play, {
     // ──── Found one! ────
     onKin(th) {
       const save = this.save;
-      if (!active(save) || save.kin[th.kin]) return;
+      if (!hunting(save) || save.kin[th.kin]) return;
       this.cancelGuidance();
       this.foundKin(th.kin, th.x, th.y, 500);
     },
@@ -73,16 +81,36 @@
         // and Rainbow's bubbles turn rainbow too (kept for every adventure)
         BB.Economy.milestones(save);
         save.cosmetics.bubble = 'rainbow'; save.wardrobeNew = 1;
-        if (!this.maze) this.later(60, () => { S().party(); for (let i = 0; i < 5; i++) this.later(i * 18, () => PT().firework(x + (Math.random() - 0.5) * 360, y - 140 - Math.random() * 80)); });
         this.sayStory('kin_complete', 400);
+      } else if (mamaReady(save)) {
+        // the sixth is home: only Mama is missing now
+        this.sayStory('kin_six_home', 600);
       }
+      BB.Save.write();
+    },
+
+    // Rainbow was just rescued: her relatives appear around the kingdom
+    // (without a reload), and a picture card shows the new goal.
+    spawnKin() {
+      for (const room of BB.World.rooms) for (const th of room.things) {
+        if (th.ch !== '@' || this.ents[room.id].things.some(e => e.type === 'kin' && e.kin === th.kin)) continue;
+        const e = BB.Things.create(th, room, this.save);
+        if (e) this.ents[room.id].things.push(e);
+      }
+    },
+    startHunt() {
+      this.spawnKin();
+      if (!hunting(this.save) || this.save.kinIntro) return;
+      this.save.kinIntro = 1;
+      this.kinCard = { t: 0 };
       BB.Save.write();
     },
 
     // ──── A guiding star toward a lost relative in this room ────
     updateRainbowFamily() {
       if (this.kinPulse > 0) this.kinPulse = Math.max(0, this.kinPulse - 0.03);
-      if (!active(this.save) || this.pl.state !== 'play') return;
+      if (this.kinCard && ++this.kinCard.t > 330) this.kinCard = null;
+      if (!hunting(this.save) || this.pl.state !== 'play') return;
       const lost = this.ents[this.room.id].things.find(th => th.type === 'kin' && !th.found);
       if (this.kinRoom !== this.room.id) {
         this.kinRoom = this.room.id;
@@ -94,9 +122,30 @@
       if (d > 120) PT().guide(px, py, lost.x, lost.y - 30, BB.CATS[lost.kin].trailColor);
     },
 
+    // ──── "Find Rainbow's family": six grey faces → their rainbow home ────
+    drawKinCard(c, t) {
+      const k = this.kinCard, a = k.t < 18 ? k.t / 18 : k.t > 300 ? Math.max(0, (330 - k.t) / 30) : 1;
+      if (a <= 0) return;
+      const cx = G().W / 2, cy = 150 - (1 - Math.min(1, k.t / 18)) * 24;
+      c.save(); c.globalAlpha = a;
+      c.fillStyle = 'rgba(255,250,240,0.95)'; c.strokeStyle = '#c4a4f0'; c.lineWidth = 4;
+      G().rrect(cx - 250, cy - 62, 500, 124, 30, c); c.fill(); c.stroke();
+      WORLD().forEach((id, i) => {
+        const x = cx - 205 + i * 46, y = cy + 26 + Math.sin(t * 0.08 + i) * 2;
+        BB.Kittens.draw(c, BB.Kittens.fadedId(id, 1), { mode: 'sit', sad: 0.9, t: t + i * 20 }, x, y, 0.95, 1);
+        BB.Critters.moodCloud(c, x, y - 52, 1, t + i * 30, 0.55);
+      });
+      c.strokeStyle = '#9a7ac8'; c.lineWidth = 5; c.lineCap = 'round'; c.lineJoin = 'round';
+      const ax = cx + 82 + Math.sin(t * 0.12) * 4;
+      c.beginPath(); c.moveTo(ax - 18, cy); c.lineTo(ax + 14, cy); c.moveTo(ax + 4, cy - 10); c.lineTo(ax + 14, cy); c.lineTo(ax + 4, cy + 10); c.stroke();
+      BB.HUD.zoneIcon(c, BB.HOME_ZONE, cx + 170, cy + 14, 1.05);
+      miniArc(c, cx + 170, cy - 30, 1.15, { kin: Object.fromEntries(ORDER().map(id => [id, 1])) }, t);
+      c.restore();
+    },
+
     // ──── The Rainbow Nest: an arch over the Cat House stairwell ────
     drawRainbowNest(c, room, cam, t) {
-      if (!active(this.save)) return;
+      if (!nest(this.save)) return;
       const cx = (room.x + ARCH.col) * T - cam.x, cy = (room.y + ARCH.row) * T - cam.y;
       if (cx < -300 || cx > G().W + 300 || cy < -40 || cy - ARCH.ry * T > G().H + 40) return;
       const save = this.save, all = complete(save);

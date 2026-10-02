@@ -13,8 +13,8 @@
 //   finale      the rainbow party
 //   family &    a member of the kittens' own family, napping somewhere
 //               secret — find them all and they come to the party
-//   kin @       one of Rainbow's own rainbow-coloured relatives (second
-//               adventure onwards): grey and lost until you find them,
+//   kin @       one of Rainbow's own rainbow-coloured relatives (after
+//               Rainbow is rescued): grey and lost until you find them,
 //               then they ride a rainbow home to the Cat House
 //  (puzzle pieces live in puzzles.js, cat food in food.js and the golden
 //  smiling-cat bubbles that teach cat tricks in gestures.js)
@@ -70,9 +70,9 @@
         th.y = floorBelow(thing.tx, thing.ty); th.facing = 1; th.hop = 0; th.hopV = 0;
         break;
       case 'kin':
-        // Only lost in the second adventure onwards, until found
+        // Lost once Rainbow has been rescued, until found (then home for good)
         th.kin = thing.kin;
-        if (!BB.CATS[th.kin] || !(save.replayCount > 0) || (save.kin || {})[th.kin]) return null;
+        if (!BB.CATS[th.kin] || !save.mazeSolved || (save.kin || {})[th.kin]) return null;
         th.y = floorBelow(thing.tx, thing.ty); th.facing = -1; th.hop = 0; th.hopV = 0; th.foundT = 0;
         th.homeDir = BB.World.byId.hm && (BB.World.byId.hm.x + 30) * T < th.x ? -1 : 1;
         break;

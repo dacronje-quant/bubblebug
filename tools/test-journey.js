@@ -83,6 +83,8 @@ function cycles(g) {
     walkMaze(g, B.GardenMaze.PRIZE); assert.equal(save.mazeSolved, true); assert.equal(save.rainbowUnlocked, true);
     // Back out of character choice; the rescue has already been earned.
     tick(12); tick(1, ['Escape']); tick(); B.Play.closeMaze();
+    // the replay cloud waits until Rainbow's whole family is home (kept through replays)
+    for (const id of B.RAINBOW_KIN) save.kin[id] = 1;
     place('nm', 6, 32); tick(B.Links.HOLD + 15);
     assert.equal(B.Play.portalChoice.kind, 'cloud'); assert.equal(B.Play.portalChoice.focus, 1);
     const unchanged = B.Save.data;

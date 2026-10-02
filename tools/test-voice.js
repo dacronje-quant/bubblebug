@@ -54,7 +54,7 @@ async function lifecycle() {
   const clips = context.BB.VOICE_CLIPS;
   const pack = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/voice/gemini-3.8/manifest.json'), 'utf8'));
   const retained = new Set(pack.retainedClips.map(c => c.id));
-  assert.equal(Object.keys(clips).length, 37);
+  assert.equal(Object.keys(clips).length, 40);
   for (const [id, clip] of Object.entries(clips)) {
     if (retained.has(id)) { assert.equal(clip.source, 'gpt-4o-mini-tts', id); assert.ok(fs.existsSync(path.join(__dirname, '..', clip.file)), id); continue; }
     assert.equal(clip.source, 'gemini-3.8-flash-tts', id);
@@ -67,12 +67,13 @@ async function lifecycle() {
   assert.equal(clips.cat_babyPatches.voice, 'Leda');
   assert.equal(new Set(Object.values(clips).filter(c => c.speaker === 'narrator').map(c => c.voice)).size, 1);
   assert.equal(clips.story_rainbow_call.voice, clips.story_rainbow_rescue.voice);
-  assert.equal(pack.clips.length + retained.size, 37);
+  assert.equal(pack.clips.length + retained.size, 40);
   // each of Rainbow's relatives keeps one voice; Mama's call, greeting and thanks match
   for (const id of ['rbGrandpa', 'rbPapa', 'rbGranny', 'rbSplash', 'rbPumpkin', 'rbTwinkle', 'rbMama']) assert.equal(clips['kin_' + id].speaker, id);
   assert.equal(clips.kin_mama_call.voice, clips.kin_rbMama.voice); assert.equal(clips.kin_complete.voice, clips.kin_rbMama.voice);
   assert.equal(clips.kin_rbTwinkle.fallback, false);
-  assert.equal(clips.story_replay_kin.voice, clips.story_welcome.voice);
+  assert.equal(clips.kin_cloud_maze.voice, clips.story_welcome.voice);
+  assert.equal(clips.kin_hunt_start.voice, clips.story_rainbow_call.voice); assert.equal(clips.kin_six_home.voice, clips.story_rainbow_call.voice);
   const gameRoot = path.join(__dirname, '..');
   function audioFiles(dir) {
     return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
@@ -81,7 +82,7 @@ async function lifecycle() {
     });
   }
   assert.deepEqual(audioFiles(path.join(gameRoot, 'assets/voice')).sort(), Object.values(clips).map(c => c.file).sort(), 'ship exactly the audio files selected by the game');
-  console.log('✓ 37 bundled recordings; consistent narrator/Rainbow/rainbow family; queue, duck, cancellation, mute and error fallback');
+  console.log('✓ 40 bundled recordings; consistent narrator/Rainbow/rainbow family; queue, duck, cancellation, mute and error fallback');
 }
 function story() {
   const g = bootGame(), B = g.BB, P = B.Play, heard = [];
@@ -102,8 +103,13 @@ function story() {
   Object.assign(P.maze, B.GardenMaze.PRIZE); P.mazeCell();
   assert.equal(heard.filter(id => id === 'story_rainbow_rescue').length, 1);
   P.maze.rewardLock = false; P.mazeCell(); assert.equal(heard.filter(id => id === 'story_rainbow_rescue').length, 1);
-  P.closeMaze(true); P.openJourneyChoice('cloud'); P.closeJourneyChoice(); P.openJourneyChoice('cloud');
-  assert.equal(heard.filter(id => id === 'story_replay_kin').length, 1);
+  assert.equal(heard.filter(id => id === 'kin_hunt_start').length, 1); // her own family is lost next
+  assert.equal(heard.indexOf('kin_hunt_start'), heard.indexOf('story_rainbow_rescue') + 1);
+  P.closeMaze(true);
+  assert.equal(P.openJourneyChoice('cloud'), false); // the replay waits for Rainbow's whole family
+  for (const id of B.RAINBOW_KIN) P.save.kin[id] = 1;
+  P.openJourneyChoice('cloud'); P.closeJourneyChoice(); P.openJourneyChoice('cloud');
+  assert.equal(heard.filter(id => id === 'story_replay_choice').length, 1);
   P.save.abilities.doubleJump = true; P.save.outfits.horn = 1;
   const previous = P.save; B.Save.write(); B.Save.load();
   assert.equal(B.Save.data.voiceStory.story_rainbow_rescue, 1);
@@ -113,7 +119,7 @@ function story() {
     assert.equal(Object.keys(B.Save.data.voiceStory).length, 0);
     assert.equal(B.Save.data.abilities.doubleJump, true); assert.equal(B.Save.data.outfits.horn, 1);
     B.Main.set('play', { cat: 'rainbow' }); g.tick(70);
-    assert.equal(heard.filter(id => id === 'story_replay_kin_start').length, run);
+    assert.equal(heard.filter(id => id === 'story_replay_start').length, run);
     assert.equal(heard.filter(id => id === 'story_welcome').length, 1);
     P.save.mazeSolved = true; P.save.rainbowUnlocked = true;
   }

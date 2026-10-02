@@ -336,11 +336,7 @@
     G().circle(x - 14, y + 38, 6, c); c.fill(); c.stroke();
     G().rrect(x - 10, y - 30, 120, 56, 26, c); c.fill(); c.stroke();
     const fam = familyOrder();
-    if (BB.RainbowFamily && BB.RainbowFamily.active(play.save)) {
-      // a Rainbow adventure: her rainbow has lost its colours too
-      faceOf(c, fam[0], x + 14, y - 2, 1.3, false); faceOf(c, fam[1], x + 86, y - 2, 1.3, false);
-      BB.RainbowFamily.miniArc(c, x + 50, y - 6, 1.35, { kin: {} }, it.t);
-    } else for (let i = 0; i < 3; i++) faceOf(c, fam[i * 2], x + 16 + i * 30, y - 2, 1.4, false);
+    for (let i = 0; i < 3; i++) faceOf(c, fam[i * 2], x + 16 + i * 30, y - 2, 1.4, false);
     c.restore();
   }
 

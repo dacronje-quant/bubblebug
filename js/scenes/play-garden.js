@@ -26,7 +26,7 @@
         if (this.room.id === this.gardenLock.room && Math.hypot(b.x + b.w / 2 - this.gardenLock.x, b.y + b.h - this.gardenLock.y) < 60) { this.gardenHold = 0; return; }
         this.gardenLock = null;
       }
-      if (!sp || this.mapOn || this.iris || this.wardrobe || this.party || this.traveling || this.pl.state !== 'play') { this.gardenHold = 0; return; }
+      if (!sp || this.iris || this.wardrobe || this.party || this.traveling || this.pl.state !== 'play') { this.gardenHold = 0; return; }
       const near = b.grounded && Math.abs(b.x + b.w / 2 - sp.x) < 18 && Math.abs(b.y + b.h - sp.y) < 6 && Math.abs(b.vx) < 0.3;
       this.gardenHold = near ? (this.gardenHold || 0) + 1 : 0;
       if (near && (this.gardenHold >= BB.Links.HOLD || BB.Input.pressed.confirm || BB.Input.pressed.bubble)) this.openGardenChoice(sp.kind);

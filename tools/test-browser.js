@@ -196,6 +196,7 @@ async function walkMaze(page, target) {
     await page.evaluate(() => {
       BB.Play.save.finale = true; BB.Play.save.mazeSolved = true; BB.Play.save.rainbowUnlocked = true;
       BB.Home.familyOrder().forEach(id => { BB.Play.save.family[id] = 1; });
+      BB.RAINBOW_KIN.forEach(id => { BB.Play.save.kin[id] = 1; }); // (the replay cloud waits for Rainbow's whole family)
     });
     await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
     await page.keyboard.press('ArrowUp'); await pause(page);
@@ -350,10 +351,11 @@ async function walkMaze(page, target) {
     assert.equal(await touch.locator('#touch').isVisible(), true);
     const mapButton = await touch.locator('#map-btn').boundingBox();
     const tapMap = () => touch.touchscreen.tap(mapButton.x + mapButton.width / 2, mapButton.y + mapButton.height / 2);
-    await tapMap(); await touch.waitForFunction(() => BB.Play.mapOn && document.body.classList.contains('menu-open'));
+    // the map button opens the same kingdom map as the pause menu; tapping it again goes back to play
+    await tapMap(); await touch.waitForFunction(() => BB.Main.name === 'pause' && BB.Pause.map && document.body.classList.contains('menu-open'));
     assert.equal(await touch.locator('#touch').isVisible(), false);
     assert.equal(await touch.locator('#map-btn').isVisible(), true); // remains available to close the map
-    await tapMap(); await touch.waitForFunction(() => !BB.Play.mapOn && !document.body.classList.contains('menu-open'));
+    await tapMap(); await touch.waitForFunction(() => BB.Main.name === 'play' && !document.body.classList.contains('menu-open'));
     assert.equal(await touch.locator('#touch').isVisible(), true);
     await place(touch, 'ng', 16, 31); await touch.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
     assert.equal(await touch.locator('#touch').isVisible(), false);
@@ -393,7 +395,7 @@ async function walkMaze(page, target) {
     assert.equal(await touch.evaluate(() => BB.Play.maze), null);
     // Touch cancelling a replay keeps the same adventure; confirming
     // in the preview restarts only its in-memory world.
-    await touch.evaluate(() => { BB.Play.save.mazeSolved = true; BB.Play.save.rainbowUnlocked = true; });
+    await touch.evaluate(() => { BB.Play.save.mazeSolved = true; BB.Play.save.rainbowUnlocked = true; BB.RAINBOW_KIN.forEach(id => { BB.Play.save.kin[id] = 1; }); });
     await touch.evaluate(() => {
       const P = BB.Play;
       P.save.mazePosition = { ...BB.GardenMaze.PRIZE }; P.openMaze();

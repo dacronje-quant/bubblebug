@@ -75,7 +75,7 @@
       this.save.inMaze = true;
       this.pl.state = 'maze'; this.pl.body.vx = this.pl.body.vy = 0;
       this.checkpoint = { x: this.pl.body.x, y: this.pl.body.y }; this.pendingCP = false;
-      this.save.visited.nm = 1; this.mapOn = false; this.zoneCard = 0;
+      this.save.visited.nm = 1; this.zoneCard = 0;
       this.wardrobe = null; this.gardenChoice = null; this.portalChoice = null;
       document.body.classList.add('in-maze');
       BB.Input.takePointers(); BB.Bubbles.clear(); BB.Particles.clear();
@@ -100,6 +100,7 @@
       BB.Camera.snap(room, this.pl.body); this.lastCam = { x: BB.Camera.x, y: BB.Camera.y };
       this.enterZone(room.zone); this.zoneCard = 0;
       BB.Music.play(this.party || this.celebrationT ? 'party' : BB.ZONES[room.zone].key);
+      this.startHunt(); // Rainbow's own family is lost now
       this.writeSave(); BB.Input.clearAll();
     },
     mazeCell() {
@@ -121,9 +122,9 @@
         this.save.mazeSolved = true; this.save.rainbowUnlocked = true; this.save.gates.nm = 1;
         m.choice = true; m.choiceT = 0; m.rewardLock = true;
         m.sel = Math.max(0, CATS.indexOf(this.save.cat)); S().party();
-        // The first time it is Rainbow; in her own adventures, her Mama
-        if (firstRescue && BB.RainbowFamily.prize(this.save) === 'rainbow') this.sayStory('story_rainbow_rescue', 350);
-        else if (firstRescue && !this.save.kin.rbMama) this.foundKin('rbMama', this.pl.body.x, this.pl.body.y, 350);
+        if (firstRescue) this.sayStory('story_rainbow_rescue', 350);
+        // …and then her news: her own rainbow family is lost too
+        if (firstRescue && BB.RainbowFamily.hunting(this.save)) this.sayStory('kin_hunt_start');
       }
       if (changed) BB.Economy.milestones(this.save);
       BB.Save.write();
@@ -261,11 +262,7 @@
       const rx = X + 1.5 * TILE, ry = Y + 1.5 * TILE;
       if (ready(this.save)) G().drawGlow(rx, ry, 33, '#ffeab5', 0.5 + Math.sin(t * 0.06) * 0.15, c);
       c.fillStyle = ready(this.save) ? '#f6c9ea' : '#8d9c94'; G().circle(rx, ry, 11, c); c.fill();
-      const prize = BB.RainbowFamily.prize(this.save);
-      // (Rainbow's Mama hops home once she has been found and thanked)
-      if (prize === 'rainbow') BB.Kittens.draw(c, 'rainbow', { mode: 'sit', sad: 1 - bloom, happy: bloom > 0.8, t }, rx, ry + 9, 0.64, 1);
-      else if (!this.save.mazeSolved || m.choice) BB.Kittens.draw(c, BB.Kittens.fadedId(prize, 1 - bloom), { mode: 'sit', sad: 1 - bloom, happy: bloom > 0.8, t }, rx, ry + 9, 0.6, 1);
-      else BB.RainbowFamily.miniArc(c, rx, ry, 0.6, this.save, t);
+      BB.Kittens.draw(c, 'rainbow', { mode: 'sit', sad: 1 - bloom, happy: bloom > 0.8, t }, rx, ry + 9, 0.64, 1);
       if (!ready(this.save)) {
         c.strokeStyle = '#7c9981'; c.lineWidth = 1.5;
         for (const dx of [-8, 0, 8]) { c.beginPath(); c.moveTo(rx + dx, ry - 16); c.lineTo(rx + dx, ry + 12); c.stroke(); }
@@ -327,7 +324,7 @@
       c.fillStyle = 'rgba(35,61,46,0.6)'; c.fillRect(0, 0, G().W, G().H);
       c.fillStyle = '#fff8ee'; c.strokeStyle = '#dbadf1'; c.lineWidth = 5;
       G().rrect(180, 106, 600, 337, 40, c); c.fill(); c.stroke();
-      G().text(BB.RainbowFamily.prize(this.save) === 'rainbow' ? 'Rainbow!' : "Rainbow's Mama!", 480, 157, 27, '#82629c', null, 'center', c);
+      G().text('Rainbow!', 480, 157, 27, '#82629c', null, 'center', c);
       CATS.forEach((id, i) => {
         const x = 300 + i * 180;
         c.fillStyle = '#f5e7f9'; c.strokeStyle = m.sel === i ? '#f3b24b' : '#d7c4de'; c.lineWidth = m.sel === i ? 5 : 2;

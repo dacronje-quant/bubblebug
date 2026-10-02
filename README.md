@@ -1,6 +1,6 @@
 # Bubble Paws: The Rainbow Kingdom 🫧🐾
 
-A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wakes up alone in the Cat House: a big gloom cloud has sent the whole family wandering off. Walk through the garden neighbourhood and round a ring of twelve hand-built biomes, blowing friendship bubbles to cheer up gloomy animals (and a few bugs), and slide home at the end for a big homecoming party. Play again as Rainbow and her own rainbow-coloured family is lost all over the kingdom too: find each one and send them riding a rainbow back home. At the end of every zone waits a big, very sad boss, each with its own silly animal moves and its own arena: dodge their slow, simple "sad attacks", then bubble them happy to open the way on. Solve picture puzzles, snack on fishy treats, learn hidden cat tricks, find the kittens' twelve lost family members, and unlock optional fun at home with collected stars and hearts. A grown-up picks **Easy** (extra jumping help), **Medium** (the former Easy), or **Hard** (happy suns and save-point returns). There's no game over, and play never depends on reading. A full adventure is a long one, so plan on an hour or more for a young player.
+A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wakes up alone in the Cat House: a big gloom cloud has sent the whole family wandering off. Walk through the garden neighbourhood and round a ring of twelve hand-built biomes, blowing friendship bubbles to cheer up gloomy animals (and a few bugs), and slide home at the end for a big homecoming party. Then rescue Rainbow, and her own rainbow-coloured family turns out to be lost all over the kingdom too: find each one, send them riding a rainbow back home, and rescue her Mama from the Cloud Maze. At the end of every zone waits a big, very sad boss, each with its own silly animal moves and its own arena: dodge their slow, simple "sad attacks", then bubble them happy to open the way on. Solve picture puzzles, snack on fishy treats, learn hidden cat tricks, find the kittens' twelve lost family members, and unlock optional fun at home with collected stars and hearts. A grown-up picks **Easy** (extra jumping help), **Medium** (the former Easy), or **Hard** (happy suns and save-point returns). There's no game over, and play never depends on reading. A full adventure is a long one, so plan on an hour or more for a young player.
 
 *Formerly called **Bubblebug**. Saves from the Bubblebug version carry over automatically.*
 
@@ -17,11 +17,11 @@ A cozy, non-violent platformer for little explorers (ages 3–7). Your kitten wa
 **Mac / Linux / tablets:** open `index.html` in Chrome, Edge, Safari or Firefox.
 **Online:** enable GitHub Pages (Settings → Pages → deploy from `main`, `/ (root)`).
 
-There's no install, no Node.js and no build step. Music and sound effects are generated in the browser; all 37 story and family voice recordings are bundled with the game, so playing never needs an API key.
+There's no install, no Node.js and no build step. Music and sound effects are generated in the browser; all 40 story and family voice recordings are bundled with the game, so playing never needs an API key.
 
-All 37 spoken recordings use Gemini 3.8 Flash TTS: the twelve family greetings, the story moments, the first-time guidance cues and eleven lines for Rainbow's family. Every character keeps one voice for all of their lines; the narrator lines share one voice. Recording volumes are matched; music becomes quiet during speech. Mute stops voices immediately, and leaving a scene cancels queued lines. See [the voice pack notes](voice-plan/GEMINI-VOICES.md).
+All 40 spoken recordings use Gemini 3.8 Flash TTS: the twelve family greetings, the story moments, the first-time guidance cues and twelve lines for Rainbow's family. Every character keeps one voice for all of their lines; the narrator lines share one voice. Recording volumes are matched; music becomes quiet during speech. Mute stops voices immediately, and leaving a scene cancels queued lines. See [the voice pack notes](voice-plan/GEMINI-VOICES.md).
 
-**Quick test of Rainbow's family:** open `try-rainbow-family.html`. It starts a Rainbow adventure at home with every power, so you can go straight out to find her relatives. Like the rewards preview, it never writes to or erases the normal adventure.
+**Quick test of Rainbow's family:** open `try-rainbow-family.html`. It starts at home just after Rainbow's rescue, with every power, so you can go straight out to find her relatives and then Mama's Cloud Maze. Like the rewards preview, it never writes to or erases the normal adventure.
 
 **Quick test of the additions:** open `try-rewards.html`. It starts at home with 250 stars, 65 hearts, the family present and the homecoming complete. Rewards and progress in this preview never write to or erase the normal adventure. Open `index.html` to play normally. See [TESTING.md](TESTING.md) for a short playtest route.
 
@@ -30,7 +30,7 @@ All 37 spoken recordings use Gemini 3.8 Flash TTS: the twelve family greetings, 
 | Move | ← → or A D | D-pad / left stick | big ◀ ▶ buttons (slide your thumb between them) |
 | Jump (hold = higher) | Space, ↑, W | A / Y | green ⬆ button |
 | Blow a bubble | X, Z, J, E, Shift | B / X / bumpers / triggers | blue bubble button |
-| See-through map (keep playing) | M or Tab | Select / Back | map button, top-right |
+| Kingdom map (game pauses) | M or Tab | Select / Back | map button, top-right |
 | Pause / home | Esc or P | Start | round pause button, top-right |
 | Do a cat trick (once you've found one) | ▼ or S | D-pad down | orange smiling-cat/music button (appears after the first trick) |
 
@@ -60,7 +60,7 @@ Both kittens are painted from photos of two real cats:
 
 Both move the same way. They differ in voice (a synthesized *mew*), idle habits and bubble style.
 
-Find all twelve family cats to open the small rainbow door inside the left side of home. Beyond it is a grand, gloomy courtyard and a majestic doorway into the Rainbow Garden maze. Rescue **Rainbow**, a magical kitten with a flowing rainbow tail, a rainbow mane and a golden unicorn horn. Choose any of the three as your playable kitten, then change again at the mirror. Your adventure progress and outfits carry over. Then a sad cloud offers a second adventure as Rainbow, with her own family to find (see *Rainbow's family* below).
+Find all twelve family cats to open the small rainbow door inside the left side of home. Beyond it is a grand, gloomy courtyard and a majestic doorway into the Rainbow Garden maze. Rescue **Rainbow**, a magical kitten with a flowing rainbow tail, a rainbow mane and a golden unicorn horn. Choose any of the three as your playable kitten, then change again at the mirror. Your adventure progress and outfits carry over. Rainbow then asks for help: her own family is lost too (see *Rainbow's family* below). Nothing is reset for this.
 
 ## 🗺 The Rainbow Kingdom
 
@@ -104,30 +104,31 @@ Maze exits wait two seconds while a golden paw ring fills. Moving into another c
 
 Every rescued critter of an invited species comes to live in the Front Garden, Pond Walk or Root Hollow, including later rescues of that species. Invite each species once for one heart at the outdoor welcome board. Each card has just one switch for its selected species. A heart and lock show that one heart is needed to unlock it; afterwards the switch shows or hides that species for free. The choice survives Continue without losing invitations or rescued hearts. Left/Right selects a species; Confirm/Bubble or tapping its slider unlocks or changes that one switch. All 65 rescued critters can live along the garden floor and upper branches. Flower beds, flags and pinwheels decorate the path from the start. Stand on the ball, bubble-wand or smiling-cat dance ring, or press Confirm/Bubble there, to play together for eight seconds. Up to six nearby ground-level visitors gather in spaced places while the others roam calmly. They ease back home after playing, with no abrupt hops or snaps. Games, petting and blowing bubbles at visitors are free and never award another collectible heart. Step away to play again.
 
-After rescuing Rainbow, a sad cloud appears near the rainbow door. Its picture choice offers a **fresh adventure as Rainbow**, with Cancel selected first. Confirming makes the family wander off again and resets critters, bosses, puzzles, stars, hearts, toys, exploration, invitations and the fountain. Movement skills, learned tricks, clothing, styles and the unlocked Rainbow character carry over. Reunite all twelve cats and rescue Rainbow's Mama from the maze to reveal the cloud for another replay. Ordinary Continue and save migration preserve the current adventure; only a confirmed sad-cloud choice restarts it.
+Once Rainbow's whole family is home, a sad cloud appears near the rainbow door. Its picture choice offers a **fresh adventure as Rainbow**, with Cancel selected first. Confirming makes the family wander off again and resets critters, bosses, puzzles, stars, hearts, toys, exploration, invitations and the fountain. Movement skills, learned tricks, clothing, styles and the unlocked Rainbow character carry over. Reunite all twelve cats and rescue Rainbow again to reveal the cloud for another replay; her family stays home for good, so later replays go straight to the cloud. Ordinary Continue and save migration preserve the current adventure; only a confirmed sad-cloud choice restarts it.
 
-### 🌈 Rainbow's family (the second adventure onwards)
+### 🌈 Rainbow's family (right after rescuing Rainbow)
 
-In a Rainbow adventure, the gloom cloud has taken the colours from Rainbow's own family as well. There is one relative for each colour of her rainbow, and each is a little unicorn cat like her:
+Rescue Rainbow and she thanks you, then shares her news: the gloom cloud took the colours from her own family too. They are lost all over the kingdom, in the same adventure, with nothing reset. A picture card shows six grey relatives and an arrow to the Cat House. There is one relative for each colour of her rainbow, and each is a little unicorn cat like her:
 
 | Colour | Who | Where they're lost |
 |---|---|---|
-| 💗 pink | Rainbow's Mama | the Rainbow Garden maze (where Rainbow herself was lost the first time) |
 | 🧡 orange | Pumpkin, her big brother | a high branch above Acorn Hollow, Autumn Woods |
 | 💛 yellow | Rainbow's Papa | a perch above the honey island, Honeycomb Hive |
 | 💚 green | Rainbow's Grandpa | the branch walk over Pond Walk, right by home |
 | 🩵 teal | Splash, her big sister | a perch over the beach, Coral Lagoon |
 | 💙 blue | Rainbow's Granny | a high cloud ledge, Cloud Castles |
 | 💜 purple | Twinkle, her baby sister | a starry ledge, Starlight Sky |
+| 💗 pink | Rainbow's Mama | the Cloud Maze, behind the courtyard doorway (last) |
 
-- **Lost and grey.** A lost relative sits drained of colour under a little rain cloud, now and then wiping a tear. Walk into a room where one is lost and a soft chime plays while little guiding stars float toward them, so nobody needs to read or search blindly.
+- **Lost and grey.** A lost relative sits drained of colour under a little rain cloud, now and then wiping a tear. Walk into a room where one is lost and a soft chime plays while little guiding stars float toward them.
 - **Found!** Walk up to them: their colour floods back in a ring of the rainbow, they say hello in their own voice, then hop onto a cloud and ride a rainbow up and away, back to the beginning: the Cat House.
-- **The Rainbow Nest.** Over the Cat House stairwell stands a big seven-band rainbow with a cloud cushion for each relative. Each band lights up in its colour when its cat comes home, and there they doze or sit up to watch you go by.
-- **Easy to follow.** A little rainbow next to the stars and hearts at the top of the screen fills in band by band. The kingdom map shows a grey "?" face in visited rooms where someone is still lost, and their face once they're home. The Continue button on the title screen shows the same little rainbow.
-- **Mama last.** With all twelve cats home, the courtyard shows Rainbow's Mama waiting beyond the doorway, calling for help. Rescue her through the same lantern maze.
-- **The whole rainbow.** When all seven are home, Mama thanks you, fireworks go up and Rainbow's bubbles turn into **rainbow bubbles**, kept for every later adventure (pick them at the mirror's bubble picture). Everyone who is home dances with the cats at the homecoming party, and the party card shows the rainbow next to the cat count.
+- **The Rainbow Nest.** Over the Cat House stairwell stands a big seven-band rainbow with a cloud cushion for each relative. Each band lights up in its colour when its cat comes home.
+- **Easy to follow.** A little rainbow next to the stars and hearts at the top fills in band by band. On the map, every lost relative flashes in their own colour where they wait; ones off to the side flash at the edge of the map with an arrow (tap one to glide there). The Continue button on the title screen shows the little rainbow too.
+- **The courtyard doorway waits for them.** While any of the six is lost, the tall doorway is shut: their six faces hang above it, grey until each one is home, and Mama waits sadly inside. With all six home, Rainbow says so, Mama calls for help, and the doorway opens.
+- **Mama's Cloud Maze.** A sunset maze of clouds, nothing like the green hedge maze. The six relatives came back to help, each waiting on a cloud with their own colour. Touch one and their colour is yours (a dot fills at the top), and every bridge of that colour turns solid. Closed bridges are clouds tinted in the colour that opens them, and wobble if you bump into one. Each colour leads to the next relative, the family follows you in a little parade, and the last bridge, a whole rainbow, needs all six colours to reach Mama. Colours are kept if you leave early, so nobody can get stuck.
+- **The whole rainbow.** With Mama rescued the family gathers under a big rainbow, fireworks go up over the courtyard, and Rainbow's bubbles turn into **rainbow bubbles**, kept for every later adventure. Everyone who is home dances at the homecoming party.
 
-The first adventure is unchanged: Rainbow's relatives only appear after the sad-cloud replay. Each replay loses them again; rainbow bubbles, skills and outfits stay.
+Rainbow's family stays home for good: a later sad-cloud replay doesn't lose them again, and the nest stays full.
 
 ### 🏠 The Cat House
 
@@ -324,8 +325,8 @@ Each zone has a little brain-teaser that opens a vine gate. The gate wears a pic
 
 ## 🧑 For grown-ups
 
-- **The map button** (top-right, next to pause; or M, Tab, or a gamepad's Select) floats a see-through map over the game while you keep playing. It's centred on your kitten and shows every visited room in its zone colour, benches, earned powers, a ★ on rooms with every sparkle found, a toy where you found one, a cat face where you found family, each boss (under a rain-cloud until cheered up, then with a heart), dotted lines between fairy-ring twins, and a little house on every cat flap you've found. Press it again to hide it.
-- **Pause** (top-right button, Esc or Start) has four picture buttons: keep playing, sound on/off, the **kingdom map** on parchment, and **home** (back to the title screen).
+- **One map.** The map button (top-right, next to pause; or M, Tab, or a gamepad's Select) and the pause menu's map picture open the same **kingdom map**; the game waits while it's open. From play, closing it goes straight back to playing; from the pause menu, back to the menu. It shows every visited room in its zone colour, benches, earned powers, a ★ on rooms with every sparkle found, a toy where you found one, a cat face where you found family, each boss (under a rain-cloud until cheered up, then with a heart), dotted lines between fairy-ring twins, a little house on every cat flap you've found, and Rainbow's lost relatives flashing in their colours.
+- **Pause** (top-right button, Esc or Start) has four picture buttons: keep playing, sound on/off, the kingdom map, and **home** (back to the title screen).
 - **The kingdom map** always stays at the same comfortable zoom and opens centred on your kitten. Browse it with ◀ ▶ ▲ ▼ held down, by dragging it with a finger or the mouse, or with its big orange arrow buttons (tap to glide, hold to keep going). Every zone you've explored has a name tag, the Cat House is beside Sparkle Gardens, and a small map of the whole ring at the bottom shows the part you're looking at; tap it to jump there. Close it with ✕, Space, the bubble button, Esc or M.
 - **Easy / Medium / Hard:** choose in the title screen's bottom-right corner. To switch mid-adventure: pause → home → pick → ▶ Continue. Medium preserves the old Easy.
 - **Start fresh:** choose 🌱 New Game on the title screen, then ✓.
@@ -360,6 +361,7 @@ js/scenes/              title (Continue / New Game) · select · play (suns, sav
                         play-home (mirror, presents, toys, visitors) · play-garden (invitations and fountain)
                         play-garden-fun (ball, bubbles, dancing) · play-journey (rainbow door and confirmed replay)
                         play-maze (hedge labyrinth and kitten rescue) · play-rainbow (Rainbow's family and nest)
+                        play-cloudmaze (Mama's colour-bridge Cloud Maze)
                         pause (+ map)
 js/main.js              fixed 60 Hz loop, scene switching, adaptive quality
 tools/                  verify-world.js + dev playtest/screenshot helpers (optional, need Node)
@@ -378,7 +380,7 @@ node tools/test-neighbourhood.js       # real scene/physics, migration, routes, 
 node tools/test-rewards.js             # milestones, held inputs, reload, fountain and Easy regressions
 node tools/test-maze.js                # entire maze graph, twelve-cat door, character changes and reload
 node tools/test-journey.js             # hidden glasses, migration and three rescue/cloud/replay cycles
-node tools/test-rainbow-family.js      # Rainbow's family: replay-only, found on foot, ride home, save, maze Mama, reward
+node tools/test-rainbow-family.js      # Rainbow's family after the rescue, Cloud Maze solved by keys, one map
 node tools/test-garden.js              # all 65 visitors, later rescues, repeated games, music and reload
 node tools/test-garden-route.js        # wider climb, high hops, trampoline and ball across all three gardens
 node tools/test-rainbow-garden.js       # indoor gate, lantern sequence, rescue exit and legacy routes
@@ -419,9 +421,9 @@ The browser check opens the real HTML files, chooses modes and mirror categories
 
 ### Editing rooms
 
-Rooms are ASCII maps in `js/world/rooms/*.js` (see the legend at the top of `js/world/world.js`). Terrain: `#` ground, `-` one-way ledge, `M` bouncy mushroom, `~` water, `%` sky-mist / steam / starry void, `^` updraft, `:` glow-petal, `H` shy wall, `G` vine gate (opens when the room's buds bloom, its boss is cheered up or its puzzle is solved), `I` ice (too slippery to climb), `X` cracked sandstone, `1`–`9` fairy rings (each digit appears exactly twice). A room's `kin:` list (not the map) places Rainbow's relatives, which only appear in Rainbow adventures. Things: `*` sparkle, `b`/`c` critters (each zone's `cast` in `js/world/zones.js` decides which animals they become), `B` bench, `E` elder, `f` firefly, `R L U D` signs, `T` toy, `n` music flower, `o` bud, `K` Cloud King, `Q` boss (the room's `boss:` field says who), `&` family member, `F` the Rainbow Slide home, `S` start. Links: `h` a zone's cat flap, `u`/`v` the two ends of the Rainbow Lift (the Cat House's doors and skylight are listed in its room, `js/world/rooms/home.js`). Puzzle pieces: `P` paw pad, `d` lost baby and `A` its mama, `k` key and `Z` its keyhole, `V` song bell and `O` the singing stone. Cat food: `e` fishy treat, `W` food bowl. `j` is a smiling-cat music bubble holding the zone's cat trick (the tricks and their animations live in `js/entities/gestures.js`). A room's `elder:`, `toy:`, `family:`, `boss:` and `needs:` fields say which power, toy, relative and boss live there and which power it takes to get in; a boss room's `arena:` names its scenery and the columns of anything its boss uses (the mud puddle, the deck holes, the thin ice, the big oak…). Boss behaviour lives in `js/entities/bosses.js` (each boss is a short recipe of clouds, wind-up time, sad attacks and how it looks when it's stuck) and puzzle logic in `js/entities/puzzles.js`. Zone palettes, ambience and casts live in `js/world/zones.js`. Run the verifier after any change.
+Rooms are ASCII maps in `js/world/rooms/*.js` (see the legend at the top of `js/world/world.js`). Terrain: `#` ground, `-` one-way ledge, `M` bouncy mushroom, `~` water, `%` sky-mist / steam / starry void, `^` updraft, `:` glow-petal, `H` shy wall, `G` vine gate (opens when the room's buds bloom, its boss is cheered up or its puzzle is solved), `I` ice (too slippery to climb), `X` cracked sandstone, `1`–`9` fairy rings (each digit appears exactly twice). A room's `kin:` list (not the map) places Rainbow's relatives, which only appear once Rainbow is rescued. Things: `*` sparkle, `b`/`c` critters (each zone's `cast` in `js/world/zones.js` decides which animals they become), `B` bench, `E` elder, `f` firefly, `R L U D` signs, `T` toy, `n` music flower, `o` bud, `K` Cloud King, `Q` boss (the room's `boss:` field says who), `&` family member, `F` the Rainbow Slide home, `S` start. Links: `h` a zone's cat flap, `u`/`v` the two ends of the Rainbow Lift (the Cat House's doors and skylight are listed in its room, `js/world/rooms/home.js`). Puzzle pieces: `P` paw pad, `d` lost baby and `A` its mama, `k` key and `Z` its keyhole, `V` song bell and `O` the singing stone. Cat food: `e` fishy treat, `W` food bowl. `j` is a smiling-cat music bubble holding the zone's cat trick (the tricks and their animations live in `js/entities/gestures.js`). A room's `elder:`, `toy:`, `family:`, `boss:` and `needs:` fields say which power, toy, relative and boss live there and which power it takes to get in; a boss room's `arena:` names its scenery and the columns of anything its boss uses (the mud puddle, the deck holes, the thin ice, the big oak…). Boss behaviour lives in `js/entities/bosses.js` (each boss is a short recipe of clouds, wind-up time, sad attacks and how it looks when it's stuck) and puzzle logic in `js/entities/puzzles.js`. Zone palettes, ambience and casts live in `js/world/zones.js`. Run the verifier after any change.
 
-Developer shortcut: `index.html#play=phoebe&room=c4&ab=all` jumps straight into a room with every power. Add `&replay=1` to make it a Rainbow adventure, or use `demo=rainbow` (as `try-rainbow-family.html` does) for one that never touches the saved adventure.
+Developer shortcut: `index.html#play=phoebe&room=c4&ab=all` jumps straight into a room with every power. Add `&hunt=1` to start just after Rainbow's rescue, or use `demo=rainbow` (as `try-rainbow-family.html` does) for one that never touches the saved adventure.
 
 ## 📄 License
 
