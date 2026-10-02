@@ -400,6 +400,7 @@ node tools/test-garden-route.js        # wider climb, high hops, trampoline and 
 node tools/test-rainbow-garden.js       # indoor gate, lantern sequence, rescue exit and legacy routes
 node tools/test-interactions.js        # shorter waits, quick-turn cancellation, pause and safe exit/reload
 node tools/test-wardrobe.js            # eight glasses/collars, four trails, progress bars and retained unlocks
+node tools/shot.js <url> <out.png>      # dev helper: screenshot any page or #room= link with Playwright
 node tools/test-critters.js            # all 39 species: animation, moods and render isolation (needs @napi-rs/canvas)
 node tools/test-difficulty.js          # mode migration, picker inputs, movement and bumps
 node tools/test-menu-feedback.js       # safe hover, menu focus, trick inputs and optional canvas/pixel checks
