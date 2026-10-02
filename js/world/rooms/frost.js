@@ -8,7 +8,7 @@
 
   // f1 ─ Snowy Foothills: the first snowflakes
   BB.room({
-    id: 'f1', zone: 8, x: 691, y: -165,
+    id: 'f1', zone: 8, x: -225, y: -17,
     map: [
       'G.............................',
       '..............................',
@@ -33,7 +33,7 @@
   // f2 ─ Icicle Stairs: hop up the snowy ledges (the icy walls are far too
   //      slippery for sticky paws)
   BB.room({
-    id: 'f2', zone: 8, x: 661, y: -182,
+    id: 'f2', zone: 8, x: -255, y: -34,
     map: [
       '.............................I',
       '.............................I',
@@ -75,7 +75,7 @@
   // f3 ─ Hare Hollow: the Snow Hare Elder gives Spring Paws — the only way
   //      over the great ice wall
   BB.room({
-    id: 'f3', zone: 8, x: 631, y: -182, elder: 'spring',
+    id: 'f3', zone: 8, x: -285, y: -34, elder: 'spring',
     map: [
       '..............................',
       '..............................',
@@ -100,7 +100,7 @@
   // f4 ─ Frozen Falls: another ice wall, a mitten on an icy pillar, and
   //      snowy steps up to an igloo
   BB.room({
-    id: 'f4', zone: 8, x: 586, y: -190, toy: 'mitten', needs: 'spring',
+    id: 'f4', zone: 8, x: -330, y: -34, toy: 'mitten', needs: 'spring',
     map: [
       '.............................................',
       '..................................*.*.*......',
@@ -124,7 +124,7 @@
 
   // fb ─ Snow Igloo: Marshmallow's baby brother is keeping warm inside
   BB.room({
-    id: 'fb', zone: 8, x: 586, y: -207, family: 'babySnowflake', needs: 'spring',
+    id: 'fb', zone: 8, x: -330, y: -51, family: 'babySnowflake', needs: 'spring',
     map: [
       '.............................................',
       '.............................................',
@@ -148,7 +148,7 @@
 
   // f5 ─ Aurora Ridge: the northern lights shimmer as the snow thins out
   BB.room({
-    id: 'f5', zone: 8, x: 556, y: -190,
+    id: 'f5', zone: 8, x: -360, y: -34,
     map: [
       '..............................',
       '..............................',
@@ -173,7 +173,7 @@
   // f6 ─ Walrus Rink: a glum walrus belly-slides across the ice and flings
   //      bouncy snowballs — spring up out of the way!
   BB.room({
-    id: 'f6', zone: 8, x: 526, y: -190, boss: 'walrus', arena: {name: 'Frozen Pond', crack: 16, icy: true},
+    id: 'f6', zone: 8, x: -390, y: -34, boss: 'walrus', arena: {name: 'Frozen Pond', crack: 16, icy: true},
     map: [
       'II............................',
       'II............................',

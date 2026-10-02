@@ -9,7 +9,7 @@
 
   // s1 ─ Bamboo Steps: lanterns, bamboo and a sleepy capybara
   BB.room({
-    id: 's1', zone: 10, x: 286, y: -190,
+    id: 's1', zone: 10, x: -345, y: -103, flip: true,
     map: [
       '#.............................',
       '#.............................',
@@ -33,7 +33,7 @@
 
   // s2 ─ Hot Springs: warm pools to paddle in, a bench, and a fairy ring
   BB.room({
-    id: 's2', zone: 10, x: 241, y: -190,
+    id: 's2', zone: 10, x: -315, y: -103, flip: true,
     map: [
       '.............................................',
       '.............................................',
@@ -58,7 +58,7 @@
   // sb ─ Moon Bath: through the fairy ring, Marshmallow's Grandpa soaks in
   //      a moonlit bath
   BB.room({
-    id: 'sb', zone: 10, x: 241, y: -207, family: 'grandpaSeal', needs: 'rings',
+    id: 'sb', zone: 10, x: -60, y: -69, family: 'grandpaSeal', needs: 'rings',
     map: [
       '#############################################',
       '#...........................................#',
@@ -83,7 +83,7 @@
   // s3 ─ Otter's Pool: the Otter Elder teaches Bubble Bounce — press the
   //      bubble button in mid-air to spring off a big bubble
   BB.room({
-    id: 's3', zone: 10, x: 211, y: -190, elder: 'bubbleBounce',
+    id: 's3', zone: 10, x: -270, y: -103, flip: true, elder: 'bubbleBounce',
     map: [
       '..............................',
       '..............................',
@@ -107,7 +107,7 @@
 
   // s4 ─ Steam Terraces: a rubber duck bobs in the top pool
   BB.room({
-    id: 's4', zone: 10, x: 166, y: -201, toy: 'duck', needs: 'bubbleBounce',
+    id: 's4', zone: 10, x: -240, y: -103, flip: true, toy: 'duck', needs: 'bubbleBounce',
     map: [
       '.............................................',
       '.............................................',
@@ -131,7 +131,7 @@
 
   // s5 ─ Lantern Bridge: red bridges over drifting steam
   BB.room({
-    id: 's5', zone: 10, x: 136, y: -212,
+    id: 's5', zone: 10, x: -195, y: -103, flip: true,
     map: [
       '..............................',
       '..............................',
@@ -156,7 +156,7 @@
   // s6 ─ Panda Grove: a sleepy, grumpy panda rolls like a big ball and
   //      tosses bamboo — bubble-bounce over him!
   BB.room({
-    id: 's6', zone: 10, x: 106, y: -212, boss: 'panda', arena: {name: 'Bamboo Grove', bamboo: [3, 9, 14, 20, 25]},
+    id: 's6', zone: 10, x: -165, y: -103, flip: true, boss: 'panda', arena: {name: 'Bamboo Grove', bamboo: [3, 9, 14, 20, 25]},
     map: [
       '##............................',
       '##............................',

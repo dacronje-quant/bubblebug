@@ -9,7 +9,7 @@
 
   // l1 ─ Sunny Beach: warm sand, a tide pool and the first crab
   BB.room({
-    id: 'l1', zone: 6, x: 1096, y: -174, kin: [{ id: 'rbSplash', x: 15, y: 5 }], // Splash, on a perch over the beach
+    id: 'l1', zone: 6, x: -210, y: 17, kin: [{ id: 'rbSplash', x: 15, y: 5 }], // Splash, on a perch over the beach
     map: [
       '..............................',
       '..............................',
@@ -33,7 +33,7 @@
 
   // l2 ─ Tide Pools: hop the rocks between the pools; a bench in the shade
   BB.room({
-    id: 'l2', zone: 6, x: 1051, y: -174,
+    id: 'l2', zone: 6, x: -255, y: 17,
     map: [
       '#............................................',
       '#............................................',
@@ -57,7 +57,7 @@
 
   // l3 ─ Turtle Cove: the Sea Turtle Elder rests beside a deep, deep pool
   BB.room({
-    id: 'l3', zone: 6, x: 1021, y: -174, elder: 'swim',
+    id: 'l3', zone: 6, x: -285, y: 17, elder: 'swim',
     map: [
       '##............................',
       '##............................',
@@ -81,7 +81,7 @@
 
   // l4 ─ Kelp Deep: hold jump to swim up, let go to sink gently
   BB.room({
-    id: 'l4', zone: 6, x: 991, y: -157, needs: 'swim',
+    id: 'l4', zone: 6, x: -315, y: 34, needs: 'swim',
     map: [
       '################################~~~~~~~~~~##################',
       '#~~~~~~~~~~~~~~~~~~~~~~~######~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#',
@@ -123,7 +123,7 @@
   // lb ─ Sunken Ship: swim down through the kelp floor; Marshmallow's big
   //      sister is waiting in the ship's dry little cabin
   BB.room({
-    id: 'lb', zone: 6, x: 1021, y: -123, family: 'bigSisterCocoa', needs: 'swim',
+    id: 'lb', zone: 6, x: -285, y: 68, family: 'bigSisterCocoa', needs: 'swim',
     map: [
       '#####################~~~~#####',
       '#~~~~~~~~~~~~~~~~~~~~~~~~~~~~#',
@@ -147,7 +147,7 @@
 
   // l5 ─ Coral Garden: a seashell waits among the corals
   BB.room({
-    id: 'l5', zone: 6, x: 961, y: -157, needs: 'swim', toy: 'shell',
+    id: 'l5', zone: 6, x: -345, y: 34, needs: 'swim', toy: 'shell',
     glasses: [{ id: 'starshades', x: 17, y: 28 }],
     map: [
       '##########~~~~~~~~~~~~~~~~~~~#',
@@ -189,7 +189,7 @@
 
   // l6 ─ Seal Rock: swim up out of the reef and leap onto the rocks
   BB.room({
-    id: 'l6', zone: 6, x: 961, y: -174,
+    id: 'l6', zone: 6, x: -345, y: 17,
     map: [
       '.............................#',
       '.............................#',
@@ -214,7 +214,7 @@
   // l7 ─ Octopus Cove: a grumpy octopus sulks in the rock pool, puffing
   //      inky gloom-bubbles and slapping splashy waves along the sand
   BB.room({
-    id: 'l7', zone: 6, x: 931, y: -182, boss: 'octopus', arena: {name: 'Shipwreck', holes: [4, 7, 24]},
+    id: 'l7', zone: 6, x: -375, y: 17, boss: 'octopus', arena: {name: 'Shipwreck', holes: [4, 7, 24]},
     map: [
       '##............................',
       '##............................',

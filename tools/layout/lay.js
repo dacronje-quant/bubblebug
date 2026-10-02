@@ -25,21 +25,23 @@ at('c4', -60, 51); at('c7', -30, 51); at('c5', 0, 34);
 // ── Coral Lagoon: the bottom-left shore. Beach row (y 17), kelp below.
 //   l7 l6 l3 l2 l1   (beach, westward)   l5 l4 lb (under it)
 const LX = -345;                           // l7's x
-at('l7', LX, 17); at('l6', LX + 30, 17); at('l3', LX + 60, 17); at('l2', LX + 90, 17); at('l1', LX + 135, 17);
-at('l5', LX, 34); at('l4', LX + 30, 34); at('lb', LX + 90, 34);
+// (the Lighthouse Shore sits right above the Coral Garden)
+at('l7', LX - 30, 17); at('l6', LX, 17); at('l3', LX + 60, 17); at('l2', LX + 90, 17); at('l1', LX + 135, 17);
+at('l5', LX, 34); at('l4', LX + 30, 34); at('lb', LX + 60, 68);   // the Sunken Ship, under the kelp floor's hole
 
 // ── The rest, placed on plan cells: col c → x = -315 + 15c, row r → y = 17r - 102
-const X = c => -315 + 15 * c, Y = r => r <= 4 ? 17 * r - 103 : 17 * r - 102;   // above the house the grid sits one tile higher, like the house
-const cell = (id, c, r, flip) => at(id, X(c), Y(r), flip ? { flip: true } : {});
-const lnk = (id, c, r, w, h, zone) => link(id, X(c), Y(r), 15 * w, 17 * h, zone);
+// (the sky rows, and everything above the house, sit one tile higher, like the house)
+const X = c => -315 + 15 * c, Y = (r, c = 0) => r <= 2 || (r <= 4 && c >= 9) ? 17 * r - 103 : 17 * r - 102;
+const cell = (id, c, r, flip) => at(id, X(c), Y(r, c), flip ? { flip: true } : {});
+const lnk = (id, c, r, w, h, zone) => link(id, X(c), Y(r, c), 15 * w, Y(r + h, c) - Y(r, c), zone);
 // Sunny Dunes: up from Octopus Cove, east along the cliff
-cell('d1', -4, 7); link('dl', X(-5), Y(5), 15, 51, 7); cell('d2', -4, 5, 1); cell('d3', -1, 5, 1); cell('db', -1, 6, 1);
+lnk('dl', -5, 6, 1, 2, 7); cell('d1', -6, 5, 1); cell('d2', -4, 5, 1); cell('d3', -1, 5, 1); cell('db', -1, 6, 1);
 cell('d4', 1, 5, 1); cell('d5', 3, 6, 1); cell('d6', 6, 6, 1);
 // Frosty Peaks: back west along the next ledge up
 lnk('fl', 8, 5, 1, 2, 8); cell('f1', 6, 5); cell('f2', 4, 4); cell('f3', 2, 4); cell('f4', -1, 4); cell('fb', -1, 3);
 cell('f5', -3, 4); cell('f6', -5, 4);
 // Autumn Woods: up the west edge and east again, then back west a floor higher
-lnk('al', -6, 2, 1, 3, 9); cell('a1', -5, 2, 1); cell('a2', -3, 2, 1); cell('a3', 0, 2, 1); lnk('am', 2, 2, 1, 1, 9);
+link('al', X(-6), Y(2), 15, Y(5) - Y(2), 9); cell('a1', -5, 2, 1); cell('a2', -3, 2, 1); cell('a3', 0, 2, 1); lnk('am', 2, 2, 3, 1, 9);   // a low tunnel, then up into the kite room's ring side
 cell('a4', 2, 1); cell('a5', 0, 1); cell('a6', -2, 1);
 // Moonlit Springs: along the very top, east towards the Starfall Shaft
 lnk('sl', -3, 0, 1, 2, 10); cell('s1', -2, 0, 1); cell('s2', 0, 0, 1); cell('s3', 3, 0, 1); cell('s4', 5, 0, 1);

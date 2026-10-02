@@ -101,4 +101,60 @@
   link({ id: 'hl', zone: 4, x: 180, y: -69, name: 'Rainy Steps' }, shaft(34, { side: 'L', top: 27, floor: 31 }, { side: 'L', top: 10, floor: 14 }));
   // rl ─ the Cloud Ladder: up from the Elephant's courtyard to the Cloud Castles
   link({ id: 'rl', zone: 5, x: -75, y: -120, name: 'Cloud Ladder' }, shaft(51, { side: 'R', top: 44, floor: 48 }, { side: 'R', top: 10, floor: 14 }));
+
+  // a plain link room: walls all round, air inside, then the openings
+  // ({ side: 'L' | 'R', top, floor } doors, and holes in the top or bottom)
+  function plain(w, h, doors, holes = []) {
+    const m = box(w, h);
+    fill(m, 1, 1, w - 2, h - 2, '.');
+    for (const d of doors) fill(m, d.side === 'L' ? 0 : w - 1, d.top, d.side === 'L' ? 0 : w - 1, d.floor - 1, '.');
+    for (const [row, x0, x1] of holes) fill(m, x0, row, x1, row, '.');
+    return m;
+  }
+
+  // dl ─ Shore Cliff: from Octopus Cove up through the floor of the Dune Gate
+  {
+    const m = shaft(34, { side: 'R', top: 27, floor: 31 }, { side: 'R', top: 27, floor: 31 });
+    fill(m, 1, 1, 13, 30, '.'); fill(m, 3, 0, 5, 0, '.');
+    for (const [y, a, b] of [[26, 7, 13], [21, 1, 7], [16, 6, 13], [11, 1, 7], [6, 3, 9], [2, 1, 2]]) ledge(m, y, a, b);
+    m[25][10] = '*'; m[20][3] = '*'; m[15][10] = '*'; m[10][3] = '*'; m[5][6] = '*';
+    link({ id: 'dl', zone: 7, x: -390, y: 0, name: 'Shore Cliff' }, m);
+  }
+  // fl ─ Frost Steps: up from the Camel's oasis to the foot of the Frosty Peaks
+  link({ id: 'fl', zone: 8, x: -195, y: -17, name: 'Frost Steps' }, shaft(34, { side: 'L', top: 27, floor: 31 }, { side: 'L', top: 0, floor: 14 }));
+  // al ─ Leafy Climb: up the west edge from the Walrus's pond to the Autumn Woods
+  link({ id: 'al', zone: 9, x: -405, y: -69, name: 'Leafy Climb' }, shaft(52, { side: 'R', top: 45, floor: 49 }, { side: 'R', top: 10, floor: 14 }));
+  // am ─ Root Tunnel: under the great old tree, then up into the Ring Grove
+  {
+    const m = plain(45, 17, [{ side: 'L', top: 0, floor: 14 }]);
+    fill(m, 1, 0, 43, 0, '#'); fill(m, 30, 0, 32, 0, '.');
+    fill(m, 1, 14, 43, 16, '#');
+    for (const [y, a, b] of [[10, 34, 40], [6, 26, 32], [3, 33, 38]]) ledge(m, y, a, b);
+    m[13][8] = '*'; m[13][14] = '*'; m[13][20] = '*'; m[9][37] = '*'; m[5][29] = '*';
+    link({ id: 'am', zone: 9, x: -285, y: -69, name: 'Root Tunnel' }, m);
+  }
+  // sl ─ Moon Steps: up from the Moose's clearing to the Moonlit Springs
+  link({ id: 'sl', zone: 10, x: -360, y: -103, name: 'Moon Steps' }, shaft(34, { side: 'R', top: 27, floor: 31 }, { side: 'R', top: 10, floor: 14 }));
+  // tl ─ Star Bridge: from the Panda's grove onto the Starlight path
+  {
+    const m = plain(15, 17, [{ side: 'L', top: 10, floor: 14 }, { side: 'R', top: 0, floor: 14 }]);
+    fill(m, 1, 0, 13, 0, '.');
+    m[13][4] = '*'; m[13][7] = '*'; m[13][10] = '*';
+    link({ id: 'tl', zone: 11, x: -135, y: -103, name: 'Star Bridge' }, m);
+  }
+  // tm ─ Comet Chute: a long drop down to the Comet Nook's path
+  {
+    const m = plain(15, 51, [{ side: 'L', top: 0, floor: 14 }, { side: 'L', top: 34, floor: 48 }]);
+    fill(m, 1, 0, 13, 0, '.');
+    for (const [y, a, b] of [[14, 1, 4], [22, 8, 13], [30, 1, 7], [39, 7, 13]]) ledge(m, y, a, b);
+    m[21][10] = '*'; m[29][4] = '*'; m[38][10] = '*'; m[47][5] = '*';
+    link({ id: 'tm', zone: 11, x: -90, y: -103, name: 'Comet Chute' }, m);
+  }
+  // tn ─ Star Well: from the Comet Nook's path, down to the Star Whale
+  {
+    const m = plain(15, 34, [{ side: 'R', top: 10, floor: 14 }], [[33, 1, 13]]);
+    ledge(m, 14, 8, 13); ledge(m, 22, 1, 6);
+    m[21][3] = '*'; m[28][9] = '*';
+    link({ id: 'tn', zone: 11, x: -150, y: -69, name: 'Star Well' }, m);
+  }
 })(window.BB);

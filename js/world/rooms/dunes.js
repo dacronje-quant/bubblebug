@@ -8,7 +8,7 @@
 
   // d1 ─ Sunny Dunes: warm sand hills under a big orange sky
   BB.room({
-    id: 'd1', zone: 7, x: 901, y: -182,
+    id: 'd1', zone: 7, x: -405, y: -17, flip: true,
     map: [
       '..............................',
       '..............................',
@@ -20,20 +20,20 @@
       '..............................',
       '..............................',
       '........*.*k*.................',
-      '........------................',
-      '..................*.*.........',
-      '..................###.........',
-      '..L.*.*..b.....n.#####.*.*.*h.',
-      '##############################',
-      '##############################',
-      '##############################',
+      '........------...............#',
+      '..................*.*........#',
+      '..................###........#',
+      '..L.*.*..b.....n.#####.*.*.*h#',
+      '#########---##################',
+      '#########...##################',
+      '#########...##################',
     ],
   });
 
   // d2 ─ Cactus Canyon: a cracked sandstone door guards a sparkly nook
   //      (come back with Mighty Paws!)
   BB.room({
-    id: 'd2', zone: 7, x: 856, y: -182,
+    id: 'd2', zone: 7, x: -375, y: -17, flip: true,
     map: [
       '#............................................',
       '#............................................',
@@ -58,7 +58,7 @@
   // d3 ─ Tortoise Oasis: the Tortoise Elder's Mighty Paws crumble the
   //      sandstone wall (onward) and the cracked floor (a secret way down)
   BB.room({
-    id: 'd3', zone: 7, x: 826, y: -182, elder: 'dig',
+    id: 'd3', zone: 7, x: -330, y: -17, flip: true, elder: 'dig',
     map: [
       'XXXX..........................',
       'XXXX..........................',
@@ -83,7 +83,7 @@
   // db ─ Cool Cave: below the oasis, Phoebe's big brother found the only
   //      shady spot in the desert
   BB.room({
-    id: 'db', zone: 7, x: 826, y: -165, family: 'bigBrotherTiger', needs: 'dig',
+    id: 'db', zone: 7, x: -330, y: 0, flip: true, family: 'bigBrotherTiger', needs: 'dig',
     map: [
       '#########...##################',
       '#............................#',
@@ -107,7 +107,7 @@
 
   // d4 ─ Sandstone Well: crumble the floor and tumble into the cool well
   BB.room({
-    id: 'd4', zone: 7, x: 796, y: -182, needs: 'dig',
+    id: 'd4', zone: 7, x: -300, y: -17, flip: true, needs: 'dig',
     map: [
       '#............................#',
       '#............................#',
@@ -148,7 +148,7 @@
 
   // d5 ─ Windy Mesa: a sealed sandstone box hides a bucket and spade
   BB.room({
-    id: 'd5', zone: 7, x: 751, y: -165, toy: 'bucket',
+    id: 'd5', zone: 7, x: -270, y: 0, flip: true, toy: 'bucket',
     map: [
       '.............................................',
       '.............................................',
@@ -173,7 +173,7 @@
   // d6 ─ Camel Oasis: a sulky camel sends rolling sand-waves and big
   //      dusty sneezes your way
   BB.room({
-    id: 'd6', zone: 7, x: 721, y: -165, boss: 'camel', arena: {name: 'Oasis Dunes'},
+    id: 'd6', zone: 7, x: -225, y: 0, flip: true, boss: 'camel', arena: {name: 'Oasis Dunes'},
     map: [
       '##............................',
       '##............................',
