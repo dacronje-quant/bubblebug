@@ -132,7 +132,7 @@ if (require.main === module) {
   const old = { ...bootGame().BB.Save.fresh(), v: 7, cat: 'rainbow', mazeSolved: true, room: 'hm', introDone: 1 };
   const migrated = bootGame(null, { storage: [['bubblebug_kingdom_v2', JSON.stringify(old)]] });
   migrated.BB.Main.set('play', {});
-  assert.equal(migrated.BB.Play.save.v, 8); assert.equal(migrated.BB.Play.save.rainbowUnlocked, true);
+  assert.equal(migrated.BB.Play.save.v, 9); assert.equal(migrated.BB.Play.save.rainbowUnlocked, true);
   assert.equal(migrated.BB.Play.pl.cat, 'rainbow');
   console.log('✓ v7 rescues migrate without losing the unlocked Rainbow character');
   const legacy = bootGame(), L = legacy.BB; L.World.build();

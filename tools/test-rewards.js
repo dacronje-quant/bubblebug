@@ -206,7 +206,7 @@ function milestones() {
   const migrated = bootGame(null, { storage: [['bubblebug_kingdom_v2', JSON.stringify(old)]] });
   migrated.BB.Main.set('play', {});
   const s = migrated.BB.Play.save;
-  assert.equal(s.v, 8); assert.equal(s.starsSpent, 0); assert.equal(s.outfits.wizard, 1);
+  assert.equal(s.v, 9); assert.equal(s.starsSpent, 0); assert.equal(s.outfits.wizard, 1);
   assert.equal(s.purchases['trail-rainbow'], 1); assert.equal(s.cosmetics.trail, 'rainbow');
   assert.equal(s.sparkles['-168,13'], 1); assert.equal(s.pads['-173,13'], 1);
   assert.equal(s.finale, true); assert.equal(migrated.BB.Save.count(s.family), 12);

@@ -49,10 +49,10 @@
       if (this.room.zone === 0 && bug && this.sayGuidance('tutorial_sad_animal', () => bug.state === 'gloomy' && near(bug, 200))) return;
       // The first mandatory hop is the gap in Sunrise Lawn. Help only after
       // three seconds of hesitation; successful earlier jumps suppress it.
-      if (this.room.id === 'g1' && b.grounded && this.pl.idleT > 180 &&
-          b.x > 6 * 32 && b.x < 19 * 32) {
+      const gapZone = () => b.x - this.room.px > 6 * 32 && b.x - this.room.px < 19 * 32;
+      if (this.room.id === 'g1' && b.grounded && this.pl.idleT > 180 && gapZone()) {
         this.sayGuidance('tutorial_jump', () => !this.guidance.jumped &&
-          this.pl.state === 'play' && b.grounded && b.x > 6 * 32 && b.x < 19 * 32);
+          this.pl.state === 'play' && b.grounded && this.room.id === 'g1' && gapZone());
       }
     },
   });

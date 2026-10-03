@@ -49,13 +49,15 @@
     }
     return m;
   }
-  // tg ─ crosses the garden path (Root Hollow → Sunny Patch) and climbs on to the Hive
+  // tg ─ the Golden Tower above the garden path, climbing on to the Hive
+  // tw ─ the Golden Gate: the garden path right outside the front door,
+  //      with the tower rising out of it (one room with the gardens)
   {
     const m = tower(35, [{ top: 27, floor: 32, left: true, right: true }]);
     fill(m, SHAFT[0], 0, SHAFT[1], 0, '.');           // up into the Hive
-    // a little sparkle trail along the path
-    for (const x of [4, 8, 22, 26]) m[31][x] = '*';
-    link({ id: 'tg', zone: 3, x: 0, y: -18, name: 'Golden Tower' }, m);
+    for (const x of [4, 8, 22, 26]) m[31][x] = '*';  // a little sparkle trail along the path
+    link({ id: 'tg', zone: 3, x: 0, y: -18, name: 'Golden Tower' }, m.slice(0, 17));
+    link({ id: 'tw', zone: 0, x: 0, y: -1, name: 'Golden Gate', cameraGroup: 'home-neighbourhood' }, m.slice(17));
   }
   // tx ─ crosses the glen (Rainy Hollow ↔ Glowpond Cliffs) above the Caverns' pillar
   {
