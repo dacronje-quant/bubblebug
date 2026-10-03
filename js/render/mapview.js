@@ -2,9 +2,10 @@
 //  MAP VIEW — the kingdom map, drawn from the rooms you've visited.
 //
 //  One map, on parchment, opened from the pause menu or straight from
-//  play (map button, M / Tab, or a gamepad's Select). It opens centred on
-//  your kitten; browse side to side with ◀ ▶ (▲ ▼ too) held down, by
-//  dragging, or with the big arrow buttons. A small map of the whole ring
+//  play (map button, M / Tab, or a gamepad's Select). It opens showing
+//  the whole kingdom fitted to the frame (on a small screen it centres on
+//  your kitten instead); browse with ◀ ▶ (▲ ▼ too) held down, by dragging,
+//  or with the big arrow buttons. A small square map of the whole kingdom
 //  at the bottom shows where you're looking (tap it to jump there); zone
 //  name tags float over each zone you've explored. While Rainbow's family
 //  is lost, each lost relative flashes in their own colour where they wait.
@@ -13,25 +14,37 @@
 //  a cat face where you found family, a toy where you found a toy, each
 //  boss (under a rain-cloud until cheered up, then with a heart), dotted
 //  lines between fairy-ring twins, a little house on each cat flap you've
-//  found, the Rainbow Lift, and your kitten's face where you are.
+//  found, the Rainbow Lift swooping round the outside of the kingdom, the
+//  Starfall float's dotted dandelion path down to the rainbow door, and
+//  your kitten's face where you are. Add #overview to the URL to see every
+//  room at once (for checking the layout).
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
   const G = () => BB.G;
   const TAU = Math.PI * 2;
-  const ZOOM = 2.6; // screen px per tile, on both maps
+  const ZOOM = 2.6; // screen px per tile at most (a small kingdom never blows up past this)
+  // the dev overview (#overview in the URL) shows every room at once
+  const OVERVIEW = () => { try { return /[?#&]overview\b/.test(String(location.search) + String(location.hash)); } catch (e) { return false; } };
 
   // ──── Layout of the browsable (pause) map ────
   const FRAME = () => ({ x: 56, y: 56, w: G().W - 112, h: G().H - 164 });  // the zoomed-in part
-  const STRIP = () => ({ x: G().W / 2 - 150, y: G().H - 104, w: 300, h: 56 }); // the whole kingdom, small (to scale)
+  const STRIP = () => ({ x: G().W / 2 - 34, y: G().H - 102, w: 68, h: 58 }); // the small square map of the whole kingdom
   const ARROW = d => ({ x: d < 0 ? 88 : G().W - 88, y: 56 + (G().H - 164) / 2, r: 27, d });
   const CLOSE = () => ({ x: G().W - 70, y: 70, r: 22 });
   const view = { cx: 0, cy: 0, tx: 0, ty: 0 }; // centre (tiles) and where it's gliding to
 
   function seenRooms() {
     const save = BB.Play.save;
+    if (OVERVIEW()) return BB.World.rooms.slice();
     return BB.World.rooms.filter(r => save.visited[r.id]);
   }
+  // the whole kingdom fits the frame: one zoom for it all (never more than ZOOM)
+  function fitZoom() {
+    const b = BB.World.bounds, f = FRAME();
+    return Math.min(ZOOM, (f.w - 24) / (b.x1 - b.x0 + 30), (f.h - 24) / (b.y1 - b.y0 + 22));
+  }
+  let zoom = ZOOM;
   function boundsOf(rooms) {
     if (!rooms.length) return null;
     const bd = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
@@ -49,7 +62,7 @@
     const bd = boundsOf(seenRooms());
     if (!bd) return null;
     const f = FRAME();
-    return { x: range(bd.x0, bd.x1, f.w / 2 / ZOOM), y: range(bd.y0, bd.y1, f.h / 2 / ZOOM), bd };
+    return { x: range(bd.x0, bd.x1, f.w / 2 / zoom), y: range(bd.y0, bd.y1, f.h / 2 / zoom), bd };
   }
   function clampView() {
     const L = limits();
@@ -59,10 +72,18 @@
   }
 
   // open the pause map centred on the kitten
+  // open the pause map showing the whole kingdom (centred on the kitten
+  // if it's too big for the screen)
   function openFull() {
-    const b = BB.Play.pl.body, T = BB.CFG.TILE;
-    view.cx = view.tx = (b.x + b.w / 2) / T;
-    view.cy = view.ty = (b.y + b.h / 2) / T;
+    zoom = fitZoom();
+    const b = BB.Play.pl.body, T = BB.CFG.TILE, wb = BB.World.bounds;
+    view.cx = view.tx = (wb.x0 + wb.x1) / 2;
+    view.cy = view.ty = (wb.y0 + wb.y1) / 2;
+    const f = FRAME();
+    if ((wb.x1 - wb.x0) * zoom > f.w || (wb.y1 - wb.y0) * zoom > f.h) {
+      view.cx = view.tx = (b.x + b.w / 2) / T;
+      view.cy = view.ty = (b.y + b.h / 2) / T;
+    }
     clampView();
   }
   // move straight away (held keys, dragging)…
@@ -96,11 +117,11 @@
   // a tap on the pause map: arrows glide half a screen, the strip jumps there
   function tapFull(p) {
     // a tap on a flashing edge face glides to that lost relative
-    const f0 = FRAME(), mark = edgeMarks(f0.x + f0.w / 2 - view.cx * ZOOM, f0.y + f0.h / 2 - view.cy * ZOOM, ZOOM).find(e => Math.hypot(p.x - e.x, p.y - e.y) < 24);
+    const f0 = FRAME(), mark = edgeMarks(f0.x + f0.w / 2 - view.cx * zoom, f0.y + f0.h / 2 - view.cy * zoom, zoom).find(e => Math.hypot(p.x - e.x, p.y - e.y) < 24);
     if (mark) { glideTo(mark.tx, mark.ty); BB.Audio.sfx.select(); return 'kin'; }
     const hit = controlAt(p);
     const f = FRAME();
-    if (hit === 'left' || hit === 'right') { glideBy((hit === 'left' ? -1 : 1) * f.w * 0.5 / ZOOM); BB.Audio.sfx.whoosh(); }
+    if (hit === 'left' || hit === 'right') { glideBy((hit === 'left' ? -1 : 1) * f.w * 0.5 / zoom); BB.Audio.sfx.whoosh(); }
     else if (hit === 'strip') {
       const L = limits();
       if (L) { const m = stripFit(L.bd); glideTo(L.bd.x0 + (p.x - m.x) / m.k, L.bd.y0 + (p.y - m.y) / m.k); }
@@ -269,14 +290,33 @@
         BB.HUD.zoneIcon(c, BB.HOME_ZONE, fx, fy - 3, 0.42);
       });
     }
-    // the Rainbow Lift
-    const lu = W.findThings('u')[0], lv = W.findThings('v')[0];
-    if (lu && lv && save.visited[W.roomAtTile(lu.tx, lu.ty).id] && save.visited[W.roomAtTile(lv.tx, lv.ty).id]) {
-      c.lineWidth = 3;
-      ['#ff7b9c', '#ffcf5c', '#8fe388', '#7cc8ff'].forEach((col, i) => {
+    // the Rainbow Lift: a rainbow swooping round the outside of the kingdom,
+    // from the Cloud Castles down past the east edge and under it to the Lagoon
+    const lu = W.findThings('u')[0], lv = W.findThings('v')[0], wb = W.bounds;
+    const seenAt = th => save.visited[W.roomAtTile(th.tx, th.ty).id] || OVERVIEW();
+    if (lu && lv && seenAt(lu) && seenAt(lv)) {
+      const X = tx => ox + (tx + 0.5) * sc, Y = ty => oy + (ty + 0.5) * sc;
+      c.lineWidth = 3; c.lineCap = 'round';
+      ['#ff7b9c', '#ffcf5c', '#8fe388', '#7cc8ff', '#b99cff'].forEach((col, i) => {
+        const d = (i - 2) * 3.2;
         c.strokeStyle = col; c.beginPath();
-        c.moveTo(ox + (lu.tx + 0.5) * sc + (i - 1.5) * 3, oy + (lu.ty + 0.5) * sc); c.lineTo(ox + (lv.tx + 0.5) * sc + (i - 1.5) * 3, oy + (lv.ty + 0.5) * sc); c.stroke();
+        c.moveTo(X(lu.tx), Y(lu.ty) + d);
+        c.bezierCurveTo(X(wb.x1 + 30) + d, Y(lu.ty), X(wb.x1 + 30) + d, Y(wb.y1 + 16) + d, X((wb.x0 + wb.x1) / 2), Y(wb.y1 + 16) + d);
+        c.bezierCurveTo(X(lv.tx + 24) - d, Y(wb.y1 + 16) + d, X(lv.tx) - d, Y(wb.y1 + 14), X(lv.tx) - d, Y(lv.ty + 1));
+        c.stroke();
       });
+    }
+    // the Starfall float: a dotted dandelion path down the shaft to the rainbow door
+    const fpad = W.findThings('F')[0], shaft = W.byId.t4, land = BB.Links.landingTile();
+    if (fpad && shaft && land && (save.visited[W.roomAtTile(fpad.tx, fpad.ty).id] || save.finale || OVERVIEW())) {
+      const cx = shaft.x + shaft.w / 2;
+      const pts = [[fpad.tx + 0.5, fpad.ty - 2], [cx, shaft.y + 2], [cx, shaft.y + shaft.h], [land.tx + 0.5, land.ty]];
+      c.strokeStyle = 'rgba(255,250,230,0.95)'; c.lineWidth = 2.5; c.setLineDash([2, 6]); c.lineCap = 'round';
+      c.beginPath(); pts.forEach(([x, y], i) => i ? c.lineTo(ox + x * sc, oy + y * sc) : c.moveTo(ox + x * sc, oy + y * sc)); c.stroke();
+      c.setLineDash([]);
+      const [hx, hy] = pts[0];
+      c.fillStyle = '#fffbe6'; c.strokeStyle = 'rgba(160,140,90,0.7)'; c.lineWidth = 1;
+      for (let i = 0; i < 10; i++) { const a = i / 10 * TAU; G().circle(ox + hx * sc + Math.cos(a) * 5, oy + hy * sc + Math.sin(a) * 5, 1.6, c); c.fill(); }
     }
 
     // dotted links between fairy-ring twins you've seen both ends of
@@ -381,7 +421,7 @@
       c.fillStyle = BB.mix(Z.sky[1], Z.top, 0.45);
       c.fillRect(X(r.x), Y(r.y), Math.max(1.5, r.w * m.k), Math.max(1.5, r.h * m.k));
     }
-    const hw = f.w / 2 / ZOOM, hh = f.h / 2 / ZOOM;
+    const hw = f.w / 2 / zoom, hh = f.h / 2 / zoom;
     const vx0 = Math.max(s.x - 4, X(view.cx - hw)), vx1 = Math.min(s.x + s.w + 4, X(view.cx + hw));
     const vy0 = Math.max(s.y - 4, Y(view.cy - hh)), vy1 = Math.min(s.y + s.h + 4, Y(view.cy + hh));
     c.strokeStyle = '#8a5a34'; c.lineWidth = 2.5;
@@ -453,7 +493,7 @@
     const P = BB.Play;
     const seen = seenRooms();
     if (!seen.length) return;
-    const sc = ZOOM;
+    const sc = zoom;
     const f0 = FRAME();
     const ox = f0.x + f0.w / 2 - view.cx * sc, oy = f0.y + f0.h / 2 - view.cy * sc;
     c.save();
@@ -488,5 +528,5 @@
     c.restore();
   }
 
-  BB.MapView = { draw, catFace, ZOOM, openFull, pan, glideBy, tick, tapFull, controlAt };
+  BB.MapView = { draw, catFace, ZOOM, openFull, pan, glideBy, tick, tapFull, controlAt, fitZoom, zoom: () => zoom };
 })(window.BB);

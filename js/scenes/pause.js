@@ -99,7 +99,7 @@
       M.tick();
       // (▲ is also "jump" on the keyboard, so jump alone doesn't close the map)
       if (this.t > 8 && (I.pressed.confirm || I.pressed.bubble || I.pressed.back || I.pressed.pause || I.pressed.map)) return close();
-      const sp = 10 / M.ZOOM;
+      const sp = 10 / M.zoom();
       if (I.held.left) M.pan(-sp, 0);
       if (I.held.right) M.pan(sp, 0);
       if (I.held.up) M.pan(0, -sp);
@@ -112,7 +112,7 @@
         if (++this.holdT > 14) M.pan((on === 'left' ? -1 : 1) * sp * 1.5, 0);
       } else this.holdT = 0;
       if (pd && !on) {
-        if (this.drag) M.pan(-(pd.x - this.drag.x) / M.ZOOM, -(pd.y - this.drag.y) / M.ZOOM);
+        if (this.drag) M.pan(-(pd.x - this.drag.x) / M.zoom(), -(pd.y - this.drag.y) / M.zoom());
         this.drag = { x: pd.x, y: pd.y };
       } else this.drag = null;
     },
