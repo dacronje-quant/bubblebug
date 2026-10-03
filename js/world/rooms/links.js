@@ -10,7 +10,13 @@
   const box = (w, h) => Array.from({ length: h }, () => Array(w).fill('#'));
   const fill = (m, x0, y0, x1, y1, ch) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) m[y][x] = ch; };
   const ledge = (m, y, x0, x1) => fill(m, x0, y, x1, y, '-');
-  const link = (def, m) => BB.room(Object.assign({ link: true }, def, { map: m.map(r => r.join('')) }));
+  // signs: [[col, row, arrow], …] — R L U D signposts pointing onward
+  const link = (def, m) => {
+    for (const [x, y, ch] of def.signs || []) m[y][x] = ch;
+    const out = Object.assign({ link: true }, def, { map: m.map(r => r.join('')) });
+    delete out.signs;
+    BB.room(out);
+  };
 
   // a climbing shaft one cell wide: in through `from` and out through `to`
   // ({ side: 'L' | 'R', top: first open row, floor: the floor row under
@@ -57,7 +63,7 @@
     fill(m, SHAFT[0], 0, SHAFT[1], 0, '.');           // up into the Hive
     for (const x of [4, 8, 22, 26]) m[31][x] = '*';  // a little sparkle trail along the path
     link({ id: 'tg', zone: 3, x: 0, y: -18, name: 'Golden Tower' }, m.slice(0, 17));
-    link({ id: 'tw', zone: 0, x: 0, y: -1, name: 'Golden Gate', cameraGroup: 'home-neighbourhood' }, m.slice(17));
+    link({ id: 'tw', zone: 0, x: 0, y: -1, name: 'Golden Gate', cameraGroup: 'home-neighbourhood', signs: [[3, 14, 'R']] }, m.slice(17));
   }
   // tx ─ crosses the glen (Rainy Hollow ↔ Glowpond Cliffs) above the Caverns' pillar
   {
@@ -66,7 +72,7 @@
     fill(m, 1, 0, 28, 8, '.');
     for (let y = 0; y < 9; y++) { m[y][SHAFT[0] - 1] = '#'; m[y][SHAFT[1] + 1] = '#'; }
     for (const x of [4, 8, 22, 26]) m[13][x] = '*';
-    link({ id: 'tx', zone: 1, x: 0, y: 17, name: 'Golden Tower' }, m);
+    link({ id: 'tx', zone: 1, x: 0, y: 17, name: 'Golden Tower', signs: [[24, 13, 'L']] }, m);
   }
 
   // mg ─ a glowing mushroom stair up from Rainy Hollow to the glen path
@@ -77,7 +83,7 @@
     fill(m, 14, 17, 14, 30, '.');                    // in from Rainy Hollow at the bottom
     ledge(m, 14, 1, 9); ledge(m, 26, 7, 13); ledge(m, 22, 1, 7); ledge(m, 18, 6, 13);
     m[25][9] = '*'; m[21][3] = '*'; m[17][10] = '*'; m[13][4] = '*';
-    link({ id: 'mg', zone: 1, x: 30, y: 17, name: 'Mushroom Stair' }, m);
+    link({ id: 'mg', zone: 1, x: 30, y: 17, name: 'Mushroom Stair', signs: [[11, 30, 'U'], [3, 13, 'L']] }, m);
   }
   // mh ─ a mossy walk from the Mushroom Canopy to the Mushroom Ring
   {
@@ -85,7 +91,7 @@
     fill(m, 0, 0, 29, 13, '.');
     fill(m, 15, 14, 29, 14, '.'); fill(m, 21, 15, 29, 15, '.');
     for (const x of [5, 10, 18, 25]) m[x < 15 ? 13 : x < 21 ? 14 : 15][x] = '*';
-    link({ id: 'mh', zone: 1, x: -120, y: 17, name: 'Mossy Walk' }, m);
+    link({ id: 'mh', zone: 1, x: -120, y: 17, name: 'Mossy Walk', signs: [[26, 15, 'L']] }, m);
   }
 
   // gd ─ the leafy drop from the Tall Garden down into Goose Green
@@ -96,13 +102,13 @@
     fill(m, 0, 34, 0, 47, '.');                      // out west into Goose Green
     ledge(m, 14, 6, 13); ledge(m, 22, 1, 8); ledge(m, 30, 6, 13); ledge(m, 39, 1, 8);
     m[13][10] = '*'; m[21][3] = '*'; m[29][10] = '*'; m[38][4] = '*'; m[47][9] = '*';
-    link({ id: 'gd', zone: 0, x: 165, y: -17, name: 'Leafy Drop' }, m);
+    link({ id: 'gd', zone: 0, x: 165, y: -17, name: 'Leafy Drop', signs: [[8, 13, 'D']] }, m);
   }
 
   // hl ─ the Rainy Steps: up from the Queen Bee's hall to the Rainy Ruins
-  link({ id: 'hl', zone: 4, x: 180, y: -69, name: 'Rainy Steps' }, shaft(34, { side: 'L', top: 27, floor: 31 }, { side: 'L', top: 10, floor: 14 }));
+  link({ id: 'hl', zone: 4, x: 180, y: -69, name: 'Rainy Steps', signs: [[3, 30, 'U'], [2, 13, 'L']] }, shaft(34, { side: 'L', top: 27, floor: 31 }, { side: 'L', top: 10, floor: 14 }));
   // rl ─ the Cloud Ladder: up from the Elephant's courtyard to the Cloud Castles
-  link({ id: 'rl', zone: 5, x: -75, y: -120, name: 'Cloud Ladder' }, shaft(51, { side: 'R', top: 44, floor: 48 }, { side: 'R', top: 10, floor: 14 }));
+  link({ id: 'rl', zone: 5, x: -75, y: -120, name: 'Cloud Ladder', signs: [[11, 47, 'U'], [12, 13, 'R']] }, shaft(51, { side: 'R', top: 44, floor: 48 }, { side: 'R', top: 10, floor: 14 }));
 
   // a plain link room: walls all round, air inside, then the openings
   // ({ side: 'L' | 'R', top, floor } doors, and holes in the top or bottom)
@@ -120,12 +126,12 @@
     fill(m, 1, 1, 13, 30, '.'); fill(m, 3, 0, 5, 0, '.');
     for (const [y, a, b] of [[26, 7, 13], [21, 1, 7], [16, 6, 13], [11, 1, 7], [6, 3, 9], [2, 1, 2]]) ledge(m, y, a, b);
     m[25][10] = '*'; m[20][3] = '*'; m[15][10] = '*'; m[10][3] = '*'; m[5][6] = '*';
-    link({ id: 'dl', zone: 7, x: -390, y: 0, name: 'Shore Cliff' }, m);
+    link({ id: 'dl', zone: 7, x: -390, y: 0, name: 'Shore Cliff', signs: [[11, 30, 'U']] }, m);
   }
   // fl ─ Frost Steps: up from the Camel's oasis to the foot of the Frosty Peaks
-  link({ id: 'fl', zone: 8, x: -195, y: -17, name: 'Frost Steps' }, shaft(34, { side: 'L', top: 27, floor: 31 }, { side: 'L', top: 0, floor: 14 }));
+  link({ id: 'fl', zone: 8, x: -195, y: -17, name: 'Frost Steps', signs: [[3, 30, 'U'], [3, 13, 'L']] }, shaft(34, { side: 'L', top: 27, floor: 31 }, { side: 'L', top: 0, floor: 14 }));
   // al ─ Leafy Climb: up the west edge from the Walrus's pond to the Autumn Woods
-  link({ id: 'al', zone: 9, x: -405, y: -69, name: 'Leafy Climb' }, shaft(52, { side: 'R', top: 45, floor: 49 }, { side: 'R', top: 10, floor: 14 }));
+  link({ id: 'al', zone: 9, x: -405, y: -69, name: 'Leafy Climb', signs: [[11, 48, 'U'], [12, 13, 'R']] }, shaft(52, { side: 'R', top: 45, floor: 49 }, { side: 'R', top: 10, floor: 14 }));
   // am ─ Root Tunnel: under the great old tree, then up into the Ring Grove
   {
     const m = plain(45, 17, [{ side: 'L', top: 0, floor: 14 }]);
@@ -133,30 +139,36 @@
     fill(m, 1, 14, 43, 16, '#');
     for (const [y, a, b] of [[10, 34, 40], [6, 26, 32], [3, 33, 38]]) ledge(m, y, a, b);
     m[13][8] = '*'; m[13][14] = '*'; m[13][20] = '*'; m[9][37] = '*'; m[5][29] = '*';
-    link({ id: 'am', zone: 9, x: -285, y: -69, name: 'Root Tunnel' }, m);
+    link({ id: 'am', zone: 9, x: -285, y: -69, name: 'Root Tunnel', signs: [[4, 13, 'R'], [31, 13, 'U']] }, m);
   }
   // sl ─ Moon Steps: up from the Moose's clearing to the Moonlit Springs
-  link({ id: 'sl', zone: 10, x: -360, y: -103, name: 'Moon Steps' }, shaft(34, { side: 'R', top: 27, floor: 31 }, { side: 'R', top: 10, floor: 14 }));
+  // (a cozy bench and a full bowl at the top: a breather after the long west climb)
+  {
+    const m = shaft(34, { side: 'R', top: 27, floor: 31 }, { side: 'R', top: 10, floor: 14 });
+    fill(m, 5, 14, 13, 14, '#');
+    link({ id: 'sl', zone: 10, x: -360, y: -103, name: 'Moon Steps', signs: [[11, 30, 'U'], [12, 13, 'R'], [7, 13, 'B'], [10, 13, 'W']] }, m);
+  }
   // tl ─ Star Bridge: from the Panda's grove onto the Starlight path
   {
     const m = plain(15, 17, [{ side: 'L', top: 10, floor: 14 }, { side: 'R', top: 0, floor: 14 }]);
-    fill(m, 1, 0, 13, 0, '.');
-    m[13][4] = '*'; m[13][7] = '*'; m[13][10] = '*';
-    link({ id: 'tl', zone: 11, x: -135, y: -103, name: 'Star Bridge' }, m);
+    fill(m, 1, 0, 13, 0, '.'); fill(m, 1, 14, 13, 16, '#');
+    m[13][5] = '*'; m[13][7] = '*'; m[13][10] = '*';
+    link({ id: 'tl', zone: 11, x: -135, y: -103, name: 'Star Bridge', signs: [[3, 13, 'R']] }, m);
   }
   // tm ─ Comet Chute: a long drop down to the Comet Nook's path
   {
     const m = plain(15, 51, [{ side: 'L', top: 0, floor: 14 }, { side: 'L', top: 34, floor: 48 }]);
     fill(m, 1, 0, 13, 0, '.');
+    fill(m, 1, 48, 13, 50, '#');
     for (const [y, a, b] of [[14, 1, 4], [22, 8, 13], [30, 1, 7], [39, 7, 13]]) ledge(m, y, a, b);
     m[21][10] = '*'; m[29][4] = '*'; m[38][10] = '*'; m[47][5] = '*';
-    link({ id: 'tm', zone: 11, x: -90, y: -103, name: 'Comet Chute' }, m);
+    link({ id: 'tm', zone: 11, x: -90, y: -103, name: 'Comet Chute', signs: [[3, 13, 'D']] }, m);
   }
   // tn ─ Star Well: from the Comet Nook's path, down to the Star Whale
   {
     const m = plain(15, 34, [{ side: 'R', top: 10, floor: 14 }], [[33, 1, 13]]);
     ledge(m, 14, 8, 13); ledge(m, 22, 1, 6);
     m[21][3] = '*'; m[28][9] = '*';
-    link({ id: 'tn', zone: 11, x: -150, y: -69, name: 'Star Well' }, m);
+    link({ id: 'tn', zone: 11, x: -150, y: -69, name: 'Star Well', signs: [[11, 13, 'D']] }, m);
   }
 })(window.BB);
