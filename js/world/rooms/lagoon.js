@@ -33,7 +33,7 @@
 
   // l2 ─ Tide Pools: hop the rocks between the pools; a bench in the shade
   BB.room({
-    id: 'l2', zone: 6, x: -255, y: 17,
+    id: 'l2', zone: 6, x: -255, y: 17, finds: [{ id: 'scuba', x: 10, y: 14 }],
     map: [
       '#............................................',
       '#............................................',
@@ -123,7 +123,7 @@
   // lb ─ Sunken Ship: swim down through the kelp floor; Marshmallow's big
   //      sister is waiting in the ship's dry little cabin
   BB.room({
-    id: 'lb', zone: 6, x: -285, y: 68, family: 'bigSisterCocoa', needs: 'swim',
+    id: 'lb', zone: 6, x: -285, y: 68, finds: [{ id: 'pirate', x: 4, y: 7 }], family: 'bigSisterCocoa', needs: 'swim',
     map: [
       '#####################~~~~#####',
       '#~~~~~~~~~~~~~~~~~~~~~~~~~~~~#',

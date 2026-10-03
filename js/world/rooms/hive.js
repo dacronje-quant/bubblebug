@@ -121,7 +121,7 @@
   // h5 ─ Wax Loft: the long golden ledge in the Hive Tower leads through a
   //      gap in the wall to Phoebe's Papa, snoozing among the honey jars
   BB.room({
-    id: 'h5', zone: 3, x: 0, y: -52, family: 'papaGinger',
+    id: 'h5', zone: 3, x: 0, y: -52, finds: [{ id: 'chef', x: 9, y: 5 }], family: 'papaGinger',
     map: [
       '##############################',
       '##############################',

@@ -125,7 +125,7 @@
   // g5 ─ Treetop Walk: climb the leafy ledges above Ladybug Hill and follow
   //      the branches all the way to Marshmallow's Mama in her nest
   BB.room({
-    id: 'g5', zone: 0, x: 30, y: -17, family: 'mamaMallow',
+    id: 'g5', zone: 0, x: 30, y: -17, finds: [{ id: 'partyhat', x: 34, y: 10 }], family: 'mamaMallow',
     map: [
       '##..........................................................',
       '##..........................................................',

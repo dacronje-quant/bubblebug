@@ -58,7 +58,7 @@
     switch (type) {
       case 'sparkle': if (save.sparkles[key]) return null; break;
       case 'toy': th.toy = room.def.toy; if (!th.toy || save.toys[th.toy]) return null; break;
-      case 'glasses': th.item = thing.item; if (!BB.Wardrobe.BY[th.item] || save.glassesFound[th.item]) return null; break;
+      case 'glasses': th.item = thing.item; if (!BB.Wardrobe.findItem(th.item) || save.glassesFound[th.item]) return null; break;
       case 'bench': case 'sign': case 'flower': th.y = floorBelow(thing.tx, thing.ty); th.dir = DIR[thing.ch]; break;
       case 'bench_': break;
       case 'firefly': th.homeX = th.x; th.homeY = th.y; th.fly = 0; break;
@@ -316,7 +316,7 @@
         const by = Math.sin(t * 0.05) * 4;
         G().drawGlow(x, y + by, 32, '#f6d1ff', 0.55, c);
         G().bubble(x, y + by, 18, '#dfc9ff', 0.8, c);
-        BB.Wardrobe.icon(c, th.item, x, y + by, 1.8, t);
+        BB.Wardrobe.findIcon(c, th.item, x, y + by, 1.8, t);
         ctx.light(x, y, 85, '#f6d1ff', 0.7);
         break;
       }

@@ -107,7 +107,7 @@
 
   // d4 ─ Sandstone Well: crumble the floor and tumble into the cool well
   BB.room({
-    id: 'd4', zone: 7, x: -300, y: -17, flip: true, needs: 'dig',
+    id: 'd4', zone: 7, x: -300, y: -17, flip: true, finds: [{ id: 'trail-paw', x: 23, y: 26 }], needs: 'dig',
     map: [
       '#............................#',
       '#............................#',

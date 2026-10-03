@@ -146,7 +146,7 @@
   // r6 ─ Bell Tower Roof: hop up past the hollow wall onto the rooftops,
   //      where Marshmallow's Granny is watching the rain
   BB.room({
-    id: 'r6', zone: 4, x: 90, y: -86, flip: true, family: 'grannyLilac', rain: true,
+    id: 'r6', zone: 4, x: 90, y: -86, flip: true, finds: [{ id: 'bubble-flower', x: 31, y: 8 }], family: 'grannyLilac', rain: true,
     map: [
       '............................................................',
       '............................................................',

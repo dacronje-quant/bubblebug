@@ -24,7 +24,15 @@
     if (!item) return;
     c.save();
     if (Number.isFinite(item.stars)) {
-      c.fillStyle = '#ffd665'; G().star(x, y, 11, 5, 0.5, -Math.PI / 2, c); c.fill();
+      const zone = BB.Wardrobe.hiddenIn(item.id);
+      const sx = zone == null ? x : x - 26;
+      c.fillStyle = '#ffd665'; G().star(sx, y, 11, 5, 0.5, -Math.PI / 2, c); c.fill();
+      // …or find it: the zone where it hides, with a "?"
+      if (zone != null) {
+        BB.HUD.zoneIcon(c, zone, x + 18, y, 0.6);
+        c.fillStyle = '#9b7fe0'; G().circle(x + 40, y - 10, 8, c); c.fill();
+        G().text('?', x + 40, y - 5, 13, '#ffffff', null, 'center', c);
+      }
     } else if (item.discover) BB.HUD.zoneIcon(c, { googly: 0, disguise: 2, starshades: 6 }[item.id], x, y, 0.6);
     else {
       const kind = item.boss ? 'bosses' : item.unlock && item.unlock.kind;
@@ -177,7 +185,7 @@
       BB.Kittens.draw(c, this.pl.cat, { mode: 'sit', happy: true, t: oc.t, wear: this.save.wear }, cx - 64, cy + 52, 3 * k, Math.floor(oc.t / 50) % 2 ? -1 : 1);
       c.restore();
       // the present itself, and a little mirror: "try things on at home"
-      BB.Wardrobe.icon(c, oc.id, cx + 80, cy - 14, 2.4, oc.t);
+      BB.Wardrobe.findIcon(c, oc.id, cx + 80, cy - 14, 2.4, oc.t);
       c.fillStyle = '#8a5a34'; G().ellipse(cx + 80, cy + 34, 12, 16, 0, c); c.fill();
       c.fillStyle = '#cfe8fb'; G().ellipse(cx + 80, cy + 34, 9, 13, 0, c); c.fill();
       BB.HUD.zoneIcon(c, BB.HOME_ZONE, cx + 112, cy + 38, 0.5);
@@ -338,6 +346,11 @@
         if (!have) {
           c.strokeStyle = '#aaa0b4'; c.lineWidth = 2; G().rrect(19, 19, 13, 11, 3, c); c.stroke();
           c.beginPath(); c.arc(25.5, 19, 4, Math.PI, 0); c.stroke();
+          // hidden somewhere out in the kingdom too: a little "?" spot
+          if (BB.Wardrobe.hiddenIn(it.id) != null) {
+            c.fillStyle = '#9b7fe0'; G().circle(-q.r * 0.7, -q.r * 0.7, 11, c); c.fill();
+            G().text('?', -q.r * 0.7, -q.r * 0.7 + 6, 17, '#ffffff', null, 'center', c);
+          }
         }
         if (worn) {
           c.fillStyle = '#5fd48a'; G().circle(q.r * 0.7, -q.r * 0.7, 11, c); c.fill();

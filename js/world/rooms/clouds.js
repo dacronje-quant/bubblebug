@@ -182,7 +182,7 @@
   // k6 ─ Star Balcony: above the sky bridges, Phoebe's Granny knits by the
   //      stars
   BB.room({
-    id: 'k6', zone: 5, x: -30, y: -154, family: 'grannyGrey',
+    id: 'k6', zone: 5, x: -30, y: -154, finds: [{ id: 'bubble-star', x: 5, y: 6 }], family: 'grannyGrey',
     map: [
       '............................................................',
       '............................................................',

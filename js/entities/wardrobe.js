@@ -393,5 +393,40 @@
     return isNew ? a : null;
   }
 
-  BB.Wardrobe = { LIST, BY, BY_BOSS, drawOn, icon, framedIcon, silhouette, grant };
+  // ──── Things found in the world ────
+  // A room's `finds` (and the older `glasses`) hide any wardrobe item or
+  // bubble / trail style somewhere in the kingdom. Finding one gives it
+  // straight away; its star milestone still unlocks it if it's never found.
+  const findItem = id => BY[id] || (BB.Cosmetics && BB.Cosmetics.LIST.find(a => a.id === id)) || null;
+  const isStyle = item => item.slot === 'bubble' || item.slot === 'trail';
+  function findIcon(c, id, x, y, s, t) {
+    const item = findItem(id);
+    if (item && isStyle(item)) BB.Cosmetics.icon(c, item, x, y, s * 0.8, t);
+    else icon(c, id, x, y, s, t);
+  }
+  // put a found thing on (or into the bubble wand / trail)
+  function giveFind(save, id) {
+    const item = findItem(id);
+    if (!item) return null;
+    save.glassesFound[id] = 1;
+    if (isStyle(item)) {
+      save.purchases = save.purchases || {}; save.purchases[id] = 1;
+      save.cosmetics[item.slot] = item.value;
+    } else {
+      save.outfits[id] = 1;
+      save.wear[item.slot] = id;
+    }
+    return item;
+  }
+  // which zone hides each findable thing (from the rooms themselves)
+  let hidden = null;
+  function hiddenIn(id) {
+    if (!hidden) {
+      hidden = {};
+      for (const r of BB.World.rooms) for (const th of r.things) if (th.ch === 'a' && th.item && hidden[th.item] == null) hidden[th.item] = r.zone;
+    }
+    return hidden[id] == null ? null : hidden[id];
+  }
+
+  BB.Wardrobe = { LIST, BY, BY_BOSS, drawOn, icon, framedIcon, silhouette, grant, findItem, findIcon, giveFind, hiddenIn };
 })(window.BB);

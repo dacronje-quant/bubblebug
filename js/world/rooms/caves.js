@@ -33,7 +33,7 @@
 
   // c2 ─ Glimmer Hall: crystal pools and ledges, a jingle bell up high
   BB.room({
-    id: 'c2', zone: 2, x: -150, y: 34, toy: 'bell',
+    id: 'c2', zone: 2, x: -150, y: 34, finds: [{ id: 'sparkly', x: 24, y: 7 }], toy: 'bell',
     map: [
       '############################################################',
       '............................................................',

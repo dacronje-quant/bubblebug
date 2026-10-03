@@ -163,7 +163,7 @@
   // m6 ─ Mushroom Canopy: high above the glowpond cliffs, Phoebe's Mama
   //      naps on the tallest cap
   BB.room({
-    id: 'm6', zone: 1, x: -90, y: 17, family: 'mamaTortie',
+    id: 'm6', zone: 1, x: -90, y: 17, finds: [{ id: 'flowers', x: 26, y: 5 }], family: 'mamaTortie',
     map: [
       '..............................',
       '..............................',

@@ -57,7 +57,7 @@
 
   // tb ─ Comet Nook: Phoebe's Grandpa is counting shooting stars
   BB.room({
-    id: 'tb', zone: 11, x: -135, y: -86, family: 'grandpaStripes',
+    id: 'tb', zone: 11, x: -135, y: -86, finds: [{ id: 'wizard', x: 31, y: 8 }], family: 'grandpaStripes',
     map: [
       '.............................................',
       '.............................................',

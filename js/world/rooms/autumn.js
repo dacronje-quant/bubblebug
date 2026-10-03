@@ -58,7 +58,7 @@
   // ab ─ Hollow Log: a fairy ring leads into a snug hollow log where
   //      Phoebe's baby sister is playing
   BB.room({
-    id: 'ab', zone: 9, x: -15, y: -69, family: 'babyPatches', needs: 'rings',
+    id: 'ab', zone: 9, x: -15, y: -69, finds: [{ id: 'bubble-heart', x: 36, y: 13 }], family: 'babyPatches', needs: 'rings',
     map: [
       '#############################################',
       '#...........................................#',

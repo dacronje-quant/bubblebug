@@ -107,7 +107,7 @@
 
   // s4 ─ Steam Terraces: a rubber duck bobs in the top pool
   BB.room({
-    id: 's4', zone: 10, x: -240, y: -103, flip: true, toy: 'duck', needs: 'bubbleBounce',
+    id: 's4', zone: 10, x: -240, y: -103, flip: true, finds: [{ id: 'heartshades', x: 6, y: 2 }], toy: 'duck', needs: 'bubbleBounce',
     map: [
       '.............................................',
       '.............................................',

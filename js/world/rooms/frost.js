@@ -124,7 +124,7 @@
 
   // fb ─ Snow Igloo: Marshmallow's baby brother is keeping warm inside
   BB.room({
-    id: 'fb', zone: 8, x: -330, y: -51, family: 'babySnowflake', needs: 'spring',
+    id: 'fb', zone: 8, x: -330, y: -51, finds: [{ id: 'jingle', x: 22, y: 9 }], family: 'babySnowflake', needs: 'spring',
     map: [
       '.............................................',
       '.............................................',

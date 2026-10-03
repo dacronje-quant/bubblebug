@@ -670,8 +670,7 @@
           BB.Save.write();
         },
         onGlasses(th) {
-          self.save.glassesFound[th.item] = 1; self.save.outfits[th.item] = 1;
-          self.save.wear.face = th.item; self.save.wardrobeNew = 1;
+          BB.Wardrobe.giveFind(self.save, th.item); self.save.wardrobeNew = 1;
           self.outfitCard = { id: th.item, t: 0 }; self.pl.happyT = 90;
           S().outfit(); PT().burst('spark', th.x, th.y, 16, { color: '#efcaff', speed: 2, life: 40 });
           if (th.item === 'googly') self.sayGuidance('tutorial_googly_glasses', () => self.save.wear.face === 'googly', 500);
