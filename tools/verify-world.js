@@ -10,7 +10,7 @@
 //
 //  For each story stage (no powers → +Double Jump → … → +Star Wings) it
 //  checks:
-//    1. the next elder (or, at the end, the Rainbow Slide home) is reachable, and
+//    1. the next elder (or, at the end, the Starfall float home) is reachable, and
 //    2. from EVERY spot you can reach in that stage, the goal is still
 //       reachable (zero softlocks — falling in water or mist always floats
 //       you back to safety, and that rescue is modelled too), and
@@ -65,7 +65,7 @@ const NAMES = {
   doubleJump: 'Butterfly Elder (Double Jump)', wallClimb: 'Snail Elder (Sticky Paws)', glow: 'Firefly Elder (Glow)',
   float: 'Dandelion Elder (Float)', swim: 'Sea Turtle Elder (Swim)', dig: 'Tortoise Elder (Mighty Paws)',
   spring: 'Snow Hare Elder (Spring Paws)', rings: 'Badger Elder (Fairy Rings)', bubbleBounce: 'Otter Elder (Bubble Bounce)',
-  wings: 'Star Whale (Star Wings)', finale: 'the Rainbow Slide home',
+  wings: 'Star Whale (Star Wings)', finale: 'the Starfall float home',
 };
 const STAGES = POWERS.map((goal, i) => ({ i, goal, have: POWERS.slice(0, i) }))
   .concat([{ i: POWERS.length, goal: 'finale', have: POWERS.slice() }]);
@@ -276,7 +276,7 @@ function bubbleable(nodes, tx, ty) {
 // lights its door up at home, and a lit door takes you back to the furthest
 // flap of that zone found so far (only there — the old target is dropped).
 // The front door is walked through; the other doors remain links. The lift runs both
-// ways; the Rainbow Slide at the very end goes home through the skylight.
+// ways; the Starfall float at the very end drifts home to the rainbow door.
 function buildLinks() {
   const L = BB.Links, out = [];
   for (let z = 0; z < 12; z++) L.flapTiles(z).forEach((t, idx) => {
@@ -295,7 +295,7 @@ function buildLinks() {
     out.push({ from: L.spot(u.tx, u.ty), to: L.spot(v.tx, v.ty), lift: true });
     out.push({ from: L.spot(v.tx, v.ty), to: L.spot(u.tx, u.ty), lift: true });
   }
-  const f = W.findThings('F')[0], sk = L.skylightTile();
+  const f = W.findThings('F')[0], sk = L.landingTile();
   if (f && sk) out.push({ from: { x: f.tx * T + 16, y: f.ty * T + 16 }, to: L.spot(sk.tx, sk.ty), slide: true });
   return out;
 }

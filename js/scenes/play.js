@@ -212,9 +212,55 @@
       else S().whoosh();
     },
 
+    // ──── The Starfall float: the finale ────
+    // At the end of Starlight Sky the kitten takes a big glowing dandelion,
+    // drifts over to the Starfall Shaft and floats all the way down it,
+    // the camera gliding along, to land by the rainbow door at home.
+    startStarfall(th) {
+      if (this.traveling) return;
+      const shaft = W().byId.t4, land = BB.Links.landingTile(), b = this.pl.body;
+      if (!shaft || !land) return;
+      BB.Voice.stop(); BB.Bubbles.clear();
+      const cx = shaft.px + shaft.pw / 2, sx = b.x + b.w / 2, sy = b.y + b.h;
+      // up off the pad, over to the top of the shaft, then all the way down
+      const path = [{ x: sx, y: sy }, { x: sx, y: sy - 3 * T }, { x: cx, y: shaft.py + 2 * T }, { x: cx, y: shaft.py + shaft.ph - T }];
+      this.traveling = { kind: 'starfall', from: th, path, seg: 0, t: 0, dest: BB.Links.spot(land.tx, land.ty) };
+      const pl = this.pl;
+      pl.state = 'starfall'; pl.gesture = null; b.vx = 0; b.vy = 0;
+      S().whoosh(); S().rescue();
+      PT().burst('spark', sx, sy - 20, 20, { color: '#fff4c2', speed: 2.6, life: 40 });
+    },
+    updateStarfall(tr) {
+      const pl = this.pl, b = pl.body;
+      const to = tr.path[tr.seg + 1];
+      if (!to) {
+        // the bottom of the shaft: a soft fade, and home by the rainbow door
+        this.traveling = null; pl.state = 'play';
+        this.travel(tr.dest, 'slide', tr.from);
+        return;
+      }
+      const fx = b.x + b.w / 2, fy = b.y + b.h, dx = to.x - fx, dy = to.y - fy, d = Math.hypot(dx, dy);
+      const speed = tr.seg === 2 ? 3.2 : 1.8;           // a gentle rise, then a long slow drift down
+      if (d <= speed) { tr.seg++; b.x = to.x - b.w / 2; b.y = to.y - b.h; }
+      else { b.x += dx / d * speed; b.y += dy / d * speed; }
+      b.facing = dx > 0.5 ? 1 : dx < -0.5 ? -1 : b.facing;
+      b.x += Math.sin(tr.t * 0.05) * 0.6;              // swaying under the dandelion
+      if (tr.t % 4 === 0) PT().trail('star', b.x + b.w / 2, b.y + b.h / 2, '#fff4c2');
+      // the camera follows from room to room
+      const r = W().roomAtPx(b.x + b.w / 2, b.y + b.h / 2);
+      if (r && r !== this.room) {
+        this.leaveRoom(this.room);
+        this.prevRoom = this.room; this.room = r;
+        this.save.visited[r.id] = 1;
+        Cam().startSlide(r, b, this.prevRoom);
+        if (r.zone !== this.prevRoom.zone) this.enterZone(r.zone);
+      }
+    },
+
     updateTravel() {
       const tr = this.traveling, pl = this.pl, b = pl.body;
       tr.t++;
+      if (tr.kind === 'starfall') return this.updateStarfall(tr);
       if (tr.kind === 'slide' && tr.t % 3 === 0) PT().trail('star', b.x + b.w / 2, b.y + b.h / 2, '#fff4c2');
       if (tr.t < C.IRIS_TIME) return;
       // arrive
@@ -632,7 +678,7 @@
           BB.Save.write();
         },
         onElder(th) { self.startGift(th); },
-        // links: doors, cat flaps, the Rainbow Lift and the Rainbow Slide
+        // links: doors, cat flaps, the Rainbow Lift and the Starfall float
         linkLocked: th => !!self.linkLock && Math.abs(th.x - self.linkLock.x) < 4 && Math.abs(th.y - self.linkLock.y) < 4,
         travel: (dest, kind, from) => self.travel(dest, kind, from),
         onFlapFound(th) {
@@ -642,10 +688,7 @@
           PT().ring(th.x, th.y - 20, '#ffe9a0', 24);
           BB.Save.write();
         },
-        onSlide(th) {
-          const sk = BB.Links.skylightTile();
-          if (sk) self.travel(BB.Links.spot(sk.tx, sk.ty), 'slide', th);
-        },
+        onSlide(th) { self.startStarfall(th); },
         // nom nom: in Hard a treat brings a sun back (a bowl, all of them);
         // in Easy it's just yummy
         onEat(th) {

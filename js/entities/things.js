@@ -152,7 +152,7 @@
         break;
       }
       case 'finale':
-        // the Rainbow Slide: hop in and slide all the way home
+        // the Starfall float: take hold and drift all the way home
         if (dist < 56 && ctx.pl.state === 'play') ctx.onSlide(th);
         break;
       case 'family':
@@ -365,25 +365,27 @@
       }
       case 'kin': drawKin(c, x, y, th, cam, ctx); break;
       case 'finale': {
-        // the Rainbow Slide: a rainbow arch, and a slide swooping down
-        // toward home (the Cat House is right below, in the middle)
-        c.save();
-        c.globalAlpha = 0.85;
-        c.lineWidth = 9;
-        const cols = ['#ff7b9c', '#ffcf5c', '#fff27a', '#8fe388', '#7cc8ff', '#b99cff'];
-        cols.forEach((col, i) => {
-          c.strokeStyle = col;
-          c.beginPath(); c.arc(x, y + 16, 120 - i * 9, Math.PI, 0); c.stroke();
-        });
-        c.lineWidth = 7;
-        cols.forEach((col, i) => {
-          c.strokeStyle = col;
-          c.beginPath(); c.moveTo(x - 30 + i * 7, y + 4); c.quadraticCurveTo(x - 10 + i * 7, y + 60, x + 60 + i * 7, y + 120); c.stroke();
-        });
-        c.restore();
-        G().drawGlow(x, y - 30, 120, '#fff4c2', 0.45 + Math.sin(t * 0.08) * 0.15, c);
+        // the Starfall float: a great glowing dandelion to hold on to — it
+        // drifts you over to the Starfall Shaft and all the way down home
+        G().drawGlow(x, y - 70, 130, '#fff4c2', 0.45 + Math.sin(t * 0.08) * 0.15, c);
+        const sway = Math.sin(t * 0.04) * 6, hx = x + sway, hy0 = y - 92;
+        c.strokeStyle = '#7fae5a'; c.lineWidth = 4; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(x, y + 2); c.quadraticCurveTo(x - 8, y - 46, hx, hy0); c.stroke();
+        for (let i = 0; i < 26; i++) {
+          const a = i / 26 * Math.PI * 2 + t * 0.004, r = 30 + (i % 3) * 3;
+          c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 1.5;
+          c.beginPath(); c.moveTo(hx, hy0); c.lineTo(hx + Math.cos(a) * r, hy0 + Math.sin(a) * r); c.stroke();
+          c.fillStyle = '#fffbe6'; G().circle(hx + Math.cos(a) * r, hy0 + Math.sin(a) * r, 3.2, c); c.fill();
+        }
+        c.fillStyle = '#ffe9a0'; G().circle(hx, hy0, 7, c); c.fill();
+        // drifting seeds show the way: over to the shaft, then down
+        for (let i = 0; i < 4; i++) {
+          const k = ((t * 0.006) + i / 4) % 1;
+          c.fillStyle = `rgba(255,251,230,${0.9 * (1 - k)})`;
+          G().circle(hx + k * 160, hy0 - 10 - Math.sin(k * Math.PI) * 30, 2.5, c); c.fill();
+        }
         // a tiny house with a heart: "home is this way"
-        const hy = y - 70 + Math.sin(t * 0.06) * 4;
+        const hy = y - 150 + Math.sin(t * 0.06) * 4;
         c.fillStyle = '#fff4e6'; c.strokeStyle = '#8a5a34'; c.lineWidth = 2;
         c.fillRect(x - 14, hy - 8, 28, 20); c.strokeRect(x - 14, hy - 8, 28, 20);
         c.fillStyle = '#e8706a'; c.beginPath(); c.moveTo(x - 19, hy - 6); c.lineTo(x, hy - 22); c.lineTo(x + 19, hy - 6); c.closePath(); c.fill(); c.stroke();

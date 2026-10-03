@@ -42,7 +42,7 @@
 //   links (see js/entities/links.js):
 //   h  a cat flap: stand in it to pop home (and it lights its door there)
 //   u / v  the two ends of the Rainbow Lift (Cloud Castles ⇄ Sky Lagoon)
-//   F  the Rainbow Slide home to the Cat House (the end of the adventure)
+//   F  the Starfall float home to the Cat House (the end of the adventure)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';

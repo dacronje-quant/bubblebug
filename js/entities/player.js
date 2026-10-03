@@ -189,6 +189,7 @@
     if (pl.hurtT > 12) { p.surprised = true; p.sad = Math.max(p.sad, 0.6); }
     if (pl.state === 'rescue') { p.mode = 'rescue'; p.surprised = pl.rescue.t < 30; p.happy = pl.rescue.t > 40; return p; }
     if (pl.state === 'bench') { p.mode = 'sleep'; return p; }
+    if (pl.state === 'starfall') { p.mode = 'rescue'; p.happy = true; return p; }
     if (pl.state === 'gift') { p.mode = 'sit'; p.happy = true; p.look = -1; return p; }
     if (pl.state === 'party') { p.mode = (pl.t % 60) < 30 ? 'stand' : 'air'; p.happy = true; return p; }
     if (pl.gesture && BB.Gestures.pose(pl.gesture.id, pl.gesture.t, b.grounded, p)) return p;

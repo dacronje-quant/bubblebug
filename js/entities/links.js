@@ -11,10 +11,10 @@
 //          per zone, glowing once its flap has been found. Stand in a lit
 //          door to go back to that zone's flap. Door 0 is a physical front
 //          door: walk through it into the garden without a teleport.
-//   u / v  the Rainbow Lift: from the bottom of Cloud Castles up to the
-//          beach of the Sky Lagoon, and back. Stand still, then whoosh!
-//   F      (in things.js) the Rainbow Slide at the top of Starlight Sky,
-//          which slides you home through the skylight for the party.
+//   u / v  the Rainbow Lift: from the far end of Cloud Castles round to
+//          the Coral Lagoon's beach, and back. Stand still, then whoosh!
+//   F      (in things.js) the Starfall float past the Moon Rabbit: a
+//          dandelion drift down the Starfall Shaft, home to the rainbow door.
 //
 //  Doorways need you to stand still in them (a paw ring fills up), so a
 //  little player never pops somewhere by accident.
@@ -67,6 +67,11 @@
     return d ? { tx: h.x + d[1], ty: h.y + d[0] } : null;
   }
   function liftTile(ch) { for (const t of W().findThings(ch)) return t; return null; }
+  // the Starfall float lands by the rainbow door, at the living room's west end
+  function landingTile() {
+    const h = home();
+    return h ? { tx: h.x + 5, ty: h.y + 31 } : null;
+  }
   function skylightTile() {
     const h = home();
     return h ? { tx: h.x + h.def.skylight[1], ty: h.y + h.def.skylight[0] } : null;
@@ -424,5 +429,5 @@
     }
   }
 
-  BB.Links = { create, hallDoors, update, draw, drawProgress, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, holdRing, hintRing, arrow, linkKey, HOLD };
+  BB.Links = { create, hallDoors, update, draw, drawProgress, doorSpot, flapSpot, skylightTile, landingTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, holdRing, hintRing, arrow, linkKey, HOLD };
 })(window.BB);
