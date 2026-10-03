@@ -17,6 +17,7 @@
 
     // go('play', opts) — fade through a soft lilac; pause/resume are instant
     go(name, opts) {
+      BB.Voice.stop();
       if (name === 'pause') { this.set('pause'); return; }
       if (name === 'play-resume') { this.scene = BB.Play; this.name = 'play'; BB.Input.clearAll(); return; }
       this.next = { name, opts };
@@ -24,6 +25,7 @@
     },
 
     set(name, opts) {
+      BB.Voice.stop();
       this.name = name;
       this.scene = SCENES[name];
       this.scene.enter(opts || {});
@@ -45,6 +47,8 @@
     },
 
     draw() {
+      const p = BB.Play;
+      document.body.classList.toggle('menu-open', this.name !== 'play' || !!(p.wardrobe || p.gardenChoice || p.portalChoice || p.maze && p.maze.choice || p.cloud && p.cloud.done || p.mini && p.mini.done));
       G.begin();
       const c = G.ctx;
       c.save();
@@ -112,7 +116,16 @@
       BB.Input.pointerDown = p;
       e.preventDefault();
     });
-    cv.addEventListener('pointermove', e => { if (BB.Input.pointerDown) BB.Input.pointerDown = G.toLogical(e.clientX, e.clientY); });
+    cv.addEventListener('pointermove', e => {
+      const p = G.toLogical(e.clientX, e.clientY), I = BB.Input;
+      if (I.pointerDown) I.pointerDown = p;
+      if (e.pointerType === 'mouse' && (!I.pointerPos || p.x !== I.pointerPos.x || p.y !== I.pointerPos.y)) {
+        I.pointerPos = p; I.pointerVersion++;
+      }
+    });
+    cv.addEventListener('pointerleave', () => {
+      if (BB.Input.pointerPos) { BB.Input.pointerPos = null; BB.Input.pointerVersion++; }
+    });
     window.addEventListener('pointerup', () => { BB.Input.pointerDown = null; });
     window.addEventListener('pointercancel', () => { BB.Input.pointerDown = null; });
     window.addEventListener('keydown', unlock);
@@ -129,6 +142,8 @@
       e.preventDefault(); e.stopPropagation();
       unlock();
       if (Main.name === 'play') BB.Play.toggleMap();
+      else if (Main.name === 'pause' && BB.Pause.map) BB.Pause.closeMap();
+      else if (Main.name === 'pause') BB.Pause.activate(2);
     });
     // stepping away from the tablet pauses the game
     document.addEventListener('visibilitychange', () => {
@@ -138,13 +153,35 @@
     BB.Save.load();
     Main.set('title');
     // Developer shortcut (never needed to play): index.html#play=phoebe&room=c4&ab=all
-    // jumps straight into a room, optionally with every power.
+    // jumps straight into a room, optionally with every power; hunt=1 starts
+    // just after Rainbow's rescue (her family is lost). demo=rewards
+    // seeds a save-free preview so a grown-up can try the optional extras.
     const h = location.hash;
     const m = /play=(\w+)/.exec(h);
     if (m) {
       const room = /room=(\w+)/.exec(h), all = /ab=all/.test(h);
-      if (room || all) BB.Save.data = BB.Save.fresh();
+      const demo = /(?:^#|&)demo=rewards(?:&|$)/.test(h);
+      // demo=rainbow: save-free, just after Rainbow's rescue, to find her family
+      const rainbowDemo = /(?:^#|&)demo=rainbow(?:&|$)/.test(h);
+      if (room || all || demo || rainbowDemo) BB.Save.data = BB.Save.fresh();
+      if (demo) {
+        BB.Save.preview = true;
+        BB.World.build();
+        const s = BB.Save.data;
+        for (const th of BB.World.findThings('*').slice(0, 250)) s.sparkles[th.tx + ',' + th.ty] = 1;
+        for (const ch of ['b', 'c']) for (const th of BB.World.findThings(ch)) s.friends[th.tx + ',' + th.ty] = 1;
+        for (const r of BB.World.rooms) if (r.def.family) s.family[r.def.family] = 1;
+        for (const a of BB.Wardrobe.LIST) if (a.boss) s.outfits[a.id] = 1;
+        s.introDone = 1; s.leftHome = 1; s.finale = true;
+      }
       if (all) Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
+      const hunt = s => { BB.World.build(); for (const r of BB.World.rooms) if (r.def.family) s.family[r.def.family] = 1;
+        Object.assign(s, { mazeSolved: true, rainbowUnlocked: true, kinIntro: 1, introDone: 1, leftHome: 1, finale: true }); };
+      if (rainbowDemo) {
+        BB.Save.preview = true; hunt(BB.Save.data); BB.Save.data.kinIntro = 0;
+        Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
+      }
+      if (/hunt=1/.test(h)) hunt(BB.Save.data);
       if (room) {
         BB.World.build();
         const r = BB.World.byId[room[1]];

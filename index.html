@@ -22,7 +22,7 @@
     <div class="tbtn" id="t-right" data-act="right"><svg viewBox="0 0 64 64"><path d="M24 14 L44 32 L24 50" /></svg></div>
     <div class="tbtn" id="t-bubble" data-act="bubble"><svg viewBox="0 0 64 64"><circle cx="30" cy="34" r="15"/><circle cx="46" cy="18" r="7"/><path class="shine" d="M22 28 Q24 23 29 22"/></svg></div>
     <div class="tbtn" id="t-jump" data-act="jump"><svg viewBox="0 0 64 64"><path d="M16 40 L32 22 L48 40" /><path d="M20 50 L44 50" class="thin"/></svg></div>
-    <div class="tbtn" id="t-trick" data-act="down"><svg viewBox="0 0 64 64"><ellipse class="pad" cx="32" cy="39" rx="11" ry="9"/><circle class="pad" cx="19" cy="27" r="5"/><circle class="pad" cx="27" cy="19" r="5"/><circle class="pad" cx="37" cy="19" r="5"/><circle class="pad" cx="45" cy="27" r="5"/></svg></div>
+    <div class="tbtn" id="t-trick" data-act="down" aria-label="Cat tricks"><svg viewBox="0 0 64 64"><path class="trick-face" d="M12 33 L12 19 L22 25 Q28 23 34 25 L44 19 L44 33 Q48 41 40 48 Q28 58 16 48 Q8 42 12 33 Z"/><path class="trick-lines" d="M17 36 Q20 31 23 36 M33 36 Q36 31 39 36 M22 43 Q28 50 34 43"/><path class="trick-note" d="M51 27 L51 12 Q58 14 58 20"/><circle class="trick-beat" cx="47" cy="28" r="4"/></svg></div>
   </div>
 
   <!-- See-through map while you play (also M / Tab / gamepad Select) -->
@@ -36,9 +36,11 @@
   <script src="js/core/config.js"></script>
   <script src="js/core/input.js"></script>
   <script src="js/core/audio.js"></script>
+  <script src="js/core/voice-clips.js"></script>
   <script src="js/core/voice.js"></script>
   <script src="js/core/music.js"></script>
   <script src="js/core/save.js"></script>
+  <script src="js/core/economy.js"></script>
 
   <!-- World data -->
   <script src="js/world/zones.js"></script>
@@ -55,7 +57,9 @@
   <script src="js/world/rooms/autumn.js"></script>
   <script src="js/world/rooms/springs.js"></script>
   <script src="js/world/rooms/starlight.js"></script>
+  <script src="js/world/rooms/links.js"></script>
   <script src="js/world/rooms/home.js"></script>
+  <script src="js/world/rooms/neighbourhood.js"></script>
 
   <!-- Engine -->
   <script src="js/engine/physics.js"></script>
@@ -75,6 +79,7 @@
   <script src="js/render/fx.js"></script>
   <script src="js/render/home.js"></script>
   <script src="js/render/arenas.js"></script>
+  <script src="js/render/neighbourhood.js"></script>
 
   <!-- Things that live in the world -->
   <script src="js/entities/player.js"></script>
@@ -85,6 +90,7 @@
   <script src="js/entities/food.js"></script>
   <script src="js/entities/gestures.js"></script>
   <script src="js/entities/wardrobe.js"></script>
+  <script src="js/entities/cosmetics.js"></script>
   <script src="js/entities/links.js"></script>
   <script src="js/entities/bosses.js"></script>
 
@@ -93,6 +99,14 @@
   <script src="js/scenes/select.js"></script>
   <script src="js/scenes/play.js"></script>
   <script src="js/scenes/play-home.js"></script>
+  <script src="js/scenes/play-garden.js"></script>
+  <script src="js/scenes/play-garden-fun.js"></script>
+  <script src="js/scenes/play-maze.js"></script>
+  <script src="js/scenes/play-journey.js"></script>
+  <script src="js/scenes/play-rainbow.js"></script>
+  <script src="js/scenes/play-cloudmaze.js"></script>
+  <script src="js/scenes/play-minimaze.js"></script>
+  <script src="js/scenes/play-guidance.js"></script>
   <script src="js/scenes/pause.js"></script>
   <script src="js/main.js"></script>
 </body>

@@ -1,0 +1,122 @@
+{
+  "model": "lyria-3.5",
+  "tracks": [
+    {
+      "id": "home",
+      "zone": "The Cat House",
+      "seconds": 97.31,
+      "loopFrom": 10.0,
+      "loopTo": 107.31,
+      "seamJump": 1.19,
+      "gainDb": -0.65
+    },
+    {
+      "id": "gardens",
+      "zone": "Sparkle Gardens",
+      "seconds": 93.18,
+      "loopFrom": 6.4,
+      "loopTo": 99.58,
+      "seamJump": 0.77,
+      "gainDb": -0.72
+    },
+    {
+      "id": "meadow",
+      "zone": "Mushroom Meadow",
+      "seconds": 96.0,
+      "loopFrom": 10.4,
+      "loopTo": 106.4,
+      "seamJump": 0.77,
+      "gainDb": -0.53
+    },
+    {
+      "id": "caves",
+      "zone": "Crystal Caverns",
+      "seconds": 82.68,
+      "loopFrom": 15.6,
+      "loopTo": 98.28,
+      "seamJump": 1.45,
+      "gainDb": -1.22
+    },
+    {
+      "id": "hive",
+      "zone": "Honeycomb Hive",
+      "seconds": 64.02,
+      "loopFrom": 9.4,
+      "loopTo": 73.42,
+      "seamJump": 1.34,
+      "gainDb": -0.96
+    },
+    {
+      "id": "ruins",
+      "zone": "Rainy Ruins",
+      "seconds": 80.19,
+      "loopFrom": 7.0,
+      "loopTo": 87.19,
+      "seamJump": 1.21,
+      "gainDb": -1.11
+    },
+    {
+      "id": "clouds",
+      "zone": "Cloud Castles",
+      "seconds": 75.78,
+      "loopFrom": 6.2,
+      "loopTo": 81.98,
+      "seamJump": 1.68,
+      "gainDb": 0.24
+    },
+    {
+      "id": "lagoon",
+      "zone": "Coral Lagoon",
+      "seconds": 98.51,
+      "loopFrom": 9.6,
+      "loopTo": 108.11,
+      "seamJump": 1.13,
+      "gainDb": -0.81
+    },
+    {
+      "id": "dunes",
+      "zone": "Sunny Dunes",
+      "seconds": 69.4,
+      "loopFrom": 15.6,
+      "loopTo": 85.0,
+      "seamJump": 0.91,
+      "gainDb": -0.61
+    },
+    {
+      "id": "frost",
+      "zone": "Frosty Peaks",
+      "seconds": 98.81,
+      "loopFrom": 8.6,
+      "loopTo": 107.41,
+      "seamJump": 1.03,
+      "gainDb": -0.95
+    },
+    {
+      "id": "autumn",
+      "zone": "Autumn Woods",
+      "seconds": 84.01,
+      "loopFrom": 12.2,
+      "loopTo": 96.21,
+      "seamJump": 0.66,
+      "gainDb": -1.38
+    },
+    {
+      "id": "springs",
+      "zone": "Moonlit Springs",
+      "seconds": 90.0,
+      "loopFrom": 15.2,
+      "loopTo": 105.2,
+      "seamJump": 2.13,
+      "gainDb": -0.44
+    },
+    {
+      "id": "starlight",
+      "zone": "Starlight Sky",
+      "seconds": 64.0,
+      "loopFrom": 16.0,
+      "loopTo": 80.0,
+      "seamJump": 0.55,
+      "gainDb": -1.46
+    }
+  ]
+}

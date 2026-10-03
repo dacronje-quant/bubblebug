@@ -13,6 +13,14 @@
 
     clampTo(room, x, y) {
       const G = BB.G;
+      // Home and its outdoor rooms share one continuous camera space.
+      // Seeing the next room before entering it makes the walk legible.
+      if (room.def.cameraGroup) {
+        const group = BB.World.rooms.filter(r => r.def.cameraGroup === room.def.cameraGroup);
+        const x0 = Math.min(...group.map(r => r.px)), y0 = Math.min(...group.map(r => r.py));
+        const x1 = Math.max(...group.map(r => r.px + r.pw)), y1 = Math.max(...group.map(r => r.py + r.ph));
+        return { x: BB.clamp(x, x0, x1 - G.W), y: BB.clamp(y, y0, y1 - G.H) };
+      }
       return {
         x: BB.clamp(x, room.px, room.px + room.pw - G.W),
         y: BB.clamp(y, room.py, room.py + room.ph - G.H),
@@ -36,7 +44,11 @@
       this.slide = null;
     },
 
-    startSlide(room, p) {
+    startSlide(room, p, fromRoom) {
+      if (fromRoom && room.def.cameraGroup && room.def.cameraGroup === fromRoom.def.cameraGroup) {
+        this.slide = null;
+        return;
+      }
       const to = this.targetFor(room, p);
       this.slide = { from: { x: this.x, y: this.y }, to, t: 0, dur: C.ROOM_SLIDE };
     },

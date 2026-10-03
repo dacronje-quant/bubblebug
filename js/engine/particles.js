@@ -56,6 +56,11 @@
       for (let i = 0; i < 12; i++) spawn({ kind: 'dot', x, y, vx: (Math.random() - 0.5) * 4, vy: -2 - Math.random() * 3, g: 0.25, life: 30, size: 2 + Math.random() * 2, color });
       spawn({ kind: 'ring', x, y, life: 24, size: 18, color });
     },
+    // a little guiding star that flies from (x, y) toward (tx, ty)
+    guide(x, y, tx, ty, color) {
+      const d = Math.hypot(tx - x, ty - y) || 1, sp = 2.6;
+      spawn({ kind: 'star', x, y, vx: (tx - x) / d * sp, vy: (ty - y) / d * sp, life: Math.max(12, Math.min(60, d / sp)), size: 3.4, color, drag: 1, vr: 0.12 });
+    },
     trail(kind, x, y, color) { spawn({ kind, x, y, vx: (Math.random() - 0.5) * 0.4, vy: -0.3 - Math.random() * 0.3, life: 26, size: 2.5 + Math.random() * 1.5, color, drag: 0.97 }); },
 
     update() {
@@ -76,6 +81,12 @@
         const k = p.life / p.max;
         c.globalAlpha = Math.min(1, k * 1.6);
         switch (p.kind) {
+          case 'paw':
+            BB.Gestures.drawPaw(c, x, y, p.size * 0.12, p.color, p.color);
+            break;
+          case 'flower':
+            BB.Cosmetics.flower(c, x, y, p.size, p.color);
+            break;
           case 'spark':
             c.fillStyle = p.color; G.twinkle(x, y, p.size * (0.5 + k), c); c.fill();
             break;

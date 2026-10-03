@@ -1,8 +1,8 @@
 // ════════════════════════════════════════════════════════════════
 //  ZONES — the twelve biomes of the Rainbow Kingdom, plus the Cat House.
 //  Zones 0–5 run west → east along the bottom of the ring; zones 6–11
-//  (dir: -1) run back east → west along the top, and the Cat House sits
-//  in the middle.
+//  (dir: -1) run back east → west along the top. The Cat House and its
+//  neighbourhood sit beside the western Sparkle Gardens.
 //  Palettes drive the procedural tile art, parallax painter, ambient
 //  particles and lighting. `cast` lists the gloomy critters who live in
 //  each zone: the `b` / `c` map characters take turns through their list,
@@ -144,7 +144,7 @@
       ambient: 'stars', dark: 0.15,
       cast: { b: ['dragon', 'unicorn', 'bunny'], c: ['lamb', 'bat'] },
     },
-    { // 12 ─ The Cat House (home, in the middle of the ring)
+    { // 12 ─ The Cat House (beside the western Sparkle Gardens)
       key: 'home', name: 'The Cat House',
       sky: ['#f7dcc0', '#f2c9a4', '#e7b489'],
       far: '#e9c29a', mid: '#d9a97c', near: '#c48c5c',
@@ -158,5 +158,18 @@
   ];
   // which way is onward in a zone: the return half of the ring runs west
   BB.zoneDir = z => (BB.ZONES[z] && BB.ZONES[z].dir) || 1;
+  // …and inside one room (a mirror-image room runs the other way round)
+  BB.roomDir = room => BB.zoneDir(room.zone) * (room.def && room.def.flip ? -1 : 1);
+  // every room in the order you meet it, zone by zone (side rooms right
+  // after the room you reach them from): "behind you" and "the flap you
+  // meet first" follow this, so a zone may bend round corners on the map
+  BB.STORY = [
+    'tw g1 g2 g5 g3 g4 gd g6', 'm1 m2 m3 mg tx m4 m6 mh m7 m5', 'c1 c6 c2 c3 c4 c7 c5',
+    'tg h1 h2 h5 h3 h4 h6', 'hl r1 r2 r6 r3 r4 r5 r7', 'rl k1 k2 k6 k3 k4 k5',
+    'l1 l2 l3 l4 lb l5 l6 l7', 'd1 dl d2 d3 db d4 d5 d6', 'fl f1 f2 f3 f4 fb f5 f6',
+    'al a1 a2 a3 am a4 a5 a6 ab', 'sl s1 s2 s3 s4 s5 s6 sb', 'tl t1 tm t2 tb tn t3 t4 t6 t5',
+  ].join(' ').split(' ');
+  // a room's place in the story (rooms not listed keep their file order, after the listed ones)
+  BB.storyIndex = room => { const i = BB.STORY.indexOf(room.id); return i < 0 ? 1000 + (room.order || 0) : i; };
   BB.HOME_ZONE = 12;
 })(window.BB);

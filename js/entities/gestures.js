@@ -1,8 +1,8 @@
 // ════════════════════════════════════════════════════════════════
 //  GESTURES — twelve little cat tricks hidden around the kingdom, one
-//  per zone, each in a golden paw bubble (j on the map). Touch one and
+//  per zone, each in a smiling-cat music bubble (j on the map). Touch one and
 //  your kitten learns that trick; then press ▼ (S, a gamepad's D-pad
-//  down, or the paw button on a touchscreen) to do it. Each press does
+//  down, or the smiling-cat button on a touchscreen) to do it. Each press does
 //  the next trick you know, round and round. Tricks are just for fun:
 //  moving, jumping or blowing a bubble stops one straight away.
 // ════════════════════════════════════════════════════════════════
@@ -28,6 +28,7 @@
     { id: 'wash', zone: 9, len: 150 },      // a paw-lick face wash
     { id: 'stretch', zone: 10, len: 140 },  // a big stretch and a yawn
     { id: 'dance', zone: 11, len: 160 },    // a hoppy happy dance
+    { id: 'twirl', zone: -1, len: 120 },    // optional heart-fountain celebration
   ];
   const BY = Object.fromEntries(LIST.map(g => [g.id, g]));
   const forZone = zone => LIST.find(g => g.zone === zone);
@@ -35,7 +36,7 @@
   const env = (k, a, b) => (k < a ? k / a : k > b ? Math.max(0, (1 - k) / (1 - b)) : 1);
   const ramp = (k, a, b) => BB.clamp((k - a) / (b - a), 0, 1);
 
-  // ──── The golden paw bubble you find ────
+  // ──── The cat-trick bubble you find ────
   function create(thing, room, save) {
     const g = forZone(room.zone);
     if (!g || (save.gestures || {})[g.id]) return null;
@@ -61,6 +62,23 @@
     c.restore();
   }
 
+  // A happy performing kitten and music note distinguish tricks from
+  // the paw prints used for paths, entrances and menu selection.
+  function drawIcon(c, x, y, s = 1, col = '#ffd84a', line = '#9b6a29') {
+    c.save(); c.translate(x, y); c.scale(s, s);
+    c.fillStyle = col; c.strokeStyle = line; c.lineWidth = 1.5; c.lineJoin = 'round'; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(-12, -3); c.lineTo(-12, -11); c.lineTo(-6, -7);
+    c.quadraticCurveTo(-3, -8, 0, -7); c.lineTo(6, -11); c.lineTo(6, -3); c.closePath(); c.fill(); c.stroke();
+    G().ellipse(-3, 2, 10, 8.5, 0, c); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(-9, 0); c.quadraticCurveTo(-7, -3, -5, 0);
+    c.moveTo(-1, 0); c.quadraticCurveTo(1, -3, 3, 0);
+    c.moveTo(-7, 4); c.quadraticCurveTo(-3, 9, 1, 4); c.stroke();
+    c.strokeStyle = col; c.lineWidth = 2.5;
+    c.beginPath(); c.moveTo(12, -2); c.lineTo(12, -13); c.quadraticCurveTo(17, -12, 17, -8); c.stroke();
+    G().ellipse(10, -1, 3, 2.2, -0.25, c); c.fill();
+    c.restore();
+  }
+
   function draw(c, th, cam) {
     const x = th.x - cam.x, y = th.y - cam.y + Math.sin(th.t * 0.05) * 4;
     if (x < -60 || x > G().W + 60 || y < -60 || y > G().H + 60) return;
@@ -74,8 +92,8 @@
       c.strokeStyle = col; c.beginPath(); c.arc(x, y, r - 1.5 - i * 1.6, th.t * 0.02 + i, th.t * 0.02 + i + 1.4); c.stroke();
     });
     c.restore();
-    // …with a golden paw print inside, giving a little wave
-    drawPaw(c, x, y + 1, 1 + Math.sin(th.t * 0.1) * 0.06, '#ffd84a', '#b8860b');
+    // …with the same smiling-cat symbol as the gesture button and HUD
+    drawIcon(c, x - 1, y + 1, 0.92 + Math.sin(th.t * 0.1) * 0.04);
     if (th.t % 70 < 20) {
       const k = (th.t % 70) / 20;
       c.fillStyle = `rgba(255,255,255,${Math.sin(k * Math.PI)})`;
@@ -133,6 +151,10 @@
         if (g.t % 32 === 8 && b.grounded) { b.vy = -4.4; b.grounded = false; }
         if (g.t % 16 === 0) PT().burst('confetti', cx, top - 8, 3, { speed: 2, g: 0.06, life: 50 });
         break;
+      case 'twirl':
+        if (g.t === 2) S().outfit();
+        if (g.t % 20 === 0) PT().burst('confetti', cx, top - 8, 4, { speed: 2, g: 0.06, life: 45 });
+        break;
     }
     if (g.t >= g.len) { pl.gesture = null; pl.happyT = Math.max(pl.happyT, 30); }
   }
@@ -189,6 +211,7 @@
         if (!grounded) return false;
         p.mode = 'stand'; p.squash = 1 + Math.sin(t * 0.4) * 0.06;
         return true;
+      case 'twirl': p.mode = 'stand'; p.happy = true; p.squash = 1 + Math.sin(t * 0.3) * 0.06; return true;
     }
     return false;
   }
@@ -201,8 +224,9 @@
     if (id === 'roll') return { rot: BB.easeInOut(Math.min(1, t / g.len)) * TAU, flip: 1 };
     if (id === 'chase') return { rot: 0, flip: Math.floor(t / 9) % 2 ? -1 : 1 };
     if (id === 'dance') return { rot: Math.sin(t * 0.2) * 0.12, flip: Math.floor((t + 8) / 32) % 2 ? -1 : 1 };
+    if (id === 'twirl') return { rot: Math.sin(t * 0.2) * 0.18, flip: Math.floor(t / 18) % 2 ? -1 : 1 };
     return null;
   }
 
-  BB.Gestures = { LIST, BY, forZone, create, update, draw, drawPaw, start, tick, pose, transform };
+  BB.Gestures = { LIST, BY, forZone, create, update, draw, drawPaw, drawIcon, start, tick, pose, transform };
 })(window.BB);

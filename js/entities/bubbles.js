@@ -12,8 +12,8 @@
   const T = C.TILE;
   const list = [];
 
-  function blow(x, y, dir, vx, cat) {
-    list.push({ x, y, vx: dir * C.BUBBLE_SPEED + vx * 0.35, vy: -0.25, life: C.BUBBLE_LIFE, r: 3, dir, cat, t: 0, seed: Math.random() * 10 });
+  function blow(x, y, dir, vx, cat, style = 'classic') {
+    list.push({ x, y, vx: dir * C.BUBBLE_SPEED + vx * 0.35, vy: -0.25, life: C.BUBBLE_LIFE, r: 3, dir, cat, style, t: 0, seed: Math.random() * 10 });
     BB.Audio.sfx.bubble(cat);
     BB.Particles.burst('dot', x, y, 3, { color: '#ffffff', speed: 1, life: 12, size: 2 });
   }
@@ -22,6 +22,8 @@
     BB.Audio.sfx.pop(big ? 0.8 : 1 + Math.random() * 0.2);
     BB.Particles.ring(b.x, b.y, '#ffffff', b.r + 4);
     BB.Particles.burst('dot', b.x, b.y, 6, { color: '#e8fbff', speed: 2, life: 16, size: 1.8 });
+    if (b.style === 'flower') BB.Particles.burst('flower', b.x, b.y, 5, { color: '#ffb3cf', speed: 1.5, life: 32, size: 4 });
+    if (b.style === 'rainbow') for (const col of BB.RAINBOW) BB.Particles.burst('spark', b.x, b.y, 1, { color: col, speed: 2.2, life: 28 });
   }
 
   // targets: [{ x, y, r, homing, hit(bubble) → true if consumed }]
@@ -52,7 +54,8 @@
 
       if (b.t % 5 === 0) {
         const m = b.cat === 'marshmallow';
-        BB.Particles.trail(m ? 'heart' : 'star', b.x - b.vx * 2, b.y, m ? '#ffc6e6' : '#ffe27a');
+        const heart = b.style === 'heart' || (b.style === 'classic' && m);
+        BB.Particles.trail(heart ? 'heart' : 'star', b.x - b.vx * 2, b.y, heart ? '#ffc6e6' : '#ffe27a');
       }
 
       let gone = false;
@@ -75,7 +78,7 @@
       const cat = BB.CATS[b.cat];
       const tint = (Math.floor(b.t / 12) % 2) ? cat.bubbleTint : cat.bubbleTint2;
       const fade = Math.min(1, b.life / 12);
-      BB.G.bubble(b.x - cam.x, b.y - cam.y, b.r * (1 + Math.sin(b.t * 0.3) * 0.05), tint, 0.95 * fade, c);
+      BB.Cosmetics.bubble(c, b.style, b.x - cam.x, b.y - cam.y, b.r * (1 + Math.sin(b.t * 0.3) * 0.05), tint, 0.95 * fade, b.t);
     }
   }
 

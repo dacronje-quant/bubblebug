@@ -10,7 +10,7 @@
 //
 //  For each story stage (no powers → +Double Jump → … → +Star Wings) it
 //  checks:
-//    1. the next elder (or, at the end, the Rainbow Slide home) is reachable, and
+//    1. the next elder (or, at the end, the Starfall float home) is reachable, and
 //    2. from EVERY spot you can reach in that stage, the goal is still
 //       reachable (zero softlocks — falling in water or mist always floats
 //       you back to safety, and that rescue is modelled too), and
@@ -20,13 +20,15 @@
 //  With every power it also checks you can always travel home to the start
 //  (for backtracking to secrets), that every gate can be opened, and that
 //  every collectible, critter, boss, puzzle piece, snack, cat trick and
-//  hidden family member is reachable. (A too-sad pop-back only returns the kitten to a spot it
+//  hidden glasses and family member is reachable. (A too-sad pop-back only returns the kitten to a spot it
 //  already stood on, so it can't create a softlock.)
 //
 //  Stages start at the previous elder, so they're independent and run in
 //  parallel worker threads (one per CPU core).
 //
-//  Usage:  node tools/verify-world.js [--map ROOM_ID] [--stage N]
+//  Usage: node tools/verify-world.js [--easy] [--replay] [--jobs N] [--map ID] [--stage N]
+//  Default: Medium / Hard's original movement. --easy uses Easy's assists.
+//  --replay starts with all powers at home and every gate still closed.
 //  Exit code 0 = every check passed.
 // ════════════════════════════════════════════════════════════════
 'use strict';
@@ -54,6 +56,8 @@ const BB = global.BB;
 const W = BB.World.build();
 const C = BB.CFG, T = C.TILE;
 const P = BB.Physics, FX = BB.FX;
+const EASY = isMainThread ? process.argv.includes('--easy') : !!workerData.easy;
+const REPLAY = isMainThread ? process.argv.includes('--replay') : !!workerData.replay;
 
 // The order elders give their gifts in
 const POWERS = ['doubleJump', 'wallClimb', 'glow', 'float', 'swim', 'dig', 'spring', 'rings', 'bubbleBounce', 'wings'];
@@ -61,7 +65,7 @@ const NAMES = {
   doubleJump: 'Butterfly Elder (Double Jump)', wallClimb: 'Snail Elder (Sticky Paws)', glow: 'Firefly Elder (Glow)',
   float: 'Dandelion Elder (Float)', swim: 'Sea Turtle Elder (Swim)', dig: 'Tortoise Elder (Mighty Paws)',
   spring: 'Snow Hare Elder (Spring Paws)', rings: 'Badger Elder (Fairy Rings)', bubbleBounce: 'Otter Elder (Bubble Bounce)',
-  wings: 'Star Whale (Star Wings)', finale: 'the Rainbow Slide home',
+  wings: 'Star Whale (Star Wings)', finale: 'the Starfall float home',
 };
 const STAGES = POWERS.map((goal, i) => ({ i, goal, have: POWERS.slice(0, i) }))
   .concat([{ i: POWERS.length, goal: 'finale', have: POWERS.slice() }]);
@@ -159,7 +163,7 @@ function simulate(node, pl, ab, cover) {
   // a long, slow swim through deep water may take a while longer
   for (let t = 0; t < maxT || (p.inWater && t < 1600); t++) {
     const inp = planInput(pl, t, st);
-    const fx = P.step(p, inp, ab);
+    const fx = P.step(p, inp, ab, EASY);
     if (cover) {
       const tx0 = Math.floor(p.x / T), tx1 = Math.floor((p.x + p.w - 1) / T);
       const ty0 = Math.floor(p.y / T), ty1 = Math.floor((p.y + p.h - 1) / T);
@@ -271,8 +275,8 @@ function bubbleable(nodes, tx, ty) {
 // A flap takes you home (stand still in it); walking within 90px of a flap
 // lights its door up at home, and a lit door takes you back to the furthest
 // flap of that zone found so far (only there — the old target is dropped).
-// The front door always leads out to the garden gate. The lift runs both
-// ways; the Rainbow Slide at the very end goes home through the skylight.
+// The front door is walked through; the other doors remain links. The lift runs both
+// ways; the Starfall float at the very end drifts home to the rainbow door.
 function buildLinks() {
   const L = BB.Links, out = [];
   for (let z = 0; z < 12; z++) L.flapTiles(z).forEach((t, idx) => {
@@ -282,13 +286,16 @@ function buildLinks() {
   });
   // a door opens at the furthest flap found so far (its target is set in the search)
   const h = L.home();
-  for (const z of Object.keys((h && h.def.doors) || {}).map(Number)) out.push({ from: L.doorSpot(z), to: z === 0 ? L.flapSpot(0) : null, door: z });
+  for (const z of Object.keys((h && h.def.doors) || {}).map(Number)) {
+    if (z === 0 && h.def.walkOut) continue;
+    out.push({ from: L.doorSpot(z), to: z === 0 ? L.flapSpot(0) : null, door: z });
+  }
   const u = W.findThings('u')[0], v = W.findThings('v')[0];
   if (u && v) {
     out.push({ from: L.spot(u.tx, u.ty), to: L.spot(v.tx, v.ty), lift: true });
     out.push({ from: L.spot(v.tx, v.ty), to: L.spot(u.tx, u.ty), lift: true });
   }
-  const f = W.findThings('F')[0], sk = L.skylightTile();
+  const f = W.findThings('F')[0], sk = L.landingTile();
   if (f && sk) out.push({ from: { x: f.tx * T + 16, y: f.ty * T + 16 }, to: L.spot(sk.tx, sk.ty), slide: true });
   return out;
 }
@@ -320,7 +327,7 @@ function exploreWithGates(starts, ab, startRoom = null) {
   const behind = room => {
     if (!startRoom) return false;
     if (zoneOrder(room.zone) !== zoneOrder(startRoom.zone)) return zoneOrder(room.zone) < zoneOrder(startRoom.zone);
-    return BB.zoneDir(room.zone) > 0 ? room.x + room.w <= startRoom.x : room.x >= startRoom.x + startRoom.w;
+    return BB.storyIndex(room) < BB.storyIndex(startRoom);
   };
   for (const room of W.rooms) {
     if (behind(room) && room.grid.some(r => r.includes('G'))) { W.openGates(room); opened.add(room.id); }
@@ -454,7 +461,7 @@ function goalThing(goal) {
 }
 
 function startFor(stage) {
-  if (stage.i === 0) { const s = W.findThings('S')[0]; return s ? spotFor(s.tx, s.ty) : null; }
+  if (stage.i === 0 || REPLAY) { const s = W.findThings('S')[0]; return s ? spotFor(s.tx, s.ty) : null; }
   const prev = goalThing(POWERS[stage.i - 1]);
   return prev ? spotFor(prev.tx, prev.ty) : null;
 }
@@ -483,7 +490,7 @@ function runStage(stage, mapRoom) {
   if (!th) { fail(`goal "${stage.goal}" is not placed in the world`); return { out, failures }; }
 
   const startRoom = W.roomAtPx(start.x + 10, start.y + 12);
-  const res = exploreWithGates([start], ab, stage.i === 0 ? null : startRoom);
+  const res = exploreWithGates([start], ab, stage.i === 0 || REPLAY ? null : startRoom);
   out.push(`  explored ${res.nodes.size} standing spots (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
   const keys = [];
   for (const n of res.nodes.values()) {
@@ -516,6 +523,14 @@ function runStage(stage, mapRoom) {
   if (leaks.length) fail('gated room(s) reachable too early: ' + leaks.map(r => `${r.id} (needs ${r.def.needs})`).join(', '));
   else if (W.rooms.some(r => r.def.needs && !stage.have.includes(r.def.needs))) pass('every power gate holds (no sneaking ahead)');
 
+  if (stage.i === 0) {
+    const missing = W.rooms.filter(r => r.def.neighbourhood && !r.def.maze).flatMap(r => r.things
+      .filter(t => t.ch === '*' && !touched(res.cover, t.tx, t.ty, 0))
+      .map(t => `${r.id} (${t.tx - r.x},${t.ty - r.y})`));
+    if (missing.length) fail('neighbourhood rewards unreachable without powers: ' + missing.join(', '));
+    else pass('every adventure neighbourhood reward is reachable without powers (post-game maze checked separately)');
+  }
+
   if (stage.goal === 'finale') {
     // Backtracking: with every power, can every spot get back to the start?
     const s = W.findThings('S')[0], sp = spotFor(s.tx, s.ty);
@@ -530,24 +545,25 @@ function runStage(stage, mapRoom) {
     // Collectibles, critters and family members
     const missing = [];
     for (const room of W.rooms) {
+      if (room.def.maze) continue; // post-game four-direction search: tools/test-maze.js
       for (const t of room.things) {
         const at = `in ${room.id} at (${t.tx - room.x},${t.ty - room.y})`;
-        if ('*TBnfy&eWjhuv'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
+        if ('*TBnfy&@eWjhuva'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, t.ch === '*' || t.ch === 'T' || t.ch === 'a' ? 0 : 1)) missing.push(`${t.ch} ${at}`);
         if ('bc'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 4)) missing.push(`critter ${at}`);
         if ('PdAkZVO'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 1)) missing.push(`puzzle piece ${t.ch} ${at}`);
         if ('QK'.includes(t.ch) && !touched(res.cover, t.tx, t.ty, 3)) missing.push(`boss ${at}`);
         if (t.ch === 'o' && !bubbleable(res.nodes, t.tx, t.ty)) missing.push(`bud ${at} can't be bubbled`);
       }
     }
-    const unvisited = W.rooms.filter(r => !roomTouched(res.cover, r));
+    const unvisited = W.rooms.filter(r => !r.def.maze && !roomTouched(res.cover, r));
     if (unvisited.length) fail('rooms never entered: ' + unvisited.map(r => r.id).join(', '));
     if (missing.length) { fail(`${missing.length} collectible(s)/landmark(s) out of reach:`); missing.forEach(m => out.push('      ' + m)); }
-    else pass('every sparkle, toy, bench, flower, firefly, critter, family member, boss, puzzle piece, snack, cat trick, cat flap and lift is reachable');
+    else pass('every sparkle, toy, bench, flower, firefly, critter, family member, rainbow relative, boss, puzzle piece, snack, cat trick, cat flap and lift is reachable');
     const shut = W.rooms.filter(r => r.grid.some(row => row.includes('G')));
     if (shut.length) fail('gates that never opened: ' + shut.map(r => r.id).join(', '));
     else pass('every gate can be opened (all bosses cheered up, all puzzles solvable)');
     out.push(`  (${W.rooms.length} rooms · ${W.findThings('*').length} sparkles · ${W.findThings('b').length + W.findThings('c').length} gloomy critters · ` +
-      `${W.findThings('T').length} toys · ${W.findThings('&').length} family members · ${W.findThings('B').length} benches · ` +
+      `${W.findThings('T').length} toys · ${W.findThings('&').length} family members · ${W.findThings('@').length} of Rainbow's relatives · ${W.findThings('B').length} benches · ` +
       `${W.findThings('Q').length + W.findThings('K').length} bosses · ${W.rooms.filter(r => r.things.some(t => 'PAZV'.includes(t.ch))).length} puzzles · ` +
       `${W.findThings('e').length} treats · ${W.findThings('W').length} food bowls · ${W.findThings('j').length} cat tricks)`);
 
@@ -571,21 +587,24 @@ function runStage(stage, mapRoom) {
 if (isMainThread) {
   const args = process.argv.slice(2);
   const mapRoom = args.includes('--map') ? args[args.indexOf('--map') + 1] : null;
-  const only = args.includes('--stage') ? +args[args.indexOf('--stage') + 1] : null;
+    const only = args.includes('--stage') ? +args[args.indexOf('--stage') + 1] : REPLAY ? POWERS.length : null;
   const todo = STAGES.filter(s => only == null || s.i === only);
   const t0 = Date.now();
   const results = new Array(STAGES.length);
   let next = 0, running = 0;
-  const cores = Math.max(1, Math.min(os.cpus().length, todo.length));
-  console.log(`Verifying ${W.rooms.length} rooms across ${todo.length} story stage(s) on ${cores} thread(s)…`);
+  const jobs = args.includes('--jobs') ? Number(args[args.indexOf('--jobs') + 1]) : os.cpus().length;
+  if (!Number.isInteger(jobs) || jobs < 1 || (only != null && !STAGES[only])) throw new Error('Use --jobs N (N > 0) and --stage 0…10');
+  const cores = Math.max(1, Math.min(jobs, todo.length));
+  console.log(`Verifying ${W.rooms.length} rooms in ${EASY ? 'Easy (assists)' : 'Medium / Hard (original movement)'} across ${todo.length} story stage(s) on ${cores} thread(s)…`);
   const launch = () => {
     while (running < cores && next < todo.length) {
       const stage = todo[next++];
       running++;
-      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom } });
+      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom, easy: EASY, replay: REPLAY } });
       w.on('message', r => {
         results[stage.i] = r;
-        console.log(`  · finished: ${NAMES[stage.goal]} (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
+        console.log(`  · ${r.failures ? 'FAILED' : 'passed'}: ${NAMES[stage.goal]} (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
+        if (r.failures) console.log(r.out.filter(line => line.includes('✗')).join('\n'));
       });
       w.on('error', e => { results[stage.i] = { out: ['  ✗ worker crashed: ' + e.stack], failures: 1 }; });
       w.on('exit', () => { running--; if (next < todo.length) launch(); else if (running === 0) finish(); });

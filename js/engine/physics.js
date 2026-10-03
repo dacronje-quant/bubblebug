@@ -42,6 +42,14 @@
 
   // Powers in effect for the current step (sandstone solidity depends on them)
   let AB = {};
+  let EASY = false;
+  const landingXs = p => EASY
+    ? [p.x - C.EASY_EDGE_GRACE, p.x + p.w / 2, p.x + p.w + C.EASY_EDGE_GRACE]
+    : [p.x + 2, p.x + p.w / 2, p.x + p.w - 2];
+  const outsideFoot = (p, px) => px < p.x || px >= p.x + p.w;
+  // Extra edge reach applies to an exposed top, never a tile down the
+  // side of a wall (which would create invisible stairs without claws).
+  const exposedEdge = (p, px, ty) => !outsideFoot(p, px) || !solidSide(W().tile(Math.floor(px / T), ty - 1));
 
   // ── Tile classification ──
   // side/ceiling solidity: out-of-world counts as a wall (invisible edge)
@@ -95,8 +103,9 @@
     return grip(p.y + p.h * 0.5) || grip(p.y + 4);
   }
 
-  function step(p, inp, ab) {
+  function step(p, inp, ab, easy = false) {
     AB = ab;
+    EASY = easy;
     p.fx = 0;
     const wasGrounded = p.grounded;
     const wasInWater = p.inWater;
@@ -111,15 +120,15 @@
     let acc;
     if (swim) acc = dir ? 0.4 : 0.25;
     else if (p.grounded) acc = dir ? C.ACC_GROUND : C.DEC_GROUND;
-    else acc = dir ? C.ACC_AIR : C.DEC_AIR;
+    else acc = dir ? (easy ? C.EASY_ACC_AIR : C.ACC_AIR) : (easy ? C.EASY_DEC_AIR : C.DEC_AIR);
     // turning around is always crisp
     if (dir && BB.sign(p.vx) === -dir) acc *= 1.6;
     p.vx = BB.approach(p.vx, target, acc);
     if (dir && !p.climbing) p.facing = dir;
 
     // ── Timers ──
-    if (p.grounded) { p.coyote = C.COYOTE; p.airTicks = 0; } else { if (p.coyote > 0) p.coyote--; p.airTicks++; }
-    if (inp.jumpPressed) p.jumpBuf = C.BUFFER; else if (p.jumpBuf > 0) p.jumpBuf--;
+    if (p.grounded) { p.coyote = easy ? C.EASY_COYOTE : C.COYOTE; p.airTicks = 0; } else { if (p.coyote > 0) p.coyote--; p.airTicks++; }
+    if (inp.jumpPressed) p.jumpBuf = easy ? C.EASY_BUFFER : C.BUFFER; else if (p.jumpBuf > 0) p.jumpBuf--;
     if (swim) p.jumpBuf = 0; // underwater, holding jump swims instead
 
     // ── Wall climbing (Snail Elder) ──
@@ -185,7 +194,7 @@
     } else {
       let g;
       if (p.vy < 0) g = (inp.jump || p.bouncing) ? C.G_UP : C.G_CUT;
-      else { g = C.G_DOWN; p.bouncing = false; }
+      else { g = easy && p.vy < 1.6 && !p.grounded ? C.EASY_APEX_GRAVITY : C.G_DOWN; p.bouncing = false; }
       p.vy += g;
       if (ab.float && inp.jump && p.vy > C.FLOAT_FALL && !p.grounded) {
         p.vy = BB.approach(p.vy, C.FLOAT_FALL, 1.2);
@@ -263,7 +272,8 @@
   function feetKind(p, fy, ab, resting) {
     const ty = Math.floor(fy / T);
     let best = 0;
-    for (const px of [p.x + 2, p.x + p.w / 2, p.x + p.w - 2]) {
+    for (const px of landingXs(p)) {
+      if (!exposedEdge(p, px, ty) || (resting && outsideFoot(p, px) && Math.abs(p.y + p.h - ty * T) > 1.5)) continue;
       const k = landKind(W().tile(Math.floor(px / T), ty), ab);
       if (k === 1) return 1;
       if (k > best) best = k;
@@ -287,7 +297,7 @@
 
     // Ledge assist: only our feet clipped the ledge → hop up onto it.
     const feet = p.y + p.h;
-    if (feet - hitTop <= C.LEDGE_ASSIST && p.vy > -3 && !rectSolid(nx, hitTop - p.h, p.w, p.h)) {
+    if (feet - hitTop <= (EASY ? C.EASY_LEDGE_ASSIST : C.LEDGE_ASSIST) && p.vy > -3 && !rectSolid(nx, hitTop - p.h, p.w, p.h)) {
       p.y = hitTop - p.h;
       p.x = nx;
       if (p.vy > 0) p.vy = 0;
@@ -307,7 +317,8 @@
       const top = ty * T;
       let kind = 0;
       if (newFeet > top) {
-        for (const px of [p.x + 2, p.x + p.w / 2, p.x + p.w - 2]) {
+        for (const px of landingXs(p)) {
+          if (!exposedEdge(p, px, ty) || (outsideFoot(p, px) && oldFeet > top + 0.01)) continue;
           const k = landKind(W().tile(Math.floor(px / T), ty), ab);
           if (!k) continue;
           if (k === 2 && oldFeet > top + 0.01) continue;     // one-way: only from above
@@ -338,11 +349,11 @@
       // Corner slip: only one corner bonked → slide around it
       if (hitL && !hitR && !hitM) {
         const push = (Math.floor(l / T) + 1) * T - p.x;
-        if (push <= C.CORNER_SLIP && !rectSolid(p.x + push, ny, p.w, p.h)) { p.x += push; p.y = ny; return; }
+        if (push <= (EASY ? C.EASY_CORNER_SLIP : C.CORNER_SLIP) && !rectSolid(p.x + push, ny, p.w, p.h)) { p.x += push; p.y = ny; return; }
       }
       if (hitR && !hitL && !hitM) {
         const push = p.x + p.w - Math.floor(r / T) * T;
-        if (push <= C.CORNER_SLIP && !rectSolid(p.x - push, ny, p.w, p.h)) { p.x -= push; p.y = ny; return; }
+        if (push <= (EASY ? C.EASY_CORNER_SLIP : C.CORNER_SLIP) && !rectSolid(p.x - push, ny, p.w, p.h)) { p.x -= push; p.y = ny; return; }
       }
       p.y = (ty + 1) * T;
       p.vy = 0;

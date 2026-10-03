@@ -245,6 +245,7 @@
             if (stone.i >= stone.seq.length) {
               stone.phase = 'done';
               ctx.save.songs[th.room] = 1;
+              BB.Save.write(); // save the song/reward before its delayed gate celebration
               const bells = ctx.entsOf(room).filter(b => b.type === 'bell');
               bells.forEach((b, k) => ctx.later(10 + k * 8, () => ringBell(b, true)));
               ctx.later(40, () => { S().songDone(); ctx.tryOpen(room); });
@@ -285,7 +286,7 @@
   function gateSpot(room) {
     // the top of the gate furthest along the way onward (east, or west on
     // the return half of the ring)
-    const dir = BB.zoneDir(room.zone);
+    const dir = BB.roomDir(room);
     const isG = (r, c) => c >= 0 && c < room.w && (room.grid[r][c] === 'G' || room.grid[r][c] === 'g');
     let best = null;
     for (let r = 0; r < room.h; r++) for (let c = 0; c < room.w; c++) {

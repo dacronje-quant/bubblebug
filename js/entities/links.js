@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════════════════════
 //  LINKS — the ways between places that aren't just walking off a room's
-//  edge. The Cat House sits in the middle of the ring of zones:
+//  edge. The Cat House connects to the ring through its neighbourhood:
 //
 //   h      a cat flap: two in every zone, one near its start (in Sparkle
 //          Gardens it's the garden gate) and one by its boss. Stand in one
@@ -9,12 +9,12 @@
 //          always opens at the furthest flap you've reached in that zone.
 //   doors  the door hall in the Cat House (its room's `doors`): one door
 //          per zone, glowing once its flap has been found. Stand in a lit
-//          door to go back to that zone's flap. Door 0 is the front door,
-//          which always leads out to the garden gate.
-//   u / v  the Rainbow Lift: from the bottom of Cloud Castles up to the
-//          beach of the Sky Lagoon, and back. Walk in and whoosh!
-//   F      (in things.js) the Rainbow Slide at the top of Starlight Sky,
-//          which slides you home through the skylight for the party.
+//          door to go back to that zone's flap. Door 0 is a physical front
+//          door: walk through it into the garden without a teleport.
+//   u / v  the Rainbow Lift: from the far end of Cloud Castles round to
+//          the Coral Lagoon's beach, and back. Stand still, then whoosh!
+//   F      (in things.js) the Starfall float past the Moon Rabbit: a
+//          dandelion drift down the Starfall Shaft, home to the rainbow door.
 //
 //  Doorways need you to stand still in them (a paw ring fills up), so a
 //  little player never pops somewhere by accident.
@@ -28,7 +28,7 @@
   const W = () => BB.World;
   const PT = () => BB.Particles;
   const S = () => BB.Audio.sfx;
-  const HOLD = 36; // ticks standing still in a doorway
+  const HOLD = C.INTERACT_HOLD;
 
   const home = () => W().rooms.find(r => r.def.home);
   function floorBelow(tx, ty) {
@@ -44,9 +44,10 @@
   const FLAPS = {};
   function flapTiles(zone) {
     if (!FLAPS[zone]) {
-      const d = BB.zoneDir(zone), out = [];
-      for (const r of W().rooms) if (r.zone === zone) for (const t of r.things) if (t.ch === 'h') out.push(t);
-      FLAPS[zone] = out.sort((a, b) => (a.tx - b.tx) * d);
+      const out = [];
+      for (const r of W().rooms) if (r.zone === zone) for (const t of r.things) if (t.ch === 'h') out.push({ t, r });
+      // along the story, then onward inside a room
+      FLAPS[zone] = out.sort((a, b) => BB.storyIndex(a.r) - BB.storyIndex(b.r) || (a.t.tx - b.t.tx) * BB.roomDir(a.r)).map(o => o.t);
     }
     return FLAPS[zone];
   }
@@ -66,6 +67,11 @@
     return d ? { tx: h.x + d[1], ty: h.y + d[0] } : null;
   }
   function liftTile(ch) { for (const t of W().findThings(ch)) return t; return null; }
+  // the Starfall float lands by the rainbow door, at the living room's west end
+  function landingTile() {
+    const h = home();
+    return h ? { tx: h.x + 5, ty: h.y + 31 } : null;
+  }
   function skylightTile() {
     const h = home();
     return h ? { tx: h.x + h.def.skylight[1], ty: h.y + h.def.skylight[0] } : null;
@@ -75,7 +81,7 @@
   function create(thing, room, save) {
     const s = spot(thing.tx, thing.ty);
     if (thing.ch === 'h') return { type: 'flap', link: true, zone: room.zone, idx: Math.max(0, flapIndex(room.zone, thing)), room: room.id, bossRoom: room.def.arena ? room.id : null, x: s.x, y: s.y, t: 0, hold: 0 };
-    if (thing.ch === 'u' || thing.ch === 'v') return { type: 'lift', link: true, end: thing.ch, zone: room.zone, room: room.id, x: s.x, y: s.y, t: 0 };
+    if (thing.ch === 'u' || thing.ch === 'v') return { type: 'lift', link: true, end: thing.ch, zone: room.zone, room: room.id, x: s.x, y: s.y, t: 0, hold: 0 };
     return null;
   }
   // the door hall's doors live in the Cat House room definition
@@ -83,7 +89,7 @@
     const out = [];
     for (const [z, rc] of Object.entries(room.def.doors || {})) {
       const s = spot(room.x + rc[1], room.y + rc[0]);
-      out.push({ type: 'door', link: true, zone: +z, front: +z === 0, room: room.id, x: s.x, y: s.y, t: Math.random() * 100, hold: 0 });
+      out.push({ type: 'door', link: true, zone: +z, front: +z === 0, walkOut: +z === 0 && !!room.def.walkOut, room: room.id, x: s.x, y: s.y, t: Math.random() * 100, hold: 0 });
     }
     return out;
   }
@@ -106,15 +112,21 @@
       if (th.opened > 0) th.opened--;
       if (near < 90 && ((save.doors || {})[th.zone] || 0) < th.idx + 1) ctx.onFlapFound(th);
       const still = standingIn(th, pl, 18) && Math.abs(b.vx) < 0.3 && !locked;
-      th.hold = still ? th.hold + 1 : Math.max(0, th.hold - 3);
+      th.hold = still ? th.hold + 1 : 0;
       if (th.hold >= HOLD) { th.hold = 0; ctx.travel(doorSpot(th.zone), 'home', th); }
     } else if (th.type === 'door') {
+      // The front door is a physical opening into the Front Garden.
+      // Other doors keep their convenient travel to discovered cat flaps.
+      if (th.walkOut) { th.hold = 0; return; }
       const ok = unlocked(th, save);
       const still = ok && standingIn(th, pl, 18) && Math.abs(b.vx) < 0.3 && !locked;
-      th.hold = still ? th.hold + 1 : Math.max(0, th.hold - 3);
+      th.hold = still ? th.hold + 1 : 0;
       if (th.hold >= HOLD) { th.hold = 0; ctx.travel(flapSpot(th.zone, doorFlap(th.zone, save)), th.front ? 'out' : 'door', th); }
     } else if (th.type === 'lift') {
-      if (!locked && standingIn(th, pl, 22)) {
+      const still = !locked && standingIn(th, pl, 22) && Math.abs(b.vx) < 0.3;
+      th.hold = still ? th.hold + 1 : 0;
+      if (th.hold >= HOLD) {
+        th.hold = 0;
         const other = liftTile(th.end === 'u' ? 'v' : 'u');
         if (other) ctx.travel(spot(other.tx, other.ty), th.end === 'u' ? 'liftUp' : 'liftDown', th);
       }
@@ -126,11 +138,24 @@
   // ──── Drawing ────
   function holdRing(c, x, y, k) {
     if (k <= 0) return;
-    c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = 5;
+    c.save();
+    c.fillStyle = 'rgba(255,248,232,0.96)'; G().circle(x, y, 19, c); c.fill();
+    c.strokeStyle = '#d6cadc'; c.lineWidth = 5;
     c.beginPath(); c.arc(x, y, 13, 0, TAU); c.stroke();
     c.strokeStyle = '#ffd84a'; c.lineWidth = 5; c.lineCap = 'round';
     c.beginPath(); c.arc(x, y, 13, -Math.PI / 2, -Math.PI / 2 + TAU * k); c.stroke();
     BB.Gestures.drawPaw(c, x, y + 1, 0.42, '#ffd84a', '#b8860b');
+    c.restore();
+  }
+
+  // Active waits belong in the foreground, above the kitten and hats.
+  function drawProgress(c, th, cam, ctx) {
+    if (!(th.hold > 0)) return;
+    if (th.type === 'door' && !unlocked(th, ctx.save)) return;
+    if (th.type === 'flap' && th.bossRoom && !(ctx.save.bosses || {})[th.bossRoom]) return;
+    const offset = th.type === 'flap' ? 130 : th.type === 'door' && !th.front ? 150 : 96;
+    if (th.type === 'flap' || th.type === 'door' || th.type === 'lift')
+      holdRing(c, th.x - cam.x, th.y - cam.y - offset, th.hold / HOLD);
   }
 
   // "stand here!": an empty paw ring that pulses
@@ -337,10 +362,10 @@
         catDoor(c, x, y, 34, 50, BB.mix(Z.accent, '#ffffff', 0.2), true, t);
       }
       homeSign(c, x, y - 92, t, 1.15);
-      if (th.hold > 0) holdRing(c, x, y - 130, th.hold / HOLD);
-      else if (used(th, save)) { /* (already used: no more hints) */ }
-      else if (kittenNear(th, ctx)) hintRing(c, x, y - 130, t);
-      else if (((save.doors || {})[th.zone] || 0) < th.idx + 1) arrow(c, x, y - 136, t); // (not found yet: look here!)
+      if (th.hold <= 0 && !used(th, save)) {
+        if (kittenNear(th, ctx)) hintRing(c, x, y - 130, t);
+        else if (((save.doors || {})[th.zone] || 0) < th.idx + 1) arrow(c, x, y - 136, t); // (not found yet: look here!)
+      }
     } else if (th.type === 'door') {
       const ok = unlocked(th, save);
       if (th.front) {
@@ -371,10 +396,17 @@
         // a little cat flap at the bottom
         c.fillStyle = '#a9583a'; G().rrect(x - 9, y - 18, 18, 16, 6, c); c.fill();
         if (!save.leftHome && th.hold <= 0) arrow(c, x, y - 128, t);
+        if (th.walkOut) {
+          // A bright open doorway and paw prints point through the wall.
+          c.fillStyle = 'rgba(255,246,196,0.8)';
+          G().rrect(x - 18, y - 70, 36, 70, 16, c); c.fill();
+          c.strokeStyle = '#fff4b0'; c.lineWidth = 4; c.lineCap = 'round';
+          c.beginPath(); c.moveTo(x + 22, y - 32); c.lineTo(x + 46, y - 32);
+          c.moveTo(x + 38, y - 40); c.lineTo(x + 46, y - 32); c.lineTo(x + 38, y - 24); c.stroke();
+        }
       } else zoneDoor(c, th, x, y, t, ok, save.newDoor != null ? save.newDoor === th.zone : save.lastZone === th.zone);
       const ry = y - (th.front ? 96 : 150);
-      if (ok && th.hold > 0) holdRing(c, x, ry, th.hold / HOLD);
-      else if (ok && !used(th, save) && kittenNear(th, ctx, 70)) hintRing(c, x, ry, t);
+      if (ok && th.hold <= 0 && !th.walkOut && !used(th, save) && kittenNear(th, ctx, 70)) hintRing(c, x, ry, t);
     } else if (th.type === 'lift') {
       // a rainbow beam (bottom end) or a rainbow landing pool (top end)
       const cols = ['#ff7b9c', '#ffcf5c', '#fff27a', '#8fe388', '#7cc8ff', '#b99cff'];
@@ -390,12 +422,12 @@
         G().twinkle(x + Math.sin(i * 2 + t * 0.05) * 10, y - k * tall, 3, c); c.fill();
       }
       // which way it goes: up from the clouds, down from the lagoon
-      if (!used(th, save)) {
+      if (th.hold <= 0 && !used(th, save)) {
         arrow(c, x, y - 150, t, '#ffffff', th.end === 'u');
         if (kittenNear(th, ctx, 90)) hintRing(c, x, y - 60, t);
       }
     }
   }
 
-  BB.Links = { create, hallDoors, update, draw, doorSpot, flapSpot, skylightTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, holdRing, hintRing, arrow, linkKey, HOLD };
+  BB.Links = { create, hallDoors, update, draw, drawProgress, doorSpot, flapSpot, skylightTile, landingTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, holdRing, hintRing, arrow, linkKey, HOLD };
 })(window.BB);
