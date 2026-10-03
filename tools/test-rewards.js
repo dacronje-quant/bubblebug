@@ -201,7 +201,9 @@ function milestones() {
   old.finale = true; old.outfits.scuba = 1; old.wear.face = 'scuba';
   old.outfits.wizard = 1; old.wear.head = 'wizard'; old.purchases['trail-rainbow'] = 1;
   old.cosmetics.trail = 'rainbow'; old.gates.nm = 1; old.pads['-173,13'] = 1;
-  old.sparkles['-168,13'] = 1; fill(old, 30);
+  // (an old save's star keys are old-map tiles: use the house and neighbourhood, which never moved)
+  old.sparkles['-168,13'] = 1;
+  for (const th of stars.filter(st => ['ng', 'np', 'nr', 'nm', 'hm'].includes(B.World.roomAtTile(st.tx, st.ty).id)).slice(0, 30)) old.sparkles[th.tx + ',' + th.ty] = 1;
   B.Home.familyOrder().forEach(id => { old.family[id] = 1; });
   const migrated = bootGame(null, { storage: [['bubblebug_kingdom_v2', JSON.stringify(old)]] });
   migrated.BB.Main.set('play', {});

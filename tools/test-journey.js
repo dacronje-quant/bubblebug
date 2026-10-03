@@ -33,7 +33,8 @@ function discoveries(g) {
   }
   assert.equal(B.Play.save.wear.face, 'starshades');
   assert.equal(B.Play.save.starsSpent, 0);
-  assert.equal(B.World.rooms.flatMap(r => B.Play.ents[r.id].things).some(th => th.type === 'glasses'), false);
+  // (the three glasses are gone; the other hidden things still wait in the world)
+  assert.equal(B.World.rooms.flatMap(r => B.Play.ents[r.id].things).some(th => th.type === 'glasses' && ['googly', 'disguise', 'starshades'].includes(th.item)), false);
   // All boss presents join their clothing category; hats use two pages.
   for (const item of B.Wardrobe.LIST.filter(a => a.boss)) B.Play.save.outfits[item.id] = 1;
   place('hm', B.Home.MIRROR_COL - 0.5, 32); tick(B.Links.HOLD + 15);
