@@ -48,8 +48,19 @@
 
     draw() {
       const p = BB.Play;
-      document.body.classList.toggle('menu-open', this.name !== 'play' || !!(p.wardrobe || p.gardenChoice || p.portalChoice || p.maze && p.maze.choice || p.cloud && p.cloud.done || p.mini && p.mini.done));
+      const pictureMenu = this.name === 'play' && !!(p.wardrobe || p.gardenChoice || p.portalChoice || p.maze && p.maze.choice || p.cloud && p.cloud.done || p.mini && p.mini.done);
+      document.body.classList.toggle('picture-menu', pictureMenu);
+      document.body.classList.toggle('menu-open', this.name !== 'play' || pictureMenu);
+      const mazeControls = document.body.classList.contains('touch') && document.body.classList.contains('in-maze') && !document.body.classList.contains('menu-open');
+      if (mazeControls !== document.body.classList.contains('maze-controls')) {
+        document.body.classList.toggle('maze-controls', mazeControls);
+        G.resize();
+      }
       G.begin();
+      if (G.surround && (this.name !== 'play' || pictureMenu || p.maze || p.cloud || p.mini)) {
+        G.surround.style.display = 'none'; G.sideHUD = null;
+        document.body.classList.remove('side-hud');
+      }
       const c = G.ctx;
       c.save();
       this.scene.draw(c);

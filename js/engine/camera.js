@@ -6,6 +6,20 @@
 (function (BB) {
   'use strict';
   const C = BB.CFG;
+  const floorDepths = new WeakMap();
+  function floorDepth(room) {
+    const cached = floorDepths.get(room);
+    if (cached && cached.version === room.version) return cached.depth;
+    let depth = 0;
+    // Find the lowest exposed firm surface, including rooms whose floor has
+    // a doorway or pit. Fully filled rows would miss these partial floors.
+    for (let row = room.h - 1; row > 0 && !depth; row--) for (let col = 0; col < room.w; col++) {
+      const ch = room.grid[row][col];
+      if ((ch === '#' || ch === 'I') && !BB.Physics.solidSide(room.grid[row - 1][col])) { depth = (room.h - row) * C.TILE; break; }
+    }
+    floorDepths.set(room, { version: room.version, depth });
+    return depth;
+  }
 
   const Cam = BB.Camera = {
     x: 0, y: 0, lookX: 0, lookY: 0,
@@ -13,6 +27,11 @@
 
     clampTo(room, x, y) {
       const G = BB.G;
+      // Touch play may look a little farther down to keep the lowest firm
+      // surface above the controls. The terrain and collision map stay intact.
+      const touch = BB.Input.touchEnabled && document.body.classList.contains('touch');
+      const soilDepth = touch ? floorDepth(room) : 0;
+      const groundPad = bottom => touch && soilDepth > 0 ? Math.max(0, G.touchFloorReserve - soilDepth - (bottom - room.py - room.ph)) : 0;
       // keep the view inside [lo, hi]; a room narrower (or shorter) than the
       // view is simply centred, so the camera never flips between its edges
       const fit = (v, lo, hi, view) => hi - lo <= view ? lo + (hi - lo - view) / 2 : BB.clamp(v, lo, hi - view);
@@ -22,11 +41,11 @@
         const group = BB.World.rooms.filter(r => r.def.cameraGroup === room.def.cameraGroup);
         const x0 = Math.min(...group.map(r => r.px)), y0 = Math.min(...group.map(r => r.py));
         const x1 = Math.max(...group.map(r => r.px + r.pw)), y1 = Math.max(...group.map(r => r.py + r.ph));
-        return { x: fit(x, x0, x1, G.W), y: fit(y, y0, y1, G.H) };
+        return { x: fit(x, x0, x1, G.W), y: fit(y, y0, y1 + groundPad(y1), G.H) };
       }
       return {
         x: fit(x, room.px, room.px + room.pw, G.W),
-        y: fit(y, room.py, room.py + room.ph, G.H),
+        y: fit(y, room.py, room.py + room.ph + groundPad(room.py + room.ph), G.H),
       };
     },
 

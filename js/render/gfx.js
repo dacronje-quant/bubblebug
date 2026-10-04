@@ -14,17 +14,28 @@
 
   const G = BB.G = {
     canvas, ctx,
+    surround: document.getElementById('surround'),
     W: C.VIEW_W, H: C.VIEW_H,
     scale: 1,                 // backing pixels per logical pixel
     maxScale: C.MAX_RENDER_SCALE, // lowered automatically on slow machines
     view: { x: 0, y: 0, w: 0, h: 0 }, // canvas placement in CSS px
+    touchFloorReserve: 0,
+    touchPadTop: 0,
+    sideHUD: null,
     t: 0,                     // global animation clock (ticks)
 
     resize() {
       const vw = window.innerWidth, vh = window.innerHeight;
+      // Maze corridors must remain above the touch row on short screens.
+      let availableH = vh;
+      if (document.body.classList.contains('maze-controls')) {
+        const pad = document.getElementById('t-down');
+        const style = pad && window.getComputedStyle(pad);
+        if (style) availableH = Math.max(1, vh - parseFloat(style.bottom) - parseFloat(style.height) - 10);
+      }
       const aspect = G.W / G.H;
       let w = vw, h = vw / aspect;
-      if (h > vh) { h = vh; w = vh * aspect; }
+      if (h > availableH) { h = availableH; w = availableH * aspect; }
       w = Math.floor(w); h = Math.floor(h);
       const dpr = window.devicePixelRatio || 1;
       const s = BB.clamp((w * dpr) / G.W, 0.75, G.maxScale);
@@ -35,8 +46,21 @@
       canvas.style.width = w + 'px';
       canvas.style.height = h + 'px';
       canvas.style.left = Math.floor((vw - w) / 2) + 'px';
-      canvas.style.top = Math.floor((vh - h) / 2) + 'px';
-      G.view = { x: Math.floor((vw - w) / 2), y: Math.floor((vh - h) / 2), w, h };
+      canvas.style.top = Math.floor((availableH - h) / 2) + 'px';
+      G.view = { x: Math.floor((vw - w) / 2), y: Math.floor((availableH - h) / 2), w, h };
+      if (G.surround) {
+        G.surround.width = Math.ceil(vw / (w / G.W) * s);
+        G.surround.height = canvas.height;
+        Object.assign(G.surround.style, { width: vw + 'px', height: h + 'px', left: '0px', top: G.view.y + 'px' });
+      }
+      // Keep the full-size adventure canvas. The camera can instead reveal
+      // more ground beneath the walking surface where the thumb row overlaps.
+      const pad = document.getElementById('t-left');
+      const style = pad && window.getComputedStyle(pad);
+      const padTop = style ? vh - parseFloat(style.bottom) - parseFloat(style.height) : vh;
+      G.touchPadTop = padTop;
+      const overlap = Math.max(0, G.view.y + h - padTop);
+      G.touchFloorReserve = overlap > 0 ? Math.min(C.TILE * 5, overlap * G.H / h + 16) : 0;
       ctx.imageSmoothingEnabled = true;
       if (changed && BB.onScaleChange) BB.onScaleChange(s);
     },

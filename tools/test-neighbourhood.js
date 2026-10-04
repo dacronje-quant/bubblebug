@@ -15,6 +15,7 @@ function bootGame(canvasFactory, options = {}) {
   const listen = (name, fn) => { if (!events.has(name)) events.set(name, []); events.get(name).push(fn); };
   const classList = () => { const set = new Set(); return {
     add: c => set.add(c), remove: c => set.delete(c),
+    contains: c => set.has(c),
     toggle(c, on) { if (on == null) on = !set.has(c); if (on) set.add(c); else set.delete(c); },
   }; };
   const element = () => ({ style: {}, classList: classList(), addEventListener() {}, dataset: {} });

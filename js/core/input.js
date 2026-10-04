@@ -74,6 +74,8 @@
     clearAll() {
       kbCodes.clear();
       for (const a of ACTIONS) { kbHeld[a] = kbLatch[a] = touchHeld[a] = touchLatch[a] = false; }
+      fingers.clear();
+      recomputeTouch();
     },
   };
 

@@ -1157,12 +1157,10 @@
       for (const r of visible) if (r.def.home) { BB.Home.drawBack(c, r, cam, t, this); BB.Home.drawMirror(c, r, cam, t, this); }
       for (const r of visible) if (r.def.arena) BB.Arenas.drawBack(c, r, cam, t, this);
       for (const r of visible) {
-        // The separate maze is behind a quiet outdoor rainbow door.
-        // Its containment walls stay in physics, outside the scenery.
-        if (r.def.maze) {
-          c.save(); c.beginPath(); c.rect(r.px - cam.x, (r.y + 32) * C.TILE - cam.y, r.pw, r.ph); c.clip();
-          BB.Tiles.drawStatic(c, r, cam, 0); c.restore();
-        } else BB.Tiles.drawStatic(c, r, cam, 0);
+        // The courtyard is still a real adventure room: its containment
+        // walls and roof must be as visible as every other solid boundary.
+        BB.Tiles.drawBounds(c, r, cam);
+        BB.Tiles.drawStatic(c, r, cam, 0);
       }
       this.visibleRooms = visible; // (the loop pre-builds terrain around these when a frame has time to spare)
       for (const r of visible) BB.Tiles.drawLive(c, r, cam, t, env);
@@ -1269,7 +1267,8 @@
       for (const f of this.healFx) {
         // a heart flies from a new friend up to your happy suns
         const k = BB.easeInOut(f.t / 40);
-        const hx = BB.lerp(f.x - cam.x, 40 + (this.mood - 1) * 24, k), hy = BB.lerp(f.y - cam.y, 31, k) - Math.sin(k * Math.PI) * 40;
+        const target = G().sideHUD && G().sideHUD.healTarget;
+        const hx = BB.lerp(f.x - cam.x, target ? target.x : 40 + (this.mood - 1) * 24, k), hy = BB.lerp(f.y - cam.y, target ? target.y : 31, k) - Math.sin(k * Math.PI) * 40;
         c.fillStyle = '#ff7eb6'; G().heart(hx, hy, 8, c); c.fill();
       }
       const boss = this.activeBoss;

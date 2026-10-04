@@ -244,11 +244,92 @@
   const bounce = { stars: 0, hearts: 0 };
   let last = { stars: -1, hearts: -1, family: -1, tricks: -1 };
 
+  function drawSideHUD(s, t) {
+    const v = G.view, cv = G.surround;
+    const right = window.innerWidth - v.x - v.w;
+    const active = !!cv && Math.min(v.x, right) >= 70 && v.h >= 300 && BB.Main.name === 'play' && !document.body.classList.contains('menu-open');
+    document.body.classList.toggle('side-hud', active);
+    G.sideHUD = null;
+    if (!cv) return false;
+    cv.style.display = active ? 'block' : 'none';
+    if (!active) return false;
+    const c = cv.getContext('2d'), ratio = v.w / G.W, density = G.scale / ratio;
+    c.setTransform(density, 0, 0, density, 0, 0);
+    c.clearRect(0, 0, window.innerWidth, v.h);
+    const items = [], bottom = Math.min(v.h - 12, (BB.Input.touchEnabled ? G.touchPadTop : window.innerHeight) - v.y - 12);
+    const bg = c.createLinearGradient(0,0,0,v.h);
+    bg.addColorStop(0,'#1b203c'); bg.addColorStop(0.6,'#17172e'); bg.addColorStop(1,'#24213a');
+    c.fillStyle=bg; c.fillRect(0,0,v.x,v.h); c.fillRect(v.x+v.w,0,right,v.h);
+    const text = (value,x,y,size=18,color='#f8f6ff') => {
+      c.font=`650 ${size}px system-ui, sans-serif`; c.textAlign='center'; c.textBaseline='middle'; c.fillStyle=color; c.fillText(String(value),x,y);
+    };
+    const card = (id,x,y,w,h) => {
+      c.fillStyle='rgba(255,255,255,0.065)'; G.rrect(x,y,w,h,Math.min(12,h/3),c); c.fill();
+      c.strokeStyle='rgba(211,222,255,0.12)'; c.lineWidth=1; c.stroke();
+      const m=c.getTransform();
+      items.push({id,x:(m.e+x*m.a)/density,y:v.y+(m.f+y*m.d)/density,w:w*m.a/density,h:h*m.d/density});
+    };
+    // The game's familiar picture vocabulary, laid out in two quiet rails.
+    // All positions are CSS pixels; icon size stays legible on wide phones.
+    const lw=Math.min(140,v.x-12), lx=(v.x-lw)/2, ly=68;
+    const leftH=58+3*38+4*6+(s.kin?42:0), ls=Math.min(1,(bottom-ly)/leftH);
+    c.save(); c.translate(lx,ly); c.scale(ls,ls);
+    const width=lw/ls, cx=width/2; let y=0;
+    card('health',0,y,width,58);
+    BB.Kittens.draw(c,s.cat||'marshmallow',{mode:'sit',t,happy:!s.hard||s.mood>=s.moodMax,sad:s.hard&&s.mood<=1?0.9:0,cry:s.hard&&s.mood<=1},cx,34,0.72,1);
+    if (s.hard) for(let i=0;i<(s.moodMax||4);i++) {
+      const px=cx+(i-((s.moodMax||4)-1)/2)*13;
+      if(i<s.mood) sun(c,px,46,0.6,t+i*17); else rainCloudIcon(c,px,46,t+i*23,0);
+    } else { G.bubble(cx,46,9,'#ffc6e6',0.9,c); c.fillStyle='#ff7eb6'; G.heart(cx,47,6,c); c.fill(); }
+    y+=64;
+    const metric=(id,count,color,icon,pulse=0) => {
+      card(id,0,y,width,38); c.save(); c.translate(17,y+17); c.scale(1+pulse*0.14,1+pulse*0.14); icon(c); c.restore();
+      text(count,width-20,y+18,String(count).length>3?13:18,color); y+=44;
+    };
+    metric('stars',s.stars,'#ffe498',ctx=>{ctx.fillStyle='#ffd767';G.star(0,0,9,5,0.48,-Math.PI/2,ctx);ctx.fill();},bounce.stars);
+    metric('hearts',s.hearts,'#ffb5ce',ctx=>{ctx.fillStyle='#ff86b2';G.heart(0,1,9,ctx);ctx.fill();},bounce.hearts);
+    metric('family',s.family||0,'#e5dcff',ctx=>BB.MapView.catFace(ctx,0,0,0.95,'#fff1dc','#9a7a64'));
+    c.fillStyle='rgba(255,255,255,0.12)'; G.rrect(8,y-12,width-16,3,1.5,c); c.fill();
+    c.fillStyle='#bcb1ff'; c.fillRect(8,y-12,(width-16)*Math.min(1,(s.family||0)/BB.Home.familyOrder().length),3);
+    if(s.kin){ card('rainbow',0,y,width,42); BB.RainbowFamily.miniArc(c,cx,y+13,0.9,s.kin,t,s.kinPulse||0); text(BB.RainbowFamily.count(s.kin)+'/'+BB.RAINBOW_KIN.length,cx,y+31,11,'#d8d0ef'); }
+    c.restore();
+    // Abilities and toys stay visible together, including the fully completed
+    // inventory. The grid adjusts to the actual rail width and available height.
+    const ax=ABILITIES.filter(a=>s.abilities[a]), toys=TOYS.filter(a=>(s.toys||{})[a]);
+    const rw=Math.min(140,right-12), rx=v.x+v.w+(right-rw)/2;
+    const cols=Math.max(2,Math.min(4,Math.floor(rw/20))), step=BB.clamp(rw/cols,22,30), iconScale=Math.min(0.95,rw/cols/32);
+    const groupH=list=>list.length?18+Math.ceil(list.length/cols)*step:0;
+    const natural=groupH(ax)+groupH(toys)+(s.tricks?38:0)+12;
+    const rs=Math.min(1,(bottom-68)/Math.max(1,natural));
+    c.save(); c.translate(rx,68); c.scale(rs,rs);
+    const rwidth=rw/rs; y=0;
+    const badges=(id,list,draw) => {
+      if(!list.length)return;
+      const h=groupH(list);card(id,0,y,rwidth,h);
+      text(id==='abilities'?'POWERS':'TOYS',rwidth/2,y+9,8,'#b6bbd7');
+      list.forEach((a,i)=>{
+        const px=(i%cols+0.5)*rwidth/cols,py=y+18+step/2+Math.floor(i/cols)*step;
+        c.fillStyle='rgba(165,178,235,0.10)';G.circle(px,py,9,c);c.fill();draw(a,px,py);
+      }); y+=h+6;
+    };
+    badges('abilities',ax,(a,x,y)=>abilityIcon(c,a,x,y,iconScale));
+    badges('toys',toys,(a,x,y)=>toyIcon(c,a,x,y,iconScale,t));
+    if(s.tricks){card('tricks',0,y,rwidth,32);BB.Gestures.drawIcon(c,17,y+16,0.65);text(s.tricks,rwidth-20,y+16,16,'#ffd8a1');}
+    c.restore();
+    G.sideHUD={active:true,items,stars:s.stars,hearts:s.hearts,family:s.family||0,mood:s.mood,hard:s.hard,abilities:ax,toys,tricks:s.tricks||0,kin:s.kin?BB.RainbowFamily.count(s.kin):null,
+      healTarget:G.toLogical(lx+lw/2,v.y+ly+46*ls)};
+    const label=`Adventure status: ${s.stars} stars, ${s.hearts} hearts, ${s.family||0} family home, ${ax.length} powers, ${toys.length} toys, ${s.tricks||0} tricks${s.hard?', happiness '+s.mood+' of '+s.moodMax:''}`;
+    if(cv._hudLabel!==label){cv.setAttribute('aria-label',label);cv._hudLabel=label;}
+    cv.setAttribute('aria-hidden','false'); cv.setAttribute('role','img');
+    return true;
+  }
+
   function drawHUD(c, s, t) {
     if (last.stars >= 0 && s.stars > last.stars) bounce.stars = 1;
     if (last.hearts >= 0 && s.hearts > last.hearts) bounce.hearts = 1;
     last.stars = s.stars; last.hearts = s.hearts;
     bounce.stars *= 0.9; bounce.hearts *= 0.9;
+    if (drawSideHUD(s, t)) return;
 
     const pill = (x, w) => { c.fillStyle = 'rgba(30,20,50,0.38)'; G.rrect(x, 12, w, 38, 19, c); c.fill(); };
 

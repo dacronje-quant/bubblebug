@@ -19,6 +19,8 @@ const URL = pathToFileURL(path.join(ROOT, 'index.html')).href;
 const out = process.argv[2] && path.resolve(process.argv[2]);
 const pause = page => page.waitForTimeout(120);
 async function tap(page, x, y, touch = false) {
+  // Scene changes can reposition the canvas on the next rendered frame.
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const p = await page.evaluate(({ x, y }) => ({
     x: BB.G.view.x + x / BB.G.W * BB.G.view.w,
     y: BB.G.view.y + y / BB.G.H * BB.G.view.h,

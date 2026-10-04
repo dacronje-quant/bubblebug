@@ -600,6 +600,32 @@
     }
   }
 
+  // An exposed solid face needs a readable edge even where its biome's body
+  // colour is close to the backdrop. Keep this inside the collision tile;
+  // grass, roots and other overhanging decoration remain outside it.
+  function paintSolidEdges(c, z, x, y, m) {
+    const Z = BB.ZONES[z];
+    c.save(); tileShape(c, x, y, m); c.clip();
+    c.lineWidth = 3; c.lineCap = 'butt';
+    c.strokeStyle = BB.mix(Z.groundDark, '#192039', 0.4);
+    c.beginPath();
+    if (!m.w) { c.moveTo(x + 1.5, y); c.lineTo(x + 1.5, y + T); }
+    if (!m.e) { c.moveTo(x + T - 1.5, y); c.lineTo(x + T - 1.5, y + T); }
+    if (!m.s) { c.moveTo(x, y + T - 1.5); c.lineTo(x + T, y + T - 1.5); }
+    c.stroke();
+    c.lineWidth = 1.5; c.strokeStyle = Z.groundLight;
+    c.beginPath();
+    if (!m.w) { c.moveTo(x + 4, y + 2); c.lineTo(x + 4, y + T - 2); }
+    if (!m.e) { c.moveTo(x + T - 4, y + 2); c.lineTo(x + T - 4, y + T - 2); }
+    if (!m.s) { c.moveTo(x + 2, y + T - 4); c.lineTo(x + T - 2, y + T - 4); }
+    c.stroke();
+    if (!m.n) {
+      c.strokeStyle = Z.topDark; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(x + 2, y + 1); c.lineTo(x + T - 2, y + 1); c.stroke();
+    }
+    c.restore();
+  }
+
   // ──── Build one chunk of a room's terrain ────
   // The chunk's own tiles plus a 1-tile ring of neighbours (nothing reaches further) are painted in the
   // usual pass order and clipped to the chunk, so chunks join seamlessly; at
@@ -609,7 +635,7 @@
     const c0 = cx * CHUNK, r0 = cy * CHUNK, c1 = Math.min(room.w, c0 + CHUNK), r1 = Math.min(room.h, r0 + CHUNK);
     const ext = {
       x: c0 * T - (c0 === 0 ? M : 0), y: r0 * T - (r0 === 0 ? M : 0),
-      x1: c1 * T + (c1 === room.w ? M : 0), y1: r1 * T + (r1 === room.h ? M : 0),
+      x1: c1 * T + (c1 === room.w ? M : 0), y1: r1 * T + (r1 === room.h ? T * 6 : 0),
     };
     const tiles = [], ledges = [];
     let hasShy = false;
@@ -619,6 +645,18 @@
         if (ch === '#' || ch === 'H' || ch === 'I') tiles.push([ch, room.x + col, room.y + r, col * T, r * T]);
         if (ch === 'H') hasShy = true;
         if (ch === '-') ledges.push([room.x + col, room.y + r, col * T, r * T]);
+      }
+    }
+    // Continue boundary soil into the world's already-solid exterior. This
+    // is artwork only: no tiles or collision data change, and real rooms,
+    // water, openings and lower routes are never painted over.
+    if (r1 === room.h) for (let col = c0; col < c1; col++) {
+      const ch = room.grid[room.h - 1][col];
+      if (ch !== '#' && ch !== 'I') continue;
+      for (let r = room.h; r < room.h + 6; r++) {
+        const tx = room.x + col, ty = room.y + r;
+        if (W().tile(tx, ty) !== null) break;
+        tiles.push([ch, tx, ty, col * T, r * T]);
       }
     }
     const out = { canvas: null, shy: null, ext, version: room.version, scale: G.scale };
@@ -631,7 +669,7 @@
     };
     const off = layer(), shy = hasShy ? layer() : null;
     const cloudy = BB.ZONES[z].key === 'clouds';
-    for (const pass of ['outline', 'body', 'sides', 'top', 'bottom']) {
+    for (const pass of ['outline', 'body', 'sides', 'top', 'bottom', 'edges']) {
       for (const [ch, tx, ty, x, y] of tiles) {
         const c = ch === 'H' ? shy.ctx : off.ctx;
         const m = maskAt(tx, ty);
@@ -643,6 +681,7 @@
           if (!m.e) cloudSide(c, z, tx, ty, x, y, 1);
         } else if (pass === 'top' && !m.n) paintTop(c, z, tx, ty, x, y, m);
         else if (pass === 'bottom' && !m.s) paintBottom(c, z, tx, ty, x, y);
+        else if (pass === 'edges') paintSolidEdges(c, z, x, y, m);
       }
     }
     for (const [tx, ty, x, y] of ledges) paintLedge(off.ctx, z, tx, ty, x, y);
@@ -685,6 +724,43 @@
   }
 
   // Draws a room's terrain; with `shyOnly`, just its shy walls at `shyAlpha`
+  function drawBounds(c, room, cam) {
+    // Outside-world tiles block sides and heads, but never support feet.
+    // Show those actual barriers as zone-coloured masonry/wood/cloud rims.
+    // The narrow inner lip remains visible even when the camera stops exactly
+    // at an edge. Real adjoining rooms and open drops receive no false wall.
+    const Z = BB.ZONES[room.zone], P = BB.Physics;
+    const lip = 8, outer = T;
+    const free = (col, row) => !P.solidSide(room.grid[row][col]);
+    const face = (side, tx, ty) => {
+      const x = tx * T - cam.x, y = ty * T - cam.y;
+      if (x + T < -outer || y + T < -outer || x > G.W + outer || y > G.H + outer) return;
+      c.fillStyle = Z.groundDark;
+      if (side === 'left') c.fillRect(x - outer, y, outer + lip, T);
+      else if (side === 'right') c.fillRect(x + T - lip, y, outer + lip, T);
+      else c.fillRect(x, y - outer, T, outer + lip);
+      c.fillStyle = Z.ground;
+      if (side === 'left') c.fillRect(x - 5, y + 1, lip + 3, T - 2);
+      else if (side === 'right') c.fillRect(x + T - lip + 2, y + 1, lip + 3, T - 2);
+      else c.fillRect(x + 1, y - 5, T - 2, lip + 3);
+      c.strokeStyle = Z.groundLight; c.lineWidth = 2;
+      c.beginPath();
+      if (side === 'left') { c.moveTo(x + lip - 1, y); c.lineTo(x + lip - 1, y + T); }
+      else if (side === 'right') { c.moveTo(x + T - lip + 1, y); c.lineTo(x + T - lip + 1, y + T); }
+      else { c.moveTo(x, y + lip - 1); c.lineTo(x + T, y + lip - 1); }
+      c.stroke();
+    };
+    const col0 = Math.max(0, Math.floor((cam.x - room.px - T) / T));
+    const col1 = Math.min(room.w - 1, Math.floor((cam.x + G.W - room.px + T) / T));
+    for (let col = col0; col <= col1; col++) if (free(col, 0) && W().tile(room.x + col, room.y - 1) === null) face('top', room.x + col, room.y);
+    const row0 = Math.max(0, Math.floor((cam.y - room.py - T) / T));
+    const row1 = Math.min(room.h - 1, Math.floor((cam.y + G.H - room.py + T) / T));
+    for (let row = row0; row <= row1; row++) {
+      if (free(0, row) && W().tile(room.x - 1, room.y + row) === null) face('left', room.x, room.y + row);
+      if (free(room.w - 1, row) && W().tile(room.x + room.w, room.y + row) === null) face('right', room.x + room.w - 1, room.y + row);
+    }
+  }
+
   function drawStatic(c, room, cam, shyAlpha, shyOnly) {
     if (shyOnly && shyAlpha <= 0.01) return;
     // only the chunks (and the parts of them) that are on screen
@@ -946,6 +1022,11 @@
   }
 
   function drawGate(c, Z, tx, ty, x, y, t) {
+    // A closed gate fills its blocking footprint. Sparse vines alone made
+    // the space between them look like a passage, despite the solid tile.
+    c.fillStyle = '#60994b'; c.fillRect(x, y, T, T);
+    c.strokeStyle = '#315f39'; c.lineWidth = 2;
+    c.strokeRect(x + 1, y + 1, T - 2, T - 2);
     // a curtain of flowering vines, closed tight
     const sway = Math.sin(t * 0.04 + tx) * 1.5;
     c.strokeStyle = '#3f8f35'; c.lineWidth = 3; c.lineCap = 'round';
@@ -972,6 +1053,8 @@
     if (room && room.def.trampoline) {
       // A padded garden trampoline uses the existing safe bounce physics.
       const dip = (1 - sq) * 12;
+      c.fillStyle = '#73bbb6'; c.strokeStyle = '#477c88'; c.lineWidth = 2;
+      G.rrect(x, y + 5, w, T - 5, 4, c); c.fill(); c.stroke();
       c.strokeStyle = '#8273a3'; c.lineWidth = 3; c.lineCap = 'round';
       for (let i = 0; i < n * 2; i++) {
         const sx = x + 8 + i * (w - 16) / Math.max(1, n * 2 - 1);
@@ -993,7 +1076,9 @@
     }[Z.key] || ['#ff5d6c', '#ffffff'];
     // stem
     c.fillStyle = '#f5ead0'; c.strokeStyle = '#8a6a4a'; c.lineWidth = 1.2;
-    G.rrect(cx - 7, y + 10, 14, T - 10, 4, c); c.fill(); c.stroke();
+    G.rrect(x, y + 10, w, T - 10, 4, c); c.fill(); c.stroke();
+    c.strokeStyle = '#d1bc96'; c.lineWidth = 1;
+    for (let sx = x + 6; sx < x + w; sx += 9) { c.beginPath(); c.moveTo(sx, y + 15); c.lineTo(sx, y + T - 2); c.stroke(); }
     // cap
     c.save();
     c.translate(cx, y + 14);
@@ -1021,5 +1106,5 @@
     for (const [k, v] of squash) { if (v <= 1) squash.delete(k); else squash.set(k, v - 1); }
   }
 
-  BB.Tiles = { warm, drawStatic, drawLive, bounce, tick, flower, crystalCluster, clear: () => cache.clear() };
+  BB.Tiles = { warm, drawBounds, drawStatic, drawLive, bounce, tick, flower, crystalCluster, clear: () => cache.clear() };
 })(window.BB);
