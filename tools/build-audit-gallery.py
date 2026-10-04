@@ -4,7 +4,7 @@ from html import escape
 from PIL import Image, ImageOps, ImageDraw
 
 root = Path(__file__).resolve().parents[1] / 'test-output' / 'release-audit'
-groups = [('test-side-hud-browser', 'Side HUD'), ('test-touch-ground-browser', 'Touch framing'), ('solid-terrain', 'All terrain blocks'), ('room-boundaries', 'Camera boundary views'), ('visual-after', 'Phone, tablet and desktop'), ('world', 'Every room'), ('visual-before', 'Before the fixes')]
+groups = [('test-safe-area-browser', 'Phone cutouts'), ('test-side-hud-browser', 'Side HUD'), ('test-touch-ground-browser', 'Touch framing'), ('solid-terrain', 'All terrain blocks'), ('room-boundaries', 'Camera boundary views'), ('visual-after', 'Phone, tablet and desktop'), ('world', 'Every room'), ('visual-before', 'Before the fixes')]
 cards = []
 for folder, title in groups:
     files = sorted((root / folder).glob('*.png'))
@@ -27,7 +27,7 @@ body{margin:24px;background:#181322;color:#f5efff;font:16px system-ui}h1{font-si
 </style><h1>Bubble Paws: game visual audit</h1>
 <p>Review the real game on phones, tablets and wide desktops, plus captures of all 103 rooms. The side HUD previews include a full inventory and hard-mode health. Click a capture for a larger view.</p>
 <p>Wide-screen side HUD, smaller controls with minimal extra floor depth, visible blocked room boundaries, unobstructed mazes and reset-safe touch input. Browser screenshots support visual review; physical device performance and unscripted play remain unverified.</p>
-<nav><button onclick="group='test-side-hud-browser';filter()">Side HUD</button><button onclick="group='test-touch-ground-browser';filter()">Touch framing</button><button onclick="group='solid-terrain';filter()">All terrain blocks</button><button onclick="group='room-boundaries';filter()">Walls and ceilings</button><button onclick="group='visual-after';filter()">Menus and mazes</button><button onclick="group='world';filter()">103 rooms</button><button onclick="group='visual-before';filter()">Before fixes</button><input aria-label="Filter captures" placeholder="Filter by size or room" oninput="filter()"></nav>
+<nav><button onclick="group='test-safe-area-browser';filter()">Phone cutouts</button><button onclick="group='test-side-hud-browser';filter()">Side HUD</button><button onclick="group='test-touch-ground-browser';filter()">Touch framing</button><button onclick="group='solid-terrain';filter()">All terrain blocks</button><button onclick="group='room-boundaries';filter()">Walls and ceilings</button><button onclick="group='visual-after';filter()">Menus and mazes</button><button onclick="group='world';filter()">103 rooms</button><button onclick="group='visual-before';filter()">Before fixes</button><input aria-label="Filter captures" placeholder="Filter by size or room" oninput="filter()"></nav>
 <div class="grid">''' + '\n'.join(cards) + '''</div><dialog><button onclick="this.parentElement.close()">Close</button><img><p></p></dialog>
 <script>let group='test-side-hud-browser';function filter(){const q=document.querySelector('input').value.toLowerCase();document.querySelectorAll('.capture').forEach(b=>b.hidden=b.dataset.group!==group||!b.textContent.toLowerCase().includes(q))}function show(b){const d=document.querySelector('dialog');d.querySelector('img').src=b.querySelector('img').src;d.querySelector('p').textContent=b.textContent;d.showModal()}filter();</script>'''
 (root / 'index.html').write_text(html, encoding='utf-8')

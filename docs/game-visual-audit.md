@@ -19,10 +19,12 @@ Outer walls and ceilings that previously looked open now have visible zone-colou
 
 The complete terrain pass also covers internal blocks and the Pawprint courtyard. Its formerly hidden containment walls and roof now render normally. Exposed solid walls and ceilings have darker outlines with a narrow highlight, and walking surfaces retain their biome-specific tops. Closed vine gates fill their solid footprint; mushroom/trampoline bodies show the full area that blocks movement. Opening a gate or crumbling sandstone removes its blocking artwork. Secret pass-through walls retain their discovery/fade behavior.
 
+Phone cutouts now constrain the canvas HUD as well as the DOM controls. Side backgrounds are pure black to blend with the cutout. Both rails reserve the larger of the left/right insets, keeping equal panel widths and mirrored clearance; map and pause align with that clearance. Top/bottom insets clear cutouts and system bars. Insets come from CSS `env(safe-area-inset-*)` or native `--safe-area-inset-*` variables and update without requiring a resize. When a cutout leaves too little room for a readable rail, the compact HUD stays inside the safe rectangle and clear of map/pause. Game dimensions and collision data are preserved.
+
 ## Validation
 
 - All 21 gameplay/save/audio suites passed.
-- All 11 browser suites passed, including camera, reset, beam, guidance, recorded voice/music, real keyboard/pointer/touch playthrough, side HUD and visual checks.
+- All 12 browser suites passed, including camera, reset, beam, guidance, recorded voice/music, real keyboard/pointer/touch playthrough, side HUD, phone cutouts and visual checks.
 - 112 visual cases passed at 320×568, 360×800, 390×844, 568×320, 640×360, 844×390, 1024×768 and 1280×720. These include title, kitten select, home, pause, map, wardrobe, hedge maze, Cloud Maze and all six relative mazes.
 - Checks assert that visible controls fit without overlap, maze controls do not cover map cells, wardrobe tabs are unobstructed, input reset clears held highlights, and pages have no overflow or runtime exceptions.
 - Captured and visually inspected all 103 rooms. Room captures sample the camera view; they are not exhaustive images of every position or animation.
@@ -31,6 +33,7 @@ The complete terrain pass also covers internal blocks and the Pawprint courtyard
 - Boundary pixels match collision behavior across all 103 adventure rooms, including the Pawprint courtyard: 1,458 blocked edge sections are marked, 3,274 other edge sections remain open, and 28 out-of-world floor exits remain open drops.
 - Full-room terrain checks cover all 13 zones and 15,642 solid tiles, including 3,414 exposed vertical wall faces, 2,141 ceiling faces, 3,441 floor faces and 1,765 one-way/glowing platform tiles. The tests use real rendered pixels and assert that opening gates and crumbling sandstone clear the artwork without altering other collision tiles. Complete terrain images cover every block, beyond what a single gameplay camera can show.
 - Side HUD checks cover six screen sizes, including narrow-screen fallback and a 2560 px wide desktop. They assert all ten abilities and twelve toys fit, panels stay outside the game and clear controls, health/currencies/progress update correctly, and menu/resume transitions hide and restore the rails.
+- Phone cutout checks cover thirteen cases using Chrome's actual CSS environment overrides and native-provided inset variables: left/right notches, rotation, top cutouts, bottom system bars, narrow-gutter fallback and restoration to a flat screen. Full-inventory HUD cards and controls fit inside the safe area; compact HUD remains clear of map/pause. Rendered gutter pixels are pure black and rail widths/clearances match on both sides. Black cutout masks in these screenshots are test overlays, not game artwork. Native Android inset reporting still requires device verification; this repository contains the web game rather than the Android wrapper.
 - The large movement-route verifier was stopped after partial passes to keep this review focused on visuals and interactions. Its full search remains incomplete and is not included in the passing-suite counts above.
 
 Physical phone comfort/performance and unscripted play remain unverified. Passing these checks does not prove the absence of every possible bug.

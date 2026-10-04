@@ -245,21 +245,25 @@
   let last = { stars: -1, hearts: -1, family: -1, tricks: -1 };
 
   function drawSideHUD(s, t) {
-    const v = G.view, cv = G.surround;
+    const v = G.view, cv = G.surround, safe = G.readSafeArea();
     const right = window.innerWidth - v.x - v.w;
-    const active = !!cv && Math.min(v.x, right) >= 70 && v.h >= 300 && BB.Main.name === 'play' && !document.body.classList.contains('menu-open');
+    // Mirror the larger cutout inset so both rails keep the same width.
+    const sideInset = Math.max(safe.left, safe.right);
+    const leftSpace = v.x - sideInset, rightSpace = right - sideInset;
+    const top = Math.max(68, safe.top + 68 - v.y);
+    const bottom = Math.min(v.h - 12, window.innerHeight - safe.bottom - v.y - 12, (BB.Input.touchEnabled ? G.touchPadTop : window.innerHeight) - v.y - 12);
+    const active = !!cv && Math.min(leftSpace, rightSpace) >= 70 && v.h >= 300 && bottom - top >= 180 && BB.Main.name === 'play' && !document.body.classList.contains('menu-open');
     document.body.classList.toggle('side-hud', active);
     G.sideHUD = null;
+    G.compactHUD = null;
     if (!cv) return false;
     cv.style.display = active ? 'block' : 'none';
     if (!active) return false;
     const c = cv.getContext('2d'), ratio = v.w / G.W, density = G.scale / ratio;
     c.setTransform(density, 0, 0, density, 0, 0);
     c.clearRect(0, 0, window.innerWidth, v.h);
-    const items = [], bottom = Math.min(v.h - 12, (BB.Input.touchEnabled ? G.touchPadTop : window.innerHeight) - v.y - 12);
-    const bg = c.createLinearGradient(0,0,0,v.h);
-    bg.addColorStop(0,'#1b203c'); bg.addColorStop(0.6,'#17172e'); bg.addColorStop(1,'#24213a');
-    c.fillStyle=bg; c.fillRect(0,0,v.x,v.h); c.fillRect(v.x+v.w,0,right,v.h);
+    const items = [];
+    c.fillStyle='#000'; c.fillRect(0,0,v.x,v.h); c.fillRect(v.x+v.w,0,right,v.h);
     const text = (value,x,y,size=18,color='#f8f6ff') => {
       c.font=`650 ${size}px system-ui, sans-serif`; c.textAlign='center'; c.textBaseline='middle'; c.fillStyle=color; c.fillText(String(value),x,y);
     };
@@ -271,7 +275,8 @@
     };
     // The game's familiar picture vocabulary, laid out in two quiet rails.
     // All positions are CSS pixels; icon size stays legible on wide phones.
-    const lw=Math.min(140,v.x-12), lx=(v.x-lw)/2, ly=68;
+    const railWidth=Math.min(140,Math.min(leftSpace,rightSpace)-12);
+    const lw=railWidth, lx=sideInset+(leftSpace-lw)/2, ly=top;
     const leftH=58+3*38+4*6+(s.kin?42:0), ls=Math.min(1,(bottom-ly)/leftH);
     c.save(); c.translate(lx,ly); c.scale(ls,ls);
     const width=lw/ls, cx=width/2; let y=0;
@@ -283,8 +288,8 @@
     } else { G.bubble(cx,46,9,'#ffc6e6',0.9,c); c.fillStyle='#ff7eb6'; G.heart(cx,47,6,c); c.fill(); }
     y+=64;
     const metric=(id,count,color,icon,pulse=0) => {
-      card(id,0,y,width,38); c.save(); c.translate(17,y+17); c.scale(1+pulse*0.14,1+pulse*0.14); icon(c); c.restore();
-      text(count,width-20,y+18,String(count).length>3?13:18,color); y+=44;
+      card(id,0,y,width,38); c.save(); c.translate(14,y+17); c.scale(1+pulse*0.14,1+pulse*0.14); icon(c); c.restore();
+      text(count,width-18,y+18,String(count).length>3?13:18,color); y+=44;
     };
     metric('stars',s.stars,'#ffe498',ctx=>{ctx.fillStyle='#ffd767';G.star(0,0,9,5,0.48,-Math.PI/2,ctx);ctx.fill();},bounce.stars);
     metric('hearts',s.hearts,'#ffb5ce',ctx=>{ctx.fillStyle='#ff86b2';G.heart(0,1,9,ctx);ctx.fill();},bounce.hearts);
@@ -296,12 +301,12 @@
     // Abilities and toys stay visible together, including the fully completed
     // inventory. The grid adjusts to the actual rail width and available height.
     const ax=ABILITIES.filter(a=>s.abilities[a]), toys=TOYS.filter(a=>(s.toys||{})[a]);
-    const rw=Math.min(140,right-12), rx=v.x+v.w+(right-rw)/2;
+    const rw=railWidth, rx=v.x+v.w+(rightSpace-rw)/2;
     const cols=Math.max(2,Math.min(4,Math.floor(rw/20))), step=BB.clamp(rw/cols,22,30), iconScale=Math.min(0.95,rw/cols/32);
     const groupH=list=>list.length?18+Math.ceil(list.length/cols)*step:0;
     const natural=groupH(ax)+groupH(toys)+(s.tricks?38:0)+12;
-    const rs=Math.min(1,(bottom-68)/Math.max(1,natural));
-    c.save(); c.translate(rx,68); c.scale(rs,rs);
+    const rs=Math.min(1,(bottom-top)/Math.max(1,natural));
+    c.save(); c.translate(rx,top); c.scale(rs,rs);
     const rwidth=rw/rs; y=0;
     const badges=(id,list,draw) => {
       if(!list.length)return;
@@ -330,6 +335,23 @@
     last.stars = s.stars; last.hearts = s.hearts;
     bounce.stars *= 0.9; bounce.hearts *= 0.9;
     if (drawSideHUD(s, t)) return;
+
+    // A cutout can consume a whole gutter. Keep the compact HUD inside the
+    // safe rectangle too, without changing the size or framing of the game.
+    const v = G.view, safe = G.safeArea, ratio = v.w / G.W || 1;
+    const xInset = Math.max(0, safe.left - v.x) / ratio;
+    const yInset = Math.max(0, safe.top - v.y) / ratio;
+    let rightEdge = Math.min(G.W, (window.innerWidth - safe.right - v.x) / ratio);
+    for (const id of ['map-btn', 'pause-btn']) {
+      const button = document.getElementById(id), r = button && button.getBoundingClientRect && button.getBoundingClientRect();
+      const y = v.y + yInset * ratio;
+      if (r && r.width && r.top < y + 86 * ratio && r.bottom > y && r.left > v.x + xInset * ratio) {
+        rightEdge = Math.min(rightEdge, (r.left - 8 - v.x) / ratio);
+      }
+    }
+    const fit = Math.min(1, Math.max(1, rightEdge - xInset) / 720);
+    c.save(); c.translate(xInset, yInset); c.scale(fit, fit);
+    G.compactHUD = { x: v.x + xInset * ratio, y: v.y + yInset * ratio, w: 720 * fit * ratio, h: 86 * fit * ratio };
 
     const pill = (x, w) => { c.fillStyle = 'rgba(30,20,50,0.38)'; G.rrect(x, 12, w, 38, 19, c); c.fill(); };
 
@@ -399,6 +421,7 @@
       toyIcon(c, toy, tx, 68, 0.85, t);
       tx += 27;
     }
+    c.restore();
   }
 
   // ──── Happy suns (the kitten's feelings) ────

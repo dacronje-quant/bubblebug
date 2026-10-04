@@ -22,7 +22,21 @@
     touchFloorReserve: 0,
     touchPadTop: 0,
     sideHUD: null,
+    safeArea: { left: 0, right: 0, top: 0, bottom: 0 },
     t: 0,                     // global animation clock (ticks)
+
+    readSafeArea() {
+      const probe = document.getElementById('safe-area');
+      const style = probe && window.getComputedStyle(probe);
+      let changed = false;
+      for (const edge of ['left', 'right', 'top', 'bottom']) {
+        const value = style ? Math.max(0, parseFloat(style['padding' + edge[0].toUpperCase() + edge.slice(1)]) || 0) : 0;
+        changed = changed || value !== G.safeArea[edge];
+        G.safeArea[edge] = value;
+      }
+      if (changed) G.updateTouchClearance();
+      return G.safeArea;
+    },
 
     resize() {
       const vw = window.innerWidth, vh = window.innerHeight;
@@ -53,16 +67,20 @@
         G.surround.height = canvas.height;
         Object.assign(G.surround.style, { width: vw + 'px', height: h + 'px', left: '0px', top: G.view.y + 'px' });
       }
-      // Keep the full-size adventure canvas. The camera can instead reveal
-      // more ground beneath the walking surface where the thumb row overlaps.
+      G.updateTouchClearance();
+      ctx.imageSmoothingEnabled = true;
+      if (changed && BB.onScaleChange) BB.onScaleChange(s);
+    },
+
+    // Refresh when native insets change even without a viewport resize.
+    updateTouchClearance() {
       const pad = document.getElementById('t-left');
       const style = pad && window.getComputedStyle(pad);
+      const vh = window.innerHeight, h = G.view.h;
       const padTop = style ? vh - parseFloat(style.bottom) - parseFloat(style.height) : vh;
       G.touchPadTop = padTop;
       const overlap = Math.max(0, G.view.y + h - padTop);
       G.touchFloorReserve = overlap > 0 ? Math.min(C.TILE * 5, overlap * G.H / h + 16) : 0;
-      ctx.imageSmoothingEnabled = true;
-      if (changed && BB.onScaleChange) BB.onScaleChange(s);
     },
 
     // CSS client coords → logical game coords
