@@ -7,8 +7,9 @@
 //  marks the way out of this room: a bouncing golden arrow over the
 //  doorway, lift, flap or door when it's on screen, or a soft arrow at
 //  the edge of the screen pointing towards it when it isn't.
-//  It steps aside during a boss's fight, in menus and cut-scenes, and on
-//  Hard it only shows after a few seconds of standing still.
+//  It steps aside during a boss's fight, in menus and cut-scenes, and it
+//  never contradicts a signpost. Easy: always shown. Medium: for a few
+//  seconds in each new room, then after 2 still seconds. Hard: after 4.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -93,9 +94,26 @@
     return out;
   }
 
-  // the first room along the story not yet explored
-  function goal(save) {
-    for (const id of BB.STORY) if (!save.visited[id] && W().byId[id]) return id;
+  // Where to go next, always onward and along the signposts' main way:
+  // an elder with a power you still need, or the first boss still sad (the next real goal), if a way there is known;
+  // else the first unexplored room further along the story than this one;
+  // else, once every boss is happy, a family cat still lost.
+  function goal(save, room) {
+    for (const id of BB.STORY) {
+      const r = W().byId[id];
+      // (an elder whose power you don't have yet comes first: it's needed)
+      if (r && r.def.elder && !(save.abilities || {})[r.def.elder] && (!room || room.id === id || firstStep(room, id, save))) return id;
+      if (!r || !r.def.arena || (save.bosses || {})[id]) continue;
+      if (!room || room.id === id || firstStep(room, id, save)) return id;
+      break;
+    }
+    const at = room ? BB.STORY.indexOf(room.id) : -1;
+    for (let i = at + 1; i < BB.STORY.length; i++) { const id = BB.STORY[i]; if (!save.visited[id] && W().byId[id]) return id; }
+    if (W().rooms.some(r => r.def.arena && !(save.bosses || {})[r.id])) return null;
+    for (const th of W().findThings('&')) {
+      const r = W().roomAtTile(th.tx, th.ty);
+      if (r && r !== room && r.def.family && !(save.family || {})[r.def.family]) return r.id;
+    }
     return null;
   }
 
@@ -124,6 +142,31 @@
     return null;
   }
 
+  // which way an exit leads (R L U D), or its kind for lifts, flaps, doors, rings
+  const exitDir = e => e.kind !== 'walk' ? e.kind : e.dx > 0 ? 'R' : e.dx < 0 ? 'L' : e.dy > 0 ? 'D' : 'U';
+  // how many steps from `from` to `to` (Infinity if no way is known)
+  function distance(from, to, save) {
+    if (from.id === to) return 0;
+    let n = 0, room = from;
+    for (; n < 200 && room && room.id !== to; n++) { const st = firstStep(room, to, save); room = st && W().byId[st.to]; }
+    return room && room.id === to ? n : Infinity;
+  }
+  // The guide never contradicts a signpost: in a room with signs, it takes
+  // an exit the signs point along (the one nearest the goal); only if no
+  // such exit leads there, it stays quiet in that room and lets the signs lead.
+  function stepFor(room, goalId, save) {
+    const plain = firstStep(room, goalId, save);
+    const signs = new Set(room.things.filter(t => 'RLUD'.includes(t.ch)).map(t => t.ch));
+    if (!plain || !signs.size || signs.has(exitDir(plain)) || (plain.kind === 'lift' && signs.has('D'))) return plain;
+    let best = null, bestD = Infinity;
+    for (const e of exits(room, save)) {
+      if (!signs.has(exitDir(e))) continue;
+      const d = distance(W().byId[e.to], goalId, save);
+      if (d < bestD) { bestD = d; best = e; }
+    }
+    return best;
+  }
+
   Object.assign(BB.Play, {
     // worked out twice a second (and straight away in a new room)
     updateWay() {
@@ -131,17 +174,22 @@
       way.t++;
       const b = this.pl.body;
       way.idle = Math.abs(b.vx) < 0.3 && b.grounded ? way.idle + 1 : 0;
+      way.roomT = way.room === this.room ? (way.roomT || 0) + 1 : 0;
       if (way.room !== this.room || way.t % 30 === 0) {
         way.room = this.room;
-        const g = goal(this.save);
+        const g = goal(this.save, this.room);
         way.goal = g;
-        way.step = g ? firstStep(this.room, g, this.save) : null;
+        way.step = g ? stepFor(this.room, g, this.save) : null;
       }
       const boss = this.activeBoss;
       const busy = this.pl.state !== 'play' || this.intro || this.gift || this.party || this.maze || this.wardrobe ||
         this.portalChoice || this.gardenChoice || this.traveling || BB.Camera.sliding ||
         (boss && boss.state !== 'happy' && boss.room === this.room.id);
-      const want = way.step && !busy && (!BB.Settings.hard || way.idle > 240) ? 1 : 0;
+      // Easy: always · Medium: a few seconds in each new room, then after
+      // standing still for 2 seconds · Hard: only after 4 still seconds
+      const mode = BB.Settings.difficulty;
+      const when = mode === 'easy' || (mode === 'hard' ? way.idle > 240 : way.roomT < 240 || way.idle > 120);
+      const want = way.step && !busy && when ? 1 : 0;
       way.show = BB.lerp(way.show, want, want ? 0.06 : 0.15);
     },
 
@@ -188,5 +236,5 @@
     c.restore();
   }
 
-  BB.Wayfinder = { goal, firstStep, exits, doorways };
+  BB.Wayfinder = { goal, firstStep, stepFor, exits, doorways };
 })(window.BB);
