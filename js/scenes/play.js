@@ -905,7 +905,8 @@
       else {
         fx = BB.Player.update(this.pl, I, ab, {
           bubbleCount: BB.Bubbles.list.length,
-          blow: (x, y, dir, vx) => BB.Bubbles.blow(x, y, dir, vx, this.pl.cat, this.save.cosmetics.bubble),
+          beam: BB.Cosmetics.bubbleFor(this.save, this.pl.cat) === 'beam',
+          blow: (x, y, dir, vx) => BB.Bubbles.blow(x, y, dir, vx, this.pl.cat, BB.Cosmetics.bubbleFor(this.save, this.pl.cat)),
         });
       }
       // feelings on the kitten itself (for drawing)

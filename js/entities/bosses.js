@@ -825,11 +825,13 @@
     }
     if (ctx.room !== W().byId[b.room]) return null;
     if (b.state === 'wait') return { x: b.x, y: b.y, r: b.D.r, homing: true, hit: () => { wake(b, ctx); return true; } };
-    if (b.state === 'sniffle') return { x: b.x, y: b.y, r: b.D.r + 4, homing: true, hit: () => { cheer(b, ctx); return true; } };
+    if (b.state === 'sniffle') return { x: b.x, y: b.y, r: b.D.r + 4, homing: true, hit: bub => { if (bub.style === 'beam') rainbowCheer(b, ctx); else cheer(b, ctx); return true; } };
     // mid-attack, the gloom cloud bats bubbles away — wait for the sniffle!
+    // (but nothing bats away a rainbow beam)
     return {
       x: b.x, y: b.y, r: b.D.r, homing: false,
       hit: bub => {
+        if (bub.style === 'beam') { rainbowCheer(b, ctx); return true; }
         b.shake = 6;
         S().deflect();
         PT().burst('dot', bub.x, bub.y, 5, { color: '#c8cce0', speed: 1.6, life: 18, size: 2.4 });
@@ -858,6 +860,24 @@
       if (b.clouds <= 0) becomeHappy(b, ctx);
       else { b.state = 'pop'; b.stT = 0; }
     }
+  }
+
+  // A rainbow beam cheers a sad boss right up, every gloom cloud at once
+  function rainbowCheer(b, ctx) {
+    b.shake = 10; b.hitFlash = 12; b.squash = 1.15;
+    S().cheerHit(b.D.clouds * b.D.per);
+    S().bossCloudPop();
+    if (ctx.dropFood) ctx.dropFood(b.x, b.y - b.D.lift * 0.5);
+    for (let i = 0; i < b.clouds; i++) {
+      const cx = b.x + (i - (b.clouds - 1) / 2) * 40, cy = b.y - b.D.lift - 46;
+      b.pops.push({ t: 0, x: cx, y: cy });
+      PT().ring(cx, cy, '#ffffff', 36);
+      PT().burst('confetti', cx, cy, 16, { speed: 3.5, g: 0.08, life: 70 });
+    }
+    for (const col of BB.RAINBOW) PT().burst('spark', b.x, b.y - 10, 3, { color: col, speed: 3, life: 36 });
+    ctx.shake(5);
+    b.hits = 0; b.clouds = 0;
+    becomeHappy(b, ctx);
   }
 
   function becomeHappy(b, ctx) {

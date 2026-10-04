@@ -12,6 +12,8 @@
     { id: 'trail-rainbow', name: 'Rainbow trail', slot: 'trail', value: 'rainbow', stars: 250 },
     { id: 'trail-paw', name: 'Tiny paw trail', slot: 'trail', value: 'paw', stars: 60 },
     { id: 'trail-heart', name: 'Heart trail', slot: 'trail', value: 'heart', unlock: { kind: 'bosses', count: 3 } },
+    // (kept last so the tab icons above keep their places in the list)
+    { id: 'bubble-beam', name: 'Rainbow beams', slot: 'bubble', value: 'beam', unlock: { kind: 'rainbow', count: 1 } },
   ];
   const COLORS = ['#ff8fb8', '#ffe066', '#8fe388', '#7cc8ff', '#b99cff'];
   function flower(c, x, y, r, color) {
@@ -37,8 +39,61 @@
     }
     c.restore();
   }
+  // A rainbow beam: seven bands that follow the shot's own path (pts, head
+  // first), tapering and fading towards the tail, with a soft white glow.
+  function ribbon(c, pts, width, alpha) {
+    const n = pts.length;
+    if (n < 2 || alpha <= 0) return;
+    const R = BB.RAINBOW, last = Math.max(1, n - 1);
+    const nm = pts.map((p, i) => {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
+      return { x: -dy / d, y: dx / d };
+    });
+    const half = i => width * (1 - (i / last) * 0.6) / 2;
+    c.save();
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    c.globalAlpha = alpha * 0.28; c.strokeStyle = '#ffffff';
+    for (let i = 0; i < n - 1; i++) {
+      c.lineWidth = half(i) * 3 * (1 - i / last);
+      c.beginPath(); c.moveTo(pts[i].x, pts[i].y); c.lineTo(pts[i + 1].x, pts[i + 1].y); c.stroke();
+    }
+    c.globalAlpha = alpha;
+    const h = pts[0], tl = pts[n - 1];
+    for (let k = 0; k < R.length; k++) {
+      const gr = c.createLinearGradient(h.x, h.y, tl.x, tl.y);
+      gr.addColorStop(0, R[k]); gr.addColorStop(0.55, R[k] + 'cc'); gr.addColorStop(1, R[k] + '00');
+      c.fillStyle = gr;
+      const off = (i, e) => -half(i) + 2 * half(i) * (k + e) / R.length;
+      c.beginPath();
+      for (let i = 0; i < n; i++) { const o = off(i, 0); c[i ? 'lineTo' : 'moveTo'](pts[i].x + nm[i].x * o, pts[i].y + nm[i].y * o); }
+      for (let i = n - 1; i >= 0; i--) { const o = off(i, 1) + 0.4; c.lineTo(pts[i].x + nm[i].x * o, pts[i].y + nm[i].y * o); }
+      c.closePath(); c.fill();
+    }
+    // a glossy line along the top band
+    c.globalAlpha = alpha * 0.55; c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(0.8, width * 0.06);
+    c.beginPath();
+    const m = Math.ceil(n / 2);
+    for (let i = 0; i < m; i++) { const o = -half(i) + width * 0.08; c[i ? 'lineTo' : 'moveTo'](pts[i].x + nm[i].x * o, pts[i].y + nm[i].y * o); }
+    c.stroke();
+    c.restore();
+  }
+  // the beam's leading star, with a warm halo
+  function beamHead(c, x, y, s, t, alpha = 1) {
+    c.save(); c.globalAlpha *= alpha;
+    BB.G.drawGlow(x, y, 18 * s, '#fff1c2', 0.75, c);
+    c.fillStyle = '#ffe066'; c.strokeStyle = '#e8a63a'; c.lineWidth = 1.2 * s;
+    BB.G.star(x, y, 7.5 * s, 5, 0.5, t * 0.12, c); c.fill(); c.stroke();
+    c.fillStyle = '#ffffff'; BB.G.twinkle(x - 1.2 * s, y - 1.2 * s, 2.8 * s, c); c.fill();
+    c.restore();
+  }
   function icon(c, item, x, y, s, t) {
-    if (item.slot === 'bubble') bubble(c, item.value, x, y, 14 * s, '#d8b8ff', 1, t);
+    if (item.value === 'beam') {
+      const pts = [];
+      for (let i = 0; i <= 16; i++) { const u = i / 16; pts.push({ x: x + (14 - u * 34) * s, y: y + (2 - Math.sin(u * Math.PI) * 12 + u * 8) * s }); }
+      ribbon(c, pts, 11 * s, 1); beamHead(c, x + 14 * s, y + 2 * s, 0.8 * s, t);
+    }
+    else if (item.slot === 'bubble') bubble(c, item.value, x, y, 14 * s, '#d8b8ff', 1, t);
     else if (item.value === 'paw') BB.Gestures.drawPaw(c, x, y, 1.2 * s, '#ff9ec7', '#b85b86');
     else if (item.value === 'heart') {
       [[-10, 6, 5], [0, 0, 7], [11, -8, 4]].forEach(([dx, dy, r]) => {
@@ -56,5 +111,8 @@
     if (style === 'paw') BB.Particles.trail('paw', x, y, '#ff9ec7');
     if (style === 'heart') BB.Particles.trail('heart', x, y, '#ff8fb8');
   }
-  BB.Cosmetics = { LIST, COLORS, bubble, icon, trail, flower };
+  // Rainbow keeps her own bubble choice, and starts out with rainbow beams.
+  const bubbleKey = cat => cat === 'rainbow' ? 'rainbowBubble' : 'bubble';
+  const bubbleFor = (save, cat) => save.cosmetics[bubbleKey(cat)] || (cat === 'rainbow' ? 'beam' : 'classic');
+  BB.Cosmetics = { LIST, COLORS, bubble, icon, trail, flower, ribbon, beamHead, bubbleKey, bubbleFor };
 })(window.BB);

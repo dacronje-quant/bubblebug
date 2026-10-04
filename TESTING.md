@@ -65,6 +65,7 @@ Checks:
 
 - `node tools/verify-world.js` (and `--easy`, `--replay`): every stage, zero softlocks, every collectible and hidden thing reachable; the last goal is the Starfall float home.
 - `node tools/test-finds.js`: the hidden things are where they should be, go straight on when found, show as earned and still unlock by stars.
+- `node tools/test-rainbow-beams.js [shot-dir]`: Rainbow casts beams from her paw by default, one beam cheers up a boss (it still opens the way on and saves), the mirror offers Rainbow beams, and each kitten's choice survives a reload.
 - `node tools/test-finale.js`: the Starfall float drifts down the shaft and lands by the rainbow door; the party starts.
 - `node tools/test-neighbourhood.js` also checks that an older save's sparkles, friends, resume spot and bench move with their rooms (save v9).
 - `node tools/layout-check.js` prints the world box, room coverage, overlaps and any doorway that leads nowhere; `--picture` draws the map in cells. `node tools/layout/seams.js` lists doorways with a floor step a kid would have to jump.

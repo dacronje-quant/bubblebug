@@ -255,7 +255,7 @@
       BB.Economy.milestones(this.save);
       if (!BB.Economy.unlocked(this.save, a)) { w.wiggle = 20; S().hmph(); return; }
       if (style) {
-        this.save.cosmetics[a.slot] = a.value; S().outfit();
+        this.save.cosmetics[a.slot === 'bubble' ? BB.Cosmetics.bubbleKey(this.pl.cat) : a.slot] = a.value; S().outfit();
       } else {
         this.save.outfits[a.id] = 1;
         this.save.wear = this.save.wear || {};
@@ -333,7 +333,7 @@
         if (Math.floor(i / 8) !== page) return;
         const style = it.slot === 'bubble' || it.slot === 'trail';
         const q = cell(i % 8), have = it.slot === 'cat' ? save.rainbowUnlocked : BB.Economy.unlocked(save, it);
-        const worn = it.slot === 'cat' ? save.cat === it.id : style ? save.cosmetics[it.slot] === it.value : (save.wear || {})[it.slot] === it.id, sel = i === w.sel && w.focus === 'items';
+        const worn = it.slot === 'cat' ? save.cat === it.id : style ? (it.slot === 'bubble' ? BB.Cosmetics.bubbleFor(save, this.pl.cat) : save.cosmetics[it.slot]) === it.value : (save.wear || {})[it.slot] === it.id, sel = i === w.sel && w.focus === 'items';
         const afford = have;
         const wx = sel && w.wiggle ? Math.sin(w.wiggle * 1.5) * 4 : 0;
         c.save(); c.translate(q.x + wx, q.y);

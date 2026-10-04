@@ -22,7 +22,7 @@
       state: 'play',            // play | rescue | bench | gift | party | sad
       sad: 0, invuln: 0, hurtT: 0, sadT: 0,
       t: 0,
-      phase: 0, squash: 1, puff: 0,
+      phase: 0, squash: 1, puff: 0, cast: 0,
       blink: 0, blinkT: 90, idleT: 0,
       yawn: 0, yawnT: 0, ear: 0, earT: 0, lick: 0, lickT: 0, wiggleT: 0,
       happyT: 0, stepT: 0, munchT: 0, munchLen: 1,
@@ -38,6 +38,7 @@
     pl.t++;
     if (pl.bubbleCd > 0) pl.bubbleCd--;
     pl.puff = Math.max(0, pl.puff - 0.08);
+    pl.cast = Math.max(0, pl.cast - 0.05);
     pl.squash = BB.lerp(pl.squash, 1, 0.2);
     if (pl.happyT > 0) pl.happyT--;
     if (pl.hurtT > 0) pl.hurtT--;
@@ -120,9 +121,10 @@
     // ── bubbles ──
     if (input.pressed.bubble && !(fx & FX.BBOUNCE) && pl.bubbleCd <= 0 && env.bubbleCount < C.BUBBLE_MAX) {
       pl.bubbleCd = C.BUBBLE_COOLDOWN;
-      pl.puff = 1;
       pl.idleT = 0;
-      env.blow(cx + b.facing * 14, b.y + 9, b.facing, b.vx);
+      // rainbow beams stream from the front paw as it sweeps forward
+      if (env.beam) { pl.cast = 1; env.blow(cx + b.facing * 20, b.y + 17, b.facing, b.vx); }
+      else { pl.puff = 1; env.blow(cx + b.facing * 14, b.y + 9, b.facing, b.vx); }
     }
     return fx;
   }
@@ -175,7 +177,7 @@
   function pose(pl) {
     const b = pl.body;
     const p = {
-      t: pl.t, blink: pl.blink, squash: pl.squash, puff: pl.puff, yawn: pl.yawn,
+      t: pl.t, blink: pl.blink, squash: pl.squash, puff: pl.puff, cast: Math.min(1, pl.cast * 1.6), yawn: pl.yawn,
       ear: pl.ear, lick: pl.lick, happy: pl.happyT > 0, phase: pl.phase, vy: b.vy, tail: 0,
       munch: pl.munchT > 0 ? pl.munchT / pl.munchLen : 0,
       wear: BB.Play.save && BB.Play.save.wear,
