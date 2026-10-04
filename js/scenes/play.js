@@ -1163,6 +1163,7 @@
           BB.Tiles.drawStatic(c, r, cam, 0); c.restore();
         } else BB.Tiles.drawStatic(c, r, cam, 0);
       }
+      this.visibleRooms = visible; // (the loop pre-builds terrain around these when a frame has time to spare)
       for (const r of visible) BB.Tiles.drawLive(c, r, cam, t, env);
       for (const r of visible) if (r.def.arena) BB.Arenas.drawFront(c, r, cam, t);
       BB.Fx.drawGround(c, visible, cam, t, this.pl.body);
