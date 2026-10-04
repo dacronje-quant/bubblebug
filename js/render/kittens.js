@@ -646,13 +646,17 @@
       len += stretch * 1.8;
     }
 
+    // casting: the near front paw sweeps forward to send out a rainbow
+    const cast = pose.cast || 0;
+    if (cast > 0) { aFN = BB.lerp(aFN, 1.45, cast); aFF = BB.lerp(aFF, 0.5, cast * 0.6); }
+
     // tail + far legs behind the body
     drawTail(c, cat, pose.tail, bx - 10 + wig * 0.4, by - 1, pose);
     limb(c, bx - 6.5 + wig, by + 3, len, aBF, 3.8, legFar, outline, cat.paw);
     limb(c, bx + 7, by + 3, len, aFF, 3.8, legFar, outline, cat.paw);
     drawBody(c, cat, bx + wig * 0.5, by, 11.5, 7.6, wig * 0.02);
     limb(c, bx - 3.5 + wig, by + 4, len, aBN, 4.2, legC, outline, cat.paw);
-    limb(c, bx + 9.5, by + 4, len, aFN, 4.2, legC, outline, cat.paw);
+    limb(c, bx + 9.5, by + 4, len + cast * 1.5, aFN, 4.2, legC, outline, cat.paw);
 
     // head, a little in front and above
     const hx = 8.5, hy = -19 + bob * 0.7 + (mode === 'air' && pose.vy > 0 ? -0.8 : 0);
