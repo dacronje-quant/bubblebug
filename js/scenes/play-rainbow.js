@@ -7,8 +7,8 @@
 //  There they sit on cloud cushions along the Rainbow Nest, the arch over
 //  the stairwell, and their own band of its rainbow lights up.
 //  With all six home, the courtyard doorway opens onto the Cloud Maze,
-//  where Mama waits (play-cloudmaze.js). Rainbow's family stays home for
-//  good: a later sad-cloud replay never loses them again.
+//  where Mama waits (play-cloudmaze.js). A sad-cloud replay is a full new
+//  playthrough: the whole family, Mama too, is lost again.
 //  A guiding star drifts toward a lost relative in the same room, so
 //  small players can always find them without reading anything.
 // ════════════════════════════════════════════════════════════════
