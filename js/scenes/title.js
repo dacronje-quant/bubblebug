@@ -4,7 +4,7 @@
 //    ▶  CONTINUE — jump straight back into the saved adventure (greyed
 //                  out when there isn't one yet)
 //    🌱 NEW GAME — pick a kitten and start fresh; if an adventure is
-//                  saved, a picture "erase it?" check (✓ / ✗) comes first
+//                  saved, choose the whole game or Rainbow's family
 //  and, in the corner, a grown-up picker for how brave the adventure is:
 //    💗 EASY — harmless bumps with extra help jumping and landing
 //    💗 MEDIUM — the former Easy, with the original movement
@@ -129,7 +129,65 @@
     // button layout (logical px)
     btn(i) { return { x: G_().W / 2 + (i === 0 ? -120 : 120), y: 330, r: 62 }; },
     mbtn(i) { return { x: G_().W - 248 + i * 78, y: 466, r: 25 }; }, // Easy / Medium / Hard
-    cbtn(i) { return { x: G_().W / 2 + (i === 0 ? -95 : 95), y: 372, r: 46 }; }, // confirm: 0 = ✓ erase, 1 = ✗ keep
+    cbtn(i, cf = this.confirm) {
+      const cx = G_().W / 2;
+      if (cf && cf.stage === 'all') return { x: cx + (i === 0 ? -150 : 150), y: 425, w: 270, h: 64 };
+      return i === 2 ? { x: cx, y: 447, w: 290, h: 56 }
+        : { x: cx + (i === 0 ? -178 : 178), y: 256, w: 332, h: 280 };
+    },
+    resetHit(p, b) { return Math.abs(p.x - b.x) < b.w / 2 && Math.abs(p.y - b.y) < b.h / 2; },
+    resetChoice() {
+      // The title can open before a world has ever been built. Build it
+      // before Home caches its twelve-cat portrait order.
+      if (!BB.World.rooms.length) BB.World.build();
+      return { t: 0, focus: 2, stage: 'choose', hoverVersion: BB.Input.pointerVersion };
+    },
+    canResetFamily() { return !!(BB.Save.data.mazeSolved && BB.Save.data.rainbowUnlocked); },
+
+    activateReset(i, cf, cancel) {
+      if (cf.stage === 'all') {
+        if (i !== 0) { cancel(); return; }
+        BB.Voice.stop();
+        BB.Save.reset();
+        BB.Main.go('select');
+      } else {
+        if (i === 2) { cancel(); return; }
+        if (i === 0) { Object.assign(cf, { stage: 'all', focus: 1, t: 0 }); S().select(); return; }
+        if (!this.canResetFamily()) { S().hmph(); return; }
+        BB.Voice.stop();
+        if (!BB.Save.resetRainbowFamily()) return;
+        BB.Main.go('play', { cat: BB.Save.data.cat });
+      }
+      // Freeze the old scene during its fade, including held/touch inputs.
+      if (BB.Main.name === 'title') this.leaving = true;
+      else BB.Play.replayStarting = true;
+      BB.Input.clearAll(); BB.Input.takePointers(); S().confirm();
+    },
+
+    updateReset(cf, taps, cancel) {
+      const I = BB.Input;
+      cf.t++;
+      if (cf.t <= 10) return;
+      const n = cf.stage === 'all' ? 2 : 3;
+      if (cf.hoverVersion !== I.pointerVersion) {
+        cf.hoverVersion = I.pointerVersion;
+        if (I.pointerPos) for (let i = 0; i < n; i++) if (this.resetHit(I.pointerPos, this.cbtn(i, cf))) cf.focus = i;
+      }
+      if (I.pressed.back || I.pressed.pause || I.pressed.map) {
+        if (cf.stage === 'all') { Object.assign(cf, { stage: 'choose', focus: 2, t: 0 }); S().select(); }
+        else cancel();
+        return;
+      }
+      const nav = I.pressed.left || I.pressed.right || I.pressed.up || I.pressed.down;
+      if (nav) {
+        if (cf.stage === 'all') cf.focus = I.pressed.left ? 0 : 1;
+        else if (I.pressed.down) cf.focus = 2;
+        else if (I.pressed.up) cf.focus = 1;
+        else cf.focus = I.pressed.left ? 0 : 1;
+        S().select();
+      } else if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) { this.activateReset(cf.focus, cf, cancel); return; }
+      for (const p of taps) for (let i = 0; i < n; i++) if (this.resetHit(p, this.cbtn(i, cf))) { cf.focus = i; this.activateReset(i, cf, cancel); return; }
+    },
 
     choose(i) {
       if (this.leaving) return;
@@ -140,7 +198,7 @@
         BB.Main.go('play', { cat: BB.Save.data.cat, resume: true });
       } else {
         S().select();
-        if (this.hasSave) { this.confirm = { t: 0, focus: 1 }; return; }
+        if (this.hasSave) { this.confirm = this.resetChoice(); return; }
         this.startFresh();
       }
     },
@@ -175,9 +233,7 @@
         const p = I.pointerPos;
         if (p) {
           const hit = b => Math.hypot(p.x - b.x, p.y - b.y) < b.r + 10;
-          if (this.confirm) {
-            for (let i = 0; i < 2; i++) if (hit(this.cbtn(i))) this.confirm.focus = i;
-          } else {
+          if (!this.confirm) {
             for (let i = 0; i < 2; i++) if (hit(this.btn(i))) this.focus = this.lastFocus = i;
             for (let i = 0; i < 3; i++) if (hit(this.mbtn(i))) { this.focus = 2; this.modeFocus = i; }
           }
@@ -185,24 +241,7 @@
       }
 
       if (this.confirm) {
-        const cf = this.confirm;
-        cf.t++;
-        if (I.pressed.left) { cf.focus = 0; S().select(); }
-        if (I.pressed.right) { cf.focus = 1; S().select(); }
-        if (I.pressed.back || I.pressed.pause) { this.confirm = null; S().select(); return; }
-        if (cf.t > 10 && (I.pressed.jump || I.pressed.confirm || I.pressed.bubble)) {
-          if (cf.focus === 0) this.startFresh(); else { this.confirm = null; S().select(); }
-          return;
-        }
-        for (const p of taps) {
-          for (let i = 0; i < 2; i++) {
-            const b = this.cbtn(i);
-            if (Math.hypot(p.x - b.x, p.y - b.y) < b.r + 8) {
-              if (i === 0) this.startFresh(); else { this.confirm = null; S().select(); }
-              return;
-            }
-          }
-        }
+        this.updateReset(this.confirm, taps, () => { this.confirm = null; S().select(); });
         return;
       }
 
@@ -372,40 +411,91 @@
       c.restore();
     },
 
-    // "Erase the saved adventure?"  — ✓ start fresh / ✗ keep it
-    drawConfirm(c, t) {
-      const G = G_(), cf = this.confirm;
+    // Shared by New Game and the courtyard cloud. Pictures show exactly
+    // which family goes missing; the green play button is always safe.
+    drawConfirm(c, t, cf = this.confirm) {
+      const G = G_(), cx = G.W / 2, all = cf.stage === 'all';
       const a = Math.min(1, cf.t / 10);
       c.save();
       c.globalAlpha = a;
-      c.fillStyle = 'rgba(25,15,45,0.55)'; c.fillRect(0, 0, G.W, G.H);
-      c.fillStyle = '#fff6de'; c.strokeStyle = '#d9a95a'; c.lineWidth = 6;
-      G.rrect(G.W / 2 - 230, 170, 460, 280, 34, c); c.fill(); c.stroke();
-      // the adventure that would be erased, with a gentle "poof" cloud over it
-      const s = this.summary;
-      BB.Kittens.draw(c, s.cat, { mode: 'sit', t, blink: (t % 160) < 8 ? 1 : 0 }, G.W / 2 - 40, 280, 1.8, 1);
-      c.fillStyle = '#ffd84a'; G.star(G.W / 2 + 30, 232, 11, 5, 0.5, -Math.PI / 2, c); c.fill();
-      G.text(String(s.stars), G.W / 2 + 70, 233, 22, '#8a5a14', null);
-      c.fillStyle = '#ff7eb6'; G.heart(G.W / 2 + 30, 268, 10, c); c.fill();
-      G.text(String(s.hearts), G.W / 2 + 70, 268, 22, '#b8407a', null);
-      c.strokeStyle = 'rgba(200,80,110,0.8)'; c.lineWidth = 6; c.lineCap = 'round';
-      c.beginPath(); c.moveTo(G.W / 2 - 100, 300); c.lineTo(G.W / 2 + 100, 205); c.stroke();
-      // ✓ erase and start fresh
-      const yes = this.cbtn(0), no = this.cbtn(1);
-      for (const [b, i, col] of [[yes, 0, '#5fd48a'], [no, 1, '#ff8fb8']]) {
-        const on = cf.focus === i;
-        if (on) G.drawGlow(b.x, b.y, b.r * 2.2, '#fff4c2', 0.6, c);
-        const k = on ? 1.1 + Math.sin(t * 0.12) * 0.04 : 1;
-        c.save(); c.translate(b.x, b.y); c.scale(k, k);
-        c.fillStyle = col; c.strokeStyle = '#ffffff'; c.lineWidth = 6;
-        G.circle(0, 0, b.r, c); c.fill(); c.stroke();
-        c.strokeStyle = '#ffffff'; c.lineWidth = 9; c.lineCap = 'round'; c.lineJoin = 'round';
-        c.beginPath();
-        if (i === 0) { c.moveTo(-17, 1); c.lineTo(-5, 14); c.lineTo(18, -13); }
-        else { c.moveTo(-14, -14); c.lineTo(14, 14); c.moveTo(14, -14); c.lineTo(-14, 14); }
-        c.stroke();
+      c.fillStyle = 'rgba(25,15,45,0.72)'; c.fillRect(0, 0, G.W, G.H);
+      c.fillStyle = '#fff9ec'; c.strokeStyle = '#c4a4e4'; c.lineWidth = 4;
+      G.rrect(cx - 375, 30, 750, 480, 30, c); c.fill(); c.stroke();
+      // Small captions help grown-ups; every action and consequence is
+      // pictured so a child never needs to read a label.
+      G.text(all ? 'Everything will reset' : 'Play again', cx, 76, 19, '#583d74', null, 'center', c);
+      const card = (i, fill, edge) => {
+        const b = this.cbtn(i, cf), on = cf.focus === i;
+        c.fillStyle = fill; c.strokeStyle = on ? '#583d74' : edge; c.lineWidth = on ? 5 : 2;
+        G.rrect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, 22, c); c.fill(); c.stroke();
+        if (on) UI.selectionPaw(c, b.x + b.w / 2 - 20, b.y - b.h / 2 + 20, 1.15);
+        return b;
+      };
+      const familyPicture = (x, y, s = 1) => {
+        BB.Home.familyOrder().forEach((id, i) => BB.Home.faceOf(c, id, x - 115 * s + i % 6 * 46 * s, y + Math.floor(i / 6) * 32 * s, 1.65 * s, true));
+        BB.RAINBOW_KIN.forEach((id, i) => BB.RainbowFamily.face(c, id, x - 114 * s + i * 38 * s, y + 66 * s, 1.15 * s, true));
+      };
+      const againPicture = (x, y, r, col) => {
+        const end = Math.PI * 1.4;
+        c.save(); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 5; c.lineCap = 'round';
+        c.beginPath(); c.arc(x, y, r, -Math.PI * 0.35, end); c.stroke();
+        const ex = x + Math.cos(end) * r, ey = y + Math.sin(end) * r;
+        c.beginPath(); c.moveTo(ex - 9, ey + 6); c.lineTo(ex + 9, ey + 4); c.lineTo(ex + 2, ey - 12); c.closePath(); c.fill(); c.restore();
+      };
+      const playPicture = (x, y, size = 22) => {
+        c.fillStyle = '#386947'; c.beginPath(); c.moveTo(x - size * 0.7, y - size); c.lineTo(x + size, y); c.lineTo(x - size * 0.7, y + size); c.closePath(); c.fill();
+      };
+      const stuffPicture = (x, y, keep) => {
+        c.save();
+        BB.HUD.zoneIcon(c, BB.HOME_ZONE, x - 102, y, 0.95);
+        c.fillStyle = '#ffd84a'; G.star(x - 34, y, 13, 5, 0.5, -Math.PI / 2, c); c.fill();
+        UI.paw(c, x + 34, y, 0.8);
+        BB.Wardrobe.icon(c, 'wizard', x + 102, y, 1.1, t);
+        c.strokeStyle = keep ? '#3c8955' : '#c65d65'; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
+        for (const px of [x - 102, x - 34, x + 34, x + 102]) {
+          c.beginPath();
+          if (keep) { c.moveTo(px - 8, y + 15); c.lineTo(px - 1, y + 22); c.lineTo(px + 11, y + 8); }
+          else { c.moveTo(px - 14, y + 14); c.lineTo(px + 14, y - 14); }
+          c.stroke();
+        }
         c.restore();
-        if (on) UI.selectionPaw(c, b.x + 24, b.y - 28, 1.4);
+      };
+      if (all) {
+        familyPicture(cx, 151, 1.35);
+        stuffPicture(cx, 291, false);
+        againPicture(cx, 353, 22, '#bc6565');
+        for (let i = 0; i < 2; i++) {
+          const b = card(i, i === 0 ? '#fce0db' : '#d3f3dd', i === 0 ? '#d98b81' : '#75bb8c');
+          if (i === 0) againPicture(b.x - 75, b.y, 20, '#bc6565');
+          else playPicture(b.x - 75, b.y, 20);
+          G.text(i === 0 ? 'Start over' : 'Keep playing', b.x + 25, b.y, 17, '#583d74', null, 'center', c);
+        }
+      } else {
+        const full = card(0, '#ffede6', '#dfa18b');
+        BB.HUD.zoneIcon(c, BB.HOME_ZONE, full.x, 163, 1.5);
+        againPicture(full.x, 162, 37, '#bc6565');
+        familyPicture(full.x, 218);
+        stuffPicture(full.x, 341, false);
+        G.text('Whole game', full.x, 377, 16, '#754a54', null, 'center', c);
+        const ready = this.canResetFamily(), kin = card(1, ready ? '#f0e5ff' : '#eeeaf0', '#b9a0d2');
+        BB.RainbowFamily.miniArc(c, kin.x, 174, 2.3, { kin: Object.fromEntries(BB.RAINBOW_KIN.map(id => [id, 1])) }, t);
+        againPicture(kin.x + 105, 163, 20, '#9a7ac8');
+        BB.RAINBOW_KIN.forEach((id, i) => {
+          const top = i < 4, col = top ? i : i - 4;
+          BB.Kittens.draw(c, id, { mode: 'sit', t, happy: true }, kin.x + (col - (top ? 1.5 : 1)) * 60, top ? 242 : 305, 0.95, 1);
+        });
+        if (ready) {
+          stuffPicture(kin.x, 339, true);
+          G.text('Rainbow family only', kin.x, 377, 16, '#684490', null, 'center', c);
+        } else {
+          c.fillStyle = '#eeeaf0'; c.strokeStyle = '#7b7185'; c.lineWidth = 5;
+          G.rrect(kin.x - 21, 320, 42, 32, 5, c); c.fill(); c.stroke();
+          c.beginPath(); c.arc(kin.x, 320, 14, Math.PI, 0); c.stroke();
+          G.text('Find Rainbow first', kin.x, 377, 16, '#7b7185', null, 'center', c);
+        }
+        const keep = card(2, '#d3f3dd', '#75bb8c');
+        playPicture(keep.x, keep.y, 21);
+        G.text('Keep playing', keep.x, 489, 14, '#386947', null, 'center', c);
       }
       c.restore();
     },

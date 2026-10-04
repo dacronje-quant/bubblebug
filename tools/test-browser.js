@@ -221,21 +221,24 @@ async function walkMaze(page, target) {
     await page.keyboard.press('Space'); await page.waitForFunction(() => BB.Main.name === 'play');
     assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
     assert.equal(await page.evaluate(() => Object.keys(BB.Play.save.sparkles).length), saved.stars.length);
-    // The existing picture confirmation starts a complete replay once,
-    // then Continue keeps Rainbow and the earned movement abilities.
+    // The cloud's clear choices restart only Rainbow's family, retaining
+    // the original world, clothes and movement skills through Continue.
     await page.evaluate(() => {
       Object.keys(BB.Play.save.abilities).forEach(key => { BB.Play.save.abilities[key] = true; });
       BB.Play.save.outfits.googly = 1; BB.Play.save.wear.face = 'googly';
     });
     await place(page, 'nm', 6, 32); await page.waitForFunction(() => BB.Play.portalChoice?.t > 10);
-    assert.equal(await page.evaluate(() => BB.Play.portalChoice.focus), 1);
+    assert.equal(await page.evaluate(() => BB.Play.portalChoice.focus), 2);
     await shot(page, 'cloud-replay');
-    await page.keyboard.press('ArrowLeft'); await pause(page);
-    await page.keyboard.down('Enter'); await page.waitForFunction(() => BB.Play.save.replayCount === 1 && !BB.Play.replayStarting); await page.keyboard.up('Enter');
-    assert.deepEqual(await page.evaluate(() => ({ cat: BB.Play.pl.cat, cats: Object.keys(BB.Play.save.family).length, bosses: Object.keys(BB.Play.save.bosses).length, stars: Object.keys(BB.Play.save.sparkles).length, skills: Object.values(BB.Play.save.abilities).every(Boolean), glasses: BB.Play.save.wear.face })), { cat: 'rainbow', cats: 0, bosses: 0, stars: 0, skills: true, glasses: 'googly' });
+    const kept = await page.evaluate(() => ({ cat: BB.Play.pl.cat, cats: Object.keys(BB.Play.save.family).length, bosses: Object.keys(BB.Play.save.bosses).length, stars: Object.keys(BB.Play.save.sparkles).length, skills: Object.values(BB.Play.save.abilities).every(Boolean), glasses: BB.Play.save.wear.face }));
+    await page.keyboard.press('ArrowRight'); await pause(page);
+    await page.keyboard.down('Enter'); await page.waitForFunction(() => BB.Play.room.id === 'hm' && BB.Play.kinCard && !BB.Play.replayStarting); await page.keyboard.up('Enter');
+    assert.deepEqual(await page.evaluate(() => ({ cat: BB.Play.pl.cat, cats: Object.keys(BB.Play.save.family).length, bosses: Object.keys(BB.Play.save.bosses).length, stars: Object.keys(BB.Play.save.sparkles).length, skills: Object.values(BB.Play.save.abilities).every(Boolean), glasses: BB.Play.save.wear.face })), kept);
+    assert.equal(await page.evaluate(() => Object.keys(BB.Play.save.kin).length), 0);
+    assert.equal(await page.evaluate(() => BB.Play.save.cloudMask), 0);
     await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
     await page.keyboard.press('Space'); await page.waitForFunction(() => BB.Main.name === 'play');
-    assert.equal(await page.evaluate(() => BB.Play.save.replayCount), 1);
+    assert.equal(await page.evaluate(() => BB.Play.save.replayCount), 0);
     assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
     const normal = await page.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2'));
     await page.goto(pathToFileURL(path.join(ROOT, 'try-rewards.html')).href);
@@ -412,9 +415,11 @@ async function walkMaze(page, target) {
     await touch.dispatchEvent('#touch', 'pointerup', { pointerId: 92, pointerType: 'touch' });
     assert.equal(await touch.evaluate(() => BB.Play.save.rainbowUnlocked), true);
     await place(touch, 'nm', 6, 32); await touch.waitForFunction(() => BB.Play.portalChoice?.t > 10);
-    await tap(touch, 575, 405, true); assert.equal(await touch.evaluate(() => BB.Play.save.replayCount), 0);
+    await tap(touch, 480, 447, true); assert.equal(await touch.evaluate(() => BB.Play.portalChoice), null);
     await place(touch, 'nm', 6, 32); await touch.waitForFunction(() => BB.Play.portalChoice?.t > 10);
-    await tap(touch, 385, 405, true); await touch.waitForFunction(() => BB.Play.save.replayCount === 1 && !BB.Play.replayStarting);
+    await tap(touch, 658, 256, true); await touch.waitForFunction(() => BB.Play.room.id === 'hm' && BB.Play.kinCard && !BB.Play.replayStarting);
+    assert.equal(await touch.evaluate(() => Object.keys(BB.Play.save.kin).length), 0);
+    assert.equal(await touch.evaluate(() => Object.keys(BB.Play.save.family).length), 12);
     assert.equal(await touch.evaluate(() => BB.Play.pl.cat), 'rainbow');
     assert.equal(await touch.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2')), null);
     assert.deepEqual(errors, []);

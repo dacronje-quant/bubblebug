@@ -180,7 +180,28 @@ assert.equal(P.save.purchases['bubble-rainbow'], 1); assert.equal(P.save.cosmeti
 g.tick(430);
 assert.equal(P.cloud, null, 'the celebration ends back in the courtyard'); assert.equal(P.room.id, 'nm');
 
-// 7. The replay cloud appears; replays keep the family home for good.
+// 7. The replay cloud appears. Restart just this family twice, then
+// finish all six happy mazes and Mama's real-key route again each time.
+for (let cycle = 0; cycle < 2; cycle++) {
+  const cats = plain(P.save.family), stars = plain(P.save.sparkles), outfits = plain(P.save.outfits);
+  g.place('nm', 6, 32); g.tick(B.Links.HOLD + 15);
+  assert.equal(P.portalChoice.kind, 'cloud'); assert.equal(P.portalChoice.focus, 2);
+  g.tick(1, ['ArrowRight']); g.tick(); g.tick(1, ['Enter']); g.tick(40);
+  assert.equal(P.room.id, 'hm'); assert.equal(RF.count(P.save), 0); assert.equal(P.save.cloudMask, 0);
+  assert.equal(kinThings().length, 6); assert.ok(P.kinCard);
+  assert.deepEqual(plain(P.save.family), cats); assert.deepEqual(plain(P.save.sparkles), stars);
+  assert.deepEqual(plain(P.save.outfits), outfits); assert.equal(P.save.cosmetics.bubble, 'rainbow');
+  B.Save.load(); B.Main.set('play', {});
+  for (const th of kinThings()) { P.ctx().onKin(th); solveMini(); }
+  assert.equal(RF.mamaReady(P.save), true);
+  g.place('nm', 21, 32); P.openJourneyChoice('rainbow'); P.chooseJourney();
+  assert.ok(P.cloud); walk(route.slice(1)); g.tick(430);
+  assert.equal(RF.complete(P.save), true); assert.equal(P.cloud, null);
+  assert.equal(heard.filter(id => id === 'kin_complete').length, cycle + 2, 'completion voice repeats for the new hunt');
+}
+console.log('✓ two family-only resets: every mini maze and Mama solved again after reload; other progress and rainbow bubbles stay earned');
+
+// The legacy save helper still preserves family progress for older integrations.
 assert.equal(B.RainbowJourney.unlocked(P.save, 'cloud'), true);
 assert.equal(B.RainbowJourney.unlocked(P.save, 'rainbow'), true, 'the doorway leads back to the hedge maze');
 g.place('nm', 21, 32); P.openJourneyChoice('rainbow'); P.chooseJourney(); assert.ok(P.maze); P.closeMaze();

@@ -197,6 +197,20 @@
       if (this.preview) return;
       try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
     },
+    resetRainbowFamily() {
+      const old = this.data;
+      if (!old.mazeSolved || !old.rainbowUnlocked) return false;
+      // Replace the save so callbacks from the previous hunt cannot mark
+      // the new hunt's story as heard. Everything else stays earned.
+      const next = Object.assign({}, old, { kin: {}, kinIntro: 0, cloudMask: 0,
+        room: null, x: null, y: null, inMaze: false, mazeReturn: null });
+      next.voiceStory = Object.fromEntries(Object.entries(old.voiceStory || {}).filter(([id]) => !id.startsWith('kin_')));
+      next.storyPending = (Array.isArray(old.storyPending) ? old.storyPending : []).filter(id => !id.startsWith('kin_'));
+      next.storyPending.push('kin_hunt_start');
+      this.data = next;
+      this.write();
+      return true;
+    },
     rainbowReplay() {
       const old = this.data;
       if (!old.mazeSolved || !old.rainbowUnlocked) return false;

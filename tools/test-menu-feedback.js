@@ -22,6 +22,7 @@ function check(g) {
   assert.equal(B.Title.confirm.focus, 0); assert.equal(B.Main.name, 'title');
   assert.equal(g.storage.get('bubblebug_kingdom_v2'), saved, 'hovering Start Fresh cannot erase a save');
   tick(1, ['ArrowRight']); tick(20); assert.equal(B.Title.confirm.focus, 1);
+  tick(1, ['ArrowDown']); tick(); assert.equal(B.Title.confirm.focus, 2);
   tick(1, ['Enter']); tick(); assert.equal(B.Title.confirm, null);
   B.Main.set('select'); tick(20);
   hover(B.Select.spot(1)); tick(60); assert.equal(B.Select.sel, 1); assert.equal(B.Select.chosen, null);

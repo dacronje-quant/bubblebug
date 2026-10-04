@@ -62,6 +62,7 @@ function cycles(g) {
   assert.equal(B.Save.rainbowReplay(), false);
   for (let cycle = 1; cycle <= 3; cycle++) {
     let save = B.Play.save;
+    Object.assign(save, { abilities: { ...abilities }, outfits: { googly: 1, wizard: 1 }, wear: { head: 'wizard', face: 'googly' }, gestures: { twirl: 1 }, cosmetics: { bubble: 'classic', trail: 'rainbow' } });
     // Completed adventure fixture, rebuilt through the real scene. The
     // route proof separately reaches every boss/puzzle from a fresh home.
     B.Home.familyOrder().forEach(id => { save.family[id] = 1; }); save.finale = true;
@@ -86,19 +87,25 @@ function cycles(g) {
     // the replay cloud waits until Rainbow's whole family is home (kept through replays)
     for (const id of B.RAINBOW_KIN) save.kin[id] = 1;
     place('nm', 6, 32); tick(B.Links.HOLD + 15);
-    assert.equal(B.Play.portalChoice.kind, 'cloud'); assert.equal(B.Play.portalChoice.focus, 1);
+    assert.equal(B.Play.portalChoice.kind, 'cloud'); assert.equal(B.Play.portalChoice.focus, 2);
     const unchanged = B.Save.data;
     tick(1, ['Enter']); tick(); assert.equal(B.Play.portalChoice, null); assert.equal(B.Save.data, unchanged);
-    assert.equal(B.Save.data.replayCount, cycle - 1);
+    assert.equal(B.Save.data.replayCount, 0);
     place('nm', 21, 32); tick(); place('nm', 6, 32); tick(B.Links.HOLD + 15);
-    tick(1, ['ArrowLeft']); tick(); tick(50, ['Enter']); tick();
+    tick(1, ['ArrowLeft']); tick(); tick(1, ['Enter']); tick(12);
+    assert.equal(B.Play.portalChoice.stage, 'all'); assert.equal(B.Play.portalChoice.focus, 1);
+    tick(1, ['ArrowLeft']); tick(); tick(1, ['Enter']); tick(40);
+    assert.equal(B.Main.name, 'select'); assert.equal(storage.has('bubblebug_kingdom_v2'), false);
+    assert.equal(B.Save.data.rainbowUnlocked, false); assert.equal(B.Save.data.mazeSolved, false);
+    assert.deepEqual(plain(B.Save.data.outfits), {}); assert.deepEqual(plain(B.Save.data.purchases), {});
+    tick(1, ['Enter']); tick(130);
     save = B.Play.save;
     assert.equal(B.Main.name, 'play'); assert.equal(B.Save.data, save);
-    assert.equal(save.replayCount, cycle); assert.equal(save.cat, 'rainbow'); assert.equal(B.Play.pl.cat, 'rainbow');
-    assert.equal(save.rainbowUnlocked, true); assert.equal(save.mazeSolved, false); assert.equal(save.inMaze, false);
-    assert.deepEqual(plain(save.abilities), abilities);
-    assert.equal(save.outfits.googly, 1); assert.equal(save.wear.face, 'googly'); assert.equal(save.gestures.twirl, 1);
-    assert.equal(save.cosmetics.trail, 'rainbow'); // earned at 250 stars in the old run
+    assert.equal(save.replayCount, 0); assert.equal(save.cat, 'marshmallow'); assert.equal(B.Play.pl.cat, 'marshmallow');
+    assert.equal(save.rainbowUnlocked, false); assert.equal(save.mazeSolved, false); assert.equal(save.inMaze, false);
+    assert.ok(Object.values(save.abilities).every(v => !v));
+    assert.deepEqual(plain(save.outfits), {}); assert.equal(save.wear.face, null); assert.deepEqual(plain(save.gestures), {});
+    assert.equal(save.cosmetics.trail, 'classic');
     for (const field of ['family', 'sparkles', 'friends', 'toys', 'buds', 'gates', 'bosses', 'pads', 'babies', 'keys', 'songs', 'secrets', 'residents', 'glassesFound']) assert.deepEqual(plain(save[field]), {}, field + ' starts over');
     assert.equal(save.purchases['heart-fountain'], undefined); assert.equal(save.purchases['resident-bunny'], undefined);
     assert.equal(save.heartsSpent, 0); assert.equal(save.starsSpent, 0); assert.equal(save.fountainUses, 0);
@@ -110,18 +117,18 @@ function cycles(g) {
     assert.notEqual(B.Play.ents.g6.bosses[0].state, 'happy');
     assert.ok(B.World.rooms.flatMap(r => B.Play.ents[r.id].bugs).every(b => b.state === 'gloomy'));
     assert.equal(B.RainbowJourney.unlocked(save, 'rainbow'), false); assert.equal(B.RainbowJourney.unlocked(save, 'cloud'), false);
-    assert.equal(B.Play.wardrobeTabs(), 6); // permanent rescued character choice
+    assert.equal(B.Play.wardrobeTabs(), 5);
     assert.equal(B.Settings.difficulty, 'hard');
     tick(400); assert.equal(B.Play.intro, null); assert.equal(save.introDone, 1);
     B.Play.writeSave(); assert.ok(storage.get('bubblebug_kingdom_v2'));
     B.Save.load(); B.Main.set('play', {}); save = B.Play.save;
-    assert.equal(save.replayCount, cycle); assert.equal(save.cat, 'rainbow'); assert.deepEqual(plain(save.abilities), abilities);
+    assert.equal(save.replayCount, 0); assert.equal(save.cat, 'marshmallow'); assert.ok(Object.values(save.abilities).every(v => !v));
     assert.notEqual(B.Play.ents.g6.bosses[0].state, 'happy');
-    // Clothes are retained, but their hidden pickups can be found anew.
+    // Clothes and their hidden pickups can be earned anew.
     B.World.openGates(B.World.byId.nr);
     place('nr', 25, 16); tick(); assert.equal(save.glassesFound.googly, 1);
   }
-  console.log('✓ three maze/rescue/cloud/replay cycles rebuild every run, survive reload and retain skills/clothes');
+  console.log('✓ three maze/rescue/cloud/full-reset cycles clear the entire game, rebuild every run and survive reload');
   return g;
 }
 

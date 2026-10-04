@@ -1,5 +1,5 @@
 // Picture interactions on the garden path: rescue Rainbow through a
-// twelve-cat rainbow, then choose a fresh adventure at the sad cloud.
+// twelve-cat rainbow, then choose a full or family-only reset at the cloud.
 (function (BB) {
   'use strict';
   const T = BB.CFG.TILE, G = () => BB.G, S = () => BB.Audio.sfx;
@@ -199,11 +199,11 @@
     openJourneyChoice(kind) {
       if (!unlocked(this.save, kind)) return false;
       BB.Voice.stop();
-      this.portalChoice = { kind, t: 0, focus: kind === 'cloud' ? 1 : 0 };
+      this.portalChoice = kind === 'cloud' ? Object.assign(BB.Title.resetChoice(), { kind }) : { kind, t: 0, focus: 0 };
       this.pl.state = 'homechoice'; this.pl.body.vx = 0; this.journeyHold = 0;
       BB.Input.takePointers(); S().select();
-      if (kind === 'cloud') this.sayStory('story_replay_choice', 0, false);
-      else if (RF().mamaReady(this.save)) this.sayStory('kin_mama_call', 0, false);
+      if (kind === 'cloud') return true;
+      if (RF().mamaReady(this.save)) this.sayStory('kin_mama_call', 0, false);
       else if (!this.save.mazeSolved) this.sayStory('story_rainbow_call', 0, false);
       return true;
     },
@@ -217,15 +217,18 @@
     chooseJourney() {
       const w = this.portalChoice;
       if (!w || !unlocked(this.save, w.kind)) return false;
+      if (w.kind === 'cloud') {
+        BB.Title.activateReset(w.focus, w, () => this.closeJourneyChoice());
+        return this.replayStarting;
+      }
       if (w.focus === 1) { this.closeJourneyChoice(); return false; }
       if (w.kind === 'rainbow') return RF().mamaReady(this.save) ? this.openCloud() : this.openMaze();
-      if (!BB.Save.rainbowReplay()) return false;
-      this.portalChoice = null; this.replayStarting = true;
-      BB.Input.clearAll(); BB.Input.takePointers(); S().bossGrumble();
-      BB.Main.go('play', { cat: 'rainbow' }); return true;
+      return false;
     },
     updateJourneyChoice() {
-      const w = this.portalChoice, I = BB.Input; w.t++;
+      const w = this.portalChoice, I = BB.Input;
+      if (w.kind === 'cloud') return BB.Title.updateReset(w, I.takePointers(), () => this.closeJourneyChoice());
+      w.t++;
       if (w.t < 10) { I.takePointers(); return; }
       if (I.pressed.back || I.pressed.pause || I.pressed.map) return this.closeJourneyChoice();
       if (I.pressed.left) { w.focus = 0; S().select(); }
@@ -252,18 +255,14 @@
       }
     },
     drawJourneyChoice(c, t) {
-      const w = this.portalChoice, replay = w.kind === 'cloud';
+      const w = this.portalChoice;
+      if (w.kind === 'cloud') { BB.Title.drawConfirm(c, t, w); return; }
       c.save(); c.fillStyle = 'rgba(35,28,56,0.6)'; c.fillRect(0, 0, G().W, G().H);
       c.fillStyle = '#fff8ee'; c.strokeStyle = '#ff9ec7'; c.lineWidth = 5;
       G().rrect(200, 107, 560, 351, 36, c); c.fill(); c.stroke();
       const mama = RF().mamaReady(this.save);
-      G().text(replay ? 'Replay as Rainbow?' : mama ? "Rainbow's Mama" : 'Rescue Rainbow', 480, 156, 26, '#82629c', null, 'center', c);
-      if (replay) {
-        BB.Kittens.draw(c, 'rainbow', { mode: 'sit', happy: true, t, wear: this.save.wear }, 354, 314, 2.4, 1);
-        sadCloud(c, 599, 243, t, 2.3);
-        BB.HUD.zoneIcon(c, BB.HOME_ZONE, 599, 291, 0.8);
-        G().text('Restart adventure · Keep skills and outfits', 480, 339, 15, '#82629c', null, 'center', c);
-      } else {
+      G().text(mama ? "Rainbow's Mama" : 'Rescue Rainbow', 480, 156, 26, '#82629c', null, 'center', c);
+      {
         rainbow(c, 392, 291, t, 1.15);
         if (mama) {
           // Mama, and a little cloud maze with its colour bridges

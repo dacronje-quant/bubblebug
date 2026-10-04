@@ -119,7 +119,9 @@ function story() {
   assert.equal(P.openJourneyChoice('cloud'), false); // the replay waits for Rainbow's whole family
   for (const id of B.RAINBOW_KIN) P.save.kin[id] = 1;
   P.openJourneyChoice('cloud'); P.closeJourneyChoice(); P.openJourneyChoice('cloud');
-  assert.equal(heard.filter(id => id === 'story_replay_choice').length, 1);
+  // The old recording describes keeping skills in a whole-world replay;
+  // it must not promise that on the new full-reset / family-only choices.
+  assert.equal(heard.filter(id => id === 'story_replay_choice').length, 0);
   P.save.abilities.doubleJump = true; P.save.outfits.horn = 1;
   const previous = P.save; B.Save.write(); B.Save.load();
   assert.equal(B.Save.data.voiceStory.story_rainbow_rescue, 1);
