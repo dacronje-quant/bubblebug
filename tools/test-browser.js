@@ -93,7 +93,7 @@ async function walkMaze(page, target) {
   try {
     const context = await browser.newContext({ viewport: { width: 960, height: 540 } });
     const page = await context.newPage(); watch(page);
-    await page.goto(URL); await page.waitForFunction(() => BB.Title.t > 16);
+    await page.goto(URL); await page.waitForFunction(() => window.BB && BB.Title.t > 16);
     await hover(page, 600, 330); assert.equal(await page.evaluate(() => BB.Title.focus), 1);
     await shot(page, 'new-game-paw');
     await page.keyboard.press('ArrowLeft'); await pause(page); assert.equal(await page.evaluate(() => BB.Title.focus), 0);
@@ -113,7 +113,7 @@ async function walkMaze(page, target) {
       assert.equal(await page.evaluate(() => BB.Settings.difficulty), mode);
     }
     await shot(page, 'title-medium');
-    await tap(page, 600, 330); await page.waitForFunction(() => BB.Main.name === 'select');
+    await tap(page, 600, 330); await page.waitForFunction(() => window.BB && BB.Main.name === 'select');
     await hover(page, 670, 350); assert.equal(await page.evaluate(() => BB.Select.sel), 1);
     assert.equal(await page.evaluate(() => BB.Select.chosen), null); await shot(page, 'kitten-paw');
     await page.keyboard.press('ArrowLeft'); await pause(page); assert.equal(await page.evaluate(() => BB.Select.sel), 0);
@@ -125,7 +125,7 @@ async function walkMaze(page, target) {
       BB.Main.set('play', {});
     });
     const mirror = await page.evaluate(() => BB.Home.MIRROR_COL);
-    await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
+    await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => window.BB && BB.Play.wardrobe?.t > 8);
     await wardrobeItem(page, 'wizard'); await shot(page, 'star-reward-half');
     assert.deepEqual(await barColor(page, 622), [255, 214, 101]);
     assert.deepEqual(await barColor(page, 628), [232, 222, 234]);
@@ -135,7 +135,7 @@ async function walkMaze(page, target) {
       BB.Main.set('play', {}); BB.Save.write();
     });
     await place(page, 'hm', mirror - 0.5, 32);
-    await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
+    await page.waitForFunction(() => window.BB && BB.Play.wardrobe?.t > 8);
     await page.keyboard.down('KeyX'); await page.waitForTimeout(350); await page.keyboard.up('KeyX');
     assert.equal(await page.evaluate(() => BB.Play.save.starsSpent), 0);
     const previousHead = await page.evaluate(() => BB.Play.save.wear.head);
@@ -184,8 +184,8 @@ async function walkMaze(page, target) {
       stars: Object.keys(BB.Play.save.sparkles).sort(),
     }));
     assert.equal(saved.spent, 0); assert.ok(saved.stars.length >= 250);
-    await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
-    await page.keyboard.press('Space'); await page.waitForFunction(() => BB.Main.name === 'play');
+    await page.reload(); await page.waitForFunction(() => window.BB && BB.Title.t > 16);
+    await page.keyboard.press('Space'); await page.waitForFunction(() => window.BB && BB.Main.name === 'play');
     assert.deepEqual(await page.evaluate(() => ({
       mode: BB.Settings.difficulty, spent: BB.Play.save.starsSpent,
       trail: BB.Play.save.cosmetics.trail, bubble: BB.Play.save.cosmetics.bubble,
@@ -198,7 +198,7 @@ async function walkMaze(page, target) {
       BB.Home.familyOrder().forEach(id => { BB.Play.save.family[id] = 1; });
       BB.RAINBOW_KIN.forEach(id => { BB.Play.save.kin[id] = 1; }); // (the replay cloud waits for Rainbow's whole family)
     });
-    await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
+    await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => window.BB && BB.Play.wardrobe?.t > 8);
     await page.keyboard.press('ArrowUp'); await pause(page);
     for (let i = 0; i < 5; i++) { await page.keyboard.press('ArrowRight'); await pause(page); }
     assert.equal(await page.evaluate(() => BB.Play.wardrobe.tab), 5);
@@ -217,8 +217,8 @@ async function walkMaze(page, target) {
     await category(page, 2); await tap(page, 681, 178); await tap(page, 681, 178);
     assert.equal(await page.evaluate(() => BB.Play.save.wear.face), 'googly');
     await shot(page, 'mirror-glasses'); await tap(page, 776, 438);
-    await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
-    await page.keyboard.press('Space'); await page.waitForFunction(() => BB.Main.name === 'play');
+    await page.reload(); await page.waitForFunction(() => window.BB && BB.Title.t > 16);
+    await page.keyboard.press('Space'); await page.waitForFunction(() => window.BB && BB.Main.name === 'play');
     assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
     assert.equal(await page.evaluate(() => Object.keys(BB.Play.save.sparkles).length), saved.stars.length);
     // The existing picture confirmation starts a complete replay once,
@@ -227,26 +227,26 @@ async function walkMaze(page, target) {
       Object.keys(BB.Play.save.abilities).forEach(key => { BB.Play.save.abilities[key] = true; });
       BB.Play.save.outfits.googly = 1; BB.Play.save.wear.face = 'googly';
     });
-    await place(page, 'nm', 6, 32); await page.waitForFunction(() => BB.Play.portalChoice?.t > 10);
+    await place(page, 'nm', 6, 32); await page.waitForFunction(() => window.BB && BB.Play.portalChoice?.t > 10);
     assert.equal(await page.evaluate(() => BB.Play.portalChoice.focus), 1);
     await shot(page, 'cloud-replay');
     await page.keyboard.press('ArrowLeft'); await pause(page);
-    await page.keyboard.down('Enter'); await page.waitForFunction(() => BB.Play.save.replayCount === 1 && !BB.Play.replayStarting); await page.keyboard.up('Enter');
+    await page.keyboard.down('Enter'); await page.waitForFunction(() => window.BB && BB.Play.save.replayCount === 1 && !BB.Play.replayStarting); await page.keyboard.up('Enter');
     assert.deepEqual(await page.evaluate(() => ({ cat: BB.Play.pl.cat, cats: Object.keys(BB.Play.save.family).length, bosses: Object.keys(BB.Play.save.bosses).length, stars: Object.keys(BB.Play.save.sparkles).length, skills: Object.values(BB.Play.save.abilities).every(Boolean), glasses: BB.Play.save.wear.face })), { cat: 'rainbow', cats: 0, bosses: 0, stars: 0, skills: true, glasses: 'googly' });
-    await page.reload(); await page.waitForFunction(() => BB.Title.t > 16);
-    await page.keyboard.press('Space'); await page.waitForFunction(() => BB.Main.name === 'play');
+    await page.reload(); await page.waitForFunction(() => window.BB && BB.Title.t > 16);
+    await page.keyboard.press('Space'); await page.waitForFunction(() => window.BB && BB.Main.name === 'play');
     assert.equal(await page.evaluate(() => BB.Play.save.replayCount), 1);
     assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
     const normal = await page.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2'));
     await page.goto(pathToFileURL(path.join(ROOT, 'try-rewards.html')).href);
-    await page.waitForFunction(() => BB.Save.preview && BB.Main.name === 'play');
-    await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
+    await page.waitForFunction(() => window.BB && BB.Save.preview && BB.Main.name === 'play');
+    await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => window.BB && BB.Play.wardrobe?.t > 8);
     await tap(page, 505, 178); await tap(page, 776, 438); await page.reload();
-    await page.waitForFunction(() => BB.Save.preview);
+    await page.waitForFunction(() => window.BB && BB.Save.preview);
     assert.equal(await page.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2')), normal);
     // The outdoor welcome spot fills all three rooms with the rescued
     // critters. Each original picture activity runs in the real browser.
-    await place(page, 'ng', 24, 31); await page.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
+    await place(page, 'ng', 24, 31); await page.waitForFunction(() => window.BB && BB.Play.gardenChoice?.t > 8);
     await page.keyboard.press('Enter'); await pause(page);
     assert.ok(await page.evaluate(() => BB.Play.homeVisitors.length > 0));
     await page.evaluate(() => {
@@ -276,7 +276,7 @@ async function walkMaze(page, target) {
       s.rainbowUnlocked = true;
       BB.Save.write();
     });
-    await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => BB.Play.wardrobe?.t > 8);
+    await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => window.BB && BB.Play.wardrobe?.t > 8);
     for (const [tab, id] of [[2, 'flowerframes'], [2, 'aviators'], [1, 'bowtie'], [1, 'pearls'], [1, 'leafcollar'], [1, 'rainbowcollar'], [4, 'trail-heart']]) {
       await category(page, tab); await wardrobeItem(page, id); await wardrobeItem(page, id);
       assert.equal(await page.evaluate(id => BB.Economy.progress(BB.Play.save, BB.Play.wardrobeItems().find(item => item.id === id)), id), 1, id);
@@ -293,27 +293,27 @@ async function walkMaze(page, target) {
     assert.equal(await page.evaluate(() => BB.Play.portalChoice), null);
     await page.evaluate(() => BB.Home.familyOrder().forEach(id => { BB.Play.save.family[id] = 1; }));
     await place(page, 'nm', 17, 32); await page.waitForTimeout(400); await shot(page, 'rainbow-path');
-    await place(page, 'nm', 21, 32); await page.waitForFunction(() => BB.Play.portalChoice?.t > 10);
+    await place(page, 'nm', 21, 32); await page.waitForFunction(() => window.BB && BB.Play.portalChoice?.t > 10);
     await shot(page, 'rainbow-entry');
-    await page.keyboard.press('Enter'); await page.waitForFunction(() => BB.Play.maze !== null);
+    await page.keyboard.press('Enter'); await page.waitForFunction(() => window.BB && BB.Play.maze !== null);
     await shot(page, 'hedge-maze');
     for (const pad of await page.evaluate(() => BB.GardenMaze.ORDER)) await walkMaze(page, pad);
     await walkMaze(page, await page.evaluate(() => BB.GardenMaze.PRIZE));
-    await page.waitForFunction(() => BB.Play.maze?.choiceT > 10);
+    await page.waitForFunction(() => window.BB && BB.Play.maze?.choiceT > 10);
     await tap(page, 660, 270); await tap(page, 660, 270);
     assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
-    await page.waitForFunction(() => BB.Play.maze.bloom === 1);
+    await page.waitForFunction(() => window.BB && BB.Play.maze.bloom === 1);
     await shot(page, 'maze-happy');
     await page.evaluate(() => { BB.Play.maze.choice = true; BB.Play.maze.choiceT = 10; BB.Play.maze.sel = 2; });
     await shot(page, 'kitten-choices');
     await tap(page, 762, 136); await page.keyboard.press('ArrowLeft');
-    await page.waitForFunction(() => BB.Play.maze?.x === BB.GardenMaze.RESCUE_EXIT.x && !BB.Play.maze.moving);
+    await page.waitForFunction(() => window.BB && BB.Play.maze?.x === BB.GardenMaze.RESCUE_EXIT.x && !BB.Play.maze.moving);
     await page.waitForTimeout(900); assert.ok(await page.evaluate(() => BB.Play.maze));
     await shot(page, 'rescue-exit-wait');
-    await page.waitForFunction(() => BB.Play.maze === null && BB.Play.room.id === 'nm');
+    await page.waitForFunction(() => window.BB && BB.Play.maze === null && BB.Play.room.id === 'nm');
     assert.equal(await page.evaluate(() => BB.Play.journeyLock), 'rainbow');
     await shot(page, 'courtyard-happy');
-    await page.keyboard.down('ArrowRight'); await page.waitForFunction(() => BB.Play.room.id === 'hm'); await page.keyboard.up('ArrowRight');
+    await page.keyboard.down('ArrowRight'); await page.waitForFunction(() => window.BB && BB.Play.room.id === 'hm'); await page.keyboard.up('ArrowRight');
     assert.equal(await page.evaluate(() => BB.Play.save.mazeSolved && BB.Play.save.rainbowUnlocked), true);
     await shot(page, 'rescued-kitten-home');
     console.log('✓ Chromium: safe mouse/keyboard menu paws, exact half star bar, full maze rescue and walk home, wardrobe, garden, replay/reload and safe preview');
@@ -321,11 +321,11 @@ async function walkMaze(page, target) {
 
     const tablet = await browser.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true });
     const touch = await tablet.newPage(); watch(touch);
-    await touch.goto(URL); await touch.waitForFunction(() => BB.Title.t > 16);
+    await touch.goto(URL); await touch.waitForFunction(() => window.BB && BB.Title.t > 16);
     await tap(touch, 790, 466, true); assert.equal(await touch.evaluate(() => BB.Settings.difficulty), 'medium');
     await touch.goto(pathToFileURL(path.join(ROOT, 'try-rewards.html')).href);
-    await touch.waitForFunction(() => BB.Save.preview && BB.Main.name === 'play');
-    await place(touch, 'hm', mirror - 0.5, 32); await touch.waitForFunction(() => BB.Play.wardrobe?.t > 8);
+    await touch.waitForFunction(() => window.BB && BB.Save.preview && BB.Main.name === 'play');
+    await place(touch, 'hm', mirror - 0.5, 32); await touch.waitForFunction(() => window.BB && BB.Play.wardrobe?.t > 8);
     assert.equal(await touch.locator('#touch').isVisible(), false);
     await tap(touch, 505, 178, true); assert.equal(await touch.evaluate(() => BB.Play.save.starsSpent), 0);
     for (let i = 0; i < 5; i++) await category(touch, i, true);
@@ -344,20 +344,20 @@ async function walkMaze(page, target) {
     await touch.waitForFunction(() => getComputedStyle(document.getElementById('touch')).display === 'block');
     const pauseButton = await touch.locator('#pause-btn').boundingBox();
     const tapPause = () => touch.touchscreen.tap(pauseButton.x + pauseButton.width / 2, pauseButton.y + pauseButton.height / 2);
-    await tapPause(); await touch.waitForFunction(() => BB.Main.name === 'pause' && document.body.classList.contains('menu-open'));
+    await tapPause(); await touch.waitForFunction(() => window.BB && BB.Main.name === 'pause' && document.body.classList.contains('menu-open'));
     assert.equal(await touch.locator('#touch').isVisible(), false);
     await shot(touch, 'touch-pause');
-    await tapPause(); await touch.waitForFunction(() => BB.Main.name === 'play' && !document.body.classList.contains('menu-open'));
+    await tapPause(); await touch.waitForFunction(() => window.BB && BB.Main.name === 'play' && !document.body.classList.contains('menu-open'));
     assert.equal(await touch.locator('#touch').isVisible(), true);
     const mapButton = await touch.locator('#map-btn').boundingBox();
     const tapMap = () => touch.touchscreen.tap(mapButton.x + mapButton.width / 2, mapButton.y + mapButton.height / 2);
     // the map button opens the same kingdom map as the pause menu; tapping it again goes back to play
-    await tapMap(); await touch.waitForFunction(() => BB.Main.name === 'pause' && BB.Pause.map && document.body.classList.contains('menu-open'));
+    await tapMap(); await touch.waitForFunction(() => window.BB && BB.Main.name === 'pause' && BB.Pause.map && document.body.classList.contains('menu-open'));
     assert.equal(await touch.locator('#touch').isVisible(), false);
     assert.equal(await touch.locator('#map-btn').isVisible(), true); // remains available to close the map
-    await tapMap(); await touch.waitForFunction(() => BB.Main.name === 'play' && !document.body.classList.contains('menu-open'));
+    await tapMap(); await touch.waitForFunction(() => window.BB && BB.Main.name === 'play' && !document.body.classList.contains('menu-open'));
     assert.equal(await touch.locator('#touch').isVisible(), true);
-    await place(touch, 'ng', 24, 31); await touch.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
+    await place(touch, 'ng', 24, 31); await touch.waitForFunction(() => window.BB && BB.Play.gardenChoice?.t > 8);
     assert.equal(await touch.locator('#touch').isVisible(), false);
     await tap(touch, 480, 390, true); assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 1);
     const invitedCount = await touch.evaluate(() => BB.Play.homeVisitors.length);
@@ -366,15 +366,15 @@ async function walkMaze(page, target) {
     await tap(touch, 610, 390, true); assert.equal(await touch.evaluate(() => BB.Play.homeVisitors.length), 0);
     await tap(touch, 500, 390, true); assert.equal(await touch.evaluate(() => BB.Play.homeVisitors.length), invitedCount);
     await shot(touch, 'touch-invite'); await tap(touch, 678, 145, true);
-    await place(touch, 'hm', 24, 32); await touch.waitForFunction(() => BB.Play.gardenChoice?.t > 8);
+    await place(touch, 'hm', 24, 32); await touch.waitForFunction(() => window.BB && BB.Play.gardenChoice?.t > 8);
     await tap(touch, 480, 390, true);
     assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 2);
     assert.equal(await touch.evaluate(() => BB.Play.gardenChoice), null);
     assert.equal(await touch.evaluate(() => BB.Play.zoneCard), 0);
     await shot(touch, 'touch-fountain-party');
-    await touch.waitForFunction(() => BB.Play.fountainCd === 0);
+    await touch.waitForFunction(() => window.BB && BB.Play.fountainCd === 0);
     await place(touch, 'hm', 21, 32); await pause(touch); await place(touch, 'hm', 24, 32);
-    await touch.waitForFunction(() => BB.Play.gardenChoice?.t > 8); await tap(touch, 480, 390, true);
+    await touch.waitForFunction(() => window.BB && BB.Play.gardenChoice?.t > 8); await tap(touch, 480, 390, true);
     assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 2);
     assert.equal(await touch.evaluate(() => BB.Play.save.fountainUses), 2);
     assert.equal(await touch.evaluate(() => document.body.classList.contains('touch')), true);
@@ -383,14 +383,14 @@ async function walkMaze(page, target) {
       await touch.waitForFunction(kind => BB.Play.gardenFun?.kind === kind, kind);
       assert.equal(await touch.evaluate(() => BB.Play.save.heartsSpent), 2);
     }
-    await place(touch, 'nm', 21, 32); await touch.waitForFunction(() => BB.Play.portalChoice?.t > 10);
+    await place(touch, 'nm', 21, 32); await touch.waitForFunction(() => window.BB && BB.Play.portalChoice?.t > 10);
     assert.equal(await touch.locator('#touch').isVisible(), false);
-    await tap(touch, 385, 405, true); await touch.waitForFunction(() => BB.Play.maze !== null);
+    await tap(touch, 385, 405, true); await touch.waitForFunction(() => window.BB && BB.Play.maze !== null);
     await tap(touch, 448, 506, true);
-    await touch.waitForFunction(() => BB.Play.maze.y === 12);
+    await touch.waitForFunction(() => window.BB && BB.Play.maze.y === 12);
     await tap(touch, 850, 30, true);
     assert.ok(await touch.evaluate(() => BB.Play.maze));
-    await touch.waitForFunction(() => BB.Play.maze === null);
+    await touch.waitForFunction(() => window.BB && BB.Play.maze === null);
     assert.equal(await touch.evaluate(() => BB.Play.room.id), 'nm');
     assert.equal(await touch.evaluate(() => BB.Play.maze), null);
     // Touch cancelling a replay keeps the same adventure; confirming
@@ -402,19 +402,19 @@ async function walkMaze(page, target) {
       P.chooseMazeCat('rainbow'); P.maze.rewardLock = true;
     });
     await tap(touch, 88, 99, true);
-    await touch.waitForFunction(() => BB.Play.maze?.x === BB.GardenMaze.RESCUE_EXIT.x && !BB.Play.maze.moving);
+    await touch.waitForFunction(() => window.BB && BB.Play.maze?.x === BB.GardenMaze.RESCUE_EXIT.x && !BB.Play.maze.moving);
     await touch.waitForTimeout(900); assert.ok(await touch.evaluate(() => BB.Play.maze));
     await shot(touch, 'touch-rescue-exit-wait');
-    await touch.waitForFunction(() => BB.Play.maze === null && BB.Play.room.id === 'nm');
+    await touch.waitForFunction(() => window.BB && BB.Play.maze === null && BB.Play.room.id === 'nm');
     const right = await touch.locator('[data-act="right"]').boundingBox();
     await touch.dispatchEvent('[data-act="right"]', 'pointerdown', { pointerId: 92, pointerType: 'touch', clientX: right.x + right.width / 2, clientY: right.y + right.height / 2 });
-    await touch.waitForFunction(() => BB.Play.room.id === 'hm');
+    await touch.waitForFunction(() => window.BB && BB.Play.room.id === 'hm');
     await touch.dispatchEvent('#touch', 'pointerup', { pointerId: 92, pointerType: 'touch' });
     assert.equal(await touch.evaluate(() => BB.Play.save.rainbowUnlocked), true);
-    await place(touch, 'nm', 6, 32); await touch.waitForFunction(() => BB.Play.portalChoice?.t > 10);
+    await place(touch, 'nm', 6, 32); await touch.waitForFunction(() => window.BB && BB.Play.portalChoice?.t > 10);
     await tap(touch, 575, 405, true); assert.equal(await touch.evaluate(() => BB.Play.save.replayCount), 0);
-    await place(touch, 'nm', 6, 32); await touch.waitForFunction(() => BB.Play.portalChoice?.t > 10);
-    await tap(touch, 385, 405, true); await touch.waitForFunction(() => BB.Play.save.replayCount === 1 && !BB.Play.replayStarting);
+    await place(touch, 'nm', 6, 32); await touch.waitForFunction(() => window.BB && BB.Play.portalChoice?.t > 10);
+    await tap(touch, 385, 405, true); await touch.waitForFunction(() => window.BB && BB.Play.save.replayCount === 1 && !BB.Play.replayStarting);
     assert.equal(await touch.evaluate(() => BB.Play.pl.cat), 'rainbow');
     assert.equal(await touch.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2')), null);
     assert.deepEqual(errors, []);

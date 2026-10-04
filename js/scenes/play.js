@@ -827,6 +827,39 @@
     },
 
     // the kitten's own Mama (she's the one waiting by the door)
+    // In a room narrower (or shorter) than the screen, the neighbouring rooms
+    // show beside it: dim them softly so the part you can play in stands out
+    // (they stay visible, so a nearby doorway still reads as the way on).
+    drawNarrowFocus(c, cam) {
+      const r = this.room, W = G().W, H = G().H;
+      const want = r && !r.def.cameraGroup && !BB.Camera.sliding && (r.pw < W - 1 || r.ph < H - 1) ? 1 : 0;
+      this.narrowDim = BB.lerp(this.narrowDim || 0, want, 0.08);
+      if (this.narrowDim < 0.02 || !r) return;
+      const x0 = r.px - cam.x, x1 = x0 + r.pw, y0 = r.py - cam.y, y1 = y0 + r.ph, edge = 28;
+      c.save();
+      c.globalAlpha = this.narrowDim;
+      const shade = 'rgba(24,18,44,0.58)', clear = 'rgba(24,18,44,0)';
+      const band = (gx0, gy0, gx1, gy1, rx, ry, rw, rh) => {
+        const g = c.createLinearGradient(gx0, gy0, gx1, gy1);
+        g.addColorStop(0, shade); g.addColorStop(1, clear);
+        c.fillStyle = g; c.fillRect(rx, ry, rw, rh);
+      };
+      if (r.pw < W - 1) {
+        c.fillStyle = shade;
+        c.fillRect(0, 0, Math.max(0, x0 - edge), H); c.fillRect(x1 + edge, 0, Math.max(0, W - x1 - edge), H);
+        band(x0 - edge, 0, x0, 0, x0 - edge, 0, edge, H);
+        band(x1 + edge, 0, x1, 0, x1, 0, edge, H);
+      }
+      if (r.ph < H - 1) {
+        c.fillStyle = shade;
+        const lx = r.pw < W - 1 ? x0 : 0, lw = r.pw < W - 1 ? r.pw : W;
+        c.fillRect(lx, 0, lw, Math.max(0, y0 - edge)); c.fillRect(lx, y1 + edge, lw, Math.max(0, H - y1 - edge));
+        band(0, y0 - edge, 0, y0, lx, y0 - edge, lw, edge);
+        band(0, y1 + edge, 0, y1, lx, y1, lw, edge);
+      }
+      c.restore();
+    },
+
     mamaId() { return this.pl.cat === 'phoebe' ? 'mamaTortie' : this.pl.cat === 'rainbow' ? null : 'mamaMallow'; },
 
     updateParty() {
@@ -1198,6 +1231,8 @@
         G().drawGlow(o.x - cam.x, o.y - cam.y, 40, '#fff4c2', 1, c);
         c.fillStyle = '#ffffff'; G().circle(o.x - cam.x, o.y - cam.y, 6, c); c.fill();
       }
+
+      this.drawNarrowFocus(c, cam);
 
       // lighting: kitten + glow ability
       const b = this.pl.body;
