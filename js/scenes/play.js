@@ -1052,6 +1052,7 @@
       }
       BB.Bubbles.update(targets);
       this.updateGuidance();
+      this.updateWay();
 
       // ── shy walls ──
       this.updateShy();
@@ -1278,6 +1279,7 @@
       if (this.kinCard) this.drawKinCard(c, t);
       if (this.outfitCard) this.drawOutfitCard(c, t);
       if (this.trickHint > 0) this.drawTrickHint(c, cam);
+      this.drawWay(c, cam);
       this.drawGuidance(c, cam);
       // (a lesson or present card takes the top of the screen: the zone
       // name steps aside instead of overlapping it)
