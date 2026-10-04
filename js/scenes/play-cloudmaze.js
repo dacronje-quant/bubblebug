@@ -161,10 +161,7 @@
       let dir = null;
       for (const p of I.takePointers()) {
         if (Math.hypot(p.x - 850, p.y - 30) < 25) { this.closeCloud(false); return; }
-        CONTROLS.forEach((d, i) => { if (Math.hypot(p.x - (386 + i * 62), p.y - 506) < 25) dir = d; });
       }
-      const pd = I.pointerDown;
-      if (pd) CONTROLS.forEach((d, i) => { if (Math.hypot(pd.x - (386 + i * 62), pd.y - 506) < 25) dir = d; });
       for (const d of CONTROLS) if (I.pressed[d]) m.buffer = d;
       if (dir) m.buffer = dir;
       if (m.moving) {
@@ -265,13 +262,6 @@
         G().circle(q.x, q.y, 10 + p.t * 1.4, c); c.stroke(); c.globalAlpha = 1;
       }
       if (m.exitHold > 0) BB.Links.holdRing(c, X + (START.x + 0.5) * TILE, Y + (START.y + 0.5) * TILE - 4, m.exitHold / EXIT_HOLD);
-      if (!m.done) CONTROLS.forEach((d, i) => {
-        const bx = 386 + i * 62;
-        c.fillStyle = '#b39ad6'; G().circle(bx, 506, 23, c); c.fill();
-        c.save(); c.translate(bx, 506); c.rotate({ left: Math.PI, up: -Math.PI / 2, down: Math.PI / 2, right: 0 }[d]);
-        c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.lineCap = 'round';
-        c.beginPath(); c.moveTo(-8, 0); c.lineTo(9, 0); c.moveTo(2, -7); c.lineTo(9, 0); c.lineTo(2, 7); c.stroke(); c.restore();
-      });
       if (m.done) this.drawCloudFamily(c, t, Math.min(1, m.done / 30));
       c.restore();
     },
