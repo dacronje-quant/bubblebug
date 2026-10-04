@@ -66,7 +66,7 @@ Checks:
 - `node tools/verify-world.js` (and `--easy`, `--replay`): every stage, zero softlocks, every collectible and hidden thing reachable; the last goal is the Starfall float home.
 - `node tools/test-finds.js`: the hidden things are where they should be, go straight on when found, show as earned and still unlock by stars.
 - `node tools/test-rainbow-beams.js [shot-dir]`: Rainbow casts beams from her paw by default, one beam cheers up a boss (it still opens the way on and saves), the mirror offers Rainbow beams, and each kitten's choice survives a reload.
-- `node tools/test-camera.js`: the camera holds still in every room, including the narrow link shafts that are thinner than the screen; Easy/Medium show the whole kingdom map, and on Hard it opens zoomed in from every zone with name tags that never overlap.
+- `node tools/test-camera.js`: the camera holds still in every room, including the narrow link shafts that are thinner than the screen; the kingdom map opens zoomed in on the whole current zone, with name tags that never overlap.
 - `node tools/test-wayfinder.js`: following the "this way!" guide from home (no powers yet) reaches every elder, all 12 bosses and every family cat with no dead end; it never points against a signpost; Medium shows it in each new room and when standing still, Hard after a still moment, and it hides while a boss is sad.
 - `node tools/test-finale.js`: the Starfall float drifts down the shaft and lands by the rainbow door; the party starts.
 - `node tools/test-neighbourhood.js` also checks that an older save's sparkles, friends, resume spot and bench move with their rooms (save v9).

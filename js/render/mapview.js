@@ -2,9 +2,8 @@
 //  MAP VIEW — the kingdom map, drawn from the rooms you've visited.
 //
 //  One map, on parchment, opened from the pause menu or straight from
-//  play (map button, M / Tab, or a gamepad's Select). It opens showing
-//  the whole kingdom fitted to the frame (on Hard, a little closer,
-//  centred on your kitten); browse with ◀ ▶ (▲ ▼ too) held down, by dragging,
+//  play (map button, M / Tab, or a gamepad's Select). It opens zoomed in
+//  on the zone you're in, the whole zone fitted to the frame; browse with ◀ ▶ (▲ ▼ too) held down, by dragging,
 //  or with the big arrow buttons. A small square map of the whole kingdom
 //  at the bottom shows where you're looking (tap it to jump there); zone
 //  name tags (small, never overlapping) sit over each zone you've explored.
@@ -75,20 +74,21 @@
   // open the pause map centred on the kitten
   // open the pause map showing the whole kingdom (centred on the kitten
   // if it's too big for the screen)
-  // Easy and Medium open showing the whole kingdom; Hard
-  // opens a little closer, centred on the kitten (browse to see the rest). The dev overview always shows it all.
-  const OPEN_ZOOM = 1.7;
-  const closeMap = () => !!(BB.Settings && BB.Settings.hard) && !OVERVIEW();
+  // The map opens zoomed in on the zone you're in (all of it fitted to the
+  // frame), centred on it; browse to see the rest. At home it opens on the
+  // house and its neighbours. The dev overview always shows the whole kingdom.
   function openFull() {
-    zoom = closeMap() ? Math.min(ZOOM, fitZoom() * OPEN_ZOOM) : fitZoom();
-    const b = BB.Play.pl.body, T = BB.CFG.TILE, wb = BB.World.bounds;
-    view.cx = view.tx = (wb.x0 + wb.x1) / 2;
-    view.cy = view.ty = (wb.y0 + wb.y1) / 2;
-    const f = FRAME();
-    if ((wb.x1 - wb.x0) * zoom > f.w || (wb.y1 - wb.y0) * zoom > f.h) {
-      view.cx = view.tx = (b.x + b.w / 2) / T;
-      view.cy = view.ty = (b.y + b.h / 2) / T;
+    const f = FRAME(), wb = BB.World.bounds, room = BB.Play.room;
+    if (OVERVIEW() || !room) {
+      zoom = fitZoom();
+      view.cx = view.tx = (wb.x0 + wb.x1) / 2; view.cy = view.ty = (wb.y0 + wb.y1) / 2;
+      clampView(); return;
     }
+    const zr = BB.World.rooms.filter(r => r.zone === room.zone);
+    const b = boundsOf(zr.length ? zr : [room]);
+    zoom = Math.min(ZOOM * 1.6, (f.w - 40) / (b.x1 - b.x0 + 4), (f.h - 40) / (b.y1 - b.y0 + 4));
+    zoom = Math.max(zoom, fitZoom());
+    view.cx = view.tx = (b.x0 + b.x1) / 2; view.cy = view.ty = (b.y0 + b.y1) / 2;
     clampView();
   }
   // move straight away (held keys, dragging)…

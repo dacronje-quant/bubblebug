@@ -46,14 +46,9 @@ const URL = pathToFileURL(path.join(__dirname, '..', 'index.html')).href;
     });
     assert.ok(res.narrow >= 10, 'the narrow link shafts are in the check');
     assert.deepEqual(res.bad, []);
-    // Easy/Medium: the kingdom map opens showing the whole kingdom, as before
-    assert.deepEqual(await page.evaluate(() => ['easy', 'medium'].map(m => {
-      BB.Settings.setDifficulty(m); BB.MapView.openFull(); return BB.MapView.zoom() === BB.MapView.fitZoom();
-    })), [true, true]);
-    // Hard: opened a little zoomed in, with small name tags that never
-    // overlap each other or the kitten, from any zone
+    // the map opens zoomed in on the zone you're in (all of it in the
+    // frame), with small name tags that never overlap each other or the kitten
     const maps = await page.evaluate(() => {
-      BB.Settings.setDifficulty('hard');
       const P = BB.Play, S = P.save, out = [];
       BB.World.rooms.forEach(r => { S.visited[r.id] = 1; });
       for (const z of [...new Set(BB.World.rooms.map(r => r.zone))]) {
@@ -68,15 +63,17 @@ const URL = pathToFileURL(path.join(__dirname, '..', 'index.html')).href;
           tags.slice(i + 1).forEach(b => { if (over(a, b, h, h)) clashes++; });
           if (a.x - a.w / 2 < f.x || a.x + a.w / 2 > f.x + f.w || a.y - h / 2 < f.y || a.y + h / 2 > f.y + f.h) outside++;
         });
-        out.push({ z, n: tags.length, clashes, outside, zoomed: BB.MapView.zoom() > BB.MapView.fitZoom() * 1.5 || BB.MapView.zoom() === BB.MapView.ZOOM });
+        out.push({ z, n: tags.length, clashes, outside, zoomed: BB.MapView.zoom() > BB.MapView.fitZoom() * 1.2 && (() => {
+          const zr = BB.World.rooms.filter(q => q.zone === z), sc = BB.MapView.zoom();
+          const w = (Math.max(...zr.map(q => q.x + q.w)) - Math.min(...zr.map(q => q.x))) * sc, hh = (Math.max(...zr.map(q => q.y + q.h)) - Math.min(...zr.map(q => q.y))) * sc;
+          return w <= f.w && hh <= f.h; })() });
       }
       return out;
     });
     for (const m of maps) assert.deepEqual({ clashes: m.clashes, outside: m.outside, zoomed: m.zoomed }, { clashes: 0, outside: 0, zoomed: true }, 'map from zone ' + m.z);
-    assert.ok(maps.every(m => m.n >= 3), 'several zone names show at once');
+    assert.ok(maps.every(m => m.n >= 1), 'the zone has its name tag');
     assert.deepEqual(errors, []);
-    await page.evaluate(() => BB.Settings.setDifficulty('medium'));
-    console.log(`✓ Easy/Medium show the whole kingdom map; on Hard it opens zoomed in from all ${maps.length} zones, with name tags that never overlap each other or the kitten`);
+    console.log(`✓ the kingdom map opens zoomed in on the whole current zone from all ${maps.length} zones, with name tags that never overlap each other or the kitten`);
     console.log(`✓ the camera holds still in all ${res.checked} rooms checked, including ${res.narrow} narrower or shorter than the view`);
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exit(1); });
