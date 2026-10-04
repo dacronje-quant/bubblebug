@@ -2,11 +2,13 @@
 //  MAP VIEW — the kingdom map, drawn from the rooms you've visited.
 //
 //  One map, on parchment, opened from the pause menu or straight from
-//  play (map button, M / Tab, or a gamepad's Select). It opens a little
-//  closer than the whole kingdom, centred on your kitten; browse with ◀ ▶ (▲ ▼ too) held down, by dragging,
+//  play (map button, M / Tab, or a gamepad's Select). It opens showing
+//  the whole kingdom fitted to the frame (on Hard, a little closer,
+//  centred on your kitten); browse with ◀ ▶ (▲ ▼ too) held down, by dragging,
 //  or with the big arrow buttons. A small square map of the whole kingdom
-//  at the bottom shows where you're looking (tap it to jump there); small
-//  zone name tags, which never overlap, sit over each zone you've explored. While Rainbow's family
+//  at the bottom shows where you're looking (tap it to jump there); zone
+//  name tags float over each zone you've explored (small ones that never
+//  overlap on Hard). While Rainbow's family
 //  is lost, each lost relative flashes in their own colour where they wait.
 //  Pictures only: each room in its biome colour, a gold star when all its
 //  sparkles are found, a lantern dot for benches, the elder's gift badge,
@@ -73,11 +75,13 @@
   // open the pause map centred on the kitten
   // open the pause map showing the whole kingdom (centred on the kitten
   // if it's too big for the screen)
-  // open the pause map a little closer than "the whole kingdom", centred on
-  // the kitten (browse to see the rest); the dev overview still shows it all
+  // Easy and Medium open showing the whole kingdom (big name tags); Hard
+  // opens a little closer, centred on the kitten (browse to see the rest),
+  // with small tags that never overlap. The dev overview always shows it all.
   const OPEN_ZOOM = 1.7;
+  const closeMap = () => !!(BB.Settings && BB.Settings.hard) && !OVERVIEW();
   function openFull() {
-    zoom = OVERVIEW() ? fitZoom() : Math.min(ZOOM, fitZoom() * OPEN_ZOOM);
+    zoom = closeMap() ? Math.min(ZOOM, fitZoom() * OPEN_ZOOM) : fitZoom();
     const b = BB.Play.pl.body, T = BB.CFG.TILE, wb = BB.World.bounds;
     view.cx = view.tx = (wb.x0 + wb.x1) / 2;
     view.cy = view.ty = (wb.y0 + wb.y1) / 2;
@@ -404,6 +408,41 @@
     }
   }
 
+  // a name tag with the zone's emblem over each zone you've explored; tags
+  // of zones running off the edge stay tucked inside the frame
+  function drawZoneTagsClassic(c, seen, sc, ox, oy) {
+    const f = FRAME(), placed = [];
+    const zones = [...new Set(seen.map(r => r.zone))];
+    c.font = `800 15px ${G().FONT}`;
+    const tags = [];
+    for (const z of zones) {
+      const zr = seen.filter(r => r.zone === z);
+      const x0 = Math.min(...zr.map(r => r.x)), x1 = Math.max(...zr.map(r => r.x + r.w)), y0 = Math.min(...zr.map(r => r.y));
+      const sx0 = ox + x0 * sc, sx1 = ox + x1 * sc;
+      if (sx1 < f.x + 40 || sx0 > f.x + f.w - 40) continue; // not on screen
+      const tw = c.measureText(BB.ZONES[z].name).width + 44;
+      const cx = BB.clamp((Math.max(sx0, f.x) + Math.min(sx1, f.x + f.w)) / 2, f.x + tw / 2 + 66, f.x + f.w - tw / 2 - 66); // (clear of the arrows)
+      tags.push({ z, tw, cx, ty: BB.clamp(oy + y0 * sc - 16, f.y + 18, f.y + f.h - 18) });
+    }
+    // neighbouring zones' tags never sit on top of each other: a tag that
+    // would overlap one already placed slides sideways, or else steps down
+    tags.sort((a, b) => a.ty - b.ty || a.cx - b.cx);
+    const hit = g => placed.some(p => Math.abs(p.cx - g.cx) < (p.tw + g.tw) / 2 + 6 && Math.abs(p.ty - g.ty) < 30);
+    for (const g of tags) {
+      const lo = f.x + g.tw / 2 + 66, hi = f.x + f.w - g.tw / 2 - 66, home = g.cx;
+      for (let i = 0; hit(g) && i < 12; i++) {
+        const blocker = placed.find(p => Math.abs(p.cx - g.cx) < (p.tw + g.tw) / 2 + 6 && Math.abs(p.ty - g.ty) < 30);
+        const side = home >= blocker.cx ? 1 : -1, nx = blocker.cx + side * ((blocker.tw + g.tw) / 2 + 8);
+        if (nx >= lo && nx <= hi && Math.abs(nx - home) < 160) g.cx = nx;
+        else { g.cx = home; g.ty = Math.min(f.y + f.h - 18, blocker.ty + 32); }
+      }
+      placed.push(g);
+      c.fillStyle = 'rgba(90,58,36,0.85)'; G().rrect(g.cx - g.tw / 2, g.ty - 13, g.tw, 26, 13, c); c.fill();
+      BB.HUD.zoneIcon(c, g.z, g.cx - g.tw / 2 + 16, g.ty, 0.42);
+      G().text(BB.ZONES[g.z].name, g.cx + 12, g.ty + 1, 15, '#fff8e8', null, 'center', c);
+    }
+  }
+
   function drawArrow(c, d, t, on) {
     const a = ARROW(d);
     c.save();
@@ -519,7 +558,8 @@
     drawRooms(c, seen, sc, ox, oy, t);
     // (name tags keep clear of your kitten's face)
     const pb = P.pl.body, kt = BB.CFG.TILE;
-    drawZoneTags(c, seen, sc, ox, oy, [{ x: ox + pb.x / kt * sc, y: oy + pb.y / kt * sc - 4, w: 44, h: 44 }]);
+    if (closeMap()) drawZoneTags(c, seen, sc, ox, oy, [{ x: ox + pb.x / kt * sc, y: oy + pb.y / kt * sc - 4, w: 44, h: 44 }]);
+    else drawZoneTagsClassic(c, seen, sc, ox, oy);
     for (const e of edgeMarks(ox, oy, sc)) {
       const col = BB.CATS[e.id].trailColor, fl = (Math.sin(t * 0.14 + e.i * 1.3) + 1) / 2;
       const a = Math.atan2(e.dy - e.y, e.dx - e.x);

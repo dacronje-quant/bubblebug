@@ -46,9 +46,14 @@ const URL = pathToFileURL(path.join(__dirname, '..', 'index.html')).href;
     });
     assert.ok(res.narrow >= 10, 'the narrow link shafts are in the check');
     assert.deepEqual(res.bad, []);
-    // the kingdom map: opened a little zoomed in, with small name tags that
-    // never overlap each other or the kitten, from any zone
+    // Easy/Medium: the kingdom map opens showing the whole kingdom, as before
+    assert.deepEqual(await page.evaluate(() => ['easy', 'medium'].map(m => {
+      BB.Settings.setDifficulty(m); BB.MapView.openFull(); return BB.MapView.zoom() === BB.MapView.fitZoom();
+    })), [true, true]);
+    // Hard: opened a little zoomed in, with small name tags that never
+    // overlap each other or the kitten, from any zone
     const maps = await page.evaluate(() => {
+      BB.Settings.setDifficulty('hard');
       const P = BB.Play, S = P.save, out = [];
       BB.World.rooms.forEach(r => { S.visited[r.id] = 1; });
       for (const z of [...new Set(BB.World.rooms.map(r => r.zone))]) {
@@ -70,7 +75,8 @@ const URL = pathToFileURL(path.join(__dirname, '..', 'index.html')).href;
     for (const m of maps) assert.deepEqual({ clashes: m.clashes, outside: m.outside, zoomed: m.zoomed }, { clashes: 0, outside: 0, zoomed: true }, 'map from zone ' + m.z);
     assert.ok(maps.every(m => m.n >= 3), 'several zone names show at once');
     assert.deepEqual(errors, []);
-    console.log(`✓ the kingdom map opens zoomed in from all ${maps.length} zones, with name tags that never overlap each other or the kitten`);
+    await page.evaluate(() => BB.Settings.setDifficulty('medium'));
+    console.log(`✓ Easy/Medium show the whole kingdom map; on Hard it opens zoomed in from all ${maps.length} zones, with name tags that never overlap each other or the kitten`);
     console.log(`✓ the camera holds still in all ${res.checked} rooms checked, including ${res.narrow} narrower or shorter than the view`);
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exit(1); });
