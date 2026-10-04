@@ -125,7 +125,12 @@ body.in-play #map-btn { display: flex; }
 body.in-play #pause-btn { display: flex; }
 #pause-btn svg { width: 28px; height: 28px; fill: #fff; }
 #pause-btn:active { transform: scale(0.9); }
-/* The maze has its own large four-direction canvas controls. */
-body.in-maze #touch, body.in-maze #map-btn { display: none; }
+/* Mazes: the usual left/right on the left, up/down mirrored on the right,
+   kept in the bottom row so they never cover the map. */
+#t-up, #t-down { display: none; background: rgba(160, 130, 220, 0.4); }
+#t-down { right: max(18px, env(safe-area-inset-right)); }
+#t-up { right: calc(max(18px, env(safe-area-inset-right)) + clamp(90px, 15vmin, 134px)); }
+body.in-maze #t-up, body.in-maze #t-down { display: block; }
+body.in-maze #t-jump, body.in-maze #t-bubble, body.in-maze #t-trick, body.in-maze #map-btn { display: none; }
 /* Picture menus are tapped directly; keep the movement pad out of them. */
 body.in-play.menu-open #touch { display: none; }

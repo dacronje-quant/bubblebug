@@ -201,7 +201,8 @@ for (let cycle = 0; cycle < 2; cycle++) {
 }
 console.log('✓ two family-only resets: every mini maze and Mama solved again after reload; other progress and rainbow bubbles stay earned');
 
-// The legacy save helper still preserves family progress for older integrations.
+// Keep the remote's legacy replay helper: a whole new adventure also
+// loses Rainbow's family, whose hunt starts after rescuing Rainbow again.
 assert.equal(B.RainbowJourney.unlocked(P.save, 'cloud'), true);
 assert.equal(B.RainbowJourney.unlocked(P.save, 'rainbow'), true, 'the doorway leads back to the hedge maze');
 g.place('nm', 21, 32); P.openJourneyChoice('rainbow'); P.chooseJourney(); assert.ok(P.maze); P.closeMaze();
@@ -210,9 +211,9 @@ P.save.finale = false; P.startParty();
 for (const id of B.RAINBOW_KIN) assert.ok(P.party.guests.some(q => q.cat === id), id + ' dances at the party');
 P.party = null;
 P.writeSave(); assert.equal(B.Save.rainbowReplay(), true);
-assert.deepEqual(Object.keys(plain(B.Save.data.kin)).sort(), [...B.RAINBOW_KIN].sort());
+assert.deepEqual(plain(B.Save.data.kin), {}); assert.equal(B.Save.data.kinIntro, 0); assert.equal(B.Save.data.cloudMask, 0);
 B.Main.set('play', { cat: 'rainbow' });
-assert.equal(kinThings().length, 0); assert.equal(RF.hunting(P.save), false); assert.equal(RF.nest(P.save), true);
+assert.equal(kinThings().length, 0); assert.equal(RF.hunting(P.save), false); assert.equal(RF.nest(P.save), false);
 assert.equal(P.save.purchases['bubble-rainbow'], 1);
 
 // 8. One map: from play (M) and from the pause menu, the same kingdom map.
@@ -232,5 +233,5 @@ g.tick(12); B.Pause.closeMap(); assert.equal(B.Main.name, 'pause'); assert.equal
     const pot = C.potAt(x, y); assert.ok(pot); mask |= 1 << C.POTS.indexOf(pot);
   } }
 console.log("✓ Rainbow's family: lost after Rainbow's rescue (no reset), found on foot, finish talking, then ride home, saved; doorway waits for all six");
-console.log('✓ Cloud Maze: forced colour order, no stuck states, kept colours, real-key walk to Mama, rainbow bubbles, party, replay keeps family');
+console.log('✓ Cloud Maze: forced colour order, no stuck states, kept colours, real-key walk to Mama, rainbow bubbles, party, legacy full replay resets family');
 console.log('✓ one kingdom map from play or the pause menu');

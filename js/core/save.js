@@ -81,9 +81,50 @@
     return d;
   }
 
+  // v8 → v9: the kingdom was rebuilt round the house ("House at the
+  // Heart"). Every room moved as a whole rectangle, some mirror-image; the
+  // Cat House rooms stayed put. Tile keys and the resume / bench spots move
+  // with their room: new = newRoom + (old − oldRoom), mirrored for a
+  // mirror-image room. OLD9 is where each room sat in v8 (id:x:y:w:h).
+  const OLD9 = 'g1:0:0:30:17 g2:30:0:30:17 g3:60:0:45:17 g4:105:-17:30:34 g5:0:-17:60:17 g6:135:-17:30:17 m1:165:-17:30:17 m2:195:-34:30:34 m3:225:-34:30:17 m4:255:-34:60:17 m5:345:-34:30:34 m6:270:-51:30:17 m7:315:-34:30:17 c1:345:0:30:17 c2:375:0:60:17 c3:435:0:30:34 c4:465:17:30:17 c5:525:0:30:34 c6:375:17:60:17 c7:495:17:30:17 h1:525:-17:30:17 h2:555:-34:30:34 h3:585:-34:30:17 h4:615:-34:60:17 h5:525:-34:30:17 h6:675:-34:30:17 r1:705:-34:30:17 r2:735:-34:60:17 r3:795:-51:30:34 r4:825:-51:30:17 r5:855:-51:60:17 r6:735:-51:60:17 r7:915:-51:30:17 k1:945:-68:30:34 k2:975:-68:60:17 k3:1035:-68:30:17 k4:1065:-68:30:17 k5:1095:-68:30:51 k6:975:-85:60:17 l1:1096:-174:30:17 l2:1051:-174:45:17 l3:1021:-174:30:17 l4:991:-157:60:34 lb:1021:-123:30:17 l5:961:-157:30:34 l6:961:-174:30:17 l7:931:-182:30:17 d1:901:-182:30:17 d2:856:-182:45:17 d3:826:-182:30:17 db:826:-165:30:17 d4:796:-182:30:34 d5:751:-165:45:17 d6:721:-165:30:17 f1:691:-165:30:17 f2:661:-182:30:34 f3:631:-182:30:17 f4:586:-190:45:17 fb:586:-207:45:17 f5:556:-190:30:17 f6:526:-190:30:17 a1:496:-190:30:17 a2:451:-190:45:17 ab:451:-173:45:17 a3:421:-190:30:17 a4:376:-190:45:17 a5:346:-190:30:17 a6:316:-190:30:17 s1:286:-190:30:17 s2:241:-190:45:17 sb:241:-207:45:17 s3:211:-190:30:17 s4:166:-201:45:17 s5:136:-212:30:17 s6:106:-212:30:17 t1:76:-212:30:17 t2:31:-212:45:17 tb:31:-229:45:17 t3:1:-212:30:17 t4:-29:-246:30:51 t5:-89:-246:30:17 t6:-59:-246:30:17';
+  function migrate8(d) {
+    const W = BB.World;
+    if (!W.rooms.length) W.build();
+    const old = OLD9.split(' ').map(s => { const [id, x, y, w, h] = s.split(':'); return { id, x: +x, y: +y, w: +w, h: +h }; });
+    const roomAt = (tx, ty) => old.find(o => tx >= o.x && tx < o.x + o.w && ty >= o.y && ty < o.y + o.h);
+    const tile = (tx, ty) => {
+      const o = roomAt(tx, ty), r = o && W.byId[o.id];
+      if (!r) return null;
+      const dx = tx - o.x;
+      return [r.x + (r.def.flip ? o.w - 1 - dx : dx), r.y + (ty - o.y)];
+    };
+    const keys = obj => {
+      const out = {};
+      for (const [k, v] of Object.entries(obj || {})) {
+        const [x, y] = k.split(',').map(Number);
+        const t = tile(x, y);
+        out[t ? t.join(',') : k] = v;
+      }
+      return out;
+    };
+    for (const f of ['sparkles', 'friends', 'buds', 'pads', 'babies', 'keys']) d[f] = keys(d[f]);
+    // a kitten-sized spot in world px (its top-left corner)
+    const spot = p => {
+      if (!p || p.x == null || p.y == null) return;
+      const o = roomAt(Math.floor((p.x + PW / 2) / T), Math.floor((p.y + 12) / T)), r = o && W.byId[o.id];
+      if (!r) return;
+      const dx = p.x - o.x * T;
+      p.x = r.x * T + (r.def.flip ? o.w * T - dx - PW : dx);
+      p.y += (r.y - o.y) * T;
+    };
+    spot(d); spot(d.bench);
+    d.v = 9;
+    return d;
+  }
+
   function fresh() {
     return {
-      v: 8,
+      v: 9,
       cat: 'marshmallow',
       room: null, x: null, y: null,        // resume spot (world px)
       bench: null,                          // last bench rested at {x,y}
@@ -92,7 +133,7 @@
         swim: false, dig: false, spring: false, rings: false, bubbleBounce: false, wings: false,
       },
       family: {},                           // family member id → 1 (found)
-      kin: {},                              // Rainbow's relatives who are home (kept through replays)
+      kin: {},                              // Rainbow's relatives who are home (lost again on a replay)
       kinIntro: 0,                          // the "find Rainbow's family" card has shown
       cloudMask: 0,                         // colours gathered in the Cloud Maze (Mama's maze)
       sparkles: {},                         // key → 1
@@ -167,7 +208,8 @@
             d.v = 8; d.rainbowUnlocked = !!d.mazeSolved || d.cat === 'rainbow';
             d.inMaze = d.room === 'nm'; // old nm saves were inside the maze game
           }
-          if (d && d.v === 8) {
+          if (d && d.v === 8) migrate8(d);
+          if (d && d.v === 9) {
             this.data = Object.assign(fresh(), d);
             this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
             this.data.wear = Object.assign(fresh().wear, d.wear || {});
@@ -220,8 +262,6 @@
       next.replayCount = (Number.isSafeInteger(old.replayCount) && old.replayCount >= 0 ? old.replayCount : 0) + 1;
       for (const key of Object.keys(next.abilities)) next.abilities[key] = !!old.abilities[key];
       for (const field of ['outfits', 'wear', 'cosmetics', 'gestures']) next[field] = Object.assign({}, next[field], old[field] || {});
-      // Rainbow's family, once home, stays home (and so does the hunt's card)
-      next.kin = Object.assign({}, old.kin || {}); next.kinIntro = old.kinIntro || 0;
       // Clothes/styles stay earned; invitations and the fountain belong
       // to the new world and must never leave an old heart debt behind.
       const styles = new Set(BB.Cosmetics.LIST.map(item => item.id));

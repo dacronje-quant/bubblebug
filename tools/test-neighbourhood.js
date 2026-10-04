@@ -88,29 +88,32 @@ function checks(game) {
   old.abilities.doubleJump = true;
   storage.set(SAVE_KEY, JSON.stringify(old));
   assert.equal(B.Save.load(), true);
-  assert.equal(B.Save.data.v, 8);
+  assert.equal(B.Save.data.v, 9);
   assert.equal(B.Save.data.x, old.x - 630 * 32);
   assert.equal(B.Save.data.y, old.y + 100 * 32);
   assert.deepEqual(plain(B.Save.data.bench), { x: old.bench.x - 630 * 32, y: old.bench.y + 100 * 32 });
-  for (const key of ['sparkles', 'friends', 'bosses', 'family', 'abilities']) assert.deepEqual(plain(B.Save.data[key]), plain(old[key]));
+  for (const key of ['bosses', 'family', 'abilities']) assert.deepEqual(plain(B.Save.data[key]), plain(old[key]));
+  // (and then the v9 kingdom rebuild moves Sunrise Lawn 30 tiles east, Daisy Steps 30 more)
+  assert.deepEqual(plain(B.Save.data.sparkles), { '36,13': 1 });
+  assert.deepEqual(plain(B.Save.data.friends), { '78,13': 'bunny' });
   B.Save.write(); const migrated = JSON.stringify(B.Save.data);
   B.Save.load(); assert.equal(JSON.stringify(B.Save.data), migrated);
   B.Main.set('play', { cat: 'phoebe' }); assert.equal(B.Play.room.id, 'hm');
   const outside = { ...old, room: 'g2', x: 48 * 32 + 6, y: 14 * 32 - 24 };
   storage.set(SAVE_KEY, JSON.stringify(outside)); B.Save.load();
-  assert.equal(B.Save.data.x, outside.x); assert.equal(B.Save.data.y, outside.y);
+  assert.equal(B.Save.data.x, outside.x + 30 * 32); assert.equal(B.Save.data.y, outside.y);
   assert.equal(B.Save.data.bench.x, old.bench.x - 630 * 32);
   for (const v of [2, 3]) {
     storage.set(SAVE_KEY, JSON.stringify({ ...outside, v }));
-    assert.equal(B.Save.load(), true); assert.equal(B.Save.data.v, 8);
+    assert.equal(B.Save.load(), true); assert.equal(B.Save.data.v, 9);
   }
   console.log('✓ v2/v3/v4 saves migrate; home moves once and progress survives');
 
   fresh();
-  assert.equal(B.World.rooms.length, 87);
-  assert.equal(B.World.findThings('*').length, 716);
+  assert.equal(B.World.rooms.length, 103);   // 87 rooms + 16 link rooms
+  assert.equal(B.World.findThings('*').length, 756);
   assert.equal(B.World.findThings('b').length + B.World.findThings('c').length, 65);
-  assert.equal(B.World.findThings('B').length, 25);
+  assert.equal(B.World.findThings('B').length, 27);
   const front = B.Play.ents.hm.things.find(th => th.type === 'door' && th.front);
   place('hm', 58, 32); tick(65);
   assert.equal(B.Play.traveling, null); assert.equal(B.Play.room.id, 'hm');
@@ -139,8 +142,10 @@ function checks(game) {
 
   // The two original progression gates remain closed until solved.
   place('g1', 26, 14); tick(180, ['ArrowRight']);
-  assert.equal(B.Play.room.id, 'g1'); assert.ok(B.Play.pl.body.x + 20 <= 29 * 32);
-  place('g6', 25, 14); tick(180, ['ArrowRight']);
+  assert.equal(B.Play.room.id, 'g1'); assert.ok(B.Play.pl.body.x + 20 <= (B.World.byId.g1.x + 29) * 32);
+  // (Goose Green is mirror-image in the compact kingdom: its gate is on the west side)
+  const gooseOn = B.roomDir(B.World.byId.g6) > 0;
+  place('g6', gooseOn ? 25 : 4, 14); tick(180, [gooseOn ? 'ArrowRight' : 'ArrowLeft']);
   assert.equal(B.Play.room.id, 'g6'); assert.equal(B.Play.save.bosses.g6, undefined);
   console.log('✓ tutorial gate and Goose gate cannot be walked past');
 

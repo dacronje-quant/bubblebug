@@ -50,3 +50,24 @@ The game bundles 53 Gemini 3.8 Flash TTS recordings: the twelve family greetings
 - Reset only Rainbow's family: their hunt announcement, greetings and completion line play again, while other story milestones stay heard. A full reset plays the original welcome on the new adventure and clears skills/outfits. Reload to confirm completed story milestones do not repeat within the same hunt.
 
 Run `node tools/test-voice.js` for queue/cancellation/save checks and `node tools/check-audio.js` for overlapping ducks, effect limits and reverb routing. `node tools/test-voice-browser.js` verifies all 53 bundled files decode and tests real playback, mute and pause in Playwright. `node tools/check-mix-browser.js [screenshot-directory]` checks the existing googly glasses moved from Ladybug Hill into Root Hollow's two-bud nook, saved unlocks, real speech ducking, and mute/pause/end cleanup. Existing glasses stay earned. Use the same optional browser and dependency settings as `tools/test-browser.js`; the new browser check also accepts Playwright through `NODE_PATH`.
+
+# Trying the compact kingdom ("House at the Heart")
+
+The kingdom is rebuilt round the house: sky on top, caves under the house, the sea bottom-left, and the Starfall Shaft standing right above the Pawprint Maze room. To look it over:
+
+1. Open `index.html#overview` and press the map button: every room shows at once, the whole kingdom fitted to one screen, with the Rainbow Lift swooping round the outside and the Starfall float's dotted path down to the rainbow door.
+2. Start a new game and walk out of the front door: the path runs through the Golden Gate (the tower rising out of the garden path) into Sunrise Lawn with no camera slide.
+3. In Sparkle Gardens, the Tall Garden's leafy drop leads down into Goose Green; the glen (Mushroom Meadow) runs west under the house to the Old Well, which drops into the caves below your own floor. With Sticky Paws, the Golden Tower climbs from the caves' pillar past the glen and the garden path to the Hive, where a bench and a bowl wait.
+4. Each zone hides one thing to wear or a bubble/trail style (see the README's *Found or earned* table). Pick one up and it goes straight on; at the mirror a still-hidden thing shows a purple "?" spot.
+5. Past the Moon Rabbit, take hold of the big glowing dandelion: it floats you over to the Starfall Shaft and down it, landing by the rainbow door for the homecoming party.
+
+Checks:
+
+- `node tools/verify-world.js` (and `--easy`, `--replay`): every stage, zero softlocks, every collectible and hidden thing reachable; the last goal is the Starfall float home.
+- `node tools/test-finds.js`: the hidden things are where they should be, go straight on when found, show as earned and still unlock by stars.
+- `node tools/test-rainbow-beams.js [shot-dir]`: Rainbow casts beams from her paw by default, one beam cheers up a boss (it still opens the way on and saves), the mirror offers Rainbow beams, and each kitten's choice survives a reload.
+- `node tools/test-camera.js`: the camera holds still in every room, including the narrow link shafts that are thinner than the screen; the kingdom map opens zoomed in on the whole current zone, with name tags that never overlap.
+- `node tools/test-wayfinder.js`: following the "this way!" guide from home (no powers yet) reaches every elder, all 12 bosses and every family cat with no dead end; it never points against a signpost; Medium shows it in each new room and when standing still, Hard after a still moment, and it hides while a boss is sad.
+- `node tools/test-finale.js`: the Starfall float drifts down the shaft and lands by the rainbow door; the party starts.
+- `node tools/test-neighbourhood.js` also checks that an older save's sparkles, friends, resume spot and bench move with their rooms (save v9).
+- `node tools/layout-check.js` prints the world box, room coverage, overlaps and any doorway that leads nowhere; `--picture` draws the map in cells. `node tools/layout/seams.js` lists doorways with a floor step a kid would have to jump.

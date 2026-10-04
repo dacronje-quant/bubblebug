@@ -8,8 +8,8 @@
 //    • walk through the front door to the Front Garden and Sparkle Gardens
 //    • the door hall upstairs: one door per zone, each lighting up once
 //      you've reached that zone's cat flap — and back again
-//    • the skylight: the Rainbow Slide from the top of Starlight Sky lands
-//      you in the living room for the homecoming party
+//    • the skylight (an old landing spot, kept for the replay and tests);
+//      the Starfall float now lands by the rainbow door for the party
 //  Cat-tree platforms (-) climb to the mezzanine; a gap drops back down.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
@@ -18,7 +18,7 @@
   BB.room({
     id: 'hm', zone: 12, x: -150, y: -18, home: true, walkOut: true, cameraGroup: 'home-neighbourhood',
     doors: {0: [31, 58], 1: [19, 4], 2: [19, 8], 3: [19, 12], 4: [19, 16], 5: [19, 20], 6: [19, 35], 7: [19, 39], 8: [19, 43], 9: [19, 47], 10: [19, 51], 11: [19, 55]},   // zone → [row, col] of its door
-    skylight: [31, 30],                      // where the Rainbow Slide lands
+    skylight: [31, 30],                      // the old Rainbow Slide landing
     cushions: [12, 15, 18, 26, 29, 32, 41, 44, 47, 50, 53, 56],        // one per family member (zone order)
     map: [
       '############################################################',

@@ -176,10 +176,7 @@
           else this.requestMazeExit('rescue', 'rescue');
           continue;
         }
-        CONTROLS.forEach((d, i) => { if (Math.hypot(p.x - (386 + i * 62), p.y - 506) < 25) dir = d; });
       }
-      const pd = I.pointerDown;
-      if (pd) CONTROLS.forEach((d, i) => { if (Math.hypot(pd.x - (386 + i * 62), pd.y - 506) < 25) dir = d; });
       for (const d of CONTROLS) if (I.pressed[d]) m.buffer = d;
       if (dir) m.buffer = dir;
       if (m.moving) {
@@ -309,13 +306,6 @@
         const ey = source === 'header' ? 30 : source === 'rescue' ? Y + TILE * 1.5 : Y + (START.y + 0.5) * TILE;
         c.save(); BB.Links.holdRing(c, ex, ey, m.exitHold / EXIT_HOLD); c.restore();
       }
-      if (!m.choice) CONTROLS.forEach((d, i) => {
-        const bx = 386 + i * 62;
-        c.fillStyle = col('#9381ac', '#80b984'); G().circle(bx, 506, 23, c); c.fill();
-        c.save(); c.translate(bx, 506); c.rotate({ left: Math.PI, up: -Math.PI / 2, down: Math.PI / 2, right: 0 }[d]);
-        c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.lineCap = 'round';
-        c.beginPath(); c.moveTo(-8, 0); c.lineTo(9, 0); c.moveTo(2, -7); c.lineTo(9, 0); c.lineTo(2, 7); c.stroke(); c.restore();
-      });
       if (m.choice) this.drawMazeCatChoice(c, t);
       c.restore();
     },

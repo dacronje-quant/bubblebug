@@ -23,7 +23,11 @@
   const solidCh = ch => ch === '#' || ch === 'H' || ch === 'I' || ch === null;
   const isSolid = (tx, ty) => solidCh(W().tile(tx, ty));
 
-  const cache = new Map(); // room.id → { canvas, shy, version, scale }
+  // Terrain is cached in chunks of CHUNK×CHUNK tiles (built only when on
+  // screen, kept within a small budget): one huge canvas per room was slow
+  // to draw and heavy on a tablet's graphics memory.
+  const CHUNK = 8, BUDGET = 90;
+  const cache = new Map(); // "room:cx,cy" → { canvas, shy, ext, version, scale } (most recent last)
 
   // ──── Rounded tile body ────
   function tileShape(c, x, y, m) {
@@ -596,22 +600,36 @@
     }
   }
 
-  // ──── Build a room's static canvases ────
-  function build(room) {
-    const z = room.zone;
-    const off = G.offscreen(room.pw + 64, room.ph + 64);
-    const shy = G.offscreen(room.pw + 64, room.ph + 64);
+  // ──── Build one chunk of a room's terrain ────
+  // The chunk's own tiles plus a 1-tile ring of neighbours (nothing reaches further) are painted in the
+  // usual pass order and clipped to the chunk, so chunks join seamlessly; at
+  // the room's outer edges the chunk keeps a 32px margin for overhangs.
+  function buildChunk(room, cx, cy) {
+    const z = room.zone, M = 32;
+    const c0 = cx * CHUNK, r0 = cy * CHUNK, c1 = Math.min(room.w, c0 + CHUNK), r1 = Math.min(room.h, r0 + CHUNK);
+    const ext = {
+      x: c0 * T - (c0 === 0 ? M : 0), y: r0 * T - (r0 === 0 ? M : 0),
+      x1: c1 * T + (c1 === room.w ? M : 0), y1: r1 * T + (r1 === room.h ? M : 0),
+    };
+    const tiles = [], ledges = [];
     let hasShy = false;
-    // paint with a 32px margin so tops/overhangs at edges aren't clipped
-    for (const layer of [off, shy]) layer.ctx.translate(32, 32);
-    const tiles = [];
-    for (let r = 0; r < room.h; r++) {
-      for (let col = 0; col < room.w; col++) {
+    for (let r = Math.max(0, r0 - 1); r < Math.min(room.h, r1 + 1); r++) {
+      for (let col = Math.max(0, c0 - 1); col < Math.min(room.w, c1 + 1); col++) {
         const ch = room.grid[r][col];
         if (ch === '#' || ch === 'H' || ch === 'I') tiles.push([ch, room.x + col, room.y + r, col * T, r * T]);
         if (ch === 'H') hasShy = true;
+        if (ch === '-') ledges.push([room.x + col, room.y + r, col * T, r * T]);
       }
     }
+    const out = { canvas: null, shy: null, ext, version: room.version, scale: G.scale };
+    if (!tiles.length && !ledges.length) return out; // open sky: nothing to draw
+    const layer = () => {
+      const o = G.offscreen(ext.x1 - ext.x, ext.y1 - ext.y);
+      o.ctx.translate(-ext.x, -ext.y);
+      o.ctx.beginPath(); o.ctx.rect(ext.x, ext.y, ext.x1 - ext.x, ext.y1 - ext.y); o.ctx.clip();
+      return o;
+    };
+    const off = layer(), shy = hasShy ? layer() : null;
     const cloudy = BB.ZONES[z].key === 'clouds';
     for (const pass of ['outline', 'body', 'sides', 'top', 'bottom']) {
       for (const [ch, tx, ty, x, y] of tiles) {
@@ -620,29 +638,27 @@
         if (pass === 'outline') { if (cloudy) cloudOutline(c, tx, ty, x, y, m); }
         else if (pass === 'body') { if (ch === 'I') paintIce(c, z, tx, ty, x, y, m); else paintBody(c, z, tx, ty, x, y, m); }
         else if (ch === 'I') continue;
-        else if (pass === 'sides' && BB.ZONES[z].key === 'clouds') {
+        else if (pass === 'sides' && cloudy) {
           if (!m.w) cloudSide(c, z, tx, ty, x, y, -1);
           if (!m.e) cloudSide(c, z, tx, ty, x, y, 1);
         } else if (pass === 'top' && !m.n) paintTop(c, z, tx, ty, x, y, m);
         else if (pass === 'bottom' && !m.s) paintBottom(c, z, tx, ty, x, y);
       }
     }
-    for (let r = 0; r < room.h; r++) {
-      for (let col = 0; col < room.w; col++) {
-        if (room.grid[r][col] === '-') paintLedge(off.ctx, z, room.x + col, room.y + r, col * T, r * T);
-      }
-    }
-    return { canvas: off.canvas, shy: hasShy ? shy.canvas : null, version: room.version, scale: G.scale };
+    for (const [tx, ty, x, y] of ledges) paintLedge(off.ctx, z, tx, ty, x, y);
+    out.canvas = off.canvas; out.shy = shy && shy.canvas;
+    return out;
   }
 
-  function get(room) {
-    let e = cache.get(room.id);
-    if (!e || e.version !== room.version || e.scale !== G.scale) {
-      e = build(room);
-      cache.set(room.id, e);
-      // keep memory modest: only the most recent rooms stay cached
-      if (cache.size > 6) cache.delete(cache.keys().next().value);
-    }
+  function chunk(room, cx, cy) {
+    const key = room.id + ':' + cx + ',' + cy;
+    let e = cache.get(key);
+    if (e && (e.version !== room.version || e.scale !== G.scale)) e = null;
+    if (e) cache.delete(key); // (re-insert below: most recently used last)
+    else e = buildChunk(room, cx, cy);
+    cache.set(key, e);
+    // keep memory modest: drop the least recently used chunks
+    while (cache.size > BUDGET) cache.delete(cache.keys().next().value);
     return e;
   }
 
@@ -650,19 +666,41 @@
   // mushrooms squash when bounced on
   const squash = new Map(); // "tx,ty" (left tile of run) → ticks
 
+  // Build the chunks just beyond the screen ahead of time, one per call,
+  // so scrolling never waits on one (call once a frame, with time to spare)
+  function warm(rooms, cam) {
+    const pad = CHUNK * T;
+    let best = null, bestD = Infinity;
+    for (const room of rooms) {
+      const cxa = Math.max(0, Math.floor((cam.x - pad - room.px) / pad)), cxb = Math.min(Math.ceil(room.w / CHUNK) - 1, Math.floor((cam.x + G.W + pad - room.px) / pad));
+      const cya = Math.max(0, Math.floor((cam.y - pad - room.py) / pad)), cyb = Math.min(Math.ceil(room.h / CHUNK) - 1, Math.floor((cam.y + G.H + pad - room.py) / pad));
+      for (let cy = cya; cy <= cyb; cy++) for (let cx = cxa; cx <= cxb; cx++) {
+        const e = cache.get(room.id + ':' + cx + ',' + cy);
+        if (e && e.version === room.version && e.scale === G.scale) continue;
+        const d = Math.hypot(room.px + (cx + 0.5) * pad - (cam.x + G.W / 2), room.py + (cy + 0.5) * pad - (cam.y + G.H / 2));
+        if (d < bestD) { bestD = d; best = [room, cx, cy]; }
+      }
+    }
+    if (best) chunk(...best);
+  }
+
   // Draws a room's terrain; with `shyOnly`, just its shy walls at `shyAlpha`
   function drawStatic(c, room, cam, shyAlpha, shyOnly) {
-    const e = get(room);
-    const img = shyOnly ? e.shy : e.canvas;
-    if (!img || (shyOnly && shyAlpha <= 0.01)) return;
-    // only blit the part of the (large) room canvas that is on screen
-    const ox = room.px - 32, oy = room.py - 32;
-    const x0 = Math.max(ox, cam.x), y0 = Math.max(oy, cam.y);
-    const x1 = Math.min(ox + room.pw + 64, cam.x + G.W), y1 = Math.min(oy + room.ph + 64, cam.y + G.H);
-    if (x1 <= x0 || y1 <= y0) return;
-    const k = e.scale;
+    if (shyOnly && shyAlpha <= 0.01) return;
+    // only the chunks (and the parts of them) that are on screen
+    const cxa = Math.max(0, Math.floor((cam.x - room.px - 32) / (CHUNK * T))), cxb = Math.min(Math.ceil(room.w / CHUNK) - 1, Math.floor((cam.x + G.W - room.px + 32) / (CHUNK * T)));
+    const cya = Math.max(0, Math.floor((cam.y - room.py - 32) / (CHUNK * T))), cyb = Math.min(Math.ceil(room.h / CHUNK) - 1, Math.floor((cam.y + G.H - room.py + 32) / (CHUNK * T)));
     if (shyOnly) c.globalAlpha = shyAlpha;
-    c.drawImage(img, (x0 - ox) * k, (y0 - oy) * k, (x1 - x0) * k, (y1 - y0) * k, x0 - cam.x, y0 - cam.y, x1 - x0, y1 - y0);
+    for (let cy = cya; cy <= cyb; cy++) for (let cx = cxa; cx <= cxb; cx++) {
+      const e = chunk(room, cx, cy), img = shyOnly ? e.shy : e.canvas;
+      if (!img) continue;
+      const ox = room.px + e.ext.x, oy = room.py + e.ext.y, ow = e.ext.x1 - e.ext.x, oh = e.ext.y1 - e.ext.y;
+      const x0 = Math.max(ox, cam.x), y0 = Math.max(oy, cam.y);
+      const x1 = Math.min(ox + ow, cam.x + G.W), y1 = Math.min(oy + oh, cam.y + G.H);
+      if (x1 <= x0 || y1 <= y0) continue;
+      const k = e.scale;
+      c.drawImage(img, (x0 - ox) * k, (y0 - oy) * k, (x1 - x0) * k, (y1 - y0) * k, x0 - cam.x, y0 - cam.y, x1 - x0, y1 - y0);
+    }
     c.globalAlpha = 1;
   }
 
@@ -983,5 +1021,5 @@
     for (const [k, v] of squash) { if (v <= 1) squash.delete(k); else squash.set(k, v - 1); }
   }
 
-  BB.Tiles = { drawStatic, drawLive, bounce, tick, flower, crystalCluster, clear: () => cache.clear() };
+  BB.Tiles = { warm, drawStatic, drawLive, bounce, tick, flower, crystalCluster, clear: () => cache.clear() };
 })(window.BB);

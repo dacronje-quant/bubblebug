@@ -286,7 +286,7 @@
   function gateSpot(room) {
     // the top of the gate furthest along the way onward (east, or west on
     // the return half of the ring)
-    const dir = BB.zoneDir(room.zone);
+    const dir = BB.roomDir(room);
     const isG = (r, c) => c >= 0 && c < room.w && (room.grid[r][c] === 'G' || room.grid[r][c] === 'g');
     let best = null;
     for (let r = 0; r < room.h; r++) for (let c = 0; c < room.w; c++) {

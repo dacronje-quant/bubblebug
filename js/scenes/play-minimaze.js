@@ -234,10 +234,7 @@
       let dir = null;
       for (const p of I.takePointers()) {
         if (Math.hypot(p.x - 850, p.y - 30) < 25) { this.closeMini(false); return; }
-        CONTROLS.forEach((d, i) => { if (Math.hypot(p.x - (386 + i * 62), p.y - 506) < 25) dir = d; });
       }
-      const pd = I.pointerDown;
-      if (pd) CONTROLS.forEach((d, i) => { if (Math.hypot(pd.x - (386 + i * 62), pd.y - 506) < 25) dir = d; });
       for (const d of CONTROLS) if (I.pressed[d]) m.buffer = d;
       if (dir) m.buffer = dir;
       if (m.moving) {
@@ -361,13 +358,6 @@
         for (let i = 0; i < 6; i++) { c.fillStyle = '#ff8fb8'; G().heart(kx - 50 + i * 20, ky - 50 - ((m.done * 1.5 + i * 13) % 50), 6, c); c.fill(); }
         c.globalAlpha = 1;
       }
-      if (!happy) CONTROLS.forEach((d, i) => {
-        const bx = 386 + i * 62;
-        c.fillStyle = 'rgba(120,90,160,0.8)'; G().circle(bx, 506, 23, c); c.fill();
-        c.save(); c.translate(bx, 506); c.rotate({ left: Math.PI, up: -Math.PI / 2, down: Math.PI / 2, right: 0 }[d]);
-        c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.lineCap = 'round';
-        c.beginPath(); c.moveTo(-8, 0); c.lineTo(9, 0); c.moveTo(2, -7); c.lineTo(9, 0); c.lineTo(2, 7); c.stroke(); c.restore();
-      });
       c.restore();
     },
   });

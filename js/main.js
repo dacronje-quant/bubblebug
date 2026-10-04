@@ -94,6 +94,8 @@
     }
     if (steps >= 6) acc = 0;
     Main.draw();
+    // spare time this frame: build the terrain just off screen ahead of time
+    if (Main.name === 'play' && BB.Play.visibleRooms && performance.now() - now < 8) BB.Tiles.warm(BB.Play.visibleRooms, BB.Camera);
     requestAnimationFrame(frame);
   }
 
