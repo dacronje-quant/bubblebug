@@ -1,3 +1,7 @@
+# Trying touch controls
+
+Touch controls keep their visible size and position, with a transparent 10px touch margin on every movement, action, maze, map and pause button. Near misses between neighbouring movement buttons select the closer button, and you can slide between Left and Right without lifting. Pressed feedback changes the icon and colour while keeping the touch target steady. `node tools/test-touch-targets-browser.js` uses real browser touch events across portrait/landscape phones and tablets to check all nine buttons, shared margins, two-finger movement/jump, cancellation, overlays and menu visibility. Use the same Playwright and optional `BUBBLEPAWS_BROWSER` settings as the other browser checks. `node tools/test-touch-ground-browser.js` checks that the character and ground-level enemies remain above the visible control row.
+
 # Trying Rainbow's family and Mama's Cloud Maze
 
 Open `try-rainbow-family.html`. It starts at home just after Rainbow's rescue, with every power, and never touches the normal saved adventure.

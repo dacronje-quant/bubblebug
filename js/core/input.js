@@ -138,9 +138,18 @@
     });
   }
   function actionAt(x, y) {
-    const el = document.elementFromPoint(x, y);
-    const btn = el && el.closest ? el.closest('.tbtn') : null;
-    return btn ? btn.dataset.act : null;
+    const pad = document.getElementById('touch');
+    const slop = parseFloat(getComputedStyle(pad).getPropertyValue('--tap-slop')) || 0;
+    let closest = null, distance = Infinity;
+    for (const btn of pad.querySelectorAll('.tbtn')) {
+      if (!btn.getClientRects().length) continue;
+      const r = btn.getBoundingClientRect();
+      if (x < r.left - slop || x > r.right + slop || y < r.top - slop || y > r.bottom + slop) continue;
+      // Split shared margins halfway between neighbours, regardless of DOM order.
+      const d = (x - (r.left + r.width / 2)) ** 2 + (y - (r.top + r.height / 2)) ** 2;
+      if (d < distance) { closest = btn; distance = d; }
+    }
+    return closest ? closest.dataset.act : null;
   }
 
   Input.enableTouch = function () {
