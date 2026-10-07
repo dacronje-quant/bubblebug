@@ -800,6 +800,9 @@
         else if (ch === ':') drawPetal(c, Z, tx, ty, x, y, t, env);
         else if (ch === 'G') drawGate(c, Z, tx, ty, x, y, t);
         else if (ch === 'M' && W().tile(tx - 1, ty) !== 'M') drawMushroom(c, Z, tx, ty, x, y, t);
+        else if (ch === 'J' && W().tile(tx - 1, ty) !== 'J') drawSpring(c, Z, tx, ty, x, y, t);
+        else if (ch === 'Y') drawPop(c, Z, tx, ty, x, y, t);
+        else if (ch === '<' || ch === '>') drawBreeze(c, Z, tx, ty, x, y, t, ch === '>' ? 1 : -1);
       }
     }
   }
@@ -1098,15 +1101,188 @@
     c.restore();
   }
 
-  // Called by gameplay when the kitten bounces on a mushroom tile
+  // ──── Playground props: spring pads, pop bubbles, breeze ribbons ────
+  // Each zone dresses its springs its own way; the coil is always visible
+  // so a little player can tell "this one boings".
+  const SPRING_LOOK = {
+    gardens: { pad: '#ff5d6c', rim: '#b8323e', dot: '#ffffff', emblem: 'daisy' },
+    meadow: { pad: '#c46ad8', rim: '#6a2c80', dot: '#7cf5d4', emblem: 'dots' },
+    caves: { pad: '#6a8cff', rim: '#2f3a88', dot: '#dff6ff', emblem: 'gem' },
+    hive: { pad: '#ffb52e', rim: '#a8661a', dot: '#fff3c4', emblem: 'drip' },
+    ruins: { pad: '#6fae7a', rim: '#3a6a48', dot: '#d8f0ff', emblem: 'dots' },
+    clouds: { pad: '#ff9ec7', rim: '#b8407a', dot: '#ffffff', emblem: 'heart' },
+    lagoon: { pad: '#ffd84a', rim: '#b08a1a', dot: '#e8a020', emblem: 'holes' },
+    dunes: { pad: '#e8742a', rim: '#8f3e12', dot: '#ffe0a0', emblem: 'sun' },
+    frost: { pad: '#eaf6ff', rim: '#6aa6c8', dot: '#a8d8f0', emblem: 'flake' },
+    autumn: { pad: '#f08a24', rim: '#8f4a10', dot: '#5b8a2a', emblem: 'pumpkin' },
+    springs: { pad: '#d8442a', rim: '#7b1f17', dot: '#ffd68a', emblem: 'drum' },
+    starlight: { pad: '#8a7aff', rim: '#3f3399', dot: '#fff6d0', emblem: 'star' },
+  };
+  function drawSpring(c, Z, tx, ty, x, y, t) {
+    let n = 1;
+    while (W().tile(tx + n, ty) === 'J') n++;
+    const w = n * T, cx = x + w / 2;
+    const L = SPRING_LOOK[Z.key] || SPRING_LOOK.gardens;
+    const k = squash.get(tx + ',' + ty) || 0;
+    // squash down, then overshoot up as it fires
+    const ph = k > 0 ? 1 - k / 22 : 1;
+    const lift = k > 0 ? (ph < 0.3 ? -ph / 0.3 * 7 : Math.sin((ph - 0.3) / 0.7 * Math.PI) * 9) : Math.sin(t * 0.08 + tx) * 0.8;
+    // base
+    c.fillStyle = BB.mix(L.rim, '#3a2a20', 0.3); c.strokeStyle = BB.mix(L.rim, '#000000', 0.4); c.lineWidth = 1.5;
+    G.rrect(x + 2, y + 22, w - 4, 10, 3, c); c.fill(); c.stroke();
+    // coil
+    const top = y + 10 - lift, bot = y + 23;
+    for (const sx of n > 1 ? [x + w * 0.28, x + w * 0.72] : [cx]) {
+      for (const [col, lw] of [['#5a6274', 5], ['#eef1f7', 2.6]]) {
+        c.strokeStyle = col; c.lineWidth = lw; c.lineCap = 'round'; c.lineJoin = 'round';
+        c.beginPath();
+        const turns = 4;
+        for (let i = 0; i <= turns * 2; i++) {
+          const yy = bot - (bot - top) * (i / (turns * 2));
+          c.lineTo(sx + (i % 2 ? 7 : -7), yy);
+        }
+        c.stroke();
+      }
+    }
+    G.drawGlow(cx, top - 2, w * 0.7, L.pad, 0.25 + 0.1 * Math.sin(t * 0.1 + tx), c);
+    // pad
+    const py = top - 6;
+    const g = c.createLinearGradient(0, py, 0, py + 10);
+    g.addColorStop(0, BB.mix(L.pad, '#ffffff', 0.35)); g.addColorStop(1, L.pad);
+    c.fillStyle = g; c.strokeStyle = L.rim; c.lineWidth = 2;
+    G.rrect(x - 1, py, w + 2, 10, 5, c); c.fill(); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,0.55)'; G.rrect(x + 4, py + 2, w - 8, 2.5, 1.2, c); c.fill();
+    // a little zone emblem on the pad's face
+    c.save(); c.translate(cx, py + 5);
+    c.fillStyle = L.dot; c.strokeStyle = L.rim; c.lineWidth = 1;
+    switch (L.emblem) {
+      case 'daisy': for (let a = 0; a < 5; a++) { G.ellipse(Math.cos(a * 1.257) * 3, Math.sin(a * 1.257) * 2, 2, 1.4, a * 1.257, c); c.fill(); } c.fillStyle = '#ffd34d'; G.circle(0, 0, 1.6, c); c.fill(); break;
+      case 'heart': c.beginPath(); c.moveTo(0, 3); c.bezierCurveTo(-6, -1, -3, -5, 0, -2); c.bezierCurveTo(3, -5, 6, -1, 0, 3); c.fill(); break;
+      case 'star': c.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 1.8 : 4, a = -Math.PI / 2 + i * Math.PI / 5; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.closePath(); c.fill(); break;
+      case 'gem': c.beginPath(); c.moveTo(0, -4); c.lineTo(4, 0); c.lineTo(0, 4); c.lineTo(-4, 0); c.closePath(); c.fill(); break;
+      case 'sun': G.circle(0, 0, 2.6, c); c.fill(); for (let a = 0; a < 8; a++) { c.beginPath(); c.moveTo(Math.cos(a * 0.785) * 3.5, Math.sin(a * 0.785) * 3.5); c.lineTo(Math.cos(a * 0.785) * 5, Math.sin(a * 0.785) * 4); c.strokeStyle = L.dot; c.stroke(); } break;
+      case 'flake': c.strokeStyle = L.dot; c.lineWidth = 1.4; for (let a = 0; a < 3; a++) { c.beginPath(); c.moveTo(Math.cos(a * 1.047) * -4, Math.sin(a * 1.047) * -4); c.lineTo(Math.cos(a * 1.047) * 4, Math.sin(a * 1.047) * 4); c.stroke(); } break;
+      case 'pumpkin': c.strokeStyle = L.rim; c.lineWidth = 1; for (const dx of [-w / 4, 0, w / 4]) { c.beginPath(); c.moveTo(dx, -4); c.quadraticCurveTo(dx + 2, 0, dx, 4); c.stroke(); } c.fillStyle = L.dot; G.rrect(-1.5, -9, 3, 5, 1, c); c.fill(); break;
+      case 'drum': c.strokeStyle = L.dot; c.lineWidth = 1.5; c.beginPath(); c.arc(0, 0, 3.4, 0, TAU); c.stroke(); break;
+      case 'drip': G.ellipse(-4, 0, 2, 3, 0, c); c.fill(); G.ellipse(4, 1, 1.6, 2.4, 0, c); c.fill(); break;
+      case 'holes': for (const [dx, dy] of [[-w / 3, -1], [-3, 1], [5, -1], [w / 3, 1]]) { G.circle(dx, dy, 1.6, c); c.fill(); } break;
+      default: for (const dx of [-w / 3, 0, w / 3]) { G.circle(dx, 0, 1.8, c); c.fill(); }
+    }
+    c.restore();
+    // a soft arrow of light hints "up!" while resting
+    if (k <= 0) {
+      const a = 0.25 + 0.2 * Math.sin(t * 0.1 + tx);
+      c.strokeStyle = `rgba(255,255,255,${a})`; c.lineWidth = 2;
+      const ay = py - 10 - ((t * 0.5 + tx * 7) % 12);
+      c.beginPath(); c.moveTo(cx - 5, ay + 4); c.lineTo(cx, ay); c.lineTo(cx + 5, ay + 4); c.stroke();
+    }
+  }
+
+  // `Y` — a pop bubble: bob, wobble, and after a pop grow back
+  const popped = new Map();
+  const POP_LOOK = {
+    gardens: '#ff7fb8', meadow: '#4fe8c0', caves: '#7cc4ff', hive: '#ffc93d', ruins: '#8fd4ff', clouds: '#ff9ed8',
+    lagoon: '#5fe0ff', dunes: '#ffb860', frost: '#9fdcff', autumn: '#ffa040', springs: '#ff8fb0', starlight: '#b8a0ff',
+  };
+  function drawPop(c, Z, tx, ty, x, y, t) {
+    const key = tx + ',' + ty;
+    const since = popped.has(key) ? popped.get(key) : 999;
+    const grow = BB.clamp((since - 6) / 22, 0, 1);
+    if (since < 14) {
+      // the pop: a burst ring
+      const k = since / 14;
+      c.strokeStyle = `rgba(255,255,255,${0.8 * (1 - k)})`; c.lineWidth = 2;
+      G.circle(x + T / 2, y + T / 2, 10 + k * 14, c); c.stroke();
+    }
+    if (grow <= 0) return;
+    const col = POP_LOOK[Z.key] || '#bfe7ff';
+    const cx = x + T / 2, cy = y + T / 2 + Math.sin(t * 0.06 + tx * 1.3) * 2.5;
+    const r = 15 * BB.easeOutBack(grow);
+    const wob = Math.sin(t * 0.13 + ty) * 0.06;
+    G.drawGlow(cx, cy, r * 2.2, col, 0.45 + Math.sin(t * 0.09 + tx) * 0.12, c);
+    c.save(); c.translate(cx, cy); c.scale(1 + wob, 1 - wob);
+    const g = c.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r);
+    g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(0.45, BB.rgba(col, 0.35)); g.addColorStop(1, BB.rgba(col, 0.75));
+    c.fillStyle = g; G.circle(0, 0, r, c); c.fill();
+    c.strokeStyle = BB.mix(col, '#4a3a6a', 0.35); c.lineWidth = 2.4; G.circle(0, 0, r, c); c.stroke();
+    c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = 1.2; G.circle(0, 0, r - 2, c); c.stroke();
+    // a tiny up-arrow inside: "this lifts you"
+    c.strokeStyle = BB.mix(col, '#3a3a5a', 0.6); c.lineWidth = 3; c.lineCap = 'round'; c.lineJoin = 'round';
+    for (const oy of [0, 5]) { c.beginPath(); c.moveTo(-5 * grow, (oy + 1) * grow); c.lineTo(0, (oy - 4) * grow); c.lineTo(5 * grow, (oy + 1) * grow); c.stroke(); }
+    c.fillStyle = 'rgba(255,255,255,0.95)'; G.ellipse(-r * 0.4, -r * 0.45, r * 0.22, r * 0.14, -0.6, c); c.fill();
+    c.restore();
+  }
+  function pop(tx, ty) { popped.set(tx + ',' + ty, 0); }
+
+  // `<` `>` — a breeze ribbon, with a little of the zone's weather in it
+  const BREEZE_BITS = {
+    gardens: 'petal', meadow: 'spore', caves: 'glint', hive: 'glint', ruins: 'drop', clouds: 'wisp',
+    lagoon: 'drop', dunes: 'sand', frost: 'flake', autumn: 'leaf', springs: 'petal', starlight: 'glint',
+  };
+  const BREEZE_TINT = {
+    gardens: '#ffb3d9', meadow: '#7cf5d4', caves: '#9fd8ff', hive: '#ffd766', ruins: '#bfe7ff', clouds: '#8fc3ff',
+    lagoon: '#7fe0ff', dunes: '#ffc07a', frost: '#bfe6ff', autumn: '#ffa860', springs: '#ffb3c7', starlight: '#c8b8ff',
+  };
+  function drawBreeze(c, Z, tx, ty, x, y, t, dir) {
+    const wind = ch => ch === '<' || ch === '>';
+    const up = !wind(W().tile(tx, ty - 1)), down = !wind(W().tile(tx, ty + 1));
+    const tint = BREEZE_TINT[Z.key] || '#bfe7ff';
+    // a soft coloured band, so a little player can see where the wind blows
+    c.fillStyle = BB.rgba(tint, 0.2);
+    snapRect(c, x, y, T, T);
+    c.strokeStyle = 'rgba(255,255,255,0.75)'; c.lineWidth = 2; c.lineCap = 'round';
+    for (const [edge, ey] of [[up, y + 1], [down, y + T - 1]]) {
+      if (!edge) continue;
+      c.beginPath();
+      for (let k = 0; k <= 4; k++) { const px = x + k * 8, py = ey + Math.sin((tx * 4 + k) * 0.8 - t * 0.12 * dir) * 1.5; k ? c.lineTo(px, py) : c.moveTo(px, py); }
+      c.stroke();
+    }
+    // chevrons racing along the way the breeze goes
+    if ((tx + ty) % 3 === 0) {
+      const run = (((t * 1.6 * dir) % 32) + 32) % 32;
+      const cxv = x + run, cyv = y + T / 2;
+      c.strokeStyle = BB.rgba('#ffffff', 0.85); c.lineWidth = 3;
+      c.beginPath(); c.moveTo(cxv - dir * 5, cyv - 6); c.lineTo(cxv + dir * 2, cyv); c.lineTo(cxv - dir * 5, cyv + 6); c.stroke();
+      c.strokeStyle = BB.rgba(BB.mix(tint, '#334', 0.35), 0.5); c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(cxv - dir * 5, cyv - 6); c.lineTo(cxv + dir * 2, cyv); c.lineTo(cxv - dir * 5, cyv + 6); c.stroke();
+    }
+    c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = 1.5;
+    for (let i = 0; i < 1; i++) {
+      const p2 = ((t * 2.4 * dir + BB.hash(tx, ty, i) * 64) % 32 + 32) % 32;
+      const sx = x + p2, sy = y + 7 + i * 18 + Math.sin(t * 0.07 + tx + i) * 2;
+      c.beginPath(); c.moveTo(sx - dir * 10, sy); c.quadraticCurveTo(sx - dir * 4, sy - 3, sx, sy); c.stroke();
+    }
+    // the drifting bit
+    const kind = BREEZE_BITS[Z.key] || 'wisp';
+    const ph = ((t * 3 * dir + BB.hash(tx, ty, 7) * 96) % 32 + 32) % 32;
+    if (BB.hash(tx, ty, 3) > 0.45) return;
+    const bx = x + ph, by = y + 6 + BB.hash(tx, ty, 5) * 20 + Math.sin(t * 0.09 + tx) * 3;
+    c.save(); c.translate(bx, by); c.rotate(t * 0.08 * dir);
+    switch (kind) {
+      case 'leaf': c.fillStyle = '#e8742a'; G.ellipse(0, 0, 4, 2, 0, c); c.fill(); break;
+      case 'petal': c.fillStyle = '#ffc6dd'; G.ellipse(0, 0, 3.2, 1.8, 0, c); c.fill(); break;
+      case 'flake': c.strokeStyle = '#ffffff'; c.lineWidth = 1; for (let a = 0; a < 3; a++) { c.beginPath(); c.moveTo(Math.cos(a * 1.047) * -3, Math.sin(a * 1.047) * -3); c.lineTo(Math.cos(a * 1.047) * 3, Math.sin(a * 1.047) * 3); c.stroke(); } break;
+      case 'sand': c.fillStyle = '#f2d18a'; G.circle(0, 0, 1.3, c); c.fill(); G.circle(4, 2, 1, c); c.fill(); break;
+      case 'drop': c.fillStyle = 'rgba(200,235,255,0.9)'; G.circle(0, 0, 1.6, c); c.fill(); break;
+      case 'spore': c.fillStyle = 'rgba(170,255,238,0.9)'; G.circle(0, 0, 1.8, c); c.fill(); break;
+      case 'glint': c.fillStyle = 'rgba(255,246,208,0.95)'; G.circle(0, 0, 1.5, c); c.fill(); break;
+      default: c.fillStyle = 'rgba(255,255,255,0.8)'; G.ellipse(0, 0, 4, 1.4, 0, c); c.fill();
+    }
+    c.restore();
+  }
+
+  // Called by gameplay when the kitten bounces on a mushroom or spring
   function bounce(tx, ty) {
+    const ch = W().tile(tx, ty);
+    if (ch !== 'M' && ch !== 'J') return;
     let x = tx;
-    while (W().tile(x - 1, ty) === 'M') x--;
-    squash.set(x + ',' + ty, 18);
+    while (W().tile(x - 1, ty) === ch) x--;
+    squash.set(x + ',' + ty, ch === 'J' ? 22 : 18);
   }
   function tick() {
     for (const [k, v] of squash) { if (v <= 1) squash.delete(k); else squash.set(k, v - 1); }
+    for (const [k, v] of popped) { if (v > 60) popped.delete(k); else popped.set(k, v + 1); }
   }
 
-  BB.Tiles = { warm, drawBounds, drawStatic, drawLive, bounce, tick, flower, crystalCluster, clear: () => cache.clear() };
+  BB.Tiles = { warm, drawBounds, drawStatic, drawLive, bounce, pop, tick, flower, crystalCluster, clear: () => cache.clear() };
 })(window.BB);

@@ -84,6 +84,27 @@
       PT().burst('spark', cx, feet, 10, { color: '#ffe8f6', speed: 3, life: 30 });
       pl.happyT = 20;
     }
+    if (fx & FX.SPRING) {
+      A().spring(); pl.squash = 1.45;
+      BB.Tiles.bounce(Math.floor(cx / C.TILE), Math.floor((feet + 2) / C.TILE));
+      PT().burst('star', cx, feet, 8, { color: '#fff3b0', speed: 3.4, life: 34 });
+      PT().ring(cx, feet, '#ffffff', 20);
+      pl.happyT = 30;
+    }
+    if (fx & FX.POP) {
+      A().popBoost(); pl.squash = 1.3;
+      if (b.popAt) {
+        BB.Tiles.pop(b.popAt.tx, b.popAt.ty);
+        const px = b.popAt.tx * C.TILE + C.TILE / 2, py = b.popAt.ty * C.TILE + C.TILE / 2;
+        PT().ring(px, py, '#ffffff', 18);
+        PT().burst('dot', px, py, 10, { color: '#e8fbff', speed: 2.6, life: 24, size: 2.2 });
+      }
+      pl.happyT = 20;
+    }
+    if (fx & FX.RIDE) BB.Movers.landed(b);
+    if (b.inWind && !pl.wasWind) A().breeze();
+    pl.wasWind = b.inWind;
+    if (b.inWind && pl.t % 4 === 0) PT().trail('dot', cx - b.inWind * 12, b.y + 6 + Math.random() * 14, 'rgba(255,255,255,0.75)');
     if (fx & FX.CLIMB_START) A().climb();
     if (fx & (FX.SPLASH | FX.BREACH)) { A().splash(); PT().splash(cx, b.y + b.h / 2, '#dff8ff'); }
     if (fx & FX.BREACH) { A().jump(pl.cat); pl.squash = 1.3; }

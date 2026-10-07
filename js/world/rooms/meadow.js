@@ -100,6 +100,10 @@
   // m4 ─ Glowpond Cliffs: needs the Double Jump — wide pond, tall cliff
   BB.room({
     id: 'm4', zone: 1, x: -60, y: 17,
+    // A glowing mushroom cap ferries you over the glowpond
+    movers: [
+      { x: 10, y: 14, w: 2, to: [17, 14], period: 360 },
+    ],
     map: [
       '............................................................',
       '........................------..............................',
@@ -125,6 +129,10 @@
   BB.room({
     id: 'm5', zone: 1, x: -180, y: 17,
     climb: true,
+    // The Old Well's mushroom lift, down and back up
+    movers: [
+      { x: 23, y: 14, w: 2, to: [23, 32.6], period: 600 },
+    ],
     map: [
       '#.............................',
       '#.............................',

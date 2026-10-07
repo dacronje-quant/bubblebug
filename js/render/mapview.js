@@ -218,7 +218,9 @@
           if (ch === '~') { m.fillStyle = Z.water; m.globalAlpha = 0.8; m.fillRect(X, Y, PX, PX); m.globalAlpha = 1; }
           else if (ch === '%') { m.fillStyle = 'rgba(235,225,255,0.7)'; m.fillRect(X, Y, PX, PX); }
           else if (ch === '-' || ch === ':') { m.fillStyle = Z.ledge; m.fillRect(X, Y, PX, PX * 0.45); }
-          else if (ch === 'M') { m.fillStyle = Z.accent; m.fillRect(X, Y, PX, PX); }
+          else if (ch === 'M' || ch === 'J') { m.fillStyle = Z.accent; m.fillRect(X, Y, PX, PX); }
+          else if (ch === 'Y') { m.fillStyle = 'rgba(255,255,255,0.75)'; m.beginPath(); m.arc(X + PX / 2, Y + PX / 2, PX * 0.4, 0, Math.PI * 2); m.fill(); }
+          else if (ch === '<' || ch === '>') { m.fillStyle = 'rgba(255,255,255,0.22)'; m.fillRect(X, Y, PX, PX); }
           else if ('#IXH'.includes(ch)) {
             const open = !SOLID.includes(tile(x, y - 1)) && tile(x, y - 1) !== '~';
             m.fillStyle = ch === 'I' ? '#d8eefa' : open ? Z.top : y % 2 ? Z.ground : Z.groundDark;

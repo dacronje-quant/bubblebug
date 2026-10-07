@@ -132,6 +132,10 @@
   // s5 ─ Lantern Bridge: red bridges over drifting steam
   BB.room({
     id: 's5', zone: 10, x: -195, y: -103, flip: true,
+    // Lantern raft over the steam
+    movers: [
+      { x: 6, y: 14, w: 2, to: [21, 14], period: 540 },
+    ],
     map: [
       '..............................',
       '..............................',

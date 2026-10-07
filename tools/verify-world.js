@@ -23,6 +23,12 @@
 //  hidden glasses and family member is reachable. (A too-sad pop-back only returns the kitten to a spot it
 //  already stood on, so it can't create a softlock.)
 //
+//  Moving platforms are left out of the search: every route must work
+//  without them. Instead, for every platform in a room the stage reaches,
+//  the kitten is set down at points all along its path and every hop off
+//  is explored too — so riding one can never strand you (zero softlocks
+//  covers those spots as well), and none may sneak you into a gated room.
+//
 //  Stages start at the previous elder, so they're independent and run in
 //  parallel worker threads (one per CPU core).
 //
@@ -52,9 +58,12 @@ const roomFiles = [...html.matchAll(/src="(js\/world\/rooms\/[^"]+)"/g)].map(m =
 roomFiles.forEach(load);
 load('js/engine/physics.js');
 load('js/entities/links.js');
+load('js/entities/movers.js');
 
 const BB = global.BB;
 const W = BB.World.build();
+// the platforms' paths only — physics itself never sees them in the search
+BB.Movers.build(); BB.Physics.setMovers([]);
 const C = BB.CFG, T = C.TILE;
 const P = BB.Physics, FX = BB.FX;
 const EASY = isMainThread ? process.argv.includes('--easy') : !!workerData.easy;
@@ -476,12 +485,47 @@ function startFor(stage) {
 
 const where = n => {
   const r = W.roomAtPx(n.x + 10, n.y + 12);
-  return `room ${r ? r.id : '?'} tile (${Math.floor((n.x + 10) / T) - (r ? r.x : 0)}, ${Math.floor((n.y + 12) / T) - (r ? r.y : 0)})`;
+  return `room ${r ? r.id : '?'} tile (${Math.floor((n.x + 10) / T) - (r ? r.x : 0)}, ${Math.floor((n.y + 12) / T) - (r ? r.y : 0)})${n.ride ? ' (riding a moving platform)' : ''}`;
 };
 
 function roomTouched(cover, r) {
   for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (cover[cellIdx(r.x + x, r.y + y)]) return true;
   return false;
+}
+
+// Riding a moving platform: set the kitten down at points along each path
+// (in rooms this stage reaches) and explore every hop off from there. The
+// seeds have no edges *into* them, so they can never make the goal look
+// reachable; they only add spots that must themselves reach the goal.
+function seedMovers(st, ab) {
+  const list = BB.Movers.list.filter(m => roomTouched(st.cover, m.room));
+  if (!list.length) return 0;
+  const near = (x, y) => {
+    let best = null, bd = Infinity;
+    for (const n of st.nodes.values()) {
+      const d = Math.abs(n.x - x) + Math.abs(n.y - y);
+      if (d < bd && W.roomAtPx(n.x + 10, n.y + 12) === W.roomAtPx(x + 10, y + 12)) { bd = d; best = n; }
+    }
+    return best;
+  };
+  const cover = st.cover;
+  st.cover = new Uint8Array(GW * GH); // rides never count as reaching collectibles
+  let added = 0;
+  for (const m of list) {
+    for (const s of BB.Movers.samples(m, 12)) {
+      const x = s.x + m.w / 2 - C.PW / 2, y = s.y - C.PH;
+      if (P.rectSolid(x, y, C.PW, C.PH)) continue;
+      const safe = near(x, y) || { safeX: x, safeY: y };
+      const k = keyOf(x, y);
+      if (st.nodes.has(k)) continue;
+      const n = addNode(st, x, y, safe.x != null ? safe.x : safe.safeX, safe.y != null ? safe.y : safe.safeY);
+      n.ride = true;
+      added++;
+    }
+  }
+  explore(st, ab);
+  st.cover = cover;
+  return added;
 }
 
 // ──── One story stage (runs inside a worker) ────
@@ -513,6 +557,8 @@ function runStage(stage, mapRoom) {
     return { out, failures };
   }
   pass(`${NAMES[stage.goal]} is reachable`);
+  const rides = seedMovers(res, ab);
+  if (rides) out.push(`  + ${rides} spots along moving platforms, and every hop off them`);
   const ok = canReach(res.nodes, keys);
   const stuck = [...res.nodes.values()].filter(n => !ok.has(n.k));
   if (stuck.length) {

@@ -23,6 +23,10 @@
 //   %  sky-mist (dandelion rescue, even for swimmers)
 //   I  ice / sugar-glass: solid, too slippery to climb
 //   X  sandstone: solid until the Tortoise's Mighty Paws crumble it
+//   J  spring pad (a big boing)     Y  pop bubble (pops you up, air
+//   < >  breeze ribbon (carries        jumps back) — see physics.js
+//        you sideways)
+//   (a room's `movers:` list adds moving platforms; js/entities/movers.js)
 //   1–9 fairy rings: each digit appears exactly twice in the world; with
 //      the Badger's gift, stepping into one pops you out at its twin
 //   &  a lost member of the kittens' family (hidden down a side passage)
@@ -58,7 +62,7 @@
   // way round in the kingdom: the same platforms and puzzles, just flipped
   // (signposts turn round with it). Every column in the definition is
   // mirrored too; `def.src` keeps the room as it was drawn.
-  const TURN = { L: 'R', R: 'L' };
+  const TURN = { L: 'R', R: 'L', '<': '>', '>': '<' };
   function flipDef(d) {
     const w = d.map[0].length, mx = x => w - 1 - x;
     const out = Object.assign({}, d, {
@@ -66,6 +70,8 @@
       map: d.map.map(row => row.split('').reverse().map(ch => TURN[ch] || ch).join('')),
     });
     for (const k of ['glasses', 'finds', 'kin']) if (d[k]) out[k] = d[k].map(o => Object.assign({}, o, { x: mx(o.x) }));
+    // moving platforms keep their drawn coordinates and mirror as they move
+    if (d.movers) out.movers = d.movers.map(o => Object.assign({}, o, { mirror: true }));
     if (d.arena) {
       const a = out.arena = Object.assign({}, d.arena);
       for (const k of ['mud', 'tree', 'crack']) if (a[k] != null) a[k] = mx(a[k]);
@@ -146,6 +152,8 @@
       }
       this.bounds = { x0, y0, x1, y1 };
       this.hatches = this.rooms.filter(r => r.def.hatch);
+      // (physics skips the pop-bubble check entirely in a world without any)
+      this.hasPop = this.rooms.some(r => r.grid.some(row => row.includes('Y')));
       this._checkOverlaps();
       // Flat char-code grid over the whole world: O(1) tile lookups for
       // physics (0 = outside every room).

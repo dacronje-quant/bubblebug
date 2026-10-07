@@ -26,6 +26,18 @@
 //   bubbleBounce  jump again after Double Jump to bounce off a big bubble
 //                                                (Otter Elder)
 //   wings       keep pressing jump to flap higher and higher (Star Whale)
+//
+//  Playground props (no power needed — the fun between the powers):
+//   J           spring pad: land on it for a big boing
+//   Y           pop bubble: touch it in the air to pop upward; your air
+//               jumps (Double Jump, Bubble Bounce) come back, so they chain
+//   < >         breeze ribbon: carries you sideways, sinking only gently
+//   movers      moving platforms (lily pads, leaves, clouds, stars…) from a
+//               room's `movers:` list. The game hands them over each tick
+//               with setMovers(); they are one-way and carry whoever rides
+//               them. The verifier leaves them out: every route must work
+//               without them, and tools/verify-world.js separately proves
+//               every hop off one still leads back onto the story path.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -38,11 +50,15 @@
     JUMP: 1, DJUMP: 2, LAND: 4, BOUNCE: 8, WALLJUMP: 16, HAZARD: 32,
     CLIMB_START: 64, LEDGE: 128, BONK: 256, UPDRAFT: 512,
     PORTAL: 1024, BBOUNCE: 2048, FLAP: 4096, SPLASH: 8192, BREACH: 16384,
+    SPRING: 32768, POP: 65536, WIND: 131072, RIDE: 262144,
   };
 
   // Powers in effect for the current step (sandstone solidity depends on them)
   let AB = {};
   let EASY = false;
+  // Moving platforms for this tick: { x, y (top), w, dx, dy } in world px,
+  // already moved; dx/dy is how far they moved this tick.
+  let MOVERS = [];
   const landingXs = p => EASY
     ? [p.x - C.EASY_EDGE_GRACE, p.x + p.w / 2, p.x + p.w + C.EASY_EDGE_GRACE]
     : [p.x + 2, p.x + p.w / 2, p.x + p.w - 2];
@@ -54,7 +70,7 @@
   // ── Tile classification ──
   // side/ceiling solidity: out-of-world counts as a wall (invisible edge)
   function solidSide(ch) {
-    return ch === '#' || ch === 'M' || ch === 'G' || ch === 'I' || ch === null || (ch === 'X' && !AB.dig);
+    return ch === '#' || ch === 'M' || ch === 'J' || ch === 'G' || ch === 'I' || ch === null || (ch === 'X' && !AB.dig);
   }
   // What your feet can stand on. Out-of-world is air, so open pits drop
   // you into the dandelion rescue rather than onto an invisible floor.
@@ -62,6 +78,7 @@
     if (ch === '#' || ch === 'G' || ch === 'I') return 1; // solid
     if (ch === 'X') return ab.dig ? 0 : 1;           // sandstone (crumbles with Mighty Paws)
     if (ch === 'M') return 3;                        // bouncy
+    if (ch === 'J') return 4;                        // spring pad (bigger boing)
     if (ch === '-') return 2;                        // one-way
     if (ch === ':') return ab.glow ? 2 : 0;          // glow petal
     return 0;
@@ -92,6 +109,7 @@
       climbing: 0, climbPush: 0, wallLock: 0, floating: false, inUpdraft: false,
       airTicks: 0, fx: 0, lastSafe: { x, y },
       bbUsed: false, inWater: false, inPortal: true,
+      inPop: false, popAt: null, inWind: 0, ride: null,
     };
   }
 
@@ -107,23 +125,32 @@
     AB = ab;
     EASY = easy;
     p.fx = 0;
+    if (p.ride) carry(p);
     const wasGrounded = p.grounded;
     const wasInWater = p.inWater;
     const cx0 = p.x + p.w / 2;
-    p.inWater = !!ab.swim && W().tile(Math.floor(cx0 / T), Math.floor((p.y + p.h / 2) / T)) === '~';
+    const mid = W().tile(Math.floor(cx0 / T), Math.floor((p.y + p.h / 2) / T));
+    p.inWater = !!ab.swim && mid === '~';
     const swim = p.inWater;
 
     // ── Horizontal intent ──
     let dir = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
     if (p.wallLock > 0) { p.wallLock--; if (dir === -p.facing) dir = 0; }
-    const target = dir * C.RUN * (swim ? C.SWIM_SPEED : 1);
-    let acc;
-    if (swim) acc = dir ? 0.4 : 0.25;
-    else if (p.grounded) acc = dir ? C.ACC_GROUND : C.DEC_GROUND;
-    else acc = dir ? (easy ? C.EASY_ACC_AIR : C.ACC_AIR) : (easy ? C.EASY_DEC_AIR : C.DEC_AIR);
-    // turning around is always crisp
-    if (dir && BB.sign(p.vx) === -dir) acc *= 1.6;
-    p.vx = BB.approach(p.vx, target, acc);
+    p.inWind = swim ? 0 : mid === '>' ? 1 : mid === '<' ? -1 : 0;
+    if (p.inWind && !p.grounded) {
+      // a breeze ribbon: swept along (steering just nudges). Paws on the
+      // ground keep their grip, so you can always walk back underneath one.
+      p.vx = BB.approach(p.vx, p.inWind * C.WIND + dir * 1.4, C.WIND_ACC);
+    } else {
+      const target = dir * C.RUN * (swim ? C.SWIM_SPEED : 1);
+      let acc;
+      if (swim) acc = dir ? 0.4 : 0.25;
+      else if (p.grounded) acc = dir ? C.ACC_GROUND : C.DEC_GROUND;
+      else acc = dir ? (easy ? C.EASY_ACC_AIR : C.ACC_AIR) : (easy ? C.EASY_DEC_AIR : C.DEC_AIR);
+      // turning around is always crisp
+      if (dir && BB.sign(p.vx) === -dir) acc *= 1.6;
+      p.vx = BB.approach(p.vx, target, acc);
+    }
     if (dir && !p.climbing) p.facing = dir;
 
     // ── Timers ──
@@ -156,6 +183,8 @@
       p.fx |= FX.WALLJUMP;
     } else if (p.jumpBuf > 0 && (p.grounded || p.coyote > 0)) {
       p.vy = ab.spring ? C.JUMP_SPRING : C.JUMP;
+      // hopping off a moving platform keeps some of its swing
+      if (p.ride) { p.vx += p.ride.dx * C.RIDE_CARRY; if (p.ride.dy < 0) p.vy += p.ride.dy * C.RIDE_CARRY; p.ride = null; }
       p.grounded = false; p.coyote = 0; p.jumpBuf = 0; p.bouncing = false;
       p.fx |= FX.JUMP;
     } else if (inp.jumpPressed && !p.grounded && !swim && ab.doubleJump && !p.djUsed && p.airTicks > 2) {
@@ -199,6 +228,11 @@
         p.vy = BB.approach(p.vy, C.FLOAT_FALL, 1.2);
         p.floating = true;
       }
+      if (p.inWind && !p.grounded) {
+        // …sinking only slowly while the breeze carries you
+        if (p.vy > C.WIND_FALL) p.vy = BB.approach(p.vy, C.WIND_FALL, 0.9);
+        p.fx |= FX.WIND;
+      }
       if (p.vy > C.MAX_FALL) p.vy = C.MAX_FALL;
     }
 
@@ -213,7 +247,13 @@
     if (!p.grounded && p.vy >= 0) {
       const k = feetKind(p, p.y + p.h + 1, ab, true);
       if (k === 1 || k === 2) { p.grounded = true; p.groundKind = k; }
+      else {
+        const m = moverUnder(p, 1.5);
+        if (m) { p.grounded = true; p.groundKind = 2; p.ride = m; }
+      }
     }
+    if (!p.grounded) p.ride = null;
+    else if (p.ride && !wasGrounded) p.fx |= FX.RIDE;
     if (p.grounded) {
       p.djUsed = false; p.bbUsed = false;
       p.climbing = 0;
@@ -245,6 +285,17 @@
       p.inPortal = true;
     } else p.inPortal = false;
 
+    // ── Pop bubbles: touch one to pop upward, air jumps refreshed ──
+    const pop = popTouch(p);
+    if (pop && !p.inPop && !swim) {
+      p.vy = Math.min(p.vy, C.POP);
+      p.bouncing = true; p.djUsed = false; p.bbUsed = false;
+      p.grounded = false; p.ride = null;
+      p.popAt = pop;
+      p.fx |= FX.POP;
+    }
+    p.inPop = !!pop;
+
     // ── Safety & rescue ──
     const room = W().roomAtPx(p.x + p.w / 2, p.y + p.h / 2);
     const feetTile = W().tile(Math.floor((p.x + p.w / 2) / T), Math.floor((p.y + p.h - 6) / T));
@@ -254,6 +305,42 @@
       p.lastSafe.x = p.x; p.lastSafe.y = p.y;
     }
     return p.fx;
+  }
+
+  // A pop bubble the body overlaps (bubbles are a little smaller than a tile)
+  function popTouch(p) {
+    if (!W().hasPop) return null;
+    const tx0 = Math.floor((p.x + 4) / T), tx1 = Math.floor((p.x + p.w - 4) / T);
+    const ty0 = Math.floor((p.y + 4) / T), ty1 = Math.floor((p.y + p.h - 4) / T);
+    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+      if (W().tile(tx, ty) === 'Y') return { tx, ty };
+    }
+    return null;
+  }
+
+  // ── Moving platforms ──
+  const overMover = (p, m) => p.x + p.w - 3 > m.x && p.x + 3 < m.x + m.w;
+  function moverUnder(p, tol) {
+    const feet = p.y + p.h;
+    for (const m of MOVERS) if (overMover(p, m) && Math.abs(feet - m.y) <= tol) return m;
+    return null;
+  }
+  // Standing on a platform: move with it (walls and ceilings still stop you)
+  function carry(p) {
+    const m = p.ride;
+    if (!MOVERS.includes(m) || !overMover(p, m) || Math.abs(p.y + p.h - (m.y - m.dy)) > 3 || p.vy < 0) { p.ride = null; return; }
+    if (m.dx) moveX(p, m.dx);
+    const ny = m.y - p.h;
+    if (!rectSolid(p.x, ny, p.w, p.h)) { p.y = ny; p.grounded = true; p.groundKind = 2; }
+    else p.ride = null;
+  }
+  // Falling onto a platform from above (it is one-way, like a ledge)
+  function landOnMover(p, oldFeet, newFeet) {
+    for (const m of MOVERS) {
+      if (!overMover(p, m)) continue;
+      if (oldFeet <= Math.max(m.y, m.y - m.dy) + 0.5 && newFeet >= m.y) return m;
+    }
+    return null;
   }
 
   // Both feet on firm ground, and no water right next to us.
@@ -320,20 +407,24 @@
           if (!exposedEdge(p, px, ty) || (outsideFoot(p, px) && oldFeet > top + 0.01)) continue;
           const k = landKind(W().tile(Math.floor(px / T), ty), ab);
           if (!k) continue;
-          if (k === 2 && oldFeet > top + 0.01) continue;     // one-way: only from above
-          if (k === 3 && oldFeet > top + 0.01) continue;
+          if (k >= 2 && oldFeet > top + 0.01) continue;      // one-way / bouncy: only from above
           if (k === 1) { kind = 1; break; }
           if (k > kind || kind === 0) kind = k;
         }
       }
       if (kind) {
         p.y = top - p.h;
-        if (kind === 3) {
-          p.vy = C.BOUNCE; p.bouncing = true; p.djUsed = false;
-          p.fx |= FX.BOUNCE;
+        if (kind === 3 || kind === 4) {
+          p.vy = kind === 4 ? C.SPRING : C.BOUNCE; p.bouncing = true; p.djUsed = false;
+          p.fx |= kind === 4 ? FX.SPRING : FX.BOUNCE;
         } else {
           p.vy = 0; p.grounded = true; p.groundKind = kind;
         }
+        return;
+      }
+      const m = MOVERS.length ? landOnMover(p, oldFeet, newFeet) : null;
+      if (m) {
+        p.y = m.y - p.h; p.vy = 0; p.grounded = true; p.groundKind = 2; p.ride = m;
         return;
       }
       p.y += dy;
@@ -362,7 +453,9 @@
   }
 
   BB.Physics = {
-    step, newBody, landKind, solidSide, rectSolid, isSafeFooting, isPortal, hazardous,
+    step, newBody, landKind, solidSide, rectSolid, isSafeFooting, isPortal, hazardous, popTouch,
     setAbilities(ab) { AB = ab; },
+    setMovers(list) { MOVERS = list || []; },
+    get movers() { return MOVERS; },
   };
 })(window.BB);

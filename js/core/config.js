@@ -62,6 +62,14 @@
     BUBBLE_BOUNCE: -10,     // Otter: a bubble under your paws ≈ 3.5 tiles
     FLAP: -7.6,             // Star Whale: each flap of the star wings
 
+    // ── Playground props (no power needed; see js/entities/movers.js) ──
+    SPRING: -16.4,          // `J` spring pad: a big boing ≈ 9.5 tiles
+    POP: -10.8,             // `Y` pop bubble: a boost that refreshes your air jumps
+    WIND: 5.4,              // `<` `>` breeze ribbon: carried sideways…
+    WIND_ACC: 0.45,
+    WIND_FALL: 0.4,         // …while sinking only gently
+    RIDE_CARRY: 0.85,       // share of a moving platform's speed you keep when you hop off
+
     // ── Bubbles ──
     BUBBLE_SPEED: 4.6,
     BUBBLE_LIFE: 75,

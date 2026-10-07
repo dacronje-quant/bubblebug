@@ -206,6 +206,20 @@
       tone({ freq: 180, to: 520, glide: 0.18, dur: 0.3, vol: 0.18, vib: [22, 30] });
       tone({ freq: 700, to: 1100, delay: 0.08, dur: 0.18, vol: 0.05, verb: 0.3 });
     },
+    // a spring pad: a big rising boing with a bright twang on top
+    spring() {
+      tone({ freq: 140, to: 620, glide: 0.24, dur: 0.38, vol: 0.18, vib: [26, 40] });
+      tone({ type: 'triangle', freq: 520, to: 1300, delay: 0.06, dur: 0.26, vol: 0.07, verb: 0.35 });
+      tone({ freq: 1560, delay: 0.16, dur: 0.22, vol: 0.035, verb: 0.5 });
+    },
+    // a pop bubble: a round "bloop" and a little upward sparkle
+    popBoost() {
+      tone({ freq: 520, to: 980, glide: 0.09, dur: 0.14, vol: 0.12 });
+      noise({ dur: 0.05, vol: 0.05, freq: 3600, q: 1.2 });
+      tone({ freq: 1320, delay: 0.07, dur: 0.18, vol: 0.05, verb: 0.45 });
+    },
+    // riding into a breeze ribbon
+    breeze() { noise({ dur: 0.5, vol: 0.045, freq: 500, to: 1800, q: 0.7, verb: 0.3 }); },
     bubble(cat) {
       // Marshmallow: a soft sighing blow. Phoebe: a quick playful "blip".
       if (cat === 'marshmallow') {

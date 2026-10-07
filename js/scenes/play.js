@@ -42,6 +42,7 @@
       this._ctx = null; this._gardenCtx = null;
       save.cat = opts.cat || save.cat;
       W().build();
+      BB.Movers.build();
       W().restoreShortcuts(save);
       BB.Economy.milestones(save);
       // create every room's residents
@@ -952,6 +953,7 @@
       const ab = this.save.abilities;
       const b = this.pl.body;
       let fx = 0;
+      BB.Movers.update(); // moving platforms move first, then carry their riders
       if (this.intro) this.updateIntro();
       if (this.linkLock && Math.hypot(b.x + b.w / 2 - this.linkLock.x, b.y + b.h - this.linkLock.y) > 40) this.linkLock = null;
       if (I.pressed.down && !this.traveling) this.doTrick();
@@ -1226,6 +1228,7 @@
       }
       this.visibleRooms = visible; // (the loop pre-builds terrain around these when a frame has time to spare)
       for (const r of visible) BB.Tiles.drawLive(c, r, cam, t, env);
+      BB.Movers.draw(c, cam, visible, t);
       for (const r of visible) if (r.def.arena) BB.Arenas.drawFront(c, r, cam, t);
       BB.Fx.drawGround(c, visible, cam, t, this.pl.body);
 
@@ -1283,6 +1286,7 @@
       for (const r of visible) this.drawShy(c, r, cam);
       for (const r of visible) BB.Tiles.drawLive(c, r, cam, t, env, true);
       BB.Fx.drawWaterFront(c, visible, cam, t);
+      BB.Movers.draw(c, cam, visible, t, true);
       for (const r of visible) if (r.def.neighbourhood) BB.Neighbourhood.drawFront(c, r, cam, t);
       for (const r of visible) if (r.def.home) BB.Home.drawFront(c, r, cam, t, this);
       if (this.intro) BB.Home.drawIntro(c, cam, this);
