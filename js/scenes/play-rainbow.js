@@ -144,6 +144,18 @@
       c.restore();
     },
 
+    updateRainbowNestEffects(room) {
+      if (!nest(this.save)) return;
+      const b = this.pl.body;
+      for (let i = 0; i < SEATS.length; i++) {
+        const id = SEATS[i];
+        if (!this.save.kin[id]) continue;
+        const p = seat(room, id);
+        const near = Math.abs(b.x + b.w / 2 - p.x) < 170 && Math.abs(b.y - p.y) < 220;
+        if (near && (this.t + i * 41) % 70 === 0) PT().heart(p.x, p.y - 34);
+      }
+    },
+
     // ──── The Rainbow Nest: an arch over the Cat House stairwell ────
     drawRainbowNest(c, room, cam, t) {
       if (!nest(this.save)) return;
@@ -178,7 +190,6 @@
           : near || all ? { mode: 'sit', happy: true, t: tt } : { mode: 'sleep', t: tt };
         const bob = all ? Math.sin(tt * 0.06) * 2 : 0;
         BB.Kittens.draw(c, id, pose, x, y + bob, s, x < b.x + b.w / 2 - cam.x ? 1 : -1);
-        if (near && tt % 70 === 0) PT().heart(p.x, p.y - 34);
       }
       c.restore();
     },

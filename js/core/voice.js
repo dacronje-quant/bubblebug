@@ -96,7 +96,7 @@
         a.onerror = () => fallback(job);
         a.onplaying = () => {
           if (current !== job) return;
-          if (job.options.valid && !job.options.valid()) { finish(job); return; }
+          if (!job.started && job.options.valid && !job.options.valid()) { finish(job); return; }
           started(job);
           duck();
           clearTimeout(watchdog);
@@ -120,9 +120,9 @@
   }
   BB.Voice = {
     play(id, delay = 0, options = {}) { return enqueue(id, BB.VOICE_CLIPS[id], delay, options); },
-    cancel(id) {
+    cancel(id, options = {}) {
       for (let i = queue.length - 1; i >= 0; i--) if (queue[i].id === id) queue.splice(i, 1);
-      if (current && current.id === id) {
+      if (current && current.id === id && !(options.keepStarted && current.started)) {
         const job = current;
         clearTimeout(timer); timer = null;
         if (job.utterance && synth) { detach(job); synth.cancel(); }
@@ -131,6 +131,12 @@
     },
     get currentId() { return current && current.id; },
     get queuedIds() { return queue.map(job => job.id); },
+    // Walking into another room invalidates pending local announcements,
+    // but a line already being heard finishes with its music duck intact.
+    leaveRoom() {
+      queue.length = 0;
+      if (current && !current.started) this.cancel(current.id);
+    },
     stop() {
       generation++; queue.length = 0;
       if (timer !== null) clearTimeout(timer);

@@ -19,13 +19,14 @@
     go(name, opts) {
       BB.Voice.stop();
       if (name === 'pause') { this.set('pause'); return; }
-      if (name === 'play-resume') { this.scene = BB.Play; this.name = 'play'; BB.Input.clearAll(); return; }
+      if (name === 'play-resume') { this.scene = BB.Play; this.name = 'play'; BB.RenderMotion.reset(); BB.Input.clearAll(); return; }
       this.next = { name, opts };
       this.fadeDir = 1;
     },
 
     set(name, opts) {
       BB.Voice.stop();
+      BB.RenderMotion.reset();
       this.name = name;
       this.scene = SCENES[name];
       this.scene.enter(opts || {});
@@ -33,6 +34,7 @@
     },
 
     update() {
+      BB.RenderMotion.beforeTick(this.name);
       if (this.fadeDir) {
         this.fade += this.fadeDir * 0.07;
         if (this.fade >= 1 && this.fadeDir > 0) {
@@ -46,7 +48,11 @@
       this.scene.update();
     },
 
-    draw() {
+    draw(alpha = 1) {
+      return BB.RenderMotion.draw(alpha, () => this.drawScene());
+    },
+
+    drawScene() {
       const p = BB.Play;
       const pictureMenu = this.name === 'play' && !!(p.wardrobe || p.gardenChoice || p.portalChoice || p.maze && p.maze.choice || p.cloud && p.cloud.done || p.mini && p.mini.done);
       document.body.classList.toggle('picture-menu', pictureMenu);
@@ -72,27 +78,14 @@
     },
   };
 
-  // ──── Adaptive quality ────
-  // If frames are consistently slow (an older PC without much graphics
-  // power), gently lower the render resolution until play is smooth.
-  let slowT = 0, avgDt = 16.7;
-  function adaptQuality(dt) {
-    if (document.hidden || dt > 200) return;
-    avgDt = avgDt * 0.95 + dt * 0.05;
-    if (avgDt > 24 && G.scale > 0.8) {
-      if (++slowT > 120) {
-        G.maxScale = Math.max(0.75, Math.min(G.maxScale, G.scale) - 0.25);
-        G.resize(); BB.Tiles.clear();
-        slowT = 0; avgDt = 16.7;
-      }
-    } else slowT = Math.max(0, slowT - 1);
-  }
-
   // ──── Loop ────
-  let acc = 0, last = performance.now();
+  let acc = 0, last = performance.now(), lastWork = 0, lastDraw = 0;
   function frame(now) {
-    adaptQuality(now - last);
-    acc += Math.min(100, now - last);
+    const period = now - last;
+    // Resize before drawing: changing the backing canvas clears its pixels.
+    BB.FrameQuality.sample(period, lastWork, lastDraw);
+    const start = performance.now();
+    acc += Math.min(100, Math.max(0, period));
     last = now;
     let steps = 0;
     while (acc >= C.STEP && steps < 6) {
@@ -104,7 +97,10 @@
       steps++;
     }
     if (steps >= 6) acc = 0;
-    Main.draw();
+    const drawStart = performance.now();
+    Main.draw(acc / C.STEP);
+    const end = performance.now();
+    lastWork = end - start; lastDraw = end - drawStart;
     // spare time this frame: build the terrain just off screen ahead of time
     if (Main.name === 'play' && BB.Play.visibleRooms && performance.now() - now < 8) BB.Tiles.warm(BB.Play.visibleRooms, BB.Camera);
     requestAnimationFrame(frame);
@@ -160,6 +156,8 @@
     });
     // stepping away from the tablet pauses the game
     document.addEventListener('visibilitychange', () => {
+      last = performance.now(); acc = 0; lastWork = lastDraw = 0;
+      BB.RenderMotion.reset(); BB.FrameQuality.reset();
       if (document.hidden && Main.name === 'play' && !BB.Play.gift) Main.go('pause');
     });
 

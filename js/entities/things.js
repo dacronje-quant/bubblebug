@@ -130,6 +130,7 @@
       }
       case 'toy':
         if (dist < 30 && ctx.pl.state !== 'rescue') { th.dead = true; ctx.onToy(th); }
+        else if (Math.floor(th.t) % 20 === 0) PT().burst('spark', th.x + (Math.random() - 0.5) * 30, th.y + Math.sin(th.t * 0.05) * 5 + (Math.random() - 0.5) * 30, 1, { color: '#ffffff', speed: 0.3, life: 30 });
         break;
       case 'glasses':
         if (dist < 24 && ctx.pl.state === 'play') { th.dead = true; ctx.onGlasses(th); }
@@ -308,7 +309,6 @@
         G().drawGlow(x, y + by, 40, '#ffe8a8', 0.7, c);
         BB.HUD.toyIcon(c, th.toy, x, y + by, 1.3, t);
         G().bubble(x, y + by, 20, '#d8f4ff', 0.8, c);
-        if (t % 20 === 0) PT().burst('spark', x + cam.x + (Math.random() - 0.5) * 30, y + cam.y + by + (Math.random() - 0.5) * 30, 1, { color: '#ffffff', speed: 0.3, life: 30 });
         ctx.light(x, y + by, 110, '#ffe8a8', 0.8);
         break;
       }

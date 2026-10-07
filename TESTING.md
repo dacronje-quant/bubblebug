@@ -1,3 +1,38 @@
+# Trying smooth movement and room boundaries
+
+Room glides take 0.2 seconds while the kitten, residents, bubbles and game
+timers keep moving. Walk across a zone's horizontal seams and tap Jump during
+the glide. In the tower, repeatedly release and tap Jump for Double Jump,
+Bubble Bounce and Star Wings while passing the upper room boundary. Brief
+taps between ticks should also work. The home and garden still share their
+continuous camera.
+
+Rendering interpolates completed 60 Hz game ticks. Compare motion on 60, 90
+and 120 Hz displays; game speed should stay the same, with positions filling
+the extra drawing frames. Snow, pollen, rain, HUD collection bounces and
+gate/portal fades use game time. Pause should freeze these effects. Resolution
+lowers only under sustained drawing load and gradually recovers with spare
+time; a healthy 30 Hz display should keep its normal resolution.
+
+Run `node tools/test-room-glides.js`, `node tools/test-render-motion.js`,
+`node tools/test-frame-quality.js` and `node tools/test-effects-timing.js` for
+boundary input, exact simulation-state preservation, quality recovery and
+30/60/90/120 Hz effect parity. Run `node tools/test-frame-loop-browser.js`
+with the Playwright and `BUBBLEPAWS_BROWSER` settings below for the real
+browser loop at those cadences; captures and results are saved under
+`test-output/frame-loop`. Simulated cadence does not replace a physical
+high-refresh tablet playtest. Movement checks also require the Medium/Hard
+and Easy world verifiers described below.
+
+Zone music prepares in short background tasks, preloads the next zone and
+keeps the previous score audible until the new recording is ready. A voice
+line already speaking should finish while walking across a room boundary or
+traveling through a door or lift;
+queued or delayed room-specific cues should disappear. Pause and mute still
+stop speech. Run `node tools/test-music.js`, `node tools/test-voice.js`,
+`node tools/test-guidance.js` and the music/voice browser checks for these
+behaviors, including offline `file://` playback.
+
 # Trying Glow and aerial jumps
 
 Skill unlocks use a picture strip with no words or numbers. Jump taps visibly

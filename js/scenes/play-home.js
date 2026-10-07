@@ -128,8 +128,7 @@
 
     updateHomeVisitors() {
       if (!['ng', 'np', 'nr'].includes(this.room.id)) return;
-      const ctx = this.ctx(), b = this.pl.body, room = this.room;
-      ctx.garden = true;
+      const ctx = this.ctx(true), b = this.pl.body, room = this.room;
       const players = new Set(this.gardenFun ? this.gardenFun.friends : []);
       for (const visitor of this.homeVisitors) {
         if (visitor.room !== room.id) continue;

@@ -39,12 +39,14 @@
 
     enter(opts) {
       const save = this.save = BB.Save.data;
+      this._ctx = null; this._gardenCtx = null;
       save.cat = opts.cat || save.cat;
       W().build();
       W().restoreShortcuts(save);
       BB.Economy.milestones(save);
       // create every room's residents
       this.ents = {};
+      this.homeRooms = W().rooms.filter(room => room.def.home);
       this.locks = {};
       const turns = {}; // zone+char → how many critters placed so far (cast rotation)
       for (const room of W().rooms) {
@@ -148,6 +150,7 @@
       // story lines cut short last time are tried again once things are quiet
       this.storyPending = (Array.isArray(save.storyPending) ? save.storyPending : []).map(id => ({ id, until: 60 * 90, next: 150 }));
       this.shakeT = 0; this.shakeAmp = 0;
+      this.narrowDim = 0;
       this.activeBoss = null; this.bossCard = null; this.bossMusic = false;
       this.homeVisitors = [];
       this.refreshHomeVisitors();
@@ -157,7 +160,10 @@
       this.enterZone(this.room.zone);
       if (!save.introDone && this.room.def.home) this.startIntro();
       BB.Bubbles.clear(); PT().clear(); BB.Bosses.clear();
+      PT().clearAmbient();
       this.t = 0;
+      this.flash = 0;
+      BB.HUD.resetHUD(this.hudState());
       this.writeSave();
       if (save.inMaze) this.openMaze();
       else this.startHunt(); // (an older finished adventure: Rainbow's family is waiting)
@@ -199,7 +205,8 @@
     // ──── Going through a door, a cat flap, the lift or the slide ────
     travel(dest, kind, from) {
       if (!dest || this.traveling) return;
-      BB.Voice.stop();
+      BB.Voice.leaveRoom();
+      this.cancelGuidance({ keepStarted: true });
       // used once: its arrows and "stand here" rings can go now
       const key = from && BB.Links.linkKey(from);
       if (key) { this.save.used = this.save.used || {}; this.save.used[key] = 1; }
@@ -221,7 +228,7 @@
       if (this.traveling) return;
       const shaft = W().byId.t4, land = BB.Links.landingTile(), b = this.pl.body;
       if (!shaft || !land) return;
-      BB.Voice.stop(); BB.Bubbles.clear();
+      BB.Voice.leaveRoom(); this.cancelGuidance({ keepStarted: true }); BB.Bubbles.clear();
       const cx = shaft.px + shaft.pw / 2, sx = b.x + b.w / 2, sy = b.y + b.h;
       // up off the pad, over to the top of the shaft, then all the way down
       const path = [{ x: sx, y: sy }, { x: sx, y: sy - 3 * T }, { x: cx, y: shaft.py + 2 * T }, { x: cx, y: shaft.py + shaft.ph - T }];
@@ -595,7 +602,7 @@
     },
 
     leaveRoom(room) {
-      BB.Voice.stop();
+      BB.Voice.leaveRoom();
       if (!room) return;
       if (room.def.home && this.party) { this.party = null; this.partyStarted = false; }
       for (const bs of this.ents[room.id].bosses) BB.Bosses.reset(bs);
@@ -611,9 +618,9 @@
     later(n, fn) { this.timers.push({ n, fn }); },
 
     // callbacks handed to entities
-    ctx() {
+    ctx(garden = false) {
       const self = this;
-      return {
+      if (!this._ctx) this._ctx = {
         pl: this.pl, save: this.save, partyStarted: this.partyStarted, room: this.room,
         followers: this.followers,
         light: (x, y, r, col, s) => BB.Lighting.add(x, y, r, col, s),
@@ -732,6 +739,14 @@
           BB.Save.write();
         },
       };
+      // Entity callbacks belong to this Play lifetime. Refresh just the
+      // references that can change when entering a room or starting over.
+      // Garden visitors get their own wrapper, sharing these callbacks,
+      // so their gentler movement flag cannot affect adventure residents.
+      const ctx = garden ? (this._gardenCtx || (this._gardenCtx = { ...this._ctx, garden: true })) : this._ctx;
+      ctx.pl = this.pl; ctx.save = this.save; ctx.partyStarted = this.partyStarted;
+      ctx.room = this.room; ctx.followers = this.followers;
+      return ctx;
     },
 
     // ──── Elder gift ceremony ────
@@ -844,8 +859,6 @@
     // (they stay visible, so a nearby doorway still reads as the way on).
     drawNarrowFocus(c, cam) {
       const r = this.room, W = G().W, H = G().H;
-      const want = r && !r.def.cameraGroup && !BB.Camera.sliding && (r.pw < W - 1 || r.ph < H - 1) ? 1 : 0;
-      this.narrowDim = BB.lerp(this.narrowDim || 0, want, 0.08);
       if (this.narrowDim < 0.02 || !r) return;
       const x0 = r.px - cam.x, x1 = x0 + r.pw, y0 = r.py - cam.y, y1 = y0 + r.ph, edge = 28;
       c.save();
@@ -881,7 +894,12 @@
       if (p.t % 25 === 0) PT().burst('confetti', p.cx + (Math.random() - 0.5) * W0, cy - 120, 12, { speed: 2, g: 0.05, life: 140 });
       if (p.t % 90 === 0) S().party();
       if (p.t % 60 === 0) PT().firework(p.cx + (Math.random() - 0.5) * 700, cy - 60 - Math.random() * 80);
-      for (const g of p.guests) g.t++;
+      for (const g of p.guests) {
+        g.t++;
+        if (g.ring) {
+          if (Math.floor(g.t) % 80 === 0) { const rp = this.ringPos(g); PT().heart(rp.x, rp.y - 30); }
+        } else if (Math.floor(g.t) % 70 === 0) PT().heart(g.x, g.y - 20);
+      }
       if (p.t > 200 && !p.dismissed) {
         p.card = Math.min(1, p.card + 0.04);
         // everyone found: an extra shower of fireworks as the banner fills up
@@ -900,9 +918,9 @@
       if (this.maze) { this.updateMaze(); return; }
       if (this.cloud) { this.updateCloud(); return; }
       if (this.mini) { this.updateMini(); return; }
-      if (this.portalChoice) { this.updateJourneyChoice(); PT().update(); return; }
-      if (this.wardrobe) { this.updateWardrobe(); PT().update(); return; }
-      if (this.gardenChoice) { this.updateGardenChoice(); PT().update(); return; }
+      if (this.portalChoice) { this.updateJourneyChoice(); PT().update(); this.updateDrawEffects(false); return; }
+      if (this.wardrobe) { this.updateWardrobe(); PT().update(); this.updateDrawEffects(false); return; }
+      if (this.gardenChoice) { this.updateGardenChoice(); PT().update(); this.updateDrawEffects(false); return; }
       if (I.pressed.pause && !this.gift && this.pl.state !== 'sad') { BB.Main.go('pause'); return; }
       if (I.pressed.map) { this.toggleMap(); if (BB.Main.name === 'pause') return; }
 
@@ -927,11 +945,6 @@
       this.hopHome = this.hopHome.filter(h => h.t < 30);
 
       const cam = Cam();
-      if (cam.sliding) {
-        cam.update(this.room, this.pl.body);
-        PT().update();
-        return;
-      }
 
       if (this.gift) this.updateGift();
       if (this.party) this.updateParty();
@@ -1013,7 +1026,6 @@
           BB.Save.write();
           BB.Bubbles.clear();
           S().whoosh();
-          return;
         }
       }
 
@@ -1078,6 +1090,7 @@
       BB.Tiles.tick();
       BB.Fx.update(this, b);
       cam.update(this.room, b);
+      this.updateDrawEffects();
       if (this.zoneCard > 0) this.zoneCard--;
       this.joy = Math.max(0, this.joy - 0.002);
 
@@ -1139,6 +1152,41 @@
       return this.save.abilities.glow ? d * 0.75 : d;
     },
 
+    hudState() {
+      return {
+        stars: BB.Economy.balance(this.save, 'stars'),
+        hearts: BB.Economy.balance(this.save, 'hearts'),
+        abilities: this.save.abilities, toys: this.save.toys,
+        family: BB.Save.count(this.save.family || {}),
+        mood: this.mood, moodMax: C.MOOD_MAX, cat: this.pl.cat, hurtT: this.hurtT, healT: this.healT,
+        hard: BB.Settings.hard, munchT: this.munchT,
+        tricks: BB.Save.count(this.save.gestures || {}),
+        kin: BB.RainbowFamily.active(this.save) ? this.save : null, kinPulse: this.kinPulse || 0,
+        boss: !!(this.activeBoss && this.activeBoss.state !== 'happy' && this.activeBoss.room === this.room.id),
+      };
+    },
+
+    // These effects used to advance from draw(), so high-refresh screens sped
+    // them up and drawing the pause background could spawn extra particles.
+    updateDrawEffects(world = true) {
+      const cam = Cam(), room = this.room;
+      const narrow = !room.def.cameraGroup && !cam.sliding && (room.pw < G().W - 1 || room.ph < G().H - 1);
+      this.narrowDim = BB.lerp(this.narrowDim, narrow ? 1 : 0, 0.08);
+      PT().ambientUpdate(BB.ZONES[room.zone].key, !!room.def.rain, cam, this.lastCam);
+      this.lastCam.x = cam.x; this.lastCam.y = cam.y;
+      if (this.flash > 0) this.flash--;
+      for (const id in this.signFade) if (this.signFade[id] > 0)
+        this.signFade[id] = this.signFade[id] >= 60 ? 0 : this.signFade[id] + 1;
+      if (this.trickCard || this.outfitCard || this.kinCard) this.zoneCard = Math.min(this.zoneCard, 12);
+      const L = this.lantern;
+      if (world && L && L.t < 30 && L.t % 4 === 0) PT().trail('spark', L.x - 26, L.y - 40, '#ffd98a');
+      for (const r of this.homeRooms) {
+        BB.Home.updateFamilyEffects(r, this);
+        this.updateRainbowNestEffects(r);
+      }
+      BB.HUD.updateHUD(this.hudState());
+    },
+
     // ──── Drawing ────
     draw(c) {
       if (this.maze) { this.drawMaze(c); return; }
@@ -1149,7 +1197,8 @@
       let sx = 0, sy = 0;
       if (this.shakeT > 0) {
         const k = this.shakeT / 14 * this.shakeAmp;
-        sx = (Math.random() - 0.5) * k; sy = (Math.random() - 0.5) * k;
+        sx = (BB.hash(Math.floor(this.t), 97, 0) - 0.5) * k;
+        sy = (BB.hash(Math.floor(this.t), 97, 1) - 0.5) * k;
       }
       const cam = { x: Math.round((cam0.x + sx) * sc) / sc, y: Math.round((cam0.y + sy) * sc) / sc };
       const t = this.t;
@@ -1163,10 +1212,6 @@
       }
       BB.Backdrops.draw(c, cam, zoneA, zoneB, mix, room.py + room.ph, t);
       BB.Fx.drawShafts(c, room, cam, t);
-
-      // ambient drift behind the terrain
-      PT().ambientUpdate(BB.ZONES[room.zone].key, !!room.def.rain, cam, this.lastCam);
-      this.lastCam = { x: cam.x, y: cam.y };
 
       const visible = W().roomsInRect(cam.x - 64, cam.y - 64, G().W + 128, G().H + 128);
       const env = { glow: this.save.abilities.glow, rings: this.save.abilities.rings, dig: this.save.abilities.dig, px: this.pl.body.x + 10, py: this.pl.body.y + 12 };
@@ -1190,7 +1235,6 @@
         if (!r.grid.some(row => row.includes('G') || row.includes('g'))) continue;
         const f = this.signFade[r.id];
         if (this.save.gates[r.id] && !f) continue;
-        if (f) this.signFade[r.id] = f + 1 > 60 ? 0 : f + 1;
         BB.Puzzles.drawSign(c, r, this.save, cam, t, f || 0);
       }
       // the save-point lantern
@@ -1270,17 +1314,7 @@
       this.drawInteractionProgress(c, cam, visible);
 
       // HUD
-      BB.HUD.drawHUD(c, {
-        stars: BB.Economy.balance(this.save, 'stars'),
-        hearts: BB.Economy.balance(this.save, 'hearts'),
-        abilities: this.save.abilities, toys: this.save.toys,
-        family: BB.Save.count(this.save.family || {}),
-        mood: this.mood, moodMax: C.MOOD_MAX, cat: this.pl.cat, hurtT: this.hurtT, healT: this.healT,
-        hard: BB.Settings.hard, munchT: this.munchT,
-        tricks: BB.Save.count(this.save.gestures || {}),
-        kin: BB.RainbowFamily.active(this.save) ? this.save : null, kinPulse: this.kinPulse || 0,
-        boss: !!(this.activeBoss && this.activeBoss.state !== 'happy' && this.activeBoss.room === this.room.id),
-      }, t);
+      BB.HUD.drawHUD(c, this.hudState(), t);
       for (const f of this.healFx) {
         // a heart flies from a new friend up to your happy suns
         const k = BB.easeInOut(f.t / 40);
@@ -1299,14 +1333,13 @@
       this.drawGuidance(c, cam);
       // (a lesson or present card takes the top of the screen: the zone
       // name steps aside instead of overlapping it)
-      if (this.trickCard || this.outfitCard || this.kinCard) this.zoneCard = Math.min(this.zoneCard, 12);
       BB.HUD.drawZoneCard(c, this.cardZone, this.zoneCard / 40, t);
       if (this.gift && this.gift.card > 0) {
         c.fillStyle = `rgba(20,10,40,${0.35 * this.gift.card})`; c.fillRect(0, 0, G().W, G().H);
         BB.HUD.drawAbilityCard(c, this.gift.ability, Math.max(0, this.gift.t - (this.gift.lessonStart == null ? 110 : this.gift.lessonStart)), this.pl.cat, this.gift.card, this.save.abilities);
       }
       if (this.party && this.party.card > 0) this.drawPartyCard(c, this.party.card);
-      if (this.flash > 0) { c.fillStyle = `rgba(255,248,220,${this.flash / 20})`; c.fillRect(0, 0, G().W, G().H); this.flash--; }
+      if (this.flash > 0) { c.fillStyle = `rgba(255,248,220,${this.flash / 20})`; c.fillRect(0, 0, G().W, G().H); }
       if (this.wardrobe) this.drawWardrobe(c, t);
       if (this.gardenChoice) this.drawGardenChoice(c, t);
       if (this.portalChoice) this.drawJourneyChoice(c, t);
@@ -1350,7 +1383,6 @@
       for (const [px, py] of [[-3.4, -39.5], [-1.2, -41.5], [1.2, -41.5], [3.4, -39.5]]) { G().circle(px, py, 1.2, c); c.fill(); }
       c.fillStyle = '#a8740e'; G().rrect(-6, -49, 12, 4, 2, c); c.fill();
       c.restore();
-      if (L.t < 30 && L.t % 4 === 0) PT().trail('spark', L.x - 26, L.y - 40, '#ffd98a');
     },
 
     drawHopHome(c, h, cam) {
@@ -1411,7 +1443,6 @@
           if (old) { c.translate(rp.x - cam.x, rp.y - cam.y); c.rotate(Math.sin(g.t * 0.06) * 0.12); c.translate(-(rp.x - cam.x), -(rp.y - cam.y)); }
           BB.Kittens.draw(c, g.cat, pose, rp.x - cam.x, rp.y - cam.y + hop, sz, dance < 110 ? rp.dir : (rp.x < this.party.cx ? 1 : -1));
           c.restore();
-          if (g.t % 80 === 0) PT().heart(rp.x, rp.y - 30);
           continue;
         }
         if (back) continue;
@@ -1424,7 +1455,6 @@
           if (g.cloud) BB.Backdrops.cloud(c, x - 20, y + 16, 0.28, 'rgba(255,255,255,0.9)');
           BB.Critters.drawBug(c, g.kind, x, y + hop - 4 + Math.sin(g.t * 0.03) * 4, { t: g.t, mood: 0, facing: g.facing, joy: true, spin: Math.sin(g.t * 0.1) * 0.2, scale: 1 });
         }
-        if (g.t % 70 === 0) PT().heart(g.x, g.y - 20);
       }
     },
 

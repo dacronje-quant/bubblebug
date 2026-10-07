@@ -5,7 +5,12 @@
 // the layered boss/party songs, and sits at the same loudness as before.
 // NODE_PATH must include Playwright; BUBBLEPAWS_BROWSER can select Edge/Chrome.
 'use strict';
-const { chromium } = require('playwright');
+const { chromium } = (() => {
+  try { return require('playwright'); } catch (e) {
+    if (!process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES) throw e;
+    return require(require('node:path').join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, 'playwright'));
+  }
+})();
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -15,6 +20,11 @@ const { pathToFileURL } = require('node:url');
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
+    await page.addInitScript(() => {
+      const original = window.atob;
+      window.__musicSlices = [];
+      window.atob = value => { __musicSlices.push(value.length); return original.call(window, value); };
+    });
     await page.goto(pathToFileURL(path.resolve(__dirname, '../index.html')).href + '#play=phoebe&room=ng');
     await page.waitForTimeout(600);
     await page.keyboard.press('ArrowRight'); // (a key press starts audio)
@@ -58,6 +68,8 @@ const { pathToFileURL } = require('node:url');
       await page.evaluate(k => BB.Music.play(k), key);
       await page.waitForFunction(k => BB.Music.recording === k, key, { timeout: 20000 });
     }
+    assert.ok(await page.evaluate(() => __musicSlices.length > 13 && Math.max(...__musicSlices) <= 16384),
+      'offline music scores are unpacked in small chunks between browser turns');
     assert.deepEqual(errors, []);
     console.log('✓ 13 recorded region scores load from disk, match loudness (x' + ratio.toFixed(2) + '), crossfade without a gap, resume, and give way to boss music');
   } finally { await browser.close(); }

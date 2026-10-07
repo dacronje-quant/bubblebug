@@ -2,8 +2,8 @@
 (function (BB) {
   'use strict';
   Object.assign(BB.Play, {
-    cancelGuidance() {
-      for (const id of Object.keys(this.guidance.jobs)) BB.Voice.cancel(id);
+    cancelGuidance(options = {}) {
+      for (const id of Object.keys(this.guidance.jobs)) BB.Voice.cancel(id, options);
       this.guidance.jobs = {};
     },
     drawGuidance(c, cam) {
@@ -11,6 +11,8 @@
       const action = ['tutorial_jump', 'tutorial_double_jump'].includes(id) ? 'jump' :
         ['tutorial_sad_animal', 'tutorial_sleepy_buds', 'tutorial_goose'].includes(id) ? 'bubble' : null;
       if (!action || BB.Audio.muted) return;
+      const job = this.guidance.jobs[id];
+      if (job && job.room !== this.room) return;
       const b = this.pl.body;
       BB.HUD.buttonIcon(c, action, b.x + b.w / 2 - cam.x, b.y - cam.y - 45, 1.1, 0.65 + Math.sin(this.t * .12) * .35);
     },
@@ -20,6 +22,7 @@
       const room = this.room, save = this.save;
       const valid = () => this.save === save && this.room === room && BB.Main.name === 'play' && condition();
       if (!valid()) return false;
+      valid.room = room;
       this.guidance.jobs[id] = valid;
       const accepted = BB.Voice.play(id, delay, { valid, onStart: () => {
         heard[id] = 1; this.guidance.next = this.t + 180; BB.Save.write();
@@ -31,7 +34,7 @@
     updateGuidance() {
       const V = BB.Voice, g = this.guidance, b = this.pl.body, e = this.ents[this.room.id];
       for (const [id, valid] of Object.entries(g.jobs)) {
-        if (!valid()) V.cancel(id);
+        if (!valid()) V.cancel(id, { keepStarted: this.room !== valid.room });
         if (V.currentId !== id && !V.queuedIds.includes(id)) delete g.jobs[id];
       }
       if (this.pl.state !== 'play' || this.intro || this.gift || this.party || this.maze ||

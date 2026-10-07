@@ -1,7 +1,7 @@
 // ════════════════════════════════════════════════════════════════
 //  CAMERA — smooth follow with look-ahead, framed to the current room.
 //  When the kitten crosses into another room the camera glides across
-//  (Celeste-style) while the action pauses for a heartbeat.
+//  while the kitten and the rest of the adventure keep moving.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -23,6 +23,7 @@
 
   const Cam = BB.Camera = {
     x: 0, y: 0, lookX: 0, lookY: 0,
+    revision: 0, // snaps mark camera discontinuities for render interpolation
     slide: null, // { from:{x,y}, to:{x,y}, t, dur }
 
     clampTo(room, x, y) {
@@ -62,6 +63,7 @@
     },
 
     snap(room, p) {
+      this.revision++;
       this.lookX = p.facing * 50; this.lookY = 0;
       const t = this.targetFor(room, p);
       this.x = t.x; this.y = t.y;
@@ -82,6 +84,10 @@
     update(room, p) {
       if (this.slide) {
         const s = this.slide;
+        // The kitten can jump, flap or run during a glide. Aim at its
+        // current position so the camera finishes beside it, not where
+        // it crossed the room boundary a few ticks ago.
+        s.to = this.targetFor(room, p);
         s.t++;
         const k = BB.easeInOut(Math.min(1, s.t / s.dur));
         this.x = BB.lerp(s.from.x, s.to.x, k);

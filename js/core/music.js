@@ -14,7 +14,7 @@
 //  a seamless loop). When one exists it is used instead of the layered
 //  song: the old region's music fades out while the new one fades in, and
 //  each region resumes where it left off. Boss, party and lullaby tunes
-//  stay layered. A region's file is only loaded when it is first heard.
+//  stay layered. The next region can be warmed in the background.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -137,6 +137,7 @@
   const busses = {};
   let procGain = null, procOff = null, rec = null, recToken = 0;
   const buffers = new Map(), loading = {}, resumeAt = {};
+  let decoding = Promise.resolve(), prewarm = null;
   let song = null, pendingSong = null, songName = null;
   let step = 0, nextTime = 0, timer = null;
   const target = { pad: 1, bass: 1, lead: 1, arp: 0.3, perc: 0.2, twinkle: 0 };
@@ -157,17 +158,40 @@
   }
 
   // ──── recorded region scores ────
+  // Decode small, four-character-aligned base64 slices between browser
+  // turns. This also works from file://, where fetch/worker URLs can fail.
+  function unpack(mp3) {
+    return new Promise(resolve => {
+      const padding = mp3.endsWith('==') ? 2 : mp3.endsWith('=') ? 1 : 0;
+      const bytes = new Uint8Array(mp3.length / 4 * 3 - padding);
+      const clock = typeof performance !== 'undefined' ? () => performance.now() : () => Date.now();
+      let at = 0, out = 0;
+      function part() {
+        const until = clock() + 2;
+        try {
+          do {
+            const bin = atob(mp3.slice(at, at + 16384));
+            for (let i = 0; i < bin.length; i++) bytes[out++] = bin.charCodeAt(i);
+            at += 16384;
+          } while (at < mp3.length && clock() < until);
+        } catch (e) { resolve(null); return; }
+        if (at < mp3.length) setTimeout(part, 0);
+        else resolve(bytes.buffer);
+      }
+      // Never unpack inside a room-transition tick, even for a cached file.
+      setTimeout(part, 0);
+    });
+  }
   function decode(name) {
     const d = window.BB_MUSIC && window.BB_MUSIC[name];
     if (!d) return Promise.resolve(null);
-    const bin = atob(d.mp3), bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return new Promise(resolve => {
+    return unpack(d.mp3).then(bytes => new Promise(resolve => {
+      if (!bytes || !A.ctx) { resolve(null); return; }
       try {
-        const p = A.ctx.decodeAudioData(bytes.buffer, b => resolve(b), () => resolve(null));
+        const p = A.ctx.decodeAudioData(bytes, b => resolve(b), () => resolve(null));
         if (p && p.catch) p.catch(() => resolve(null));
       } catch (e) { resolve(null); }
-    }).then(b => {
+    })).then(b => {
       if (!b) return null;
       b._loopEnd = Math.min(b.duration, d.frames / d.rate);
       delete window.BB_MUSIC[name]; // the decoded copy is all we need now
@@ -184,12 +208,21 @@
       el.src = 'assets/music/' + name + '.js';
       el.onload = el.onerror = () => { el.remove(); resolve(); };
       document.head.appendChild(el);
-    }).then(() => decode(name)).then(b => {
+    }).then(() => {
+      // Only one encoded score is unpacked/decoded at a time, including
+      // preloads, so rapid travel cannot create a burst of audio allocations.
+      const job = decoding.then(() => decode(name));
+      decoding = job.catch(() => null);
+      return job;
+    }).then(b => {
       delete loading[name];
       if (b) {
         buffers.set(name, b);
         // keep only the last few regions decoded (each is ~30 MB of samples)
-        while (buffers.size > KEEP) { const old = buffers.keys().next().value; if (rec && rec.name === old) break; buffers.delete(old); }
+        for (const old of buffers.keys()) {
+          if (buffers.size <= KEEP) break;
+          if (old !== songName && (!rec || rec.name !== old)) buffers.delete(old);
+        }
       }
       return b;
     });
@@ -222,7 +255,7 @@
     procGain.gain.linearRampToValueAtTime(on ? 1 : 0, t + (on ? FADE_IN : FADE_OUT));
     clearTimeout(procOff);
     // (the layered song stops scheduling once it has faded away)
-    if (!on) procOff = setTimeout(() => { if (rec || recToken) { song = null; pendingSong = null; if (timer) { clearInterval(timer); timer = null; } } }, FADE_OUT * 1000 + 300);
+    if (!on) procOff = setTimeout(() => { if (rec) { song = null; pendingSong = null; if (timer) { clearInterval(timer); timer = null; } } }, FADE_OUT * 1000 + 300);
   }
   function startProcedural(name) {
     const s = SONGS[name] || SONGS.gardens;
@@ -283,22 +316,36 @@
     SONGS,
     wanted: null,
     RECORDED,
+    preload(name) {
+      // Warm just one likely destination after a short delay in this zone.
+      // Cancel the previous request when a new zone is entered.
+      clearTimeout(prewarm);
+      if (!A.ctx || !RECORDED.includes(name) || name === songName) return;
+      const current = songName;
+      prewarm = setTimeout(() => {
+        prewarm = null;
+        if (songName === current && !A.muted) load(name);
+      }, 1200);
+    },
     play(name) {
       this.wanted = name;
       if (!ensureBusses()) return; // no audio yet — started once the player taps/presses
       if (name === songName) return;
       songName = name;
       const token = ++recToken;
-      fadeOutRecorded(); // the old region's music fades away…
       if (RECORDED.includes(name)) {
-        fadeProcedural(false);
+        this.preload(RECORDED[(RECORDED.indexOf(name) + 1) % RECORDED.length]);
         load(name).then(buffer => {
           if (token !== recToken || songName !== name) return;
-          if (buffer) startRecorded(name, buffer); // …while the new one fades in
-          else { recToken = 0; fadeProcedural(true); startProcedural(name); } // (no file: the layered song)
+          // Keep the old music audible during background preparation, then
+          // crossfade as soon as the next score is ready.
+          fadeOutRecorded();
+          if (buffer) { startRecorded(name, buffer); fadeProcedural(false); }
+          else { fadeProcedural(true); startProcedural(name); } // (no file: the layered song)
         });
       } else {
-        recToken = 0;
+        clearTimeout(prewarm); prewarm = null;
+        fadeOutRecorded();
         fadeProcedural(true);
         startProcedural(name);
       }
@@ -306,7 +353,9 @@
     stop() {
       if (timer) { clearInterval(timer); timer = null; } song = null; pendingSong = null; songName = null; this.wanted = null;
       if (rec) { try { rec.src.stop(); } catch (e) { /* stopped */ } rec = null; }
-      recToken = 0;
+      ++recToken;
+      clearTimeout(prewarm); prewarm = null;
+      clearTimeout(procOff); procOff = null;
     },
     get recording() { return rec ? rec.name : null; },
     get current() { return songName; },

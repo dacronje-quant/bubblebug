@@ -86,7 +86,7 @@
     BOSS_SNIFFLE: 250,      // ticks the boss sits sniffling (bubble now!)
 
     // ── Presentation ──
-    ROOM_SLIDE: 26,         // ticks for the camera to glide between rooms
+    ROOM_SLIDE: 12,         // ticks for a camera glide while the adventure keeps moving
     RESCUE_TIME: 80,        // ticks of the dandelion float back to safety
     MAX_RENDER_SCALE: 2,
   });

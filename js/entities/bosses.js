@@ -1070,7 +1070,7 @@
         }
         break;
       case 'antlers':
-        if (front && b.stT % 50 < 12) for (let i = 0; i < 2; i++) { c.fillStyle = '#c89a5a'; G().circle(x + f * (D.r + 6) + (Math.random() - 0.5) * 16, y - D.lift + (Math.random() - 0.5) * 20, 2.4, c); c.fill(); }
+        if (front && b.stT % 50 < 12) for (let i = 0; i < 2; i++) { c.fillStyle = '#c89a5a'; G().circle(x + f * (D.r + 6) + (BB.hash(Math.floor(b.t), i, 90) - 0.5) * 16, y - D.lift + (BB.hash(Math.floor(b.t), i, 91) - 0.5) * 20, 2.4, c); c.fill(); }
         break;
       case 'doze':
         if (front) {

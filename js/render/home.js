@@ -294,6 +294,15 @@
     return out;
   }
 
+  function updateFamilyEffects(room, play) {
+    if (play.party) return;
+    const b = play.pl.body;
+    for (const p of familySpots(room, play)) {
+      const near = Math.abs(b.x - p.x) < 120 && Math.abs(b.y - p.y) < 100;
+      if (near && (play.t + p.i * 37) % 60 === 0) BB.Particles.heart(p.x, p.y - 40);
+    }
+  }
+
   // the family members who are home, napping on their cushions
   // (bubble one and they jump up with a giggle and say who they are)
   function drawFamily(c, room, cam, t, play) {
@@ -310,7 +319,6 @@
       const hop = play.celebrationT > 0 ? Math.max(0, Math.sin(tt * 0.18)) * 22
         : poke > 0 ? Math.abs(Math.sin(poke * 0.16)) * Math.min(1, poke / 40) * 26 : 0;
       BB.Kittens.draw(c, id, pose, x, y - hop, m.size || 1.4, x < b.x - cam.x ? 1 : -1);
-      if (near && tt % 60 === 0) BB.Particles.heart(p.x, p.y - 40);
     }
   }
 
@@ -349,5 +357,5 @@
     c.restore();
   }
 
-  BB.Home = { familyOrder, familySpots, drawBack, drawFamily, drawFront, drawIntro, faceOf, drawToys, drawMirror, toySpot, TOY_SPOTS, MIRROR_COL };
+  BB.Home = { familyOrder, familySpots, updateFamilyEffects, drawBack, drawFamily, drawFront, drawIntro, faceOf, drawToys, drawMirror, toySpot, TOY_SPOTS, MIRROR_COL };
 })(window.BB);

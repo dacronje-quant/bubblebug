@@ -241,8 +241,27 @@
   }
 
   // ──── Main HUD ────
-  const bounce = { stars: 0, hearts: 0 };
-  let last = { stars: -1, hearts: -1, family: -1, tricks: -1 };
+  const bounce = { stars: 0, hearts: 0, family: 0, tricks: 0 };
+  const last = { stars: -1, hearts: -1, family: -1, tricks: -1 };
+
+  function resetHUD(s) {
+    for (const key of Object.keys(bounce)) {
+      bounce[key] = 0;
+      last[key] = s ? s[key] || 0 : -1;
+    }
+  }
+
+  // Counter celebrations run on the same 60 Hz clock as collection. A draw
+  // may happen twice between ticks on a tablet, or show a frozen pause scene.
+  function updateHUD(s) {
+    for (const key of Object.keys(bounce)) {
+      if (key === 'tricks' && s.boss) continue;
+      const value = s[key] || 0;
+      if (last[key] >= 0 && value > last[key]) bounce[key] = 1;
+      last[key] = value;
+      bounce[key] *= 0.9;
+    }
+  }
 
   function drawSideHUD(s, t) {
     const v = G.view, cv = G.surround, safe = G.readSafeArea();
@@ -330,10 +349,6 @@
   }
 
   function drawHUD(c, s, t) {
-    if (last.stars >= 0 && s.stars > last.stars) bounce.stars = 1;
-    if (last.hearts >= 0 && s.hearts > last.hearts) bounce.hearts = 1;
-    last.stars = s.stars; last.hearts = s.hearts;
-    bounce.stars *= 0.9; bounce.hearts *= 0.9;
     if (drawSideHUD(s, t)) return;
 
     // A cutout can consume a whole gutter. Keep the compact HUD inside the
@@ -376,14 +391,11 @@
     const x0 = X0 + 212;
     const fam = s.family || 0;
     if (fam > 0) {
-      if (last.family >= 0 && fam > last.family) bounce.family = 1;
-      bounce.family = (bounce.family || 0) * 0.9;
       pill(x0, 82);
       const fb = 1 + bounce.family * 0.5;
       BB.MapView.catFace(c, x0 + 22, 33, 1.25 * fb, '#fff1dc', '#9a7a64');
       G.text(String(fam), x0 + 58, 32, 22 * (1 + bounce.family * 0.2), '#fff1dc', 'rgba(40,20,60,0.6)');
     }
-    last.family = fam;
 
     // Rainbow's family (Rainbow adventures): a little rainbow, one band
     // lighting up for each relative who is home
@@ -398,14 +410,11 @@
     // (hidden during a boss fight, where the boss's own picture takes the top)
     const tricks = s.boss ? 0 : s.tricks || 0;
     if (tricks > 0) {
-      if (last.tricks >= 0 && tricks > last.tricks) bounce.tricks = 1;
-      bounce.tricks = (bounce.tricks || 0) * 0.9;
       const px = next;
       pill(px, 82);
       BB.Gestures.drawIcon(c, px + 22, 32, 0.95 * (1 + bounce.tricks * 0.5));
       G.text(String(tricks), px + 58, 32, 22 * (1 + bounce.tricks * 0.2), '#fff4c2', 'rgba(40,20,60,0.6)');
     }
-    if (!s.boss) last.tricks = tricks;
 
     // abilities, then toys, along the second row
     let x = 26;
@@ -713,5 +722,5 @@
     c.restore();
   }
 
-  BB.HUD = { drawHUD, drawZoneCard, drawAbilityCard, drawBossCard, buttonIcon, abilityIcon, toyIcon, zoneIcon };
+  BB.HUD = { updateHUD, resetHUD, drawHUD, drawZoneCard, drawAbilityCard, drawBossCard, buttonIcon, abilityIcon, toyIcon, zoneIcon };
 })(window.BB);

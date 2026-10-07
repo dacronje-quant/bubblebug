@@ -10,7 +10,8 @@ B.Voice = {
     if (opts.valid && !opts.valid()) return false;
     heard.push(id); current = id; opts.onStart?.(); return true;
   },
-  cancel(id) { cancelled.push(id); if (current === id) current = null; queued = queued.filter(x => x !== id); },
+  cancel(id, options = {}) { cancelled.push(id); if (current === id && !options.keepStarted) current = null; queued = queued.filter(x => x !== id); },
+  leaveRoom() { queued = []; },
   stop() { current = null; queued = []; },
 };
 g.place('g1', 5, 14); P.pl.idleT = 0;
@@ -33,6 +34,18 @@ B.Voice.play = (id, delay, opts) => { valid = opts.valid; return true; };
 P.save.wear.face = 'googly';
 assert.equal(P.sayGuidance('tutorial_googly_glasses', () => P.save.wear.face === 'googly', 500), true);
 assert.equal(valid(), true); g.place('ng', 5, 31); assert.equal(valid(), false);
+// An already audible hint completes after walking through a room boundary.
+B.Voice.play = (id, delay, opts = {}) => { heard.push(id); current = id; opts.onStart?.(); return true; };
+assert.equal(P.sayGuidance('room_crossing_probe', () => true), true);
+g.place('nr', 7, 16); P.updateGuidance();
+assert.equal(current, 'room_crossing_probe', 'room invalidation preserves started speech');
+B.Voice.cancel('room_crossing_probe');
+assert.equal(P.sayGuidance('door_crossing_probe', () => P.pl.state === 'play'), true);
+P.travel({ x: B.World.byId.ng.px + 160, y: B.World.byId.ng.py + 31 * 32 }, 'door');
+P.updateGuidance();
+assert.equal(current, 'door_crossing_probe', 'door/lift travel preserves a started hint as its old condition changes');
+assert.equal(Object.keys(P.guidance.jobs).length, 0, 'travel clears old room conditions');
+B.Voice.cancel('door_crossing_probe');
 // Discoveries cue their explanation once, with the family introduction first.
 B.Voice.play = (id, delay, opts = {}) => {
   if (opts.valid && !opts.valid()) return false;

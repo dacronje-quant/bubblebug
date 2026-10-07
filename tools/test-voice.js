@@ -55,6 +55,33 @@ async function lifecycle() {
   let ends = 0;
   V.play('story_homecoming', 0, { onEnd: () => ends++ }); created.at(-1).end(); assert.equal(ends, 1);
   V.play('story_homecoming', 0, { onEnd: () => ends++ }); V.stop(); assert.equal(ends, 1);
+  // Ordinary room crossings keep an audible line, its completion callback
+  // and speech duck, but drop delayed/queued cues from the room left behind.
+  let sameRoom = true;
+  V.play('story_homecoming', 0, { valid: () => sameRoom, onEnd: () => ends++ });
+  const acrossRoom = created.at(-1);
+  V.play('tutorial_sleepy_buds', 100);
+  sameRoom = false;
+  V.leaveRoom(); V.cancel('story_homecoming', { keepStarted: true });
+  acrossRoom.onplaying(); // playback can resume after a buffering pause
+  assert.equal(V.currentId, 'story_homecoming'); assert.equal(acrossRoom.paused, false);
+  assert.equal(V.queuedIds.length, 0); assert.equal(ducked.at(-1), true);
+  acrossRoom.end(); assert.equal(ends, 2); assert.equal(V.currentId, null);
+  assert.equal(ducked.at(-1), false);
+  const afterCrossing = created.length;
+  V.play('tutorial_sleepy_buds', 20); V.leaveRoom(); await wait(35);
+  assert.equal(created.length, afterCrossing, 'a delayed old-room cue never starts');
+  V.play('story_rainbow_call'); created.at(-1).onerror();
+  const speechAcrossRoom = spoken.at(-1); speechAcrossRoom.onstart();
+  V.play('tutorial_sleepy_buds'); V.leaveRoom();
+  assert.equal(V.currentId, 'story_rainbow_call'); assert.equal(V.queuedIds.length, 0);
+  speechAcrossRoom.onend(); assert.equal(V.currentId, null);
+  // A recording loading without onplaying has not started; discard it.
+  const OriginalAudio = context.Audio;
+  context.Audio = class extends OriginalAudio { play() { this.paused = false; return Promise.resolve(); } };
+  V.play('tutorial_sleepy_buds'); const loadingHint = created.at(-1);
+  V.leaveRoom(); assert.equal(loadingHint.paused, true); assert.equal(V.currentId, null);
+  context.Audio = OriginalAudio;
   const clips = context.BB.VOICE_CLIPS;
   const pack = JSON.parse(fs.readFileSync(path.join(__dirname, '../assets/voice/gemini-3.8/manifest.json'), 'utf8'));
   const retained = new Set(pack.retainedClips.map(c => c.id));
