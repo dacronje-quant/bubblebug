@@ -112,6 +112,7 @@
       }
       this.bounds = { x0, y0, x1, y1 };
       this._checkOverlaps();
+      this._frames();
       // Flat char-code grid over the whole world: O(1) tile lookups for
       // physics (0 = outside every room).
       this.gw = x1 - x0; this.gh = y1 - y0;
@@ -150,6 +151,23 @@
             throw new Error(`Rooms ${a.id} and ${b.id} overlap`);
           }
         }
+      }
+    },
+
+    // Camera frames: a zone's rooms that sit side by side at the same height
+    // share one frame, so the camera scrolls straight across from one to the
+    // next. Anywhere else (up / down a shaft, into a taller room, into the
+    // next zone) a room is its own frame and the camera glides over. Boss
+    // arenas always keep a frame of their own: one screen wide, so the whole
+    // fight is in view.
+    _frames() {
+      for (const r of this.rooms) r.frame = { px: r.px, py: r.py, pw: r.pw, ph: r.ph, rooms: [r] };
+      const rs = this.rooms.slice().sort((a, b) => a.y - b.y || a.x - b.x);
+      for (let i = 1; i < rs.length; i++) {
+        const a = rs[i - 1], b = rs[i];
+        if (a.zone !== b.zone || a.y !== b.y || a.h !== b.h || a.x + a.w !== b.x || a.def.arena || b.def.arena) continue;
+        const f = a.frame;
+        f.pw += b.pw; f.rooms.push(b); b.frame = f;
       }
     },
 

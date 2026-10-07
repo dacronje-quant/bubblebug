@@ -1,7 +1,8 @@
 // ════════════════════════════════════════════════════════════════
-//  CAMERA — smooth follow with look-ahead, framed to the current room.
-//  When the kitten crosses into another room the camera glides across
-//  (Celeste-style) while the action pauses for a heartbeat.
+//  CAMERA — smooth follow with look-ahead, framed to the current room's
+//  camera frame (a zone's side-by-side rooms share one, so it scrolls
+//  straight across them). Crossing into a room with a different frame,
+//  the camera glides across while the game keeps running underneath.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -9,13 +10,13 @@
 
   const Cam = BB.Camera = {
     x: 0, y: 0, lookX: 0, lookY: 0,
-    slide: null, // { from:{x,y}, to:{x,y}, t, dur }
+    slide: null, // { from:{x,y}, t, dur }
 
     clampTo(room, x, y) {
-      const G = BB.G;
+      const G = BB.G, f = room.frame || room;
       return {
-        x: BB.clamp(x, room.px, room.px + room.pw - G.W),
-        y: BB.clamp(y, room.py, room.py + room.ph - G.H),
+        x: BB.clamp(x, f.px, f.px + f.pw - G.W),
+        y: BB.clamp(y, f.py, f.py + f.ph - G.H),
       };
     },
 
@@ -36,27 +37,27 @@
       this.slide = null;
     },
 
-    startSlide(room, p) {
-      const to = this.targetFor(room, p);
-      this.slide = { from: { x: this.x, y: this.y }, to, t: 0, dur: C.ROOM_SLIDE };
+    startSlide() {
+      this.slide = { from: { x: this.x, y: this.y }, t: 0, dur: C.ROOM_SLIDE };
     },
 
-    get sliding() { return !!this.slide; },
-
     update(room, p) {
-      if (this.slide) {
-        const s = this.slide;
-        s.t++;
-        const k = BB.easeInOut(Math.min(1, s.t / s.dur));
-        this.x = BB.lerp(s.from.x, s.to.x, k);
-        this.y = BB.lerp(s.from.y, s.to.y, k);
-        if (s.t >= s.dur) this.slide = null;
-        return;
-      }
       // gentle look-ahead in the facing direction; peek down while falling fast
       this.lookX = BB.lerp(this.lookX, p.facing * 50 + p.vx * 8, 0.04);
       this.lookY = BB.lerp(this.lookY, p.vy > 6 ? 70 : 0, 0.05);
       const t = this.targetFor(room, p);
+      if (this.slide) {
+        // ease out from where the camera was towards wherever the kitten is
+        // now (it keeps moving during the glide), quickest at the start so
+        // the kitten never hangs off the edge of the screen
+        const s = this.slide;
+        s.t++;
+        const k = Math.sin(Math.min(1, s.t / s.dur) * Math.PI / 2);
+        this.x = BB.lerp(s.from.x, t.x, k);
+        this.y = BB.lerp(s.from.y, t.y, k);
+        if (s.t >= s.dur) this.slide = null;
+        return;
+      }
       this.x = BB.lerp(this.x, t.x, 0.14);
       this.y = BB.lerp(this.y, t.y, p.grounded ? 0.12 : 0.09);
       const c = this.clampTo(room, this.x, this.y);

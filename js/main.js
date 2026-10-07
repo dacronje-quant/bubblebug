@@ -90,6 +90,9 @@
     }
     if (steps >= 6) acc = 0;
     Main.draw();
+    // a few spare milliseconds to paint the rooms next door ahead of time
+    // (more while a door's iris hides the screen)
+    if (Main.scene.warmUp && !Main.fadeDir) Main.scene.warmUp(Main.scene.traveling ? 10 : 4);
     requestAnimationFrame(frame);
   }
 

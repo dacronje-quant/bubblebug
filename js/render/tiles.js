@@ -23,7 +23,8 @@
   const solidCh = ch => ch === '#' || ch === 'H' || ch === 'I' || ch === null;
   const isSolid = (tx, ty) => solidCh(W().tile(tx, ty));
 
-  const cache = new Map(); // room.id → { canvas, shy, version, scale }
+  const cache = new Map(); // room.id → { canvas, shy, version, scale }, least recently drawn first
+  const SLICE = 32;        // tile paints between pauses while warming up
 
   // ──── Rounded tile body ────
   function tileShape(c, x, y, m) {
@@ -597,14 +598,12 @@
   }
 
   // ──── Build a room's static canvases ────
-  function build(room) {
+  // A generator, so a room can be painted a slice at a time in spare frame
+  // time before the kitten walks in (see warm), or all at once if needed now.
+  function* paint(room, job) {
     const z = room.zone;
-    const off = G.offscreen(room.pw + 64, room.ph + 64);
-    const shy = G.offscreen(room.pw + 64, room.ph + 64);
-    let hasShy = false;
-    // paint with a 32px margin so tops/overhangs at edges aren't clipped
-    for (const layer of [off, shy]) layer.ctx.translate(32, 32);
     const tiles = [];
+    let hasShy = false;
     for (let r = 0; r < room.h; r++) {
       for (let col = 0; col < room.w; col++) {
         const ch = room.grid[r][col];
@@ -612,9 +611,15 @@
         if (ch === 'H') hasShy = true;
       }
     }
+    const off = job.off = G.offscreen(room.pw + 64, room.ph + 64);
+    const shy = job.shy = hasShy ? G.offscreen(room.pw + 64, room.ph + 64) : null;
+    // paint with a 32px margin so tops/overhangs at edges aren't clipped
+    for (const layer of [off, shy]) if (layer) layer.ctx.translate(32, 32);
     const cloudy = BB.ZONES[z].key === 'clouds';
+    let n = 0;
     for (const pass of ['outline', 'body', 'sides', 'top', 'bottom']) {
       for (const [ch, tx, ty, x, y] of tiles) {
+        if (++n % SLICE === 0) yield;
         const c = ch === 'H' ? shy.ctx : off.ctx;
         const m = maskAt(tx, ty);
         if (pass === 'outline') { if (cloudy) cloudOutline(c, tx, ty, x, y, m); }
@@ -629,21 +634,90 @@
     }
     for (let r = 0; r < room.h; r++) {
       for (let col = 0; col < room.w; col++) {
-        if (room.grid[r][col] === '-') paintLedge(off.ctx, z, room.x + col, room.y + r, col * T, r * T);
+        if (room.grid[r][col] === '-') { if (++n % SLICE === 0) yield; paintLedge(off.ctx, z, room.x + col, room.y + r, col * T, r * T); }
       }
     }
-    return { canvas: off.canvas, shy: hasShy ? shy.canvas : null, version: room.version, scale: G.scale };
+    // browsers record canvas drawing and only rasterise it when it's first
+    // used, so use it once (onto a 1-pixel scratch canvas) to have that
+    // happen now, while warming up, rather than on the frame it's needed
+    yield; settle(off.canvas);
+    if (shy) { yield; settle(shy.canvas); }
+    return { canvas: off.canvas, shy: shy && shy.canvas, version: job.version, scale: off.scale };
+  }
+
+  // Keep memory modest: only the most recently drawn rooms stay cached (as
+  // many as can be on screen at once, plus the rooms next door being
+  // warmed up), and a dropped canvas gives its memory back straight away
+  // (Safari on iPads otherwise counts it until garbage collection).
+  const CACHE_MAX = 10;
+  const pending = new Map(); // room.id → paint job in progress
+  const free = cv => { if (cv) cv.width = cv.height = 0; };
+  let speck = null;
+  const settle = cv => {
+    speck = speck || G.offscreen(1, 1, 1);
+    speck.ctx.drawImage(cv, 0, 0, 1, 1);
+  };
+  const fresh = (e, room) => e && e.version === room.version && e.scale === G.scale;
+
+  function job(room) {
+    let j = pending.get(room.id);
+    if (j && (j.version !== room.version || j.scale !== G.scale)) { drop(room.id); j = null; }
+    if (!j) {
+      j = { version: room.version, scale: G.scale, off: null, shy: null };
+      j.gen = paint(room, j);
+      pending.set(room.id, j);
+      if (pending.size > 3) drop(pending.keys().next().value);
+    }
+    return j;
+  }
+
+  function drop(id) {
+    const j = pending.get(id);
+    if (!j) return;
+    pending.delete(id);
+    free(j.off && j.off.canvas); free(j.shy && j.shy.canvas);
+  }
+
+  function store(room, e) {
+    pending.delete(room.id);
+    const old = cache.get(room.id);
+    if (old) { cache.delete(room.id); free(old.canvas); free(old.shy); }
+    cache.set(room.id, e);
+    while (cache.size > CACHE_MAX) {
+      const k = cache.keys().next().value, x = cache.get(k);
+      cache.delete(k); free(x.canvas); free(x.shy);
+    }
+    return e;
   }
 
   function get(room) {
-    let e = cache.get(room.id);
-    if (!e || e.version !== room.version || e.scale !== G.scale) {
-      e = build(room);
-      cache.set(room.id, e);
-      // keep memory modest: only the most recent rooms stay cached
-      if (cache.size > 6) cache.delete(cache.keys().next().value);
+    const e = cache.get(room.id);
+    if (fresh(e, room)) { cache.delete(room.id); cache.set(room.id, e); return e; } // (most recent last)
+    const j = job(room);
+    let r;
+    do r = j.gen.next(); while (!r.done);
+    return store(room, r.value);
+  }
+
+  // Paint rooms that aren't cached yet, a slice at a time, until the clock
+  // reaches `until` (a performance.now() time). True once they're all ready.
+  function warm(rooms, until) {
+    for (const room of rooms) {
+      if (fresh(cache.get(room.id), room)) continue;
+      const j = job(room);
+      for (;;) {
+        if (performance.now() >= until) return false;
+        const r = j.gen.next();
+        if (r.done) { store(room, r.value); break; }
+      }
     }
-    return e;
+    return true;
+  }
+
+  function clear() {
+    for (const id of [...pending.keys()]) drop(id);
+    for (const e of cache.values()) { free(e.canvas); free(e.shy); }
+    cache.clear();
   }
 
   // ──── Per-frame drawing ────
@@ -652,14 +726,15 @@
 
   // Draws a room's terrain; with `shyOnly`, just its shy walls at `shyAlpha`
   function drawStatic(c, room, cam, shyAlpha, shyOnly) {
-    const e = get(room);
-    const img = shyOnly ? e.shy : e.canvas;
-    if (!img || (shyOnly && shyAlpha <= 0.01)) return;
+    if (shyOnly && shyAlpha <= 0.01) return;
     // only blit the part of the (large) room canvas that is on screen
     const ox = room.px - 32, oy = room.py - 32;
     const x0 = Math.max(ox, cam.x), y0 = Math.max(oy, cam.y);
     const x1 = Math.min(ox + room.pw + 64, cam.x + G.W), y1 = Math.min(oy + room.ph + 64, cam.y + G.H);
     if (x1 <= x0 || y1 <= y0) return;
+    const e = get(room);
+    const img = shyOnly ? e.shy : e.canvas;
+    if (!img) return;
     const k = e.scale;
     if (shyOnly) c.globalAlpha = shyAlpha;
     c.drawImage(img, (x0 - ox) * k, (y0 - oy) * k, (x1 - x0) * k, (y1 - y0) * k, x0 - cam.x, y0 - cam.y, x1 - x0, y1 - y0);
@@ -965,5 +1040,5 @@
     for (const [k, v] of squash) { if (v <= 1) squash.delete(k); else squash.set(k, v - 1); }
   }
 
-  BB.Tiles = { drawStatic, drawLive, bounce, tick, flower, crystalCluster, clear: () => cache.clear() };
+  BB.Tiles = { drawStatic, drawLive, bounce, tick, flower, crystalCluster, warm, clear };
 })(window.BB);
