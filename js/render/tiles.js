@@ -1079,11 +1079,17 @@
       hive: ['#ffb52e', '#fff3c4'], ruins: ['#ff8c4b', '#fff0d0'], clouds: ['#ff9ec7', '#ffffff'],
       autumn: ['#d8442a', '#fff0d0'], starlight: ['#8a7aff', '#fff6d0'],
     }[Z.key] || ['#ff5d6c', '#ffffff'];
-    // stem
+    // a slim stem under the wide cap, flaring a little at its foot
+    const sw = Math.max(14, w * 0.3), sx0 = cx - sw / 2;
     c.fillStyle = '#f5ead0'; c.strokeStyle = '#8a6a4a'; c.lineWidth = 1.2;
-    G.rrect(x, y + 10, w, T - 10, 4, c); c.fill(); c.stroke();
+    c.beginPath();
+    c.moveTo(sx0 + 1, y + 10); c.lineTo(sx0 + sw - 1, y + 10);
+    c.quadraticCurveTo(sx0 + sw, y + T - 6, sx0 + sw + 4, y + T);
+    c.lineTo(sx0 - 4, y + T);
+    c.quadraticCurveTo(sx0, y + T - 6, sx0 + 1, y + 10);
+    c.closePath(); c.fill(); c.stroke();
     c.strokeStyle = '#d1bc96'; c.lineWidth = 1;
-    for (let sx = x + 6; sx < x + w; sx += 9) { c.beginPath(); c.moveTo(sx, y + 15); c.lineTo(sx, y + T - 2); c.stroke(); }
+    for (const k of [0.33, 0.66]) { const lx = sx0 + sw * k; c.beginPath(); c.moveTo(lx, y + 15); c.lineTo(lx, y + T - 3); c.stroke(); }
     // cap
     c.save();
     c.translate(cx, y + 14);
