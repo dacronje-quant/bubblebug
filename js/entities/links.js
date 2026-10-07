@@ -94,7 +94,13 @@
     return out;
   }
 
-  const unlocked = (th, save) => th.front || !!(save.doors || {})[th.zone];
+  function doorOpen(zone, save) {
+    if (!(save.doors || {})[zone]) return false;
+    const t = flapTile(zone, doorFlap(zone, save));
+    const r = t && W().roomAtTile(t.tx, t.ty);
+    return !!r && (!r.def.needs || !!(save.abilities || {})[r.def.needs]);
+  }
+  const unlocked = (th, save) => th.front || doorOpen(th.zone, save);
   function standingIn(th, pl, r) {
     const b = pl.body;
     return pl.state === 'play' && b.grounded && Math.abs(b.x + b.w / 2 - th.x) < r && Math.abs(b.y + b.h - th.y) < 6;
@@ -429,5 +435,5 @@
     }
   }
 
-  BB.Links = { create, hallDoors, update, draw, drawProgress, doorSpot, flapSpot, skylightTile, landingTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, holdRing, hintRing, arrow, linkKey, HOLD };
+  BB.Links = { create, hallDoors, update, draw, drawProgress, doorSpot, flapSpot, skylightTile, landingTile, spot, home, flapTile, flapTiles, flapOpen, doorFlap, doorOpen, holdRing, hintRing, arrow, linkKey, HOLD };
 })(window.BB);

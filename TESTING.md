@@ -1,3 +1,31 @@
+# Trying Glow and aerial jumps
+
+Skill unlocks use a picture strip with no words or numbers. Jump taps visibly
+press and release; a continuous hold keeps the fingertip down. Swimming shows
+release to sink, Sticky Paws shows holding into a wall followed by Jump to kick
+away, and Glow/Dig/Fairy Rings show movement triggering the effect. Bubble
+Bounce uses Jump after any learned Double Jump; Star Wings shows the learned
+jump sequence before repeated flaps. The diagram follows the selected kitten
+and the current touch, keyboard or gamepad input.
+
+Use the play picture to replay and the arrow to continue. A gameplay button
+only dismisses the card after the whole sequence has played. The automatic
+timeout remains, and replay starts a fresh viewing period. Check that the
+card clears the actual touch row, map/pause controls and screen cutouts.
+
+Run `node tools/test-skill-prompts.js` for diagram-versus-physics checks,
+tap/hold/release timing, learned-power variants and ceremony replay/dismissal.
+Run `node tools/test-skill-prompts-browser.js` with the same Playwright/browser
+settings as the control tests for all ten lessons on desktop, tablet and
+portrait/landscape phones, zero-text rendering, clear controls and real canvas
+replay/continue clicks. Captures are saved to `test-output/skill-prompts`.
+
+Jump once from the ground, release and tap again for Double Jump, then tap a third time for Bubble Bounce. Once Star Wings are learned, further taps flap. Holding Jump must not repeat a bounce; floating and swimming still use a hold. Shoot before, during and after the jumps: Bubble must shoot without changing the jump sequence, including when Jump and Bubble are pressed together. Land and repeat to check the air jumps reset.
+
+In Honey Pools, Glow works automatically. Without it, the faint closed petals cannot support the kitten; with it, they form golden platforms. Walk towards them and watch the flowers unfold and brighten. Moving the camera must not change how strongly the flowers respond at the same player distance. Sleepy buds that open gates still need bubbles. The Glow lesson shows a flower bridge over honey; the Bubble Bounce lesson shows three presses of the Jump button.
+
+Run `node tools/test-skill-controls.js` for player/physics checks. Run `node tools/test-skill-controls-browser.js` with Playwright and optional `BUBBLEPAWS_BROWSER` for actual keyboard events, simulated standard gamepad input, multitouch, Glow rendering and lesson screenshots on desktop, tablet and portrait/landscape phones. Movement changes also require `node tools/verify-world.js --jobs 4` and `node tools/verify-world.js --easy --jobs 4`; the verifier uses successive Jump presses for the new bounce sequence.
+
 # Trying touch controls
 
 Touch controls keep their visible size and position, with a transparent 10px touch margin on every movement, action, maze, map and pause button. Near misses between neighbouring movement buttons select the closer button, and you can slide between Left and Right without lifting. Pressed feedback changes the icon and colour while keeping the touch target steady. `node tools/test-touch-targets-browser.js` uses real browser touch events across portrait/landscape phones and tablets to check all nine buttons, shared margins, two-finger movement/jump, cancellation, overlays and menu visibility. Use the same Playwright and optional `BUBBLEPAWS_BROWSER` settings as the other browser checks. `node tools/test-touch-ground-browser.js` checks that the character and ground-level enemies remain above the visible control row.
@@ -57,6 +85,10 @@ Run `node tools/test-voice.js` for queue/cancellation/save checks and `node tool
 
 # Trying the compact kingdom ("House at the Heart")
 
+Open `try-climbing-trails.html` to explore the new terraces from the Mushroom crossing of the Golden Tower, with all skills. Like the rewards preview, this uses an in-memory adventure and leaves the normal save intact. Climb through the garden crossing, try the side rewards and bench, then use Sticky Paws for the final neck into the Hive.
+
+At the top of the Mushroom crossing, the soil rim marks the blocked ceiling; golden posts mark the opening. Jump up through the shaft, using its right side to land in the garden. The hatch opens a return gap on the left, marked by a mushroom picture and downward arrow. All shortcut cues use pictures and shapes without words. Walk into that gap to land on the Mushroom catch shelf. In a normal adventure the opening survives Continue and family-only resets; a full new adventure closes it. Use `--shortcuts-open` with the world verifier to test all story stages in the unlocked state, as well as the default closed state.
+
 The kingdom is rebuilt round the house: sky on top, caves under the house, the sea bottom-left, and the Starfall Shaft standing right above the Pawprint Maze room. To look it over:
 
 1. Open `index.html#overview` and press the map button: every room shows at once, the whole kingdom fitted to one screen, with the Rainbow Lift swooping round the outside and the Starfall float's dotted path down to the rainbow door.
@@ -74,4 +106,7 @@ Checks:
 - `node tools/test-wayfinder.js`: following the "this way!" guide from home (no powers yet) reaches every elder, all 12 bosses and every family cat with no dead end; it never points against a signpost; Medium shows it in each new room and when standing still, Hard after a still moment, and it hides while a boss is sad.
 - `node tools/test-finale.js`: the Starfall float drifts down the shaft and lands by the rainbow door; the party starts.
 - `node tools/test-neighbourhood.js` also checks that an older save's sparkles, friends, resume spot and bench move with their rooms (save v9).
+- `node tools/test-climbs.js` preserves all 1,201 original landmarks and checks all 1,779 original standing positions in normal and Easy movement. It reloads older saves across the refreshed rooms, keeps their 756 already-collected stars and other progress, jumps the Pond Walk side route without powers, and tests the discovered Hive door before and after Sticky Paws. It also checks the garden hatch's ascent, safe landing, return drop, saved opening, Continue, family-only reset and full reset, plus the narrow Coral Garden dive pocket.
+- `node tools/test-climbs-browser.js [shot-dir]` traverses the Pond Walk reward loop, complete Golden Tower and garden return shortcut with real keyboard input, including the room seam and final Sticky Paws climb. It captures ten representative climbs and the hatch in both states at desktop and portrait-phone sizes, and checks runtime errors and overflow.
+- For the refreshed trails, run `node tools/verify-world.js --jobs 4`, then `--easy --jobs 4`, `--replay --jobs 1` and `--replay --easy --jobs 1`. The search checks every stage's goal, every reachable standing spot, power gates, all collectibles, closed puzzle/boss gates and the route back home. The explicit Hive requirement is also respected by the house door and wayfinder.
 - `node tools/layout-check.js` prints the world box, room coverage, overlaps and any doorway that leads nowhere; `--picture` draws the map in cells. `node tools/layout/seams.js` lists doorways with a floor step a kid would have to jump.

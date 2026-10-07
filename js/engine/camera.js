@@ -45,7 +45,9 @@
       }
       return {
         x: fit(x, room.px, room.px + room.pw, G.W),
-        y: fit(y, room.py, room.py + room.ph + groundPad(room.py + room.ph), G.H),
+        // A connecting shaft may reveal its real ceiling and the hatch
+        // above it before the kitten jumps through the room boundary.
+        y: fit(y, room.py - (room.def.ceilingPeek || 0) * C.TILE, room.py + room.ph + groundPad(room.py + room.ph), G.H),
       };
     },
 

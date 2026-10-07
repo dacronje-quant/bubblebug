@@ -29,6 +29,7 @@
 //  Usage: node tools/verify-world.js [--easy] [--replay] [--jobs N] [--map ID] [--stage N]
 //  Default: Medium / Hard's original movement. --easy uses Easy's assists.
 //  --replay starts with all powers at home and every gate still closed.
+//  --shortcuts-open checks unlocked hatches once their entry skill is earned.
 //  Exit code 0 = every check passed.
 // ════════════════════════════════════════════════════════════════
 'use strict';
@@ -58,6 +59,7 @@ const C = BB.CFG, T = C.TILE;
 const P = BB.Physics, FX = BB.FX;
 const EASY = isMainThread ? process.argv.includes('--easy') : !!workerData.easy;
 const REPLAY = isMainThread ? process.argv.includes('--replay') : !!workerData.replay;
+const SHORTCUTS_OPEN = isMainThread ? process.argv.includes('--shortcuts-open') : !!workerData.shortcutsOpen;
 
 // The order elders give their gifts in
 const POWERS = ['doubleJump', 'wallClimb', 'glow', 'float', 'swim', 'dig', 'spring', 'rings', 'bubbleBounce', 'wings'];
@@ -94,10 +96,12 @@ function buildPlans(ab) {
       }
     }
   }
-  // Bubble Bounce: press bubble in mid-air (with or without a double jump first)
+  // Bubble Bounce: a further Jump tap after the double jump.
   if (ab.bubbleBounce) {
     for (const d of [0, -1, 1]) for (const run of d ? [0, 10] : [0]) {
-      for (const dj of [null, 16]) for (const bb of [14, 30]) plans.push({ kind: 'jump', d, run, h: 999, air: 'hold', dj, bb });
+      for (const dj of ab.doubleJump ? [6, 16] : [null]) for (const bb of [14, 30]) {
+        if (dj == null || bb > dj) plans.push({ kind: 'jump', d, run, h: 999, air: 'hold', dj, bb });
+      }
     }
   }
   // Star Wings: flap a few times (or many), steering now, later, or only
@@ -146,7 +150,7 @@ function planInput(pl, t, st) {
   if (tj === 0) inp.jumpPressed = true;
   if (pl.dj != null && tj === pl.dj) inp.jumpPressed = true;
   if (pl.flap && tj >= 10 && (tj - 10) % pl.flap === 0 && (tj - 10) / pl.flap < pl.flaps) inp.jumpPressed = true;
-  if (pl.bb != null && tj === pl.bb) inp.bubblePressed = true;
+  if (pl.bb != null && tj === pl.bb) inp.jumpPressed = true;
   inp.jump = tj < pl.h || (pl.dj != null && tj >= pl.dj);
   return inp;
 }
@@ -320,6 +324,9 @@ const zoneOrder = z => z === BB.HOME_ZONE ? -1 : z;
 // light up as their flaps are found in this stage's own search.
 function exploreWithGates(starts, ab, startRoom = null) {
   W.build();
+  // The garden hatch can only be reached from below after Double Jump.
+  // A fresh adventure has no open shortcut; full replay/new-game resets it.
+  if (SHORTCUTS_OPEN && ab.doubleJump) for (const room of W.hatches) W.openHatch(room);
   P.setAbilities(ab);
   const st = newState();
   for (const s0 of starts) addNode(st, s0.x, s0.y, s0.x, s0.y);
@@ -352,6 +359,7 @@ function exploreWithGates(starts, ab, startRoom = null) {
     // point each door at its zone's furthest flap, dropping the old way out
     for (const lk of links) {
       if (lk.door == null || !doors.has(lk.door)) continue;
+      if (!BB.Links.doorOpen(lk.door, { doors: Object.fromEntries(doors), abilities: ab })) { lk.to = null; continue; }
       let i = doors.get(lk.door) - 1;
       while (i > 0 && !links.some(f => f.flap === lk.door && f.idx === i && open(f))) i--;
       const to = BB.Links.flapSpot(lk.door, i);
@@ -595,12 +603,12 @@ if (isMainThread) {
   const jobs = args.includes('--jobs') ? Number(args[args.indexOf('--jobs') + 1]) : os.cpus().length;
   if (!Number.isInteger(jobs) || jobs < 1 || (only != null && !STAGES[only])) throw new Error('Use --jobs N (N > 0) and --stage 0…10');
   const cores = Math.max(1, Math.min(jobs, todo.length));
-  console.log(`Verifying ${W.rooms.length} rooms in ${EASY ? 'Easy (assists)' : 'Medium / Hard (original movement)'} across ${todo.length} story stage(s) on ${cores} thread(s)…`);
+  console.log(`Verifying ${W.rooms.length} rooms in ${EASY ? 'Easy (assists)' : 'Medium / Hard (original movement)'} across ${todo.length} story stage(s) on ${cores} thread(s), shortcuts ${SHORTCUTS_OPEN ? 'open' : 'closed'}…`);
   const launch = () => {
     while (running < cores && next < todo.length) {
       const stage = todo[next++];
       running++;
-      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom, easy: EASY, replay: REPLAY } });
+      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom, easy: EASY, replay: REPLAY, shortcutsOpen: SHORTCUTS_OPEN } });
       w.on('message', r => {
         results[stage.i] = r;
         console.log(`  · ${r.failures ? 'FAILED' : 'passed'}: ${NAMES[stage.goal]} (${((Date.now() - t0) / 1000).toFixed(0)}s)`);

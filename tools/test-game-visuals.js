@@ -41,7 +41,7 @@ async function shot(page, name) {
       await page.evaluate(() => BB.Main.set('select'));
       await shot(page, prefix + 'select');
       await page.goto(pathToFileURL(path.join(root, 'try-rewards.html')).href);
-      await page.waitForFunction(() => BB.Play.pl && BB.Play.t > 60);
+      await page.waitForFunction(() => window.BB?.Play?.pl && BB.Play.t > 60);
       await page.evaluate(() => { BB.Play.intro = null; BB.Play.iris = null; BB.Play.zoneCard = 0; });
       await shot(page, prefix + 'home');
       // All held pointers must be discarded on a pause or loss of focus.

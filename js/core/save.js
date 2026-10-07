@@ -141,6 +141,7 @@
       toys: {},                             // toy id → 1
       buds: {},                             // bud key → 1
       gates: {},                            // room id → 1 once its gate is open
+      shortcuts: {},                        // hatch id → 1 once climbed through from below
       bosses: {},                           // arena room id → 1 (cheered up!)
       pads: {},                             // paw pad key → 1 (pressed)
       babies: {},                           // lost baby key → 1 (home with mama)
@@ -214,7 +215,7 @@
             this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
             this.data.wear = Object.assign(fresh().wear, d.wear || {});
             this.data.cosmetics = Object.assign(fresh().cosmetics, d.cosmetics || {});
-            for (const field of ['outfits', 'purchases', 'residents', 'hiddenResidents', 'glassesFound', 'voiceStory', 'kin']) this.data[field] = Object.assign({}, d[field] || {});
+            for (const field of ['outfits', 'purchases', 'residents', 'hiddenResidents', 'glassesFound', 'voiceStory', 'kin', 'shortcuts']) this.data[field] = Object.assign({}, d[field] || {});
             // An older active maze can finish its existing route. New
             // entries use the lantern gates, keeping every pad/star key.
             if (d.inMaze && !d.mazePuzzleVersion) this.data.mazeLegacyAccess = true;

@@ -567,7 +567,11 @@
 
     // stage
     const gy = cy + 92;
-    c.fillStyle = '#cfe8b8'; G.rrect(cx - 190, gy, 380, 12, 6, c); c.fill();
+    c.fillStyle = '#cfe8b8';
+    if (ability === 'glow') {
+      G.rrect(cx - 190, gy, 100, 12, 6, c); c.fill();
+      G.rrect(cx + 120, gy, 70, 12, 6, c); c.fill();
+    } else { G.rrect(cx - 190, gy, 380, 12, 6, c); c.fill(); }
     const loop = 150, p = (t % loop) / loop;
     let kx = cx - 120, ky = gy, pose = { mode: 'stand', t }, press = 0, face = 1, btn = 'jump', helmet = false;
 
@@ -587,13 +591,24 @@
       else { kx = wx - 12; ky = gy - Math.min(1, (p - 0.25) / 0.6) * 130; pose = { mode: 'climb', phase: t * 0.3, t }; }
       press = -1; // hold → toward wall
     } else if (ability === 'glow') {
+      // Walk towards closed flowers: they unfold into a bridge underfoot.
       kx = cx - 140 + p * 280;
       pose = { mode: 'run', phase: t * 0.3, t };
+      press = -1;
       G.drawGlow(kx, ky - 12, 90, '#fff3b0', 0.8, c);
-      for (let i = 0; i < 3; i++) {
-        const px = cx - 90 + i * 90, near = Math.max(0, 1 - Math.abs(px - kx) / 110);
-        c.fillStyle = `rgba(255,220,150,${0.25 + near * 0.75})`;
-        c.beginPath(); c.ellipse(px, gy - 50, 18 * (0.5 + near * 0.6), 7, 0, 0, TAU); c.fill();
+      c.fillStyle = '#e8b057'; G.rrect(cx - 90, gy + 6, 210, 16, 5, c); c.fill();
+      for (let i = 0; i < 5; i++) {
+        const px = cx - 70 + i * 42, open = BB.clamp((kx - px + 80) / 65, 0, 1);
+        if (open > 0) {
+          G.drawGlow(px, gy, 28, '#fff3b0', open * 0.55, c);
+          c.fillStyle = '#ffe9a8'; c.strokeStyle = '#c78c42'; c.lineWidth = 1.5;
+          G.rrect(px - 21 * open, gy - 3, 42 * open, 7, 3, c); c.fill(); c.stroke();
+        }
+        for (const angle of [-1, 0, 1]) {
+          c.save(); c.translate(px, gy - 3); c.rotate(angle * open * 0.9);
+          c.fillStyle = angle ? '#ffc9e3' : '#fff1b8';
+          c.beginPath(); c.ellipse(0, -7, 3 + open * 2, 8, 0, 0, TAU); c.fill(); c.restore();
+        }
       }
     } else if (ability === 'float') {
       // jump, then HOLD jump to drift down slowly
@@ -659,16 +674,15 @@
       else { kx = cx + 130 + (p - 0.6) / 0.4 * 40; pose = { mode: 'run', phase: t * 0.3, t }; }
       press = -1;
     } else if (ability === 'bubbleBounce') {
-      // jump, then press BUBBLE in mid-air to bounce off a bubble
+      // Three Jump taps: jump, double jump, then bounce off a bubble.
       kx = cx - 130 + p * 260;
-      let h;
-      if (p < 0.4) h = Math.sin(p / 0.4 * Math.PI * 0.8) * 70;
-      else h = 70 * Math.sin(0.8 * Math.PI) + Math.sin((p - 0.4) / 0.6 * Math.PI) * 75 - (p - 0.4) / 0.6 * 41;
+      const h = p < 0.3 ? Math.sin(p / 0.3 * Math.PI / 2) * 45
+        : p < 0.55 ? 45 + Math.sin((p - 0.3) / 0.25 * Math.PI / 2) * 35
+        : 80 * Math.cos((p - 0.55) / 0.45 * Math.PI / 2) + Math.sin((p - 0.55) / 0.45 * Math.PI) * 25;
       ky = gy - Math.max(0, h);
-      pose = { mode: h > 1 ? 'air' : 'stand', vy: (p > 0.2 && p < 0.4) || p > 0.7 ? 3 : -3, t };
-      if (p > 0.36 && p < 0.5) G.bubble(cx - 130 + 0.4 * 260, gy - 70 * Math.sin(0.8 * Math.PI) + 20, 18 * (1 - (p - 0.36) / 0.14 * 0.5), '#9fe8ff', 1, c);
-      btn = p > 0.3 && p < 0.6 ? 'bubble' : 'jump';
-      press = (p < 0.06) || (p > 0.36 && p < 0.44) ? 1 : 0;
+      pose = { mode: h > 1 ? 'air' : 'stand', vy: p > 0.7 ? 3 : -3, t };
+      if (p > 0.51 && p < 0.65) G.bubble(cx - 130 + 0.55 * 260, gy - 80 + 18, 18 * (1 - (p - 0.51) / 0.14 * 0.5), '#9fe8ff', 1, c);
+      press = p < 0.06 || (p > 0.28 && p < 0.34) || (p > 0.53 && p < 0.59) ? 1 : 0;
     } else if (ability === 'wings') {
       // tap jump again and again to flap higher and higher
       kx = cx - 60 + Math.sin(p * TAU) * 40;

@@ -145,6 +145,7 @@
         }
       }
       this.bounds = { x0, y0, x1, y1 };
+      this.hatches = this.rooms.filter(r => r.def.hatch);
       this._checkOverlaps();
       // Flat char-code grid over the whole world: O(1) tile lookups for
       // physics (0 = outside every room).
@@ -217,6 +218,39 @@
       r.grid[ty - r.y][tx - r.x] = ch;
       this.flat[(ty - this.bounds.y0) * this.gw + (tx - this.bounds.x0)] = ch.charCodeAt(0);
       if (!quiet) r.version++;
+    },
+
+    // Permanent shortcuts change the live collision grid and terrain cache.
+    openHatch(room) {
+      const h = room.def.hatch;
+      if (!h) return;
+      for (let col = h.left; col <= h.right; col++) {
+        if (room.grid[h.row][col] === '-') this.setTile(room.x + col, room.y + h.row, '.');
+      }
+    },
+
+    restoreShortcuts(save) {
+      for (const room of this.hatches) {
+        const h = room.def.hatch;
+        if (h && save.shortcuts && save.shortcuts[h.id]) this.openHatch(room);
+      }
+    },
+
+    // Feet must clear the hatch on a real ascent. Bumping its underside,
+    // falling from the garden, and jumping along the garden path do not unlock it.
+    climbThroughHatch(save, body, previousFeet) {
+      if (body.vy >= 0) return false;
+      for (const room of this.hatches) {
+        const h = room.def.hatch;
+        if (!h || (save.shortcuts && save.shortcuts[h.id])) continue;
+        const y = (room.y + h.row) * T;
+        if (previousFeet <= y || body.y + body.h > y) continue;
+        if (body.x < (room.x + h.approachLeft) * T || body.x + body.w > (room.x + h.approachRight + 1) * T) continue;
+        (save.shortcuts = save.shortcuts || {})[h.id] = 1;
+        this.openHatch(room);
+        return true;
+      }
+      return false;
     },
 
     // Opens a room's bud gates (G → g).

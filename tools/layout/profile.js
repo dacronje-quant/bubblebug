@@ -41,10 +41,12 @@ function buildPlans(ab) {
       }
     }
   }
-  // Bubble Bounce: press bubble in mid-air (with or without a double jump first)
+  // Bubble Bounce: a further Jump tap after the double jump.
   if (ab.bubbleBounce) {
     for (const d of [0, -1, 1]) for (const run of d ? [0, 10] : [0]) {
-      for (const dj of [null, 16]) for (const bb of [14, 30]) plans.push({ kind: 'jump', d, run, h: 999, air: 'hold', dj, bb });
+      for (const dj of ab.doubleJump ? [6, 16] : [null]) for (const bb of [14, 30]) {
+        if (dj == null || bb > dj) plans.push({ kind: 'jump', d, run, h: 999, air: 'hold', dj, bb });
+      }
     }
   }
   // Star Wings: flap a few times (or many), steering now, later, or only
@@ -93,7 +95,7 @@ function planInput(pl, t, st) {
   if (tj === 0) inp.jumpPressed = true;
   if (pl.dj != null && tj === pl.dj) inp.jumpPressed = true;
   if (pl.flap && tj >= 10 && (tj - 10) % pl.flap === 0 && (tj - 10) / pl.flap < pl.flaps) inp.jumpPressed = true;
-  if (pl.bb != null && tj === pl.bb) inp.bubblePressed = true;
+  if (pl.bb != null && tj === pl.bb) inp.jumpPressed = true;
   inp.jump = tj < pl.h || (pl.dj != null && tj >= pl.dj);
   return inp;
 }

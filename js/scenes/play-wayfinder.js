@@ -84,7 +84,7 @@
     }
     if (room.def.home && room.def.doors) {
       for (const z of Object.keys(room.def.doors)) {
-        if (+z === 0 || !(save.doors || {})[z]) continue; // (the front door is a real doorway)
+        if (+z === 0 || !BB.Links.doorOpen(+z, save)) continue; // (the front door is a real doorway)
         const f = BB.Links.flapTile(+z, BB.Links.doorFlap(+z, save));
         const to = f && W().roomAtTile(f.tx, f.ty);
         const d = room.def.doors[z];

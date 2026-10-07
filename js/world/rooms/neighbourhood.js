@@ -12,7 +12,7 @@
   const put = (map, x, y, ch) => { map[y][x] = ch; };
   const room = (id, x, name, map, detail, extras = {}) => BB.room({
     id, zone: 0, x, y: -17, name,
-    neighbourhood: detail, cameraGroup: 'home-neighbourhood',
+    neighbourhood: detail, cameraGroup: 'home-neighbourhood', climb: true,
     map: map.map(row => row.join('')),
     ...extras,
   });
@@ -32,6 +32,7 @@
   for (const [x, y] of [[7, 27], [7, 21], [12, 18]]) put(garden, x, y, '*');
   // a little treat ledge right above the trampoline: bounce up to its sparkle
   ledge(garden, 25, 18, 4); put(garden, 20, 24, '*');
+  ledge(garden, 22, 18, 6); put(garden, 21, 21, '*'); put(garden, 19, 21, 'e');
   put(garden, 22, 30, 'n'); put(garden, 26, 29, 'f'); put(garden, 28, 30, 'R');
   room('ng', -90, 'Front Garden', garden, 'garden', { trampoline: { col: 16, row: 31, width: 3 } });
 
@@ -40,6 +41,9 @@
   // lower walk stays open for kittens who have not learned to jump yet.
   for (const [x, length] of [[0, 7], [9, 6], [17, 6], [25, 5]]) ledge(pond, 16, x, length);
   for (const x of [4, 10, 20, 26]) { put(pond, x, 30, '*'); put(pond, x, 15, '*'); }
+  // A second gentle route to the branch walk, with a treat on its bend.
+  for (const [y, x] of [[28, 10], [25, 10], [22, 15], [19, 10]]) ledge(pond, y, x, 8);
+  put(pond, 14, 27, '*'); put(pond, 15, 24, '*'); put(pond, 18, 21, '*'); put(pond, 13, 18, 'e');
   put(pond, 7, 30, 'n'); put(pond, 22, 15, 'n'); put(pond, 27, 30, 'R');
   // The pond is painted below a walkable timber bridge. Children can
   // cross the neighbourhood with movement alone, before learning jump.
@@ -54,6 +58,7 @@
   for (let y = 13; y < 16; y++) roots[y][19] = 'G';
   put(roots, 7, 15, 'o'); put(roots, 12, 15, 'o');
   for (const [y, x] of [[19, 23], [22, 19], [25, 23], [28, 19]]) ledge(roots, y, x);
+  ledge(roots, 22, 10, 7); put(roots, 13, 21, '*'); put(roots, 11, 21, 'e');
   for (const [x, y] of [[5, 30], [14, 30], [25, 24], [21, 27], [4, 15], [15, 15], [23, 15], [26, 15]]) put(roots, x, y, '*');
   put(roots, 16, 29, 'n'); put(roots, 25, 30, 'R');
   room('nr', -30, 'Root Hollow', roots, 'roots', { glasses: [{ id: 'googly', x: 25, y: 15 }] });

@@ -999,7 +999,9 @@
       c.beginPath(); c.ellipse(cx, cy - 2, 3, 5, 0, 0, TAU); c.fill();
       return;
     }
-    const near = env.px != null ? BB.clamp(1 - Math.hypot(env.px - cx - (0), env.py - (ty * T + 4)) / 260, 0, 1) : 0.5;
+    // Player and tile positions must both be in world coordinates.
+    const near = env.px != null ? BB.clamp(1 - Math.hypot(env.px - (tx * T + T / 2), env.py - (ty * T + 4)) / 260, 0, 1) : 0.5;
+    const unfold = 0.35 + near * 0.65;
     const pulse = 0.5 + near * 0.5 + Math.sin(t * 0.06 + tx) * 0.08;
     G.drawGlow(cx, cy, 30 + near * 16, '#fff3b0', 0.3 + near * 0.35, c);
     // a glowing lily-pad platform you can clearly stand on
@@ -1012,9 +1014,9 @@
     for (const px of [x + 9, x + 23]) {
       c.save(); c.translate(px, y + 1);
       for (const a of [-0.5, 0, 0.5]) {
-        c.save(); c.rotate(a * (0.7 + near * 0.3));
+        c.save(); c.rotate(a * (0.3 + unfold * 1.5));
         c.fillStyle = BB.rgba(a ? '#ffc9e3' : '#ffe9a8', 0.95); c.strokeStyle = 'rgba(200,120,90,0.6)'; c.lineWidth = 0.8;
-        c.beginPath(); c.ellipse(0, -5, 2.6, 5.5, 0, 0, TAU); c.fill(); c.stroke();
+        c.beginPath(); c.ellipse(0, -3 - unfold * 3, 1.8 + unfold * 1.4, 3.5 + unfold * 3, 0, 0, TAU); c.fill(); c.stroke();
         c.restore();
       }
       c.restore();

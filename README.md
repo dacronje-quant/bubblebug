@@ -34,6 +34,8 @@ All 53 spoken recordings use Gemini 3.8 Flash TTS: the twelve family greetings, 
 | Pause / home | Esc or P | Start | round pause button, top-right |
 | Do a cat trick (once you've found one) | ▼ or S | D-pad down | orange smiling-cat/music button (appears after the first trick) |
 
+Once unlocked, successive Jump taps give a normal jump, Double Jump, Bubble Bounce, then Star Wings flaps. Bubble always shoots, including in mid-air. Hold Jump to float or swim once those powers are learned. Glow works automatically: it lights dark places and opens the special glow-petal bridges; sleepy gate buds still need bubbles.
+
 Touch buttons appear automatically on tablets and touchscreens.
 
 On tablets and phones, *Add to Home Screen* (when the game is served online) installs it as a full-screen app called **Bubble Paws**, with the same icon as the Windows launcher.
@@ -86,7 +88,7 @@ Every zone has about six rooms, gloomy critters, sparkles, a picture puzzle, a h
 | 🌵 **Sunny Dunes** | Sandstone canyons under a huge sun | 🐢 **Mighty Paws** (cracked sandstone crumbles at a touch) |
 | ❄ **Frosty Peaks** | Snowy pines and glassy ice walls too slippery to climb | 🐇 **Spring Paws** (a much bigger jump) |
 | 🍁 **Autumn Woods** | Falling leaves and sleeping fairy rings | 🦡 **Fairy Rings** (step in one, pop out of its matching twin) |
-| 🏮 **Moonlit Springs** | Bamboo, lanterns and steamy pools | 🦦 **Bubble Bounce** (press bubble in mid-air to spring off a bubble) |
+| 🏮 **Moonlit Springs** | Bamboo, lanterns and steamy pools | 🦦 **Bubble Bounce** (tap Jump a third time to spring off a bubble) |
 | 🌙 **Starlight Sky** | Crystal grass under the stars, and the tall Starfall Shaft | 🐋 **Star Wings** (keep tapping jump to flap higher and higher) |
 
 At the very top of the Starfall Shaft, just past the Moon Rabbit, a great glowing dandelion waits: the **🌼 Starfall float**. Take hold and it drifts you over to the shaft and all the way down it, the camera gliding along, to land by the rainbow (Pawprint Maze) door in the living room. That's the end of the adventure (see *The Cat House* below).
@@ -246,7 +248,7 @@ Marshmallow's family are Birmans and Siamese-pointed cats in cream, lilac and ch
 
 Bunnies and frogs hop, birds, bats, owls and bees flutter, fish and jellyfish swim, spiders dangle on silk, and everyone else waddles. Every friend you make comes to the rainbow party.
 
-The world has 103 interconnected rooms (87 places plus 16 small link rooms, the Cat House included), 756 sparkles, 65 gloomy critters, 12 bosses, the original 12 picture puzzles plus the new maze, 12 hidden cat tricks plus the fountain twirl, 16 hidden things to wear (three funny glasses and thirteen treasures), 70 fishy treats, 16 food bowls, 27 cozy benches (your own bed at home among them), 24 cat flaps (two per zone), 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
+The world has 103 interconnected rooms (87 places plus 16 small link rooms, the Cat House included), 860 sparkles, 65 gloomy critters, 12 bosses, the original 12 picture puzzles plus the new maze, 12 hidden cat tricks plus the fountain twirl, 16 hidden things to wear (three funny glasses and thirteen treasures), 87 fishy treats, 17 food bowls, 28 cozy benches (your own bed at home among them), 24 cat flaps (two per zone), 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
 
 ### ✨ Little touches
 
@@ -460,9 +462,19 @@ A too-sad pop-back only ever returns the kitten to a spot it has already stood o
 
 Before any of that, a quick map check makes sure every pool has a floor and walls, so once you can swim, water is safe everywhere (no pool may sit over mist or the edge of the world).
 
-The starting-stage check requires all 24 adventure neighbourhood stars to be reachable without elder powers. Maze checks prove that each matching lantern and exit is reachable in order, that all corridors and stars remain connected, and that older active routes still resume safely. The indoor door is tested at 0, 11 and 12 cats with all powers in every difficulty. Three successive rescue/full-reset cycles check rebuilt entities, fresh gates, cleared powers/clothes, rediscoveries and reload. Two family-only resets solve all six small mazes and Mama again, while checking other progress stays earned. Garden checks repeat all three games with all 65 visitors, measure movement/facing to catch jitter or snaps, and check saved individual switches without changing the heart ledger. The compact world contains 103 rooms and 756 stars, with the original 65 critters, 12 toys, 12 family members, 25 benches, 12 bosses and 24 cat flaps retained.
+The starting-stage check requires all 29 adventure neighbourhood stars to be reachable without elder powers. Maze checks prove that each matching lantern and exit is reachable in order, that all corridors and stars remain connected, and that older active routes still resume safely. The indoor door is tested at 0, 11 and 12 cats with all powers in every difficulty. Three successive rescue/full-reset cycles check rebuilt entities, fresh gates, cleared powers/clothes, rediscoveries and reload. Two family-only resets solve all six small mazes and Mama again, while checking other progress stays earned. Garden checks repeat all three games with all 65 visitors, measure movement/facing to catch jitter or snaps, and check saved individual switches without changing the heart ledger. The compact world contains 103 rooms and 860 stars, with 65 critters, 12 toys, 12 family members, 28 benches, 12 bosses and 24 cat flaps.
 
 The browser check opens the real HTML files, chooses modes and mirror categories with keyboard and pointer events, equips styles/scuba/glasses, walks the neighbourhood, plays with all 65 garden friends, checks the rainbow door/maze, confirms or cancels replays, reloads progress and protects the normal save in preview. Emulated tablet touch covers invitations, all three garden games, fountain repeats, maze controls and confirmed replays. Set `BUBBLEPAWS_BROWSER` if using a custom Chromium executable. Physical gamepad and tablet comfort still need a human playtest.
+
+### Winding climbing trails
+
+The adventure's 31 vertical routes now use broad terraces, side reward pockets and catch ledges; two adjoining walkways share their biome details. The Golden Tower opens its side chambers into trails that meet the main route farther up. Its upper neck still needs Sticky Paws, including when entering from the garden or glen crossing. The house's Hive door also waits for that power, so cheering up the cave boss cannot skip the Snail Elder.
+
+Leafy steps, mushroom shelves, crystal windows, honey terraces, mossy ruin landings, snow shelves, coral passages and lantern perches give each region a different shape. Pond Walk adds a second route to the upper branches with ordinary jumps. Starfall's perches remain above a flight-only stretch, preserving Star Wings progression. All original collectible positions, room coordinates, puzzles and family members remain in place; 104 extra sparkles, 17 treats and a bench with a bowl reward exploration.
+
+The Mushroom crossing's soil ceiling has a clear stone rim and roots only where it blocks jumping. Golden posts and an upward arrow mark the pass-through shaft. Picture cues show the hatch opening and a mushroom above the return arrow; no reading is needed. Climbing through from below opens a garden hatch permanently for that adventure: a return gap on the left, a landing ledge on the right, and a catch shelf below. Continue keeps it open; a new adventure closes it.
+
+`node tools/test-climbs.js` checks original landmarks and checkpoints, old-save Continue, ordinary jumping, the actual Hive door, and the garden hatch's ascent, return, reload and reset. `node tools/test-climbs-browser.js` walks the Pond Walk, Golden Tower and garden shortcut with real keyboard inputs and captures desktop and phone views. Run the complete world search in normal and Easy movement, plus `--replay` with and without `--easy`, after changing climb geometry. Repeat with `--shortcuts-open` to check the unlocked return route.
 
 ### Editing rooms
 

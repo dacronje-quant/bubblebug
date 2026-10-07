@@ -23,7 +23,7 @@
 //   spring      much higher jumps                (Snow Hare Elder)
 //   rings       step into a fairy ring `1`–`9` to pop out at its twin
 //                                                (Badger Elder)
-//   bubbleBounce  press bubble in mid-air to bounce off a big bubble
+//   bubbleBounce  jump again after Double Jump to bounce off a big bubble
 //                                                (Otter Elder)
 //   wings       keep pressing jump to flap higher and higher (Star Whale)
 // ════════════════════════════════════════════════════════════════
@@ -162,17 +162,16 @@
       p.vy = C.DJUMP;
       p.djUsed = true; p.jumpBuf = 0; p.bouncing = false;
       p.fx |= FX.DJUMP;
+    } else if (inp.jumpPressed && ab.bubbleBounce && !p.grounded && !swim && !p.climbing && !p.bbUsed && p.airTicks > 2) {
+      // The next Jump tap springs off a bubble; Bubble remains a shot.
+      p.vy = C.BUBBLE_BOUNCE;
+      p.bbUsed = true; p.jumpBuf = 0; p.bouncing = true;
+      p.fx |= FX.BBOUNCE;
     } else if (inp.jumpPressed && !p.grounded && !swim && ab.wings && p.airTicks > 2) {
       // Star Wings: every further press is another flap
       p.vy = Math.min(p.vy, C.FLAP);
       p.jumpBuf = 0; p.bouncing = false;
       p.fx |= FX.FLAP;
-    }
-    // Bubble Bounce: blow a big bubble under your paws and spring off it
-    if (inp.bubblePressed && ab.bubbleBounce && !p.grounded && !swim && !p.climbing && !p.bbUsed && p.airTicks > 2) {
-      p.vy = C.BUBBLE_BOUNCE;
-      p.bbUsed = true; p.bouncing = true;
-      p.fx |= FX.BBOUNCE;
     }
 
     // ── Vertical forces ──

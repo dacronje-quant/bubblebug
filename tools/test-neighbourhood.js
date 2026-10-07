@@ -112,9 +112,9 @@ function checks(game) {
 
   fresh();
   assert.equal(B.World.rooms.length, 103);   // 87 rooms + 16 link rooms
-  assert.equal(B.World.findThings('*').length, 756);
+  assert.equal(B.World.findThings('*').length, 860);
   assert.equal(B.World.findThings('b').length + B.World.findThings('c').length, 65);
-  assert.equal(B.World.findThings('B').length, 27);
+  assert.equal(B.World.findThings('B').length, 28);
   const front = B.Play.ents.hm.things.find(th => th.type === 'door' && th.front);
   place('hm', 58, 32); tick(65);
   assert.equal(B.Play.traveling, null); assert.equal(B.Play.room.id, 'hm');

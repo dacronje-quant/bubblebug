@@ -41,6 +41,7 @@
       const save = this.save = BB.Save.data;
       save.cat = opts.cat || save.cat;
       W().build();
+      W().restoreShortcuts(save);
       BB.Economy.milestones(save);
       // create every room's residents
       this.ents = {};
@@ -740,12 +741,14 @@
       const b = this.pl.body;
       b.vx = 0;
       this.gift = { th, t: 0, ability: th.ability, card: 0 };
+      BB.Input.takePointers();
       BB.Audio.duck(0.3, 6);
     },
 
     updateGift() {
       const g = this.gift, b = this.pl.body;
       g.t++;
+      const taps = BB.Input.takePointers();
       // let the kitten settle onto the ground during the ceremony
       if (!b.grounded) BB.Physics.step(b, NO_INPUT, this.save.abilities, BB.Settings.assists);
       const ox = g.th.x, oy = g.th.y - 20, kx = b.x + b.w / 2, ky = b.y + b.h / 2;
@@ -766,7 +769,16 @@
       } else if (g.t > 110) {
         if (g.ability === 'doubleJump') this.sayGuidance('tutorial_double_jump', () => this.gift === g && !g.closing);
         g.card = Math.min(1, g.card + 0.06);
-        if ((g.t > 260 && BB.Input.any) || g.t > 900) {
+        if (g.lessonStart == null) g.lessonStart = g.t;
+        if (!g.lesson) g.lesson = BB.SkillPrompts.lesson(g.ability, this.save.abilities);
+        const layout = BB.SkillPrompts.layout();
+        const replay = taps.some(p => BB.SkillPrompts.hit(p, layout.replay));
+        const next = taps.some(p => BB.SkillPrompts.hit(p, layout.next));
+        if (replay) g.lessonStart = g.t;
+        const elapsed = g.t - g.lessonStart;
+        // Let the entire sequence play before a gameplay tap dismisses it.
+        // The explicit picture arrow always lets a child keep playing.
+        if (next || (!replay && elapsed >= g.lesson.duration && BB.Input.any) || elapsed > 790) {
           this.gift.closing = true;
         }
       }
@@ -936,11 +948,16 @@
       if (this.pl.state === 'sad') this.updateSad();
       else if (this.traveling) this.updateTravel();
       else {
+        const previousFeet = b.y + b.h;
         fx = BB.Player.update(this.pl, I, ab, {
           bubbleCount: BB.Bubbles.list.length,
           beam: BB.Cosmetics.bubbleFor(this.save, this.pl.cat) === 'beam',
           blow: (x, y, dir, vx) => BB.Bubbles.blow(x, y, dir, vx, this.pl.cat, BB.Cosmetics.bubbleFor(this.save, this.pl.cat)),
         });
+        if (this.pl.state === 'play' && W().climbThroughHatch(this.save, b, previousFeet)) {
+          BB.Save.write(); S().keyGet();
+          PT().burst('spark', b.x + b.w / 2, b.y + b.h, 20, { color: '#ffe27a', speed: 2.5, life: 40 });
+        }
       }
       // feelings on the kitten itself (for drawing)
       if (fx & (FX.JUMP | FX.DJUMP)) {
@@ -1286,7 +1303,7 @@
       BB.HUD.drawZoneCard(c, this.cardZone, this.zoneCard / 40, t);
       if (this.gift && this.gift.card > 0) {
         c.fillStyle = `rgba(20,10,40,${0.35 * this.gift.card})`; c.fillRect(0, 0, G().W, G().H);
-        BB.HUD.drawAbilityCard(c, this.gift.ability, this.gift.t, this.pl.cat, this.gift.card);
+        BB.HUD.drawAbilityCard(c, this.gift.ability, Math.max(0, this.gift.t - (this.gift.lessonStart == null ? 110 : this.gift.lessonStart)), this.pl.cat, this.gift.card, this.save.abilities);
       }
       if (this.party && this.party.card > 0) this.drawPartyCard(c, this.party.card);
       if (this.flash > 0) { c.fillStyle = `rgba(255,248,220,${this.flash / 20})`; c.fillRect(0, 0, G().W, G().H); this.flash--; }

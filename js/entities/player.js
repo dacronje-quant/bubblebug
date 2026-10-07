@@ -119,7 +119,7 @@
     idleAnims(pl, false);
 
     // ── bubbles ──
-    if (input.pressed.bubble && !(fx & FX.BBOUNCE) && pl.bubbleCd <= 0 && env.bubbleCount < C.BUBBLE_MAX) {
+    if (input.pressed.bubble && pl.bubbleCd <= 0 && env.bubbleCount < C.BUBBLE_MAX) {
       pl.bubbleCd = C.BUBBLE_COOLDOWN;
       pl.idleT = 0;
       // rainbow beams stream from the front paw as it sweeps forward
