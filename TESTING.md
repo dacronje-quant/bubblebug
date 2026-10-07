@@ -32,7 +32,7 @@ Touch controls keep their visible size and position, with a transparent 10px tou
 
 # Trying Rainbow's family and Mama's Cloud Maze
 
-Open `try-rainbow-family.html`. It starts at home just after Rainbow's rescue, with every power, and never touches the normal saved adventure.
+Open [the Rainbow family preview](index.html#play=rainbow&room=hm&demo=rainbow). It starts at home just after Rainbow's rescue, with every power, and never touches the normal saved adventure.
 
 1. A picture card shows six grey relatives and an arrow to the Cat House. Upstairs over the stairwell, the Rainbow Nest is grey with seven empty cloud cushions; the little rainbow at the top is grey too.
 2. Open the map (map button or M): each lost relative flashes in their own colour; ones off to the side flash at the map's edge with an arrow, and tapping one glides there. Close the map: you are straight back in the game.
@@ -46,7 +46,7 @@ Open `try-rainbow-family.html`. It starts at home just after Rainbow's rescue, w
 
 # Trying the home neighbourhood and rewards
 
-Download this branch as a ZIP, extract it, and open `try-rewards.html` in a browser. No install or build is needed. This preview starts at home with 250 stars, 65 rescued critters/hearts, all 12 family cats, boss presents and the homecoming complete, so you can try the garden, maze and Rainbow replay. It keeps progress in memory, so reloading starts the preview again and your normal adventure stays intact. Open `index.html` for normal saved play.
+Download this branch as a ZIP, extract it, and open `index.html#play=phoebe&room=hm&demo=rewards` in a browser, or use [the rewards preview](index.html#play=phoebe&room=hm&demo=rewards). No install or build is needed. This preview starts at home with 250 stars, 65 rescued critters/hearts, all 12 family cats, boss presents and the homecoming complete, so you can try the garden, maze and Rainbow replay. It keeps progress in memory, so reloading starts the preview again and your normal adventure stays intact. Open `index.html` for normal saved play.
 
 The title picker has three modes: **Easy** adds jumping and landing help; **Medium** is the former Easy; **Hard** keeps its original movement and happy suns. Existing Easy adventures carry over to Medium. Difficulty remains a device setting, including when trying the preview.
 
@@ -69,7 +69,7 @@ Family wishes, house decorating and jukebox tunes remain deferred. No recovery b
 
 ## Region music
 
-Walk from the Cat House into the Front Garden and on into Mushroom Meadow: each region's recorded score fades out while the next fades in, with no silence between. Come back and the earlier score continues where it stopped. A boss arena switches to its bouncy layered tune and back. Leave a region playing for two minutes to hear the loop point pass without a gap. Run `node tools/test-music-browser.js` (Playwright via `NODE_PATH`) for the automated version. To rebuild after new takes: `node --env-file=/path/.env music-plan/generate-lyria.mjs`, then `python3 music-plan/build-music.py`.
+Walk from the Cat House into the Front Garden and on into Mushroom Meadow: each region's recorded score fades out while the next fades in, with no silence between. Come back and the earlier score continues where it stopped. A boss arena switches to its bouncy layered tune and back. Leave a region playing for two minutes to hear the loop point pass without a gap. Run `node tools/test-music-browser.js` (Playwright via `NODE_PATH`) for the automated version. The shipped music bundles and pack manifest are in `assets/music/`.
 
 ## Approved story voices
 
@@ -85,7 +85,7 @@ Run `node tools/test-voice.js` for queue/cancellation/save checks and `node tool
 
 # Trying the compact kingdom ("House at the Heart")
 
-Open `try-climbing-trails.html` to explore the new terraces from the Mushroom crossing of the Golden Tower, with all skills. Like the rewards preview, this uses an in-memory adventure and leaves the normal save intact. Climb through the garden crossing, try the side rewards and bench, then use Sticky Paws for the final neck into the Hive.
+Open [the climbing preview](index.html#play=phoebe&room=tx&ab=all&demo=rewards) to explore the new terraces from the Mushroom crossing of the Golden Tower, with all skills. Like the rewards preview, this uses an in-memory adventure and leaves the normal save intact. Climb through the garden crossing, try the side rewards and bench, then use Sticky Paws for the final neck into the Hive.
 
 At the top of the Mushroom crossing, the soil rim marks the blocked ceiling; golden posts mark the opening. Jump up through the shaft, using its right side to land in the garden. The hatch opens a return gap on the left, marked by a mushroom picture and downward arrow. All shortcut cues use pictures and shapes without words. Walk into that gap to land on the Mushroom catch shelf. In a normal adventure the opening survives Continue and family-only resets; a full new adventure closes it. Use `--shortcuts-open` with the world verifier to test all story stages in the unlocked state, as well as the default closed state.
 
@@ -109,4 +109,4 @@ Checks:
 - `node tools/test-climbs.js` preserves all 1,201 original landmarks and checks all 1,779 original standing positions in normal and Easy movement. It reloads older saves across the refreshed rooms, keeps their 756 already-collected stars and other progress, jumps the Pond Walk side route without powers, and tests the discovered Hive door before and after Sticky Paws. It also checks the garden hatch's ascent, safe landing, return drop, saved opening, Continue, family-only reset and full reset, plus the narrow Coral Garden dive pocket.
 - `node tools/test-climbs-browser.js [shot-dir]` traverses the Pond Walk reward loop, complete Golden Tower and garden return shortcut with real keyboard input, including the room seam and final Sticky Paws climb. It captures ten representative climbs and the hatch in both states at desktop and portrait-phone sizes, and checks runtime errors and overflow.
 - For the refreshed trails, run `node tools/verify-world.js --jobs 4`, then `--easy --jobs 4`, `--replay --jobs 1` and `--replay --easy --jobs 1`. The search checks every stage's goal, every reachable standing spot, power gates, all collectibles, closed puzzle/boss gates and the route back home. The explicit Hive requirement is also respected by the house door and wayfinder.
-- `node tools/layout-check.js` prints the world box, room coverage, overlaps and any doorway that leads nowhere; `--picture` draws the map in cells. `node tools/layout/seams.js` lists doorways with a floor step a kid would have to jump.
+- `node tools/layout-check.js` prints the world box, room coverage, overlaps and any doorway that leads nowhere; `--picture` draws the map in cells.

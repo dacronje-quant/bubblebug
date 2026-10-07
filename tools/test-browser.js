@@ -243,7 +243,9 @@ async function walkMaze(page, target) {
     assert.equal(await page.evaluate(() => BB.Play.save.replayCount), 0);
     assert.equal(await page.evaluate(() => BB.Play.pl.cat), 'rainbow');
     const normal = await page.evaluate(() => localStorage.getItem('bubblebug_kingdom_v2'));
-    await page.goto(pathToFileURL(path.join(ROOT, 'try-rewards.html')).href);
+    // Demo selection is read at boot, so start a new document when changing its hash.
+    await page.goto('about:blank');
+    await page.goto(pathToFileURL(path.join(ROOT, 'index.html')).href + '#play=phoebe&room=hm&demo=rewards');
     await page.waitForFunction(() => { try { return BB.Save.preview && BB.Main.name === 'play'; } catch (e) { return false; } });
     await place(page, 'hm', mirror - 0.5, 32); await page.waitForFunction(() => { try { return BB.Play.wardrobe?.t > 8; } catch (e) { return false; } });
     await tap(page, 505, 178); await tap(page, 776, 438); await page.reload();
@@ -328,7 +330,8 @@ async function walkMaze(page, target) {
     const touch = await tablet.newPage(); watch(touch);
     await touch.goto(URL); await touch.waitForFunction(() => { try { return BB.Title.t > 16; } catch (e) { return false; } });
     await tap(touch, 790, 466, true); assert.equal(await touch.evaluate(() => BB.Settings.difficulty), 'medium');
-    await touch.goto(pathToFileURL(path.join(ROOT, 'try-rewards.html')).href);
+    await touch.goto('about:blank');
+    await touch.goto(pathToFileURL(path.join(ROOT, 'index.html')).href + '#play=phoebe&room=hm&demo=rewards');
     await touch.waitForFunction(() => { try { return BB.Save.preview && BB.Main.name === 'play'; } catch (e) { return false; } });
     await place(touch, 'hm', mirror - 0.5, 32); await touch.waitForFunction(() => { try { return BB.Play.wardrobe?.t > 8; } catch (e) { return false; } });
     assert.equal(await touch.locator('#touch').isVisible(), false);

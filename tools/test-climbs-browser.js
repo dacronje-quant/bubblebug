@@ -109,7 +109,9 @@ async function jump(page, x, floor) {
       const s = BB.Save.fresh(); s.cat = 'marshmallow'; s.toys.yarn = 1;
       const text = JSON.stringify(s); localStorage.setItem('bubblebug_kingdom_v2', text); return text;
     });
-    await page.goto(pathToFileURL(path.join(__dirname, '../try-climbing-trails.html')).href);
+    // A fresh document boots the demo while retaining the browser's normal save.
+    await page.goto('about:blank');
+    await page.goto(pathToFileURL(path.join(__dirname, '../index.html')).href + '#play=phoebe&room=tx&ab=all&demo=rewards');
     await page.waitForFunction(() => window.BB?.Play?.pl && BB.Play.t > 30);
     const preview = await page.evaluate(() => ({ preview: BB.Save.preview, room: BB.Play.room.id, normal: localStorage.getItem('bubblebug_kingdom_v2') }));
     assert.equal(preview.preview, true); assert.equal(preview.room, 'tx'); assert.equal(preview.normal, normal, 'climb preview never overwrites the normal adventure');

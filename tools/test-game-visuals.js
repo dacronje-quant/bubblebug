@@ -40,7 +40,9 @@ async function shot(page, name) {
       await shot(page, prefix + 'title');
       await page.evaluate(() => BB.Main.set('select'));
       await shot(page, prefix + 'select');
-      await page.goto(pathToFileURL(path.join(root, 'try-rewards.html')).href);
+      // A fresh document boots the demo instead of only changing the current hash.
+      await page.goto('about:blank');
+      await page.goto(pathToFileURL(path.join(root, 'index.html')).href + '#play=phoebe&room=hm&demo=rewards');
       await page.waitForFunction(() => window.BB?.Play?.pl && BB.Play.t > 60);
       await page.evaluate(() => { BB.Play.intro = null; BB.Play.iris = null; BB.Play.zoneCard = 0; });
       await shot(page, prefix + 'home');

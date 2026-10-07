@@ -5,3 +5,8 @@ Thumbs.db
 .vscode/
 .idea/
 test-output/
+/.recovery/
+/.claude/
+/music-plan/
+/voice-plan/
+/--help/
