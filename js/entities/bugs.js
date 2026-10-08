@@ -240,19 +240,8 @@
   function draw(c, b, cam) {
     const x = b.x - cam.x, y = b.y - cam.y + (b.hop || 0);
     if (x < -120 || x > BB.G.W + 120 || y < -140 || y > BB.G.H + 120) return;
-    if (b.behavior === 'dangle') {
-      c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 1;
-      c.beginPath(); c.moveTo(x, b.anchorY - cam.y); c.lineTo(x, y - 8); c.stroke();
-    }
-    const dance = b.danceT > 0 ? Math.sin(b.t * (b.sourceKey ? 0.045 : 0.16)) * (b.sourceKey ? 0.055 : 0.13) : 0;
-    const st = {
-      t: b.t, mood: b.visualMood == null ? b.mood : b.visualMood, facing: b.facing, blink: b.blink, joy: b.state === 'happy' && (b.danceT > 0 || b.greetT > 0 || b.t % 200 < 40),
-      shake: b.shake ? Math.sin(b.shake * 2) * 2.5 : 0, walk: b.behavior === 'walk' && b.moving, spin: dance,
-      rainbow: b.rainbow > 0 ? Math.min(1, b.rainbow / 40) : 0, squash: b.hopV < 0 ? 1.12 : b.hop < 0 ? 1.05 : 1,
-      step: b.stepT, landing: b.landT / 9, greeting: b.greetT ? Math.sin(b.greetT / 66 * Math.PI) : 0,
-      ground: ['walk', 'hop'].includes(b.behavior) ? (b.footOffset == null ? (LIFT[b.kind] || 9) * LOOK : b.footOffset - 1) - b.hop : undefined,
-      lookX: b.lookAt == null ? 0 : BB.clamp((b.lookAt - b.x) * b.facing / 100, -1, 1),
-    };
+    drawThread(c, b, cam, x, y);
+    const st = pose(b);
     if (b.king) {
       st.scale = KING_LOOK;
       BB.Critters.drawKing(c, x, y, st);
@@ -266,5 +255,51 @@
     }
   }
 
-  BB.Bugs = { create, animate, update, hit, draw };
+  // A crowd of calm garden friends is drawn from small per-critter
+  // pictures, repainted every `stride` ticks (staggered between critters)
+  // instead of re-tracing every vector path each frame. Position, shadow
+  // and thread still move every frame; only the pose updates a little less often.
+  const SPRITE_W = 96, SPRITE_H = 88, SPRITE_X = 48, SPRITE_Y = 48; // every critter pose fits within ±36px
+  function drawCached(c, b, cam, stride) {
+    const x = b.x - cam.x, y = b.y - cam.y + (b.hop || 0);
+    if (x < -120 || x > BB.G.W + 120 || y < -140 || y > BB.G.H + 120) return;
+    drawThread(c, b, cam, x, y);
+    const st = pose(b);
+    st.scale = LOOK;
+    BB.Critters.shadow(c, b.kind, x, y, st);
+    const scale = BB.G.scale, tick = Math.floor(b.t);
+    let sp = b.sprite;
+    if (!sp || sp.scale !== scale) sp = b.sprite = Object.assign(BB.G.offscreen(SPRITE_W, SPRITE_H, scale), { t: null });
+    if (sp.t === null || tick - sp.t >= stride || tick < sp.t) {
+      const o = sp.ctx;
+      o.setTransform(1, 0, 0, 1, 0, 0); o.clearRect(0, 0, sp.canvas.width, sp.canvas.height);
+      o.setTransform(scale, 0, 0, scale, 0, 0);
+      st.noShadow = true;
+      BB.Critters.drawBug(o, b.kind, SPRITE_X, SPRITE_Y, st);
+      // stagger first repaints so the crowd never repaints on the same tick
+      sp.t = sp.t === null ? tick - Math.floor(Math.random() * stride) : tick;
+    }
+    c.drawImage(sp.canvas, x - SPRITE_X, y - SPRITE_Y, SPRITE_W, SPRITE_H);
+  }
+
+  function drawThread(c, b, cam, x, y) {
+    if (b.behavior !== 'dangle') return;
+    c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(x, b.anchorY - cam.y); c.lineTo(x, y - 8); c.stroke();
+  }
+
+  function pose(b) {
+    const dance = b.danceT > 0 ? Math.sin(b.t * (b.sourceKey ? 0.045 : 0.16)) * (b.sourceKey ? 0.055 : 0.13) : 0;
+    const st = {
+      t: b.t, mood: b.visualMood == null ? b.mood : b.visualMood, facing: b.facing, blink: b.blink, joy: b.state === 'happy' && (b.danceT > 0 || b.greetT > 0 || b.t % 200 < 40),
+      shake: b.shake ? Math.sin(b.shake * 2) * 2.5 : 0, walk: b.behavior === 'walk' && b.moving, spin: dance,
+      rainbow: b.rainbow > 0 ? Math.min(1, b.rainbow / 40) : 0, squash: b.hopV < 0 ? 1.12 : b.hop < 0 ? 1.05 : 1,
+      step: b.stepT, landing: b.landT / 9, greeting: b.greetT ? Math.sin(b.greetT / 66 * Math.PI) : 0,
+      ground: ['walk', 'hop'].includes(b.behavior) ? (b.footOffset == null ? (LIFT[b.kind] || 9) * LOOK : b.footOffset - 1) - b.hop : undefined,
+      lookX: b.lookAt == null ? 0 : BB.clamp((b.lookAt - b.x) * b.facing / 100, -1, 1),
+    };
+    return st;
+  }
+
+  BB.Bugs = { create, animate, update, hit, draw, drawCached };
 })(window.BB);

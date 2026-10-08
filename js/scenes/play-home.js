@@ -154,7 +154,18 @@
     },
 
     drawHomeVisitors(c, cam, visible) {
-      for (const visitor of this.homeVisitors) if (visible.some(r => r.id === visitor.room)) BB.Bugs.draw(c, visitor, cam);
+      const shown = this.homeVisitors.filter(v => {
+        if (visible.some(r => r.id === v.room)) return true;
+        v.sprite = null; // free the cached picture while its garden is off screen
+        return false;
+      });
+      // A few friends are cheap to draw in full every frame; a big crowd
+      // uses cached pictures, except a friend in the middle of a greeting.
+      const crowd = shown.length > 8;
+      for (const visitor of shown) {
+        if (crowd && !visitor.greetT) BB.Bugs.drawCached(c, visitor, cam, 3);
+        else BB.Bugs.draw(c, visitor, cam);
+      }
     },
 
     // ──── Presents from the bosses ────

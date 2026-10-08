@@ -744,6 +744,15 @@
   const SWIMMERS = new Set(['fish', 'koi', 'jellyfish']);
   const FOOT = { bunny: 11, frog: 11, hedgehog: 11, bearcub: 15, lamb: 12, turtle: 10, penguin: 13, polarcub: 14, fawn: 14, unicorn: 13, capybara: 13, monkey: 13, squirrel: 11 };
 
+  function shadow(c, kind, x, y, st) {
+    if (FLYERS.has(kind) || SWIMMERS.has(kind) || kind === 'spider') return;
+    const s = st.scale || 1, foot = FOOT[kind] || 10;
+    const gy = st.ground == null ? foot * s : st.ground, lift = Math.max(0, gy - foot * s);
+    c.save(); c.fillStyle = 'rgba(71,48,82,0.10)';
+    G.ellipse(x, y + gy, (14 - Math.min(5, lift * 0.08)) * s, 2.4 * s, 0, c); c.fill();
+    c.fillStyle = 'rgba(71,48,82,0.05)'; G.ellipse(x, y + gy, 10 * s, 1.3 * s, 0, c); c.fill(); c.restore();
+  }
+
   function drawBug(c, kind, x, y, st) {
     const mood = BB.clamp(st.mood == null ? 1 : st.mood, 0, 1);
     const fn = BUGS[kind] || BUGS.ladybug;
@@ -756,12 +765,7 @@
     const bob = ground && st.walk ? -Math.abs(Math.sin(step)) * 0.85 : swimming ? Math.sin(t * 0.055) * 0.6 : 0;
     const roll = (st.spin || 0) + Math.sin(t * (flying ? 0.06 : 0.035)) * (flying ? 0.035 : swimming ? 0.05 : dangling ? 0.03 : 0.012);
     const art = Object.assign({}, st, { t, step });
-    if (ground && !st.noShadow) {
-      const gy = st.ground == null ? foot * s : st.ground, lift = Math.max(0, gy - foot * s);
-      c.save(); c.fillStyle = 'rgba(71,48,82,0.10)';
-      G.ellipse(x, y + gy, (14 - Math.min(5, lift * 0.08)) * s, 2.4 * s, 0, c); c.fill();
-      c.fillStyle = 'rgba(71,48,82,0.05)'; G.ellipse(x, y + gy, 10 * s, 1.3 * s, 0, c); c.fill(); c.restore();
-    }
+    if (ground && !st.noShadow) shadow(c, kind, x, y, st);
     c.save();
     c.translate(x + (st.shake || 0), y);
     c.scale((st.facing || 1) * s, s);
@@ -1123,5 +1127,5 @@
     c.restore();
   }
 
-  BB.Critters = { drawBug, drawKing, drawElder, moodCloud, rainbow, face, KINDS: Object.keys(BUGS) };
+  BB.Critters = { drawBug, shadow, drawKing, drawElder, moodCloud, rainbow, face, KINDS: Object.keys(BUGS) };
 })(window.BB);
