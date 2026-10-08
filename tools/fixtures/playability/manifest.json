@@ -5,49 +5,49 @@
       "name": "easy-1",
       "mode": "easy",
       "seed": 1,
-      "ticks": 229502,
+      "ticks": 181866,
       "requireAllCollectibles": false,
-      "captureFingerprint": "a6b2f32ad81f8faa2dd15688181a43ca285dafef6a6372bc65c548cd46922958",
-      "sha256": "1916f9b79bbfd5b5f2f0556553283c26dfa9502f12c3b25cf25329179e9480cd",
-      "stars": 396,
+      "captureFingerprint": "110ec9f71364850e9984989534e4e92a19992574e1ac47e1c59cda6d7b89d0f3",
+      "sha256": "f3b19c890694e059e0a5e850478965cf52fc39948368b3847e42380af84549c0",
+      "stars": 378,
       "critters": 65,
-      "compressedBytes": 36895
+      "compressedBytes": 42161
     },
     {
       "name": "medium-1",
       "mode": "medium",
       "seed": 1,
-      "ticks": 180138,
+      "ticks": 175719,
       "requireAllCollectibles": false,
-      "captureFingerprint": "a6b2f32ad81f8faa2dd15688181a43ca285dafef6a6372bc65c548cd46922958",
-      "sha256": "9fd4196609ae860d37d6a507320bb14542de77f56b57fca185b4c6daeed0bbf7",
-      "stars": 395,
+      "captureFingerprint": "110ec9f71364850e9984989534e4e92a19992574e1ac47e1c59cda6d7b89d0f3",
+      "sha256": "06908219acd68014fda6ddd1fc84a5ce12b2043e6aa24f294a4bfc721d06894f",
+      "stars": 386,
       "critters": 65,
-      "compressedBytes": 31606
+      "compressedBytes": 39434
     },
     {
       "name": "hard-1",
       "mode": "hard",
       "seed": 1,
-      "ticks": 177507,
+      "ticks": 174728,
       "requireAllCollectibles": false,
-      "captureFingerprint": "a6b2f32ad81f8faa2dd15688181a43ca285dafef6a6372bc65c548cd46922958",
-      "sha256": "f5890930a62e418830ae55b018849c46ceb3dac24544aa673c45d92bdd9d6554",
-      "stars": 391,
+      "captureFingerprint": "110ec9f71364850e9984989534e4e92a19992574e1ac47e1c59cda6d7b89d0f3",
+      "sha256": "1561c3521aceaa719fbdd2d7b7e0714d72c773b12cd1b42b9a99018b9a3aa1f3",
+      "stars": 380,
       "critters": 65,
-      "compressedBytes": 30715
+      "compressedBytes": 39329
     },
     {
       "name": "easy-1-collectibles",
       "mode": "easy",
       "seed": 1,
-      "ticks": 328309,
+      "ticks": 235488,
       "requireAllCollectibles": true,
-      "captureFingerprint": "a6b2f32ad81f8faa2dd15688181a43ca285dafef6a6372bc65c548cd46922958",
-      "sha256": "a4548bd164ab550ff15c208a6efc3ac8faa04cffbca9bff5e24ee446f9050eb9",
+      "captureFingerprint": "110ec9f71364850e9984989534e4e92a19992574e1ac47e1c59cda6d7b89d0f3",
+      "sha256": "0fee84aa3d148bc49b05aef3e96d5e075db2bc8d7f532b2781e9b39c8a44da96",
       "stars": 860,
       "critters": 65,
-      "compressedBytes": 54240
+      "compressedBytes": 56857
     }
   ]
 }

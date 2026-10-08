@@ -213,12 +213,13 @@ function runAdventure(game, options = {}) {
       distance: b => Math.hypot(b.x + b.w / 2 - th.x, b.y + b.h / 2 - y),
       test: b => foot ? Math.abs(b.x + b.w / 2 - th.x) < radius && Math.abs(b.y + b.h - th.y) < 5 && b.grounded : Math.hypot(b.x + b.w / 2 - th.x, b.y + b.h / 2 - y) < radius };
   }
-  function executeRoute(goal, allowShoot = false) {
+  function executeRoute(goal, allowShoot = false, onStuck = null) {
     const roomBefore = P.room.id, beforeMode = P.pl.state;
     const result = localRoute(B, P.pl.body, goal, { maxNodes: options.maxNodes || 1800 });
     report.planner.searches++; report.planner.expansions += result.expansions;
     if (!result.actions) {
       if (!P.pl.body.grounded) { wait(30); return true; }
+      if (onStuck) return onStuck();
       throw new Error('controller-route-unresolved:' + P.room.id + ':' + goal.id);
     }
     if (!result.actions.length) { step([]); return true; }
@@ -425,7 +426,15 @@ function runAdventure(game, options = {}) {
     const goal = { id: 'room:' + exit.to, x: tx, y: ty, bounds,
       distance: b => landings.length ? Math.min(...landings.map(s => Math.hypot(b.x + b.w / 2 - Math.max(s.x0, Math.min(s.x1, b.x + b.w / 2)), b.y + b.h - s.y))) : Math.hypot(b.x + b.w / 2 - tx, b.y + b.h / 2 - ty),
       test: b => b.x + b.w / 2 >= dest.px && b.x + b.w / 2 < dest.px + dest.pw && b.y + b.h / 2 >= dest.py && b.y + b.h / 2 < dest.py + dest.ph && firstStep.regionAt(dest, (b.x + b.w / 2) / 32, (b.y + b.h / 2) / 32) === arrivalRegion && (exit.dy < 0 ? b.grounded && Math.abs(b.vy) < .01 && (!landings.length || landings.some(s => Math.abs(b.y + b.h - s.y) < 2 && b.x + b.w / 2 > s.x0 - 26 && b.x + b.w / 2 < s.x1 + 26)) : Math.abs(b.x + b.w / 2 - tx) < 80 && Math.abs(b.y + b.h / 2 - ty) < 80) };
-    return executeRoute(goal, true);
+    // From a perch above a side seam, a kitten without a double jump can only
+    // fall through it, below the arrival window the search aims at. A player
+    // just walks out that way: do the same (briefly), then replan there.
+    const walkOut = exit.dx ? () => {
+      const from = P.room;
+      for (let i = 0; i < 45 && P.room === from; i++) step(dirKeys(exit.dx));
+      return P.room !== from;
+    } : null;
+    return executeRoute(goal, true, walkOut);
   }
 
   try {
