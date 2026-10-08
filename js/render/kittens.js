@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════════════
-//  KITTENS — the two heroes, painted procedurally in vector.
+//  KITTENS — the heroes and family, painted procedurally in vector.
 //
 //  MARSHMALLOW — a fluffy cream Birman kitten: warm taupe points on
 //    ears, mask and tail, a dark little nose, snowy "gloves" on every
@@ -17,6 +17,17 @@
   'use strict';
   const G = BB.G;
   const TAU = Math.PI * 2;
+  const RAINBOW = ['#ff77b5', '#ffa870', '#ffe575', '#91e6a6', '#76dbea', '#849fff', '#c293f4'];
+  BB.RAINBOW = RAINBOW;
+  // A magical cat's tail and mane run through its own colours: the whole
+  // rainbow for Rainbow, one soft colour for each of her relatives.
+  const spectrum = cat => cat.spectrum || RAINBOW;
+  const rainbowColor = (s, cols = RAINBOW) => {
+    const n = cols.length - 1, p = Math.min(n - 0.001, s * n), i = Math.floor(p);
+    return BB.mix(cols[i], cols[i + 1], p - i);
+  };
+  const mane = cat => Array.from({ length: 7 }, (_, i) => spectrum(cat)[i % spectrum(cat).length]);
+  const GOLD = ['#fffbea', '#ffdf7c', '#e6b554', '#bf9250'];
 
   const CATS = BB.CATS = {
     marshmallow: {
@@ -45,7 +56,13 @@
   // Marshmallow's family are all colour-pointed Birmans; Phoebe's are a
   // tortie, tabby and calico bunch. `size` is how big they're drawn.
   const base = (from, over) => Object.assign({}, CATS[from], over);
-  const blueEyes = { iris: '#3d8ff0', irisLight: '#a8e0ff', irisDark: '#123f8f' };
+  CATS.rainbow = base('marshmallow', {
+    id: 'rainbow', name: 'Rainbow', magical: true,
+    fur: '#fff8ff', furShade: '#e4c8ff', belly: '#ffffff', point: '#eda8db', pointDark: '#b078c7',
+    tail: '#bda4ff', tailTip: '#70d8e0', paw: '#fff7bf', earInner: '#ffb5d9', nose: '#de86b1',
+    iris: '#48cfd5', irisLight: '#c1ffff', irisDark: '#36839c', outline: '#9160a1',
+    bubbleTint: '#d5bdff', bubbleTint2: '#b1f7ee', trail: 'star', voice: 700,
+  });
   Object.assign(CATS, {
     mamaMallow: base('marshmallow', {
       id: 'mamaMallow', name: "Marshmallow's Mama", size: 1.6, voice: 470, cushion: '#ffb3d1',
@@ -63,12 +80,12 @@
       acc: { glasses: '#7a5a8a', flower: '#d8b8ff' },
     }),
     bigSisterCocoa: base('marshmallow', {
-      id: 'bigSisterCocoa', name: "Marshmallow's big sister", size: 1.2, voice: 560, cushion: '#c9a6ff',
+      id: 'bigSisterCocoa', name: "Marshmallow's Big Sister", size: 1.2, voice: 560, cushion: '#c9a6ff',
       point: '#8a5a3e', pointDark: '#6a3e28', tail: '#d0b49a', tailTip: '#6a3e28', nose: '#6a4a3e',
       acc: { bow: '#b99cff' },
     }),
     babySnowflake: base('marshmallow', {
-      id: 'babySnowflake', name: "Marshmallow's baby brother", size: 0.9, voice: 760, cushion: '#9ff0e0',
+      id: 'babySnowflake', name: "Marshmallow's Baby Brother", size: 0.9, voice: 760, cushion: '#9ff0e0',
       fur: '#fff8ee', point: '#e8a060', pointDark: '#d07a3a', tail: '#f4d4b0', tailTip: '#d07a3a', nose: '#e89a80',
       acc: { scarf: '#4fc3c8' },
     }),
@@ -92,12 +109,12 @@
       nose: '#d89aa0', acc: { glasses: '#5a4a6a', scarf: '#ff9ec7' },
     }),
     bigBrotherTiger: base('phoebe', {
-      id: 'bigBrotherTiger', name: "Phoebe's big brother", pattern: 'tabby', size: 1.25, voice: 520, cushion: '#ffb35c',
+      id: 'bigBrotherTiger', name: "Phoebe's Big Brother", pattern: 'tabby', size: 1.25, voice: 520, cushion: '#ffb35c',
       fur: '#9a7250', furShade: '#7a5638', stripe: '#3e2818', patch: '#5a3e28', face: '#9a7250', tail: '#9a7250', tailTip: '#3e2818',
       acc: { bandana: '#e84a4a' },
     }),
     babyPatches: base('phoebe', {
-      id: 'babyPatches', name: "Phoebe's baby sister", pattern: 'calico', size: 0.9, voice: 780, cushion: '#ffc6e6',
+      id: 'babyPatches', name: "Phoebe's Baby Sister", pattern: 'calico', size: 0.9, voice: 780, cushion: '#ffc6e6',
       fur: '#fffaf2', furShade: '#ece2d4', patch: '#e8883a', patchLight: '#f0a860', stripe: '#2e2424', face: '#fffaf2',
       tail: '#e8883a', tailTip: '#2e2424', nose: '#ffa0a8', acc: { bow: '#ff7eb6' },
     }),
@@ -111,6 +128,50 @@
   CATS.marshmallow.size = CATS.phoebe.size = 1.2;
   BB.FAMILY = ['mamaMallow', 'mamaTortie', 'papaBirman', 'papaGinger', 'grannyLilac', 'grannyGrey',
     'bigSisterCocoa', 'bigBrotherTiger', 'babySnowflake', 'babyPatches', 'grandpaSeal', 'grandpaStripes'];
+
+  // ──── Rainbow's own family (second adventure onwards) ────
+  // One relative for each colour of her rainbow, in rainbow order. Each is
+  // a little unicorn cat like Rainbow, tinted all over in its own colour.
+  const kin = (id, name, size, voice, hue, over) => {
+    const [main, light, deep] = hue;
+    return base('rainbow', Object.assign({
+      id, name, size, voice, kin: true, cushion: light,
+      fur: BB.mix(light, '#ffffff', 0.72), furShade: BB.mix(light, '#ffffff', 0.25), belly: '#ffffff',
+      point: main, pointDark: deep, tail: light, tailTip: deep, earInner: BB.mix(main, '#ffffff', 0.4),
+      paw: BB.mix(light, '#ffffff', 0.6), nose: BB.mix(deep, '#ff8fb0', 0.4), outline: BB.mix(deep, '#3a2a4a', 0.55),
+      spectrum: [light, main, deep, main], trailColor: main,
+    }, over));
+  };
+  Object.assign(CATS, {
+    rbMama: kin('rbMama', "Rainbow's Mama", 1.6, 480, ['#ff77b5', '#ffb3d6', '#e0559a'], { acc: { flower: '#fff07a' } }),
+    rbPumpkin: kin('rbPumpkin', "Rainbow's Big Brother", 1.25, 540, ['#ffa870', '#ffcaa3', '#ea7f3e'], { acc: { bandana: '#5fc781' }, iris: '#7fc94a', irisLight: '#dcf7a8', irisDark: '#3f7a18' }),
+    rbPapa: kin('rbPapa', "Rainbow's Papa", 1.75, 370, ['#ffd84a', '#fff0a6', '#d9a520'], { acc: { bowtie: '#ff77b5' }, iris: '#e3a032', irisLight: '#fff0a0', irisDark: '#93600c' }),
+    rbGrandpa: kin('rbGrandpa', "Rainbow's Grandpa", 1.7, 330, ['#6fd08c', '#b3efc2', '#3fa05f'], { acc: { glasses: '#2f5a3c', bowtie: '#ffa870' }, horn: ['#ffffff', '#e6e9f2', '#bfc6d6', '#8f97aa'] }),
+    rbSplash: kin('rbSplash', "Rainbow's Big Sister", 1.2, 600, ['#4fcbe0', '#a8eef6', '#2ea2b8'], { acc: { bow: '#c293f4' } }),
+    rbGranny: kin('rbGranny', "Rainbow's Granny", 1.5, 420, ['#7c97ff', '#c2d0ff', '#5a72dc'], { acc: { glasses: '#4a5694', scarf: '#ffb3d6' }, horn: ['#ffffff', '#e6e9f2', '#bfc6d6', '#8f97aa'] }),
+    rbTwinkle: kin('rbTwinkle', "Rainbow's Baby Sister", 0.9, 800, ['#b98af2', '#e2cdff', '#8f5fd6'], { acc: { bow: '#ffe575' } }),
+  });
+  BB.RAINBOW_KIN = ['rbMama', 'rbPumpkin', 'rbPapa', 'rbGrandpa', 'rbSplash', 'rbGranny', 'rbTwinkle'];
+
+  // A lost relative's colour has drained away (they are grey and sad
+  // until found). Faded copies are made once per step and kept.
+  const GREY = '#c4bfcc';
+  function fade(value, k) {
+    if (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)) return BB.mix(value, GREY, k);
+    if (Array.isArray(value)) return value.map(v => fade(v, k));
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, v]) => [key, fade(v, k)]));
+    return value;
+  }
+  function fadedId(id, k) {
+    const step = Math.round(BB.clamp(k, 0, 1) * 8);
+    if (!step || !CATS[id]) return id;
+    const key = id + '~' + step;
+    if (!CATS[key]) {
+      const src = CATS[id], amount = step / 8 * 0.85;
+      CATS[key] = Object.assign(fade(src, amount), { id: key, faded: step / 8, horn: fade(src.horn || GOLD, amount), spectrum: fade(spectrum(src), amount), outline: BB.mix(src.outline, '#6a6476', amount) });
+    }
+    return key;
+  }
 
   // ──── small helpers ────
   function limb(c, x0, y0, len, ang, w, color, outline, pawColor) {
@@ -159,11 +220,12 @@
     if (cat.fluffy) {
       // Birman plume: overlapping soft puffs that get darker toward the tip
       for (let pass = 0; pass < 2; pass++) {
-        for (let i = 0; i <= 10; i++) {
-          const s = i / 10;
+        const count = cat.magical ? 18 : 10;
+        for (let i = 0; i <= count; i++) {
+          const s = i / count;
           const [px, py] = bez(s);
           const r = (3.2 + Math.sin(s * Math.PI) * 2.6) * (pose.mode === 'sit' || pose.mode === 'sleep' ? 0.72 : 1);
-          c.fillStyle = pass === 0 ? cat.outline : BB.mix(cat.tail, cat.tailTip, Math.pow(s, 1.6));
+          c.fillStyle = pass === 0 ? cat.outline : cat.magical ? rainbowColor(s, spectrum(cat)) : BB.mix(cat.tail, cat.tailTip, Math.pow(s, 1.6));
           G.circle(px, py, pass === 0 ? r + 0.9 : r, c); c.fill();
         }
       }
@@ -198,6 +260,12 @@
       c.fillStyle = g; c.fillRect(-rx - 2, -ry - 2, rx * 2 + 4, ry * 2 + 4);
       c.fillStyle = BB.rgba(cat.point, 0.28); G.ellipse(-rx * 0.8, -ry * 0.2, rx * 0.45, ry, 0, c); c.fill();
       c.fillStyle = cat.belly; G.ellipse(rx * 0.75, ry * 0.2, rx * 0.45, ry * 0.9, 0, c); c.fill();
+      if (cat.magical) {
+        const rainbow = c.createLinearGradient(-rx, -ry, rx, ry);
+        spectrum(cat).forEach((color, i, all) => rainbow.addColorStop(i / (all.length - 1), color));
+        c.fillStyle = rainbow; c.globalAlpha = 0.85;
+        G.ellipse(-rx * 0.15, -ry * 0.3, rx * 0.9, ry * 0.75, -0.25, c); c.fill(); c.globalAlpha = 1;
+      }
     } else if (cat.pattern === 'tabby') {
       // classic tabby: soft darker back, curved stripes, white tummy
       c.fillStyle = cat.furShade; G.ellipse(-rx * 0.1, -ry * 0.55, rx * 1.1, ry * 0.6, 0, c); c.fill();
@@ -447,6 +515,23 @@
       c.beginPath(); c.moveTo(0, 4 + dy * 0.5); c.lineTo(-len + 1, 3 + dy * 1.5 - wig); c.stroke();
     }
     if (cat.acc) drawAccessories(c, cat);
+    if (cat.magical && BB.Wardrobe) {
+      G.drawGlow(-1, -16, 18, cat.faded ? '#d8d2e2' : '#ffefb1', cat.faded ? 0.1 : 0.22, c);
+      for (const [i, color] of mane(cat).entries()) {
+        c.fillStyle = color; G.ellipse(-8 + i * 1.5, -10 - Math.sin(i * 0.5) * 2, 2.5, 5, -0.4, c); c.fill();
+      }
+      c.save();
+      const horn = cat.horn || GOLD;
+      const gold = c.createLinearGradient(-3, -30, 4, -9);
+      gold.addColorStop(0, horn[0]); gold.addColorStop(0.45, horn[1]); gold.addColorStop(1, horn[2]);
+      c.fillStyle = gold; c.strokeStyle = horn[3]; c.lineWidth = 0.8;
+      c.beginPath(); c.moveTo(-4, -9); c.lineTo(0, -30); c.lineTo(4, -9); c.quadraticCurveTo(0, -7, -4, -9); c.fill(); c.stroke();
+      c.clip(); c.strokeStyle = '#fff7d0'; c.lineWidth = 1;
+      for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(-5, -12 - i * 4); c.lineTo(5, -15 - i * 4); c.stroke(); }
+      c.restore();
+      c.fillStyle = '#fff3bd'; G.star(7, -13, 1.9, 4, 0.3, 0, c); c.fill();
+      G.star(-11, -18 + Math.sin(t * 0.05), 1.5, 4, 0.3, 0, c); c.fill();
+    }
     // what the kitten is wearing (presents from the bosses)
     if (pose.wear && BB.Wardrobe) BB.Wardrobe.drawOn(c, pose.wear, t);
     c.restore();
@@ -498,7 +583,6 @@
   // ──── The whole kitten ────
   function drawKitten(c, catId, pose, x, y, scale = 1, facing = 1) {
     const cat = CATS[catId] || CATS.marshmallow;
-    const t = pose.t || 0;
     c.save();
     c.translate(x, y);
     c.scale(scale * facing, scale);
@@ -560,13 +644,17 @@
       len += stretch * 1.8;
     }
 
+    // casting: the near front paw sweeps forward to send out a rainbow
+    const cast = pose.cast || 0;
+    if (cast > 0) { aFN = BB.lerp(aFN, 1.45, cast); aFF = BB.lerp(aFF, 0.5, cast * 0.6); }
+
     // tail + far legs behind the body
     drawTail(c, cat, pose.tail, bx - 10 + wig * 0.4, by - 1, pose);
     limb(c, bx - 6.5 + wig, by + 3, len, aBF, 3.8, legFar, outline, cat.paw);
     limb(c, bx + 7, by + 3, len, aFF, 3.8, legFar, outline, cat.paw);
     drawBody(c, cat, bx + wig * 0.5, by, 11.5, 7.6, wig * 0.02);
     limb(c, bx - 3.5 + wig, by + 4, len, aBN, 4.2, legC, outline, cat.paw);
-    limb(c, bx + 9.5, by + 4, len, aFN, 4.2, legC, outline, cat.paw);
+    limb(c, bx + 9.5, by + 4, len + cast * 1.5, aFN, 4.2, legC, outline, cat.paw);
 
     // head, a little in front and above
     const hx = 8.5, hy = -19 + bob * 0.7 + (mode === 'air' && pose.vy > 0 ? -0.8 : 0);
@@ -643,5 +731,5 @@
     }
   }
 
-  BB.Kittens = { draw: drawKitten, CATS };
+  BB.Kittens = { draw: drawKitten, CATS, fadedId };
 })(window.BB);

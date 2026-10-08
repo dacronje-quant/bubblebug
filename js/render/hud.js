@@ -24,7 +24,7 @@
     else if (kind === 'bubble') { G.bubble(-2, 2, 8, '#ffffff', 1, c); G.bubble(7, -7, 4, '#ffffff', 1, c); }
     else if (kind === 'right') { c.beginPath(); c.moveTo(-4, -8); c.lineTo(5, 0); c.lineTo(-4, 8); c.stroke(); }
     else if (kind === 'left') { c.beginPath(); c.moveTo(4, -8); c.lineTo(-5, 0); c.lineTo(4, 8); c.stroke(); }
-    else if (kind === 'trick') BB.Gestures.drawPaw(c, 0, 1, 0.85, '#ffffff', '#ffffff');
+    else if (kind === 'trick') BB.Gestures.drawIcon(c, 0, 1, 0.85, '#ffffff', '#b87838');
     c.restore();
   }
 
@@ -241,14 +241,132 @@
   }
 
   // ──── Main HUD ────
-  const bounce = { stars: 0, hearts: 0 };
-  let last = { stars: -1, hearts: -1, family: -1, tricks: -1 };
+  const bounce = { stars: 0, hearts: 0, family: 0, tricks: 0 };
+  const last = { stars: -1, hearts: -1, family: -1, tricks: -1 };
+
+  function resetHUD(s) {
+    for (const key of Object.keys(bounce)) {
+      bounce[key] = 0;
+      last[key] = s ? s[key] || 0 : -1;
+    }
+  }
+
+  // Counter celebrations run on the same 60 Hz clock as collection. A draw
+  // may happen twice between ticks on a tablet, or show a frozen pause scene.
+  function updateHUD(s) {
+    for (const key of Object.keys(bounce)) {
+      if (key === 'tricks' && s.boss) continue;
+      const value = s[key] || 0;
+      if (last[key] >= 0 && value > last[key]) bounce[key] = 1;
+      last[key] = value;
+      bounce[key] *= 0.9;
+    }
+  }
+
+  function drawSideHUD(s, t) {
+    const v = G.view, cv = G.surround, safe = G.readSafeArea();
+    const right = window.innerWidth - v.x - v.w;
+    // Mirror the larger cutout inset so both rails keep the same width.
+    const sideInset = Math.max(safe.left, safe.right);
+    const leftSpace = v.x - sideInset, rightSpace = right - sideInset;
+    const top = Math.max(68, safe.top + 68 - v.y);
+    const bottom = Math.min(v.h - 12, window.innerHeight - safe.bottom - v.y - 12, (BB.Input.touchEnabled ? G.touchPadTop : window.innerHeight) - v.y - 12);
+    const active = !!cv && Math.min(leftSpace, rightSpace) >= 70 && v.h >= 300 && bottom - top >= 180 && BB.Main.name === 'play' && !document.body.classList.contains('menu-open');
+    document.body.classList.toggle('side-hud', active);
+    G.sideHUD = null;
+    G.compactHUD = null;
+    if (!cv) return false;
+    cv.style.display = active ? 'block' : 'none';
+    if (!active) return false;
+    const c = cv.getContext('2d'), ratio = v.w / G.W, density = G.scale / ratio;
+    c.setTransform(density, 0, 0, density, 0, 0);
+    c.clearRect(0, 0, window.innerWidth, v.h);
+    const items = [];
+    c.fillStyle='#000'; c.fillRect(0,0,v.x,v.h); c.fillRect(v.x+v.w,0,right,v.h);
+    const text = (value,x,y,size=18,color='#f8f6ff') => {
+      c.font=`650 ${size}px system-ui, sans-serif`; c.textAlign='center'; c.textBaseline='middle'; c.fillStyle=color; c.fillText(String(value),x,y);
+    };
+    const card = (id,x,y,w,h) => {
+      c.fillStyle='rgba(255,255,255,0.065)'; G.rrect(x,y,w,h,Math.min(12,h/3),c); c.fill();
+      c.strokeStyle='rgba(211,222,255,0.12)'; c.lineWidth=1; c.stroke();
+      const m=c.getTransform();
+      items.push({id,x:(m.e+x*m.a)/density,y:v.y+(m.f+y*m.d)/density,w:w*m.a/density,h:h*m.d/density});
+    };
+    // The game's familiar picture vocabulary, laid out in two quiet rails.
+    // All positions are CSS pixels; icon size stays legible on wide phones.
+    const railWidth=Math.min(140,Math.min(leftSpace,rightSpace)-12);
+    const lw=railWidth, lx=sideInset+(leftSpace-lw)/2, ly=top;
+    const leftH=58+3*38+4*6+(s.kin?42:0), ls=Math.min(1,(bottom-ly)/leftH);
+    c.save(); c.translate(lx,ly); c.scale(ls,ls);
+    const width=lw/ls, cx=width/2; let y=0;
+    card('health',0,y,width,58);
+    BB.Kittens.draw(c,s.cat||'marshmallow',{mode:'sit',t,happy:!s.hard||s.mood>=s.moodMax,sad:s.hard&&s.mood<=1?0.9:0,cry:s.hard&&s.mood<=1},cx,34,0.72,1);
+    if (s.hard) for(let i=0;i<(s.moodMax||4);i++) {
+      const px=cx+(i-((s.moodMax||4)-1)/2)*13;
+      if(i<s.mood) sun(c,px,46,0.6,t+i*17); else rainCloudIcon(c,px,46,t+i*23,0);
+    } else { G.bubble(cx,46,9,'#ffc6e6',0.9,c); c.fillStyle='#ff7eb6'; G.heart(cx,47,6,c); c.fill(); }
+    y+=64;
+    const metric=(id,count,color,icon,pulse=0) => {
+      card(id,0,y,width,38); c.save(); c.translate(14,y+17); c.scale(1+pulse*0.14,1+pulse*0.14); icon(c); c.restore();
+      text(count,width-18,y+18,String(count).length>3?13:18,color); y+=44;
+    };
+    metric('stars',s.stars,'#ffe498',ctx=>{ctx.fillStyle='#ffd767';G.star(0,0,9,5,0.48,-Math.PI/2,ctx);ctx.fill();},bounce.stars);
+    metric('hearts',s.hearts,'#ffb5ce',ctx=>{ctx.fillStyle='#ff86b2';G.heart(0,1,9,ctx);ctx.fill();},bounce.hearts);
+    metric('family',s.family||0,'#e5dcff',ctx=>BB.MapView.catFace(ctx,0,0,0.95,'#fff1dc','#9a7a64'));
+    c.fillStyle='rgba(255,255,255,0.12)'; G.rrect(8,y-12,width-16,3,1.5,c); c.fill();
+    c.fillStyle='#bcb1ff'; c.fillRect(8,y-12,(width-16)*Math.min(1,(s.family||0)/BB.Home.familyOrder().length),3);
+    if(s.kin){ card('rainbow',0,y,width,42); BB.RainbowFamily.miniArc(c,cx,y+13,0.9,s.kin,t,s.kinPulse||0); text(BB.RainbowFamily.count(s.kin)+'/'+BB.RAINBOW_KIN.length,cx,y+31,11,'#d8d0ef'); }
+    c.restore();
+    // Abilities and toys stay visible together, including the fully completed
+    // inventory. The grid adjusts to the actual rail width and available height.
+    const ax=ABILITIES.filter(a=>s.abilities[a]), toys=TOYS.filter(a=>(s.toys||{})[a]);
+    const rw=railWidth, rx=v.x+v.w+(rightSpace-rw)/2;
+    const cols=Math.max(2,Math.min(4,Math.floor(rw/20))), step=BB.clamp(rw/cols,22,30), iconScale=Math.min(0.95,rw/cols/32);
+    const groupH=list=>list.length?18+Math.ceil(list.length/cols)*step:0;
+    const natural=groupH(ax)+groupH(toys)+(s.tricks?38:0)+12;
+    const rs=Math.min(1,(bottom-top)/Math.max(1,natural));
+    c.save(); c.translate(rx,top); c.scale(rs,rs);
+    const rwidth=rw/rs; y=0;
+    const badges=(id,list,draw) => {
+      if(!list.length)return;
+      const h=groupH(list);card(id,0,y,rwidth,h);
+      text(id==='abilities'?'POWERS':'TOYS',rwidth/2,y+9,8,'#b6bbd7');
+      list.forEach((a,i)=>{
+        const px=(i%cols+0.5)*rwidth/cols,py=y+18+step/2+Math.floor(i/cols)*step;
+        c.fillStyle='rgba(165,178,235,0.10)';G.circle(px,py,9,c);c.fill();draw(a,px,py);
+      }); y+=h+6;
+    };
+    badges('abilities',ax,(a,x,y)=>abilityIcon(c,a,x,y,iconScale));
+    badges('toys',toys,(a,x,y)=>toyIcon(c,a,x,y,iconScale,t));
+    if(s.tricks){card('tricks',0,y,rwidth,32);BB.Gestures.drawIcon(c,17,y+16,0.65);text(s.tricks,rwidth-20,y+16,16,'#ffd8a1');}
+    c.restore();
+    G.sideHUD={active:true,items,stars:s.stars,hearts:s.hearts,family:s.family||0,mood:s.mood,hard:s.hard,abilities:ax,toys,tricks:s.tricks||0,kin:s.kin?BB.RainbowFamily.count(s.kin):null,
+      healTarget:G.toLogical(lx+lw/2,v.y+ly+46*ls)};
+    const label=`Adventure status: ${s.stars} stars, ${s.hearts} hearts, ${s.family||0} family home, ${ax.length} powers, ${toys.length} toys, ${s.tricks||0} tricks${s.hard?', happiness '+s.mood+' of '+s.moodMax:''}`;
+    if(cv._hudLabel!==label){cv.setAttribute('aria-label',label);cv._hudLabel=label;}
+    cv.setAttribute('aria-hidden','false'); cv.setAttribute('role','img');
+    return true;
+  }
 
   function drawHUD(c, s, t) {
-    if (last.stars >= 0 && s.stars > last.stars) bounce.stars = 1;
-    if (last.hearts >= 0 && s.hearts > last.hearts) bounce.hearts = 1;
-    last.stars = s.stars; last.hearts = s.hearts;
-    bounce.stars *= 0.9; bounce.hearts *= 0.9;
+    if (drawSideHUD(s, t)) return;
+
+    // A cutout can consume a whole gutter. Keep the compact HUD inside the
+    // safe rectangle too, without changing the size or framing of the game.
+    const v = G.view, safe = G.safeArea, ratio = v.w / G.W || 1;
+    const xInset = Math.max(0, safe.left - v.x) / ratio;
+    const yInset = Math.max(0, safe.top - v.y) / ratio;
+    let rightEdge = Math.min(G.W, (window.innerWidth - safe.right - v.x) / ratio);
+    for (const id of ['map-btn', 'pause-btn']) {
+      const button = document.getElementById(id), r = button && button.getBoundingClientRect && button.getBoundingClientRect();
+      const y = v.y + yInset * ratio;
+      if (r && r.width && r.top < y + 86 * ratio && r.bottom > y && r.left > v.x + xInset * ratio) {
+        rightEdge = Math.min(rightEdge, (r.left - 8 - v.x) / ratio);
+      }
+    }
+    const fit = Math.min(1, Math.max(1, rightEdge - xInset) / 720);
+    c.save(); c.translate(xInset, yInset); c.scale(fit, fit);
+    G.compactHUD = { x: v.x + xInset * ratio, y: v.y + yInset * ratio, w: 720 * fit * ratio, h: 86 * fit * ratio };
 
     const pill = (x, w) => { c.fillStyle = 'rgba(30,20,50,0.38)'; G.rrect(x, 12, w, 38, 19, c); c.fill(); };
 
@@ -273,26 +391,30 @@
     const x0 = X0 + 212;
     const fam = s.family || 0;
     if (fam > 0) {
-      if (last.family >= 0 && fam > last.family) bounce.family = 1;
-      bounce.family = (bounce.family || 0) * 0.9;
       pill(x0, 82);
       const fb = 1 + bounce.family * 0.5;
       BB.MapView.catFace(c, x0 + 22, 33, 1.25 * fb, '#fff1dc', '#9a7a64');
       G.text(String(fam), x0 + 58, 32, 22 * (1 + bounce.family * 0.2), '#fff1dc', 'rgba(40,20,60,0.6)');
     }
-    last.family = fam;
 
-    // cat tricks learned: a golden paw and a count
-    const tricks = s.tricks || 0;
+    // Rainbow's family (Rainbow adventures): a little rainbow, one band
+    // lighting up for each relative who is home
+    let next = x0 + (fam > 0 ? 90 : 0);
+    if (s.kin && BB.RainbowFamily) {
+      pill(next, 64);
+      BB.RainbowFamily.miniArc(c, next + 32, 27, 1.15, s.kin, t, s.kinPulse || 0);
+      next += 72;
+    }
+
+    // cat tricks learned: the smiling-cat symbol and a count
+    // (hidden during a boss fight, where the boss's own picture takes the top)
+    const tricks = s.boss ? 0 : s.tricks || 0;
     if (tricks > 0) {
-      if (last.tricks >= 0 && tricks > last.tricks) bounce.tricks = 1;
-      bounce.tricks = (bounce.tricks || 0) * 0.9;
-      const px = x0 + (fam > 0 ? 90 : 0);
+      const px = next;
       pill(px, 82);
-      BB.Gestures.drawPaw(c, px + 22, 32, 0.95 * (1 + bounce.tricks * 0.5), '#ffd84a', '#b8860b');
+      BB.Gestures.drawIcon(c, px + 22, 32, 0.95 * (1 + bounce.tricks * 0.5));
       G.text(String(tricks), px + 58, 32, 22 * (1 + bounce.tricks * 0.2), '#fff4c2', 'rgba(40,20,60,0.6)');
     }
-    last.tricks = tricks;
 
     // abilities, then toys, along the second row
     let x = 26;
@@ -308,6 +430,7 @@
       toyIcon(c, toy, tx, 68, 0.85, t);
       tx += 27;
     }
+    c.restore();
   }
 
   // ──── Happy suns (the kitten's feelings) ────
@@ -453,7 +576,11 @@
 
     // stage
     const gy = cy + 92;
-    c.fillStyle = '#cfe8b8'; G.rrect(cx - 190, gy, 380, 12, 6, c); c.fill();
+    c.fillStyle = '#cfe8b8';
+    if (ability === 'glow') {
+      G.rrect(cx - 190, gy, 100, 12, 6, c); c.fill();
+      G.rrect(cx + 120, gy, 70, 12, 6, c); c.fill();
+    } else { G.rrect(cx - 190, gy, 380, 12, 6, c); c.fill(); }
     const loop = 150, p = (t % loop) / loop;
     let kx = cx - 120, ky = gy, pose = { mode: 'stand', t }, press = 0, face = 1, btn = 'jump', helmet = false;
 
@@ -473,13 +600,24 @@
       else { kx = wx - 12; ky = gy - Math.min(1, (p - 0.25) / 0.6) * 130; pose = { mode: 'climb', phase: t * 0.3, t }; }
       press = -1; // hold → toward wall
     } else if (ability === 'glow') {
+      // Walk towards closed flowers: they unfold into a bridge underfoot.
       kx = cx - 140 + p * 280;
       pose = { mode: 'run', phase: t * 0.3, t };
+      press = -1;
       G.drawGlow(kx, ky - 12, 90, '#fff3b0', 0.8, c);
-      for (let i = 0; i < 3; i++) {
-        const px = cx - 90 + i * 90, near = Math.max(0, 1 - Math.abs(px - kx) / 110);
-        c.fillStyle = `rgba(255,220,150,${0.25 + near * 0.75})`;
-        c.beginPath(); c.ellipse(px, gy - 50, 18 * (0.5 + near * 0.6), 7, 0, 0, TAU); c.fill();
+      c.fillStyle = '#e8b057'; G.rrect(cx - 90, gy + 6, 210, 16, 5, c); c.fill();
+      for (let i = 0; i < 5; i++) {
+        const px = cx - 70 + i * 42, open = BB.clamp((kx - px + 80) / 65, 0, 1);
+        if (open > 0) {
+          G.drawGlow(px, gy, 28, '#fff3b0', open * 0.55, c);
+          c.fillStyle = '#ffe9a8'; c.strokeStyle = '#c78c42'; c.lineWidth = 1.5;
+          G.rrect(px - 21 * open, gy - 3, 42 * open, 7, 3, c); c.fill(); c.stroke();
+        }
+        for (const angle of [-1, 0, 1]) {
+          c.save(); c.translate(px, gy - 3); c.rotate(angle * open * 0.9);
+          c.fillStyle = angle ? '#ffc9e3' : '#fff1b8';
+          c.beginPath(); c.ellipse(0, -7, 3 + open * 2, 8, 0, 0, TAU); c.fill(); c.restore();
+        }
       }
     } else if (ability === 'float') {
       // jump, then HOLD jump to drift down slowly
@@ -545,16 +683,15 @@
       else { kx = cx + 130 + (p - 0.6) / 0.4 * 40; pose = { mode: 'run', phase: t * 0.3, t }; }
       press = -1;
     } else if (ability === 'bubbleBounce') {
-      // jump, then press BUBBLE in mid-air to bounce off a bubble
+      // Three Jump taps: jump, double jump, then bounce off a bubble.
       kx = cx - 130 + p * 260;
-      let h;
-      if (p < 0.4) h = Math.sin(p / 0.4 * Math.PI * 0.8) * 70;
-      else h = 70 * Math.sin(0.8 * Math.PI) + Math.sin((p - 0.4) / 0.6 * Math.PI) * 75 - (p - 0.4) / 0.6 * 41;
+      const h = p < 0.3 ? Math.sin(p / 0.3 * Math.PI / 2) * 45
+        : p < 0.55 ? 45 + Math.sin((p - 0.3) / 0.25 * Math.PI / 2) * 35
+        : 80 * Math.cos((p - 0.55) / 0.45 * Math.PI / 2) + Math.sin((p - 0.55) / 0.45 * Math.PI) * 25;
       ky = gy - Math.max(0, h);
-      pose = { mode: h > 1 ? 'air' : 'stand', vy: (p > 0.2 && p < 0.4) || p > 0.7 ? 3 : -3, t };
-      if (p > 0.36 && p < 0.5) G.bubble(cx - 130 + 0.4 * 260, gy - 70 * Math.sin(0.8 * Math.PI) + 20, 18 * (1 - (p - 0.36) / 0.14 * 0.5), '#9fe8ff', 1, c);
-      btn = p > 0.3 && p < 0.6 ? 'bubble' : 'jump';
-      press = (p < 0.06) || (p > 0.36 && p < 0.44) ? 1 : 0;
+      pose = { mode: h > 1 ? 'air' : 'stand', vy: p > 0.7 ? 3 : -3, t };
+      if (p > 0.51 && p < 0.65) G.bubble(cx - 130 + 0.55 * 260, gy - 80 + 18, 18 * (1 - (p - 0.51) / 0.14 * 0.5), '#9fe8ff', 1, c);
+      press = p < 0.06 || (p > 0.28 && p < 0.34) || (p > 0.53 && p < 0.59) ? 1 : 0;
     } else if (ability === 'wings') {
       // tap jump again and again to flap higher and higher
       kx = cx - 60 + Math.sin(p * TAU) * 40;
@@ -585,5 +722,5 @@
     c.restore();
   }
 
-  BB.HUD = { drawHUD, drawZoneCard, drawAbilityCard, drawBossCard, buttonIcon, abilityIcon, toyIcon, zoneIcon };
+  BB.HUD = { updateHUD, resetHUD, drawHUD, drawZoneCard, drawAbilityCard, drawBossCard, buttonIcon, abilityIcon, toyIcon, zoneIcon };
 })(window.BB);

@@ -26,6 +26,7 @@
   const blank = () => Object.fromEntries(ACTIONS.map(a => [a, false]));
 
   const kbHeld = blank();
+  const kbCodes = new Set();
   const kbLatch = blank();
   const touchHeld = blank();
   const touchLatch = blank();
@@ -40,6 +41,7 @@
     touchEnabled: false,
     pointers: [],             // queued pointer taps in logical coords {x,y}
     pointerPos: null,         // hover position (mouse), logical coords
+    pointerVersion: 0,        // only a new mouse movement changes menu focus
 
     poll() {
       padHeld = readGamepads();
@@ -70,7 +72,10 @@
     takePointers() { const p = this.pointers; this.pointers = []; return p; },
 
     clearAll() {
+      kbCodes.clear();
       for (const a of ACTIONS) { kbHeld[a] = kbLatch[a] = touchHeld[a] = touchLatch[a] = false; }
+      fingers.clear();
+      recomputeTouch();
     },
   };
 
@@ -82,6 +87,7 @@
       if (Input.device === 'touch') document.body.classList.remove('touch');
       Input.device = 'keyboard';
       if (e.repeat) return;
+      kbCodes.add(e.code);
       for (const a of acts) { kbHeld[a] = true; kbLatch[a] = true; }
     } else if (!e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
       Input._anyKey = true; // wakes the title screen for mashing toddlers
@@ -89,7 +95,8 @@
   });
   window.addEventListener('keyup', e => {
     const acts = KEYMAP[e.code];
-    if (acts) for (const a of acts) kbHeld[a] = false;
+    kbCodes.delete(e.code);
+    if (acts) for (const a of acts) kbHeld[a] = [...kbCodes].some(code => KEYMAP[code].includes(a));
   });
   window.addEventListener('blur', () => Input.clearAll());
 
@@ -131,9 +138,18 @@
     });
   }
   function actionAt(x, y) {
-    const el = document.elementFromPoint(x, y);
-    const btn = el && el.closest ? el.closest('.tbtn') : null;
-    return btn ? btn.dataset.act : null;
+    const pad = document.getElementById('touch');
+    const slop = parseFloat(getComputedStyle(pad).getPropertyValue('--tap-slop')) || 0;
+    let closest = null, distance = Infinity;
+    for (const btn of pad.querySelectorAll('.tbtn')) {
+      if (!btn.getClientRects().length) continue;
+      const r = btn.getBoundingClientRect();
+      if (x < r.left - slop || x > r.right + slop || y < r.top - slop || y > r.bottom + slop) continue;
+      // Split shared margins halfway between neighbours, regardless of DOM order.
+      const d = (x - (r.left + r.width / 2)) ** 2 + (y - (r.top + r.height / 2)) ** 2;
+      if (d < distance) { closest = btn; distance = d; }
+    }
+    return closest ? closest.dataset.act : null;
   }
 
   Input.enableTouch = function () {

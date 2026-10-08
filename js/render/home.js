@@ -189,12 +189,16 @@
     });
     // glowing paw prints from the bed to the front door, until the first trip out
     if (!save.leftHome && !play.intro) {
-      for (let i = 0; i < 6; i++) {
+      const exitCol = room.def.doors[0][1];
+      const dir = exitCol > 8 ? 1 : -1;
+      const steps = Math.ceil(Math.abs(exitCol - 8) / 2.5);
+      for (let i = 0; i < steps; i++) {
+        const col = 8 + dir * (i + 1) * 2.5;
         const k = ((t * 0.03) - i * 0.15) % 1;
         const a = k > 0 ? Math.sin(Math.min(1, k * 1.2) * Math.PI) : 0;
         c.globalAlpha = 0.45 + a * 0.55;
-        G().drawGlow(X(7.6 - i * 0.8), Y(32) - 7 - (i % 2) * 5, 14, '#ffe27a', 0.5 * a, c);
-        BB.Gestures.drawPaw(c, X(7.6 - i * 0.8), Y(32) - 7 - (i % 2) * 5, 0.7, '#ffd84a', '#b8860b');
+        G().drawGlow(X(col), Y(32) - 7 - (i % 2) * 5, 14, '#ffe27a', 0.5 * a, c);
+        BB.Gestures.drawPaw(c, X(col), Y(32) - 7 - (i % 2) * 5, 0.7, '#ffd84a', '#b8860b');
       }
       c.globalAlpha = 1;
     }
@@ -276,27 +280,46 @@
     if (fresh && BB.Links.arrow) BB.Links.arrow(c, x, y - 192, t);
   }
 
-  // the family members who are home, napping on their cushions
-  function drawFamily(c, room, cam, t, play) {
-    if (play.party) return;
-    const save = play.save, fam = familyOrder();
+  // where each family member who is home sits (world pixels)
+  function familySpots(room, play) {
+    const save = play.save, fam = familyOrder(), out = [];
     (room.def.cushions || []).forEach((col, i) => {
       const id = fam[i];
       if (!id || !(save.family || {})[id]) return;
       // the kitten's own Mama waits by the front door
       const mama = id === play.mamaId();
-      if (mama) col = 5.5;
-      const x = (room.x + col) * T + T / 2 - cam.x, y = (room.y + 32) * T - cam.y - 4;
-      if (x < -60 || x > G().W + 60) return;
-      const m = BB.CATS[id] || {};
-      const b = play.pl.body, near = Math.abs(b.x - (x + cam.x)) < 120 && Math.abs(b.y - (y + cam.y)) < 100;
-      const tt = t + i * 37;
-      // (Mama stays awake, watching the door)
-      const pose = near || mama ? { mode: 'sit', happy: near, t: tt } : { mode: 'sleep', t: tt };
-      BB.Kittens.draw(c, id, pose, x, y, m.size || 1.4, x < b.x - cam.x ? 1 : -1);
-      if (near && tt % 60 === 0) BB.Particles.heart(x + cam.x, y + cam.y - 40);
-
+      if (mama) col = room.def.doors[0][1] - 2.5;
+      out.push({ id, i, mama, x: (room.x + col) * T + T / 2, y: (room.y + 32) * T - 4 });
     });
+    return out;
+  }
+
+  function updateFamilyEffects(room, play) {
+    if (play.party) return;
+    const b = play.pl.body;
+    for (const p of familySpots(room, play)) {
+      const near = Math.abs(b.x - p.x) < 120 && Math.abs(b.y - p.y) < 100;
+      if (near && (play.t + p.i * 37) % 60 === 0) BB.Particles.heart(p.x, p.y - 40);
+    }
+  }
+
+  // the family members who are home, napping on their cushions
+  // (bubble one and they jump up with a giggle and say who they are)
+  function drawFamily(c, room, cam, t, play) {
+    if (play.party) return;
+    for (const p of familySpots(room, play)) {
+      const { id, i, mama } = p, x = p.x - cam.x, y = p.y - cam.y;
+      if (x < -60 || x > G().W + 60) continue;
+      const m = BB.CATS[id] || {};
+      const b = play.pl.body, near = Math.abs(b.x - p.x) < 120 && Math.abs(b.y - p.y) < 100;
+      const tt = t + i * 37, poke = (play.familyPokes || {})[id] || 0;
+      // (Mama stays awake, watching the door)
+      const pose = play.celebrationT > 0 || poke > 0 ? { mode: 'stand', happy: true, t: tt, squash: 1 + Math.sin(tt * 0.2) * 0.12, wave: Math.max(0, Math.sin(tt * 0.1)) }
+        : near || mama ? { mode: 'sit', happy: near, t: tt } : { mode: 'sleep', t: tt };
+      const hop = play.celebrationT > 0 ? Math.max(0, Math.sin(tt * 0.18)) * 22
+        : poke > 0 ? Math.abs(Math.sin(poke * 0.16)) * Math.min(1, poke / 40) * 26 : 0;
+      BB.Kittens.draw(c, id, pose, x, y - hop, m.size || 1.4, x < b.x - cam.x ? 1 : -1);
+    }
   }
 
   // the skylight in the roof — a rainbow shines through once you've slid home
@@ -334,5 +357,5 @@
     c.restore();
   }
 
-  BB.Home = { familyOrder, drawBack, drawFamily, drawFront, drawIntro, faceOf, drawToys, drawMirror, toySpot, TOY_SPOTS, MIRROR_COL };
+  BB.Home = { familyOrder, familySpots, updateFamilyEffects, drawBack, drawFamily, drawFront, drawIntro, faceOf, drawToys, drawMirror, toySpot, TOY_SPOTS, MIRROR_COL };
 })(window.BB);

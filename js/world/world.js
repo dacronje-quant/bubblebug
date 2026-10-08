@@ -26,6 +26,8 @@
 //   1–9 fairy rings: each digit appears exactly twice in the world; with
 //      the Badger's gift, stepping into one pops you out at its twin
 //   &  a lost member of the kittens' family (hidden down a side passage)
+//   @  (from a room's `kin:` list, not the map) one of Rainbow's own
+//      rainbow-coloured relatives, lost in the second adventure onwards
 //   Q  a zone's big gloomy boss (the room's `boss:` says who) — cheer
 //      them up and the room's gate opens
 //   puzzles (each opens its room's G gate when solved):
@@ -35,11 +37,12 @@
 //   V  song bell;  O  the singing stone that shows the tune to repeat
 //   cat food (regrows; in Hard it cheers you back up):
 //   e  a fishy treat (+1 happy sun);  W  a full food bowl (every sun)
-//   j  a golden paw bubble: the zone's cat trick (do it with ▼)
+//   j  a smiling-cat bubble: the zone's cat trick (do it with ▼)
+//   a  hidden funny glasses (room.glasses lists their item and location)
 //   links (see js/entities/links.js):
 //   h  a cat flap: stand in it to pop home (and it lights its door there)
 //   u / v  the two ends of the Rainbow Lift (Cloud Castles ⇄ Sky Lagoon)
-//   F  the Rainbow Slide home to the Cat House (the end of the adventure)
+//   F  the Starfall float home to the Cat House (the end of the adventure)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -51,12 +54,34 @@
   // Rooms register themselves from js/world/rooms/*.js
   BB.room = def => { DEFS.push(def); };
 
+  // A room marked `flip: true` is shown mirror-image, so it runs the other
+  // way round in the kingdom: the same platforms and puzzles, just flipped
+  // (signposts turn round with it). Every column in the definition is
+  // mirrored too; `def.src` keeps the room as it was drawn.
+  const TURN = { L: 'R', R: 'L' };
+  function flipDef(d) {
+    const w = d.map[0].length, mx = x => w - 1 - x;
+    const out = Object.assign({}, d, {
+      src: d,
+      map: d.map.map(row => row.split('').reverse().map(ch => TURN[ch] || ch).join('')),
+    });
+    for (const k of ['glasses', 'finds', 'kin']) if (d[k]) out[k] = d[k].map(o => Object.assign({}, o, { x: mx(o.x) }));
+    if (d.arena) {
+      const a = out.arena = Object.assign({}, d.arena);
+      for (const k of ['mud', 'tree', 'crack']) if (a[k] != null) a[k] = mx(a[k]);
+      for (const k of ['holes', 'bamboo']) if (a[k]) a[k] = a[k].map(mx).reverse();
+      if (a.bowl) a.bowl = [mx(a.bowl[1]), mx(a.bowl[0])];
+      if (a.craters) a.craters = a.craters.map(([p, q]) => [mx(q), mx(p)]).reverse();
+    }
+    return out;
+  }
+
   const BUCKET = 16;
   // char-code → one-character string (0 → null: outside the world)
   const CH = [null];
   for (let i = 1; i < 128; i++) CH[i] = String.fromCharCode(i);
 
-  const World = BB.World = {
+  BB.World = {
     rooms: [],
     byId: {},
     buckets: new Map(),
@@ -71,11 +96,12 @@
       this._last = null;
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
 
-      for (const def of DEFS) {
+      for (const raw of DEFS) {
+        const def = raw.flip ? flipDef(raw) : raw;
         const h = def.map.length;
         const w = def.map[0].length;
         const room = {
-          def, id: def.id, zone: def.zone,
+          def, id: def.id, zone: def.zone, order: this.rooms.length,
           x: def.x, y: def.y, w, h,
           px: def.x * T, py: def.y * T, pw: w * T, ph: h * T,
           grid: [], things: [], version: 0,
@@ -96,6 +122,14 @@
           }
           room.grid.push(row);
         }
+        // The post-game maze has its own four-direction movement. Keep
+        // its original collectible keys for old saves and the kingdom map.
+        for (const [x, y] of def.mazeStars || []) room.things.push({ ch: '*', tx: def.x + x, ty: def.y + y });
+        // hidden finds (any wardrobe item; `glasses` is the older name)
+        for (const drop of (def.glasses || []).concat(def.finds || [])) room.things.push({ ch: 'a', item: drop.id, tx: def.x + drop.x, ty: def.y + drop.y });
+        // Rainbow's lost relatives (second adventure onwards): `kin` lists
+        // who waits where, so the ASCII maps stay the same for every run.
+        for (const k of def.kin || []) room.things.push({ ch: '@', kin: k.id, tx: def.x + k.x, ty: def.y + k.y });
         if (this.byId[room.id]) throw new Error(`Duplicate room id ${room.id}`);
         this.rooms.push(room);
         this.byId[room.id] = room;
@@ -111,7 +145,9 @@
         }
       }
       this.bounds = { x0, y0, x1, y1 };
+      this.hatches = this.rooms.filter(r => r.def.hatch);
       this._checkOverlaps();
+      this._cameraGroups();
       // Flat char-code grid over the whole world: O(1) tile lookups for
       // physics (0 = outside every room).
       this.gw = x1 - x0; this.gh = y1 - y0;
@@ -153,6 +189,35 @@
       }
     },
 
+    // Camera groups: rooms that share one continuous camera, so it scrolls
+    // straight across their seams instead of gliding. Home and its outdoor
+    // rooms are grouped by hand (`cameraGroup`). A zone's ordinary rooms
+    // that sit side by side at the same height group themselves into a
+    // strip. Boss arenas (one screen wide, so the whole fight is in view)
+    // and the link trails between zones keep their own framing.
+    _cameraGroups() {
+      const groups = new Map();
+      // (a hidden link, so rooms stay plain data for saves, snapshots and tools)
+      const link = (r, g) => Object.defineProperty(r, 'camGroup', { value: g, writable: true, configurable: true, enumerable: false });
+      const join = (id, r, strip) => {
+        let g = groups.get(id);
+        if (!g) groups.set(id, g = { id, strip, rooms: [] });
+        g.rooms.push(r); link(r, g);
+      };
+      for (const r of this.rooms) { link(r, null); if (r.def.cameraGroup) join(r.def.cameraGroup, r, false); }
+      const rs = this.rooms.filter(r => !r.def.cameraGroup && !r.def.arena && !r.def.link).sort((a, b) => a.y - b.y || a.x - b.x);
+      for (let i = 1; i < rs.length; i++) {
+        const a = rs[i - 1], b = rs[i];
+        if (a.zone !== b.zone || a.y !== b.y || a.h !== b.h || a.x + a.w !== b.x) continue;
+        if (!a.camGroup) join('strip:' + a.id, a, true);
+        join(a.camGroup.id, b, true);
+      }
+      for (const g of groups.values()) {
+        g.px = Math.min(...g.rooms.map(r => r.px)); g.py = Math.min(...g.rooms.map(r => r.py));
+        g.px1 = Math.max(...g.rooms.map(r => r.px + r.pw)); g.py1 = Math.max(...g.rooms.map(r => r.py + r.ph));
+      }
+    },
+
     roomAtTile(tx, ty) {
       const r0 = this._last;
       if (r0 && tx >= r0.x && ty >= r0.y && tx < r0.x + r0.w && ty < r0.y + r0.h) return r0;
@@ -183,6 +248,39 @@
       r.grid[ty - r.y][tx - r.x] = ch;
       this.flat[(ty - this.bounds.y0) * this.gw + (tx - this.bounds.x0)] = ch.charCodeAt(0);
       if (!quiet) r.version++;
+    },
+
+    // Permanent shortcuts change the live collision grid and terrain cache.
+    openHatch(room) {
+      const h = room.def.hatch;
+      if (!h) return;
+      for (let col = h.left; col <= h.right; col++) {
+        if (room.grid[h.row][col] === '-') this.setTile(room.x + col, room.y + h.row, '.');
+      }
+    },
+
+    restoreShortcuts(save) {
+      for (const room of this.hatches) {
+        const h = room.def.hatch;
+        if (h && save.shortcuts && save.shortcuts[h.id]) this.openHatch(room);
+      }
+    },
+
+    // Feet must clear the hatch on a real ascent. Bumping its underside,
+    // falling from the garden, and jumping along the garden path do not unlock it.
+    climbThroughHatch(save, body, previousFeet) {
+      if (body.vy >= 0) return false;
+      for (const room of this.hatches) {
+        const h = room.def.hatch;
+        if (!h || (save.shortcuts && save.shortcuts[h.id])) continue;
+        const y = (room.y + h.row) * T;
+        if (previousFeet <= y || body.y + body.h > y) continue;
+        if (body.x < (room.x + h.approachLeft) * T || body.x + body.w > (room.x + h.approachRight + 1) * T) continue;
+        (save.shortcuts = save.shortcuts || {})[h.id] = 1;
+        this.openHatch(room);
+        return true;
+      }
+      return false;
     },
 
     // Opens a room's bud gates (G → g).

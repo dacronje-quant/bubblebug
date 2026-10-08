@@ -5,16 +5,29 @@
 //  whose sparkles are all found, and your kitten's face where you are.
 //  It stays zoomed in; browse it with ◀ ▶ (▲ ▼) held down, by dragging, or
 //  with its arrow buttons, and close it with ✕ (or jump / bubble / Esc / M).
+//  It is the game's one map: the map button (or M / Tab / Select) during
+//  play opens the very same map, and closing it then goes straight back
+//  to playing.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
   const G = () => BB.G;
-  const TAU = Math.PI * 2;
   const BUTTONS = ['resume', 'sound', 'map', 'home'];
 
   BB.Pause = {
-    t: 0, focus: 0, map: false,
-    enter() { this.t = 0; this.focus = 0; this.map = false; BB.Music.setMood({ paused: true }); },
+    t: 0, focus: 0, map: false, fromPlay: false,
+    enter() { this.t = 0; this.focus = 0; this.map = false; this.fromPlay = false; BB.Music.setMood({ paused: true }); },
+    // the map straight from play (map button, M / Tab / Select)
+    openMap() {
+      BB.Main.go('pause');
+      this.fromPlay = true; this.focus = 2;
+      this.map = true; this.t = 0; this.drag = null; this.holdT = 0; BB.MapView.openFull();
+      BB.Audio.sfx.select();
+    },
+    closeMap() {
+      this.map = false; this.t = 0; this.drag = null; BB.Audio.sfx.select();
+      if (this.fromPlay) { this.leave(); BB.Main.go('play-resume'); }
+    },
     leave() { BB.Music.setMood({ energy: 0.3 }); },
 
     pos(i) { return { x: G().W / 2 + (i - 1.5) * 150, y: G().H / 2 + 20 }; },
@@ -35,6 +48,7 @@
       const taps = I.takePointers();
       if (this.map) return this.updateMap(I, taps);
       if (I.pressed.pause || I.pressed.back) { this.leave(); BB.Main.go('play-resume'); return; }
+      if (I.pressed.map) { this.focus = 2; this.activate(2); return; }
       if (I.pressed.left) { this.focus = (this.focus + 3) % 4; BB.Audio.sfx.select(); }
       if (I.pressed.right) { this.focus = (this.focus + 1) % 4; BB.Audio.sfx.select(); }
       if (I.pressed.jump || I.pressed.confirm || I.pressed.bubble) this.activate(this.focus);
@@ -74,16 +88,17 @@
         }
         c.restore();
       }
+      G().text('AI-generated story voices', G().W / 2, G().H - 24, 12, '#e2d6ec', null, 'center', c);
     },
 
     // browsing the kingdom map
     updateMap(I, taps) {
       const M = BB.MapView;
-      const close = () => { this.map = false; this.t = 0; this.drag = null; BB.Audio.sfx.select(); };
+      const close = () => this.closeMap();
       M.tick();
       // (▲ is also "jump" on the keyboard, so jump alone doesn't close the map)
       if (this.t > 8 && (I.pressed.confirm || I.pressed.bubble || I.pressed.back || I.pressed.pause || I.pressed.map)) return close();
-      const sp = 10 / M.ZOOM;
+      const sp = 10 / M.zoom();
       if (I.held.left) M.pan(-sp, 0);
       if (I.held.right) M.pan(sp, 0);
       if (I.held.up) M.pan(0, -sp);
@@ -96,7 +111,7 @@
         if (++this.holdT > 14) M.pan((on === 'left' ? -1 : 1) * sp * 1.5, 0);
       } else this.holdT = 0;
       if (pd && !on) {
-        if (this.drag) M.pan(-(pd.x - this.drag.x) / M.ZOOM, -(pd.y - this.drag.y) / M.ZOOM);
+        if (this.drag) M.pan(-(pd.x - this.drag.x) / M.zoom(), -(pd.y - this.drag.y) / M.zoom());
         this.drag = { x: pd.x, y: pd.y };
       } else this.drag = null;
     },

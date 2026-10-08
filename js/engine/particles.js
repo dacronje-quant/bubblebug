@@ -25,8 +25,8 @@
     return p;
   }
 
-  const P = BB.Particles = {
-    list,
+  BB.Particles = {
+    list, ambient, rain,
     // burst of a kind around (x, y)
     burst(kind, x, y, n = 10, opt = {}) {
       for (let i = 0; i < n; i++) {
@@ -56,6 +56,11 @@
       for (let i = 0; i < 12; i++) spawn({ kind: 'dot', x, y, vx: (Math.random() - 0.5) * 4, vy: -2 - Math.random() * 3, g: 0.25, life: 30, size: 2 + Math.random() * 2, color });
       spawn({ kind: 'ring', x, y, life: 24, size: 18, color });
     },
+    // a little guiding star that flies from (x, y) toward (tx, ty)
+    guide(x, y, tx, ty, color) {
+      const d = Math.hypot(tx - x, ty - y) || 1, sp = 2.6;
+      spawn({ kind: 'star', x, y, vx: (tx - x) / d * sp, vy: (ty - y) / d * sp, life: Math.max(12, Math.min(60, d / sp)), size: 3.4, color, drag: 1, vr: 0.12 });
+    },
     trail(kind, x, y, color) { spawn({ kind, x, y, vx: (Math.random() - 0.5) * 0.4, vy: -0.3 - Math.random() * 0.3, life: 26, size: 2.5 + Math.random() * 1.5, color, drag: 0.97 }); },
 
     update() {
@@ -76,6 +81,12 @@
         const k = p.life / p.max;
         c.globalAlpha = Math.min(1, k * 1.6);
         switch (p.kind) {
+          case 'paw':
+            BB.Gestures.drawPaw(c, x, y, p.size * 0.12, p.color, p.color);
+            break;
+          case 'flower':
+            BB.Cosmetics.flower(c, x, y, p.size, p.color);
+            break;
           case 'spark':
             c.fillStyle = p.color; G.twinkle(x, y, p.size * (0.5 + k), c); c.fill();
             break;
@@ -112,19 +123,22 @@
     },
 
     clear() { list.length = 0; },
+    clearAmbient() { ambient.length = 0; rain.length = 0; },
 
     // ──── Ambient drift (screen space) ────
     ambientUpdate(zoneKey, rainy, cam, lastCam) {
       const G = BB.G;
       const dx = cam.x - lastCam.x, dy = cam.y - lastCam.y;
-      const want = { pollen: 28, spores: 36, glints: 30, honey: 26, rain: 16, wisps: 20, bubbles: 22, sand: 30, snow: 60, leaves: 22, steam: 16, stars: 40, motes: 24 }[BB.ZONES.find(z => z.key === zoneKey).ambient] || 20;
       const kind = BB.ZONES.find(z => z.key === zoneKey).ambient;
+      const want = { pollen: 28, spores: 36, glints: 30, honey: 26, rain: 16, wisps: 20, bubbles: 22, sand: 30, snow: 60, leaves: 22, steam: 16, stars: 40, motes: 24 }[kind] || 20;
+      // A new biome gets its own drift immediately; initialization and motion
+      // happen here on game ticks, never from ambientDraw.
+      for (let i = ambient.length - 1; i >= 0; i--) if (ambient[i].kind !== kind) ambient.splice(i, 1);
       while (ambient.length < want) {
         ambient.push({ kind, x: Math.random() * G.W, y: Math.random() * G.H, ph: Math.random() * TAU, s: 0.5 + Math.random(), depth: 0.3 + Math.random() * 0.9 });
       }
       for (let i = ambient.length - 1; i >= 0; i--) {
         const a = ambient[i];
-        if (a.kind !== kind) { ambient.splice(i, 1); continue; }
         a.ph += 0.02;
         a.x -= dx * a.depth; a.y -= dy * a.depth;
         if (kind === 'pollen') { a.x += Math.sin(a.ph) * 0.3 + 0.15; a.y += Math.cos(a.ph * 0.7) * 0.2 - 0.05; }

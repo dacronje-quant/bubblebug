@@ -23,7 +23,11 @@
   const solidCh = ch => ch === '#' || ch === 'H' || ch === 'I' || ch === null;
   const isSolid = (tx, ty) => solidCh(W().tile(tx, ty));
 
-  const cache = new Map(); // room.id → { canvas, shy, version, scale }
+  // Terrain is cached in chunks of CHUNK×CHUNK tiles (built only when on
+  // screen, kept within a small budget): one huge canvas per room was slow
+  // to draw and heavy on a tablet's graphics memory.
+  const CHUNK = 8, BUDGET = 90;
+  const cache = new Map(); // "room:cx,cy" → { canvas, shy, ext, version, scale } (most recent last)
 
   // ──── Rounded tile body ────
   function tileShape(c, x, y, m) {
@@ -49,10 +53,16 @@
     return { n: isSolid(tx, ty - 1), s: isSolid(tx, ty + 1), e: isSolid(tx + 1, ty), w: isSolid(tx - 1, ty) };
   }
 
-  // depth below the nearest exposed top (for darkening deep ground)
+  // distance to the nearest open air in any direction (for darkening deep
+  // ground). Walls and ceilings stay as light as a floor's surface instead
+  // of darkening like buried soil, so they stand out against the sky.
   function depthAt(tx, ty) {
-    let d = 0;
-    while (d < 6 && isSolid(tx, ty - d - 1) && W().tile(tx, ty - d - 1) !== null) d++;
+    let d = 6;
+    for (const [dx, dy] of [[0, -1], [-1, 0], [1, 0], [0, 1]]) {
+      let n = 0;
+      while (n < d && isSolid(tx + dx * (n + 1), ty + dy * (n + 1))) n++;
+      d = n;
+    }
     return d;
   }
 
@@ -477,6 +487,22 @@
     c.fillStyle = '#ffd34d'; G.circle(x, y - 7 * s, 1.4 * s, c); c.fill();
   }
 
+  // The same little flower as a ready-made picture, for scenery that
+  // draws dozens of them every frame (one image copy instead of 7 shapes).
+  const flowerSprites = new Map();
+  function flowerStamp(c, x, y, col, s) {
+    const key = col + s + '@' + G.scale;
+    let sp = flowerSprites.get(key);
+    if (!sp) {
+      const r = 4.3 * s + 1.5, h = 11.3 * s + 3;
+      sp = G.offscreen(r * 2, h);
+      sp.ox = r; sp.oy = h - 1.5;
+      flower(sp.ctx, sp.ox, sp.oy, col, s);
+      flowerSprites.set(key, sp);
+    }
+    c.drawImage(sp.canvas, x - sp.ox, y - sp.oy, sp.w, sp.h);
+  }
+
   function crystalCluster(c, x, y, seed, s) {
     const cols = ['#bfe6ff', '#d7c2ff', '#9ff0ff'];
     for (let i = 0; i < 3; i++) {
@@ -596,53 +622,108 @@
     }
   }
 
-  // ──── Build a room's static canvases ────
-  function build(room) {
-    const z = room.zone;
-    const off = G.offscreen(room.pw + 64, room.ph + 64);
-    const shy = G.offscreen(room.pw + 64, room.ph + 64);
+  // An exposed solid face needs a readable edge even where its biome's body
+  // colour is close to the backdrop: a dark outline (reads on bright skies)
+  // with a bright rim inside it (reads on dark ones). Keep this inside the
+  // collision tile; grass, roots and other overhanging decoration remain
+  // outside it.
+  const edgeDark = Z => BB.mix(Z.groundDark, '#120c24', 0.55);
+  const edgeLight = Z => BB.mix(Z.groundLight, '#ffffff', 0.55);
+  function paintSolidEdges(c, z, x, y, m) {
+    const Z = BB.ZONES[z];
+    c.save(); tileShape(c, x, y, m); c.clip();
+    c.lineWidth = 3; c.lineCap = 'butt';
+    c.strokeStyle = edgeDark(Z);
+    c.beginPath();
+    if (!m.w) { c.moveTo(x + 1.5, y); c.lineTo(x + 1.5, y + T); }
+    if (!m.e) { c.moveTo(x + T - 1.5, y); c.lineTo(x + T - 1.5, y + T); }
+    if (!m.s) { c.moveTo(x, y + T - 1.5); c.lineTo(x + T, y + T - 1.5); }
+    c.stroke();
+    c.lineWidth = 3; c.strokeStyle = edgeLight(Z);
+    c.beginPath();
+    if (!m.w) { c.moveTo(x + 4.5, y + (m.n ? 0 : 3)); c.lineTo(x + 4.5, y + T - (m.s ? 0 : 3)); }
+    if (!m.e) { c.moveTo(x + T - 4.5, y + (m.n ? 0 : 3)); c.lineTo(x + T - 4.5, y + T - (m.s ? 0 : 3)); }
+    if (!m.s) { c.moveTo(x + (m.w ? 0 : 3), y + T - 4.5); c.lineTo(x + T - (m.e ? 0 : 3), y + T - 4.5); }
+    c.stroke();
+    if (!m.n) {
+      c.strokeStyle = Z.topDark; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(x + 2, y + 1); c.lineTo(x + T - 2, y + 1); c.stroke();
+    }
+    c.restore();
+  }
+
+  // ──── Build one chunk of a room's terrain ────
+  // The chunk's own tiles plus a 1-tile ring of neighbours (nothing reaches further) are painted in the
+  // usual pass order and clipped to the chunk, so chunks join seamlessly; at
+  // the room's outer edges the chunk keeps a 32px margin for overhangs.
+  function buildChunk(room, cx, cy) {
+    const z = room.zone, M = 32;
+    const c0 = cx * CHUNK, r0 = cy * CHUNK, c1 = Math.min(room.w, c0 + CHUNK), r1 = Math.min(room.h, r0 + CHUNK);
+    const ext = {
+      x: c0 * T - (c0 === 0 ? M : 0), y: r0 * T - (r0 === 0 ? M : 0),
+      x1: c1 * T + (c1 === room.w ? M : 0), y1: r1 * T + (r1 === room.h ? T * 6 : 0),
+    };
+    const tiles = [], ledges = [];
     let hasShy = false;
-    // paint with a 32px margin so tops/overhangs at edges aren't clipped
-    for (const layer of [off, shy]) layer.ctx.translate(32, 32);
-    const tiles = [];
-    for (let r = 0; r < room.h; r++) {
-      for (let col = 0; col < room.w; col++) {
+    for (let r = Math.max(0, r0 - 1); r < Math.min(room.h, r1 + 1); r++) {
+      for (let col = Math.max(0, c0 - 1); col < Math.min(room.w, c1 + 1); col++) {
         const ch = room.grid[r][col];
         if (ch === '#' || ch === 'H' || ch === 'I') tiles.push([ch, room.x + col, room.y + r, col * T, r * T]);
         if (ch === 'H') hasShy = true;
+        if (ch === '-') ledges.push([room.x + col, room.y + r, col * T, r * T]);
       }
     }
+    // Continue boundary soil into the world's already-solid exterior. This
+    // is artwork only: no tiles or collision data change, and real rooms,
+    // water, openings and lower routes are never painted over.
+    if (r1 === room.h) for (let col = c0; col < c1; col++) {
+      const ch = room.grid[room.h - 1][col];
+      if (ch !== '#' && ch !== 'I') continue;
+      for (let r = room.h; r < room.h + 6; r++) {
+        const tx = room.x + col, ty = room.y + r;
+        if (W().tile(tx, ty) !== null) break;
+        tiles.push([ch, tx, ty, col * T, r * T]);
+      }
+    }
+    const out = { canvas: null, shy: null, ext, version: room.version, scale: G.scale };
+    if (!tiles.length && !ledges.length) return out; // open sky: nothing to draw
+    const layer = () => {
+      const o = G.offscreen(ext.x1 - ext.x, ext.y1 - ext.y);
+      o.ctx.translate(-ext.x, -ext.y);
+      o.ctx.beginPath(); o.ctx.rect(ext.x, ext.y, ext.x1 - ext.x, ext.y1 - ext.y); o.ctx.clip();
+      return o;
+    };
+    const off = layer(), shy = hasShy ? layer() : null;
     const cloudy = BB.ZONES[z].key === 'clouds';
-    for (const pass of ['outline', 'body', 'sides', 'top', 'bottom']) {
+    for (const pass of ['outline', 'body', 'sides', 'top', 'bottom', 'edges']) {
       for (const [ch, tx, ty, x, y] of tiles) {
         const c = ch === 'H' ? shy.ctx : off.ctx;
         const m = maskAt(tx, ty);
         if (pass === 'outline') { if (cloudy) cloudOutline(c, tx, ty, x, y, m); }
         else if (pass === 'body') { if (ch === 'I') paintIce(c, z, tx, ty, x, y, m); else paintBody(c, z, tx, ty, x, y, m); }
         else if (ch === 'I') continue;
-        else if (pass === 'sides' && BB.ZONES[z].key === 'clouds') {
+        else if (pass === 'sides' && cloudy) {
           if (!m.w) cloudSide(c, z, tx, ty, x, y, -1);
           if (!m.e) cloudSide(c, z, tx, ty, x, y, 1);
         } else if (pass === 'top' && !m.n) paintTop(c, z, tx, ty, x, y, m);
         else if (pass === 'bottom' && !m.s) paintBottom(c, z, tx, ty, x, y);
+        else if (pass === 'edges') paintSolidEdges(c, z, x, y, m);
       }
     }
-    for (let r = 0; r < room.h; r++) {
-      for (let col = 0; col < room.w; col++) {
-        if (room.grid[r][col] === '-') paintLedge(off.ctx, z, room.x + col, room.y + r, col * T, r * T);
-      }
-    }
-    return { canvas: off.canvas, shy: hasShy ? shy.canvas : null, version: room.version, scale: G.scale };
+    for (const [tx, ty, x, y] of ledges) paintLedge(off.ctx, z, tx, ty, x, y);
+    out.canvas = off.canvas; out.shy = shy && shy.canvas;
+    return out;
   }
 
-  function get(room) {
-    let e = cache.get(room.id);
-    if (!e || e.version !== room.version || e.scale !== G.scale) {
-      e = build(room);
-      cache.set(room.id, e);
-      // keep memory modest: only the most recent rooms stay cached
-      if (cache.size > 6) cache.delete(cache.keys().next().value);
-    }
+  function chunk(room, cx, cy) {
+    const key = room.id + ':' + cx + ',' + cy;
+    let e = cache.get(key);
+    if (e && (e.version !== room.version || e.scale !== G.scale)) e = null;
+    if (e) cache.delete(key); // (re-insert below: most recently used last)
+    else e = buildChunk(room, cx, cy);
+    cache.set(key, e);
+    // keep memory modest: drop the least recently used chunks
+    while (cache.size > BUDGET) cache.delete(cache.keys().next().value);
     return e;
   }
 
@@ -650,19 +731,94 @@
   // mushrooms squash when bounced on
   const squash = new Map(); // "tx,ty" (left tile of run) → ticks
 
+  // Build the chunks just beyond the screen ahead of time, one per call,
+  // so scrolling never waits on one (call once a frame, with time to spare)
+  function warm(rooms, cam) {
+    const pad = CHUNK * T;
+    let best = null, bestD = Infinity;
+    for (const room of rooms) {
+      const cxa = Math.max(0, Math.floor((cam.x - pad - room.px) / pad)), cxb = Math.min(Math.ceil(room.w / CHUNK) - 1, Math.floor((cam.x + G.W + pad - room.px) / pad));
+      const cya = Math.max(0, Math.floor((cam.y - pad - room.py) / pad)), cyb = Math.min(Math.ceil(room.h / CHUNK) - 1, Math.floor((cam.y + G.H + pad - room.py) / pad));
+      for (let cy = cya; cy <= cyb; cy++) for (let cx = cxa; cx <= cxb; cx++) {
+        const e = cache.get(room.id + ':' + cx + ',' + cy);
+        if (e && e.version === room.version && e.scale === G.scale) continue;
+        const d = Math.hypot(room.px + (cx + 0.5) * pad - (cam.x + G.W / 2), room.py + (cy + 0.5) * pad - (cam.y + G.H / 2));
+        if (d < bestD) { bestD = d; best = [room, cx, cy]; }
+      }
+    }
+    if (best) chunk(...best);
+  }
+
   // Draws a room's terrain; with `shyOnly`, just its shy walls at `shyAlpha`
+  function drawBounds(c, room, cam) {
+    // Outside-world tiles block sides and heads, but never support feet.
+    // Show those actual barriers as zone-coloured masonry/wood/cloud rims.
+    // The narrow inner lip remains visible even when the camera stops exactly
+    // at an edge. Open connections and out-of-world drops receive no false wall.
+    //
+    // A neighbouring room's wall, ceiling or floor right at the seam is
+    // painted by that room, but it sits just off screen whenever the camera
+    // stops at this room's edge, so the kitten bumps into (or lands on)
+    // something it can't see. It gets the same lip, which slims away as the
+    // real block scrolls into view.
+    const P = BB.Physics, lip = 8, outer = T;
+    const free = (col, row) => !P.solidSide(room.grid[row][col]);
+    const face = (side, col, row) => {
+      const tx = room.x + col, ty = room.y + row;
+      const ax = tx + (side === 'left' ? -1 : side === 'right' ? 1 : 0), ay = ty + (side === 'top' ? -1 : side === 'bottom' ? 1 : 0);
+      const ch = W().tile(ax, ay), out = ch === null;
+      if (out ? side === 'bottom' : !P.solidSide(ch)) return;
+      const x = tx * T - cam.x, y = ty * T - cam.y;
+      if (x + T < -outer || y + T < -outer || x > G.W + outer || y > G.H + outer) return;
+      // how much of the neighbour's own block is already on screen
+      const seen = out ? 0 : BB.clamp(side === 'left' ? x : side === 'right' ? G.W - x - T : side === 'top' ? y : G.H - y - T, 0, lip);
+      const depth = lip - seen;
+      if (depth <= 0.5) return;
+      const Z = BB.ZONES[out ? room.zone : W().roomAtTile(ax, ay).zone];
+      // a band a..b px from the seam, into the room (negative: beyond it)
+      const band = (a, b, col) => {
+        c.fillStyle = col;
+        if (side === 'left') c.fillRect(x + a, y, b - a, T);
+        else if (side === 'right') c.fillRect(x + T - b, y, b - a, T);
+        else if (side === 'top') c.fillRect(x, y + a, T, b - a);
+        else c.fillRect(x, y + T - b, T, b - a);
+      };
+      if (out) band(-outer, 0, Z.groundDark);
+      const ice = ch === 'I' && (ICE[Z.key] || ICE.frost);
+      band(0, depth, ice ? ice[0] : ch === 'G' ? '#60994b' : Z.ground);
+      band(Math.max(0, depth - 6), Math.max(0, depth - 3), ice ? '#ffffff' : edgeLight(Z));
+      band(Math.max(0, depth - 3), depth, ice ? ice[2] : edgeDark(Z));
+    };
+    const col0 = Math.max(0, Math.floor((cam.x - room.px - T) / T));
+    const col1 = Math.min(room.w - 1, Math.floor((cam.x + G.W - room.px + T) / T));
+    for (let col = col0; col <= col1; col++) {
+      if (free(col, 0)) face('top', col, 0);
+      if (free(col, room.h - 1)) face('bottom', col, room.h - 1);
+    }
+    const row0 = Math.max(0, Math.floor((cam.y - room.py - T) / T));
+    const row1 = Math.min(room.h - 1, Math.floor((cam.y + G.H - room.py + T) / T));
+    for (let row = row0; row <= row1; row++) {
+      if (free(0, row)) face('left', 0, row);
+      if (free(room.w - 1, row)) face('right', room.w - 1, row);
+    }
+  }
+
   function drawStatic(c, room, cam, shyAlpha, shyOnly) {
-    const e = get(room);
-    const img = shyOnly ? e.shy : e.canvas;
-    if (!img || (shyOnly && shyAlpha <= 0.01)) return;
-    // only blit the part of the (large) room canvas that is on screen
-    const ox = room.px - 32, oy = room.py - 32;
-    const x0 = Math.max(ox, cam.x), y0 = Math.max(oy, cam.y);
-    const x1 = Math.min(ox + room.pw + 64, cam.x + G.W), y1 = Math.min(oy + room.ph + 64, cam.y + G.H);
-    if (x1 <= x0 || y1 <= y0) return;
-    const k = e.scale;
+    if (shyOnly && shyAlpha <= 0.01) return;
+    // only the chunks (and the parts of them) that are on screen
+    const cxa = Math.max(0, Math.floor((cam.x - room.px - 32) / (CHUNK * T))), cxb = Math.min(Math.ceil(room.w / CHUNK) - 1, Math.floor((cam.x + G.W - room.px + 32) / (CHUNK * T)));
+    const cya = Math.max(0, Math.floor((cam.y - room.py - 32) / (CHUNK * T))), cyb = Math.min(Math.ceil(room.h / CHUNK) - 1, Math.floor((cam.y + G.H - room.py + 32) / (CHUNK * T)));
     if (shyOnly) c.globalAlpha = shyAlpha;
-    c.drawImage(img, (x0 - ox) * k, (y0 - oy) * k, (x1 - x0) * k, (y1 - y0) * k, x0 - cam.x, y0 - cam.y, x1 - x0, y1 - y0);
+    for (let cy = cya; cy <= cyb; cy++) for (let cx = cxa; cx <= cxb; cx++) {
+      const e = chunk(room, cx, cy), img = shyOnly ? e.shy : e.canvas;
+      if (!img) continue;
+      const ox = room.px + e.ext.x, oy = room.py + e.ext.y, ow = e.ext.x1 - e.ext.x, oh = e.ext.y1 - e.ext.y;
+      const x0 = Math.max(ox, cam.x), y0 = Math.max(oy, cam.y);
+      const x1 = Math.min(ox + ow, cam.x + G.W), y1 = Math.min(oy + oh, cam.y + G.H);
+      if (x1 <= x0 || y1 <= y0) continue;
+      const k = e.scale;
+      c.drawImage(img, (x0 - ox) * k, (y0 - oy) * k, (x1 - x0) * k, (y1 - y0) * k, x0 - cam.x, y0 - cam.y, x1 - x0, y1 - y0);
+    }
     c.globalAlpha = 1;
   }
 
@@ -898,7 +1054,9 @@
       c.beginPath(); c.ellipse(cx, cy - 2, 3, 5, 0, 0, TAU); c.fill();
       return;
     }
-    const near = env.px != null ? BB.clamp(1 - Math.hypot(env.px - cx - (0), env.py - (ty * T + 4)) / 260, 0, 1) : 0.5;
+    // Player and tile positions must both be in world coordinates.
+    const near = env.px != null ? BB.clamp(1 - Math.hypot(env.px - (tx * T + T / 2), env.py - (ty * T + 4)) / 260, 0, 1) : 0.5;
+    const unfold = 0.35 + near * 0.65;
     const pulse = 0.5 + near * 0.5 + Math.sin(t * 0.06 + tx) * 0.08;
     G.drawGlow(cx, cy, 30 + near * 16, '#fff3b0', 0.3 + near * 0.35, c);
     // a glowing lily-pad platform you can clearly stand on
@@ -911,9 +1069,9 @@
     for (const px of [x + 9, x + 23]) {
       c.save(); c.translate(px, y + 1);
       for (const a of [-0.5, 0, 0.5]) {
-        c.save(); c.rotate(a * (0.7 + near * 0.3));
+        c.save(); c.rotate(a * (0.3 + unfold * 1.5));
         c.fillStyle = BB.rgba(a ? '#ffc9e3' : '#ffe9a8', 0.95); c.strokeStyle = 'rgba(200,120,90,0.6)'; c.lineWidth = 0.8;
-        c.beginPath(); c.ellipse(0, -5, 2.6, 5.5, 0, 0, TAU); c.fill(); c.stroke();
+        c.beginPath(); c.ellipse(0, -3 - unfold * 3, 1.8 + unfold * 1.4, 3.5 + unfold * 3, 0, 0, TAU); c.fill(); c.stroke();
         c.restore();
       }
       c.restore();
@@ -921,6 +1079,11 @@
   }
 
   function drawGate(c, Z, tx, ty, x, y, t) {
+    // A closed gate fills its blocking footprint. Sparse vines alone made
+    // the space between them look like a passage, despite the solid tile.
+    c.fillStyle = '#60994b'; c.fillRect(x, y, T, T);
+    c.strokeStyle = '#315f39'; c.lineWidth = 2;
+    c.strokeRect(x + 1, y + 1, T - 2, T - 2);
     // a curtain of flowering vines, closed tight
     const sway = Math.sin(t * 0.04 + tx) * 1.5;
     c.strokeStyle = '#3f8f35'; c.lineWidth = 3; c.lineCap = 'round';
@@ -943,6 +1106,26 @@
     const w = n * T, cx = x + w / 2;
     const k = squash.get(tx + ',' + ty) || 0;
     const sq = k > 0 ? 1 - Math.sin((k / 18) * Math.PI) * 0.35 : 1;
+    const room = W().roomAtTile(tx, ty);
+    if (room && room.def.trampoline) {
+      // A padded garden trampoline uses the existing safe bounce physics.
+      const dip = (1 - sq) * 12;
+      c.fillStyle = '#73bbb6'; c.strokeStyle = '#477c88'; c.lineWidth = 2;
+      G.rrect(x, y + 5, w, T - 5, 4, c); c.fill(); c.stroke();
+      c.strokeStyle = '#8273a3'; c.lineWidth = 3; c.lineCap = 'round';
+      for (let i = 0; i < n * 2; i++) {
+        const sx = x + 8 + i * (w - 16) / Math.max(1, n * 2 - 1);
+        c.beginPath(); c.moveTo(sx, y + 5); c.lineTo(sx - 3, y + 11); c.lineTo(sx + 3, y + 17); c.lineTo(sx, y + 25); c.stroke();
+      }
+      c.fillStyle = '#90ddd4'; c.strokeStyle = '#4c9a9a'; c.lineWidth = 2;
+      G.rrect(x - 3, y - 3 + dip, w + 6, 10, 5, c); c.fill(); c.stroke();
+      c.strokeStyle = '#fff7db'; c.lineWidth = 1;
+      for (let i = 1; i < n * 3; i++) { const sx = x + i * w / (n * 3); c.beginPath(); c.moveTo(sx, y + dip); c.lineTo(sx + 5, y + 5 + dip); c.stroke(); }
+      c.fillStyle = '#ffc6dd'; G.ellipse(cx, y + 2 + dip, 11, 3, 0, c); c.fill();
+      c.strokeStyle = '#b88bd1'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(cx, y - 26); c.lineTo(cx, y - 43); c.moveTo(cx - 7, y - 35); c.lineTo(cx, y - 43); c.lineTo(cx + 7, y - 35); c.stroke();
+      return;
+    }
     const palette = {
       gardens: ['#ff5d6c', '#ffffff'], meadow: ['#c46ad8', '#7cf5d4'], caves: ['#6a8cff', '#dff6ff'],
       hive: ['#ffb52e', '#fff3c4'], ruins: ['#ff8c4b', '#fff0d0'], clouds: ['#ff9ec7', '#ffffff'],
@@ -950,7 +1133,9 @@
     }[Z.key] || ['#ff5d6c', '#ffffff'];
     // stem
     c.fillStyle = '#f5ead0'; c.strokeStyle = '#8a6a4a'; c.lineWidth = 1.2;
-    G.rrect(cx - 7, y + 10, 14, T - 10, 4, c); c.fill(); c.stroke();
+    G.rrect(x, y + 10, w, T - 10, 4, c); c.fill(); c.stroke();
+    c.strokeStyle = '#d1bc96'; c.lineWidth = 1;
+    for (let sx = x + 6; sx < x + w; sx += 9) { c.beginPath(); c.moveTo(sx, y + 15); c.lineTo(sx, y + T - 2); c.stroke(); }
     // cap
     c.save();
     c.translate(cx, y + 14);
@@ -978,5 +1163,5 @@
     for (const [k, v] of squash) { if (v <= 1) squash.delete(k); else squash.set(k, v - 1); }
   }
 
-  BB.Tiles = { drawStatic, drawLive, bounce, tick, flower, crystalCluster, clear: () => cache.clear() };
+  BB.Tiles = { warm, drawBounds, drawStatic, drawLive, bounce, tick, flower, flowerStamp, crystalCluster, clear: () => cache.clear() };
 })(window.BB);

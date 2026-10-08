@@ -1,0 +1,17 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const { bootGame } = require('./test-neighbourhood');
+const { createCanvas } = require(path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, '@napi-rs/canvas'));
+const g = bootGame(createCanvas), B = g.BB;
+const out = process.argv[2];
+fs.mkdirSync(out, { recursive: true });
+B.Save.data.mazeSolved = B.Save.data.rainbowUnlocked = true;
+B.RAINBOW_KIN.forEach(id => { B.Save.data.kin[id] = 1; });
+B.Save.write(); B.Main.set('title'); g.tick(25);
+B.Title.choose(1); g.tick(15);
+B.Main.draw();
+fs.writeFileSync(path.join(out, 'reset-choices.png'), B.G.canvas.toBuffer('image/png'));
+B.Title.activateReset(0, B.Title.confirm, () => {}); g.tick(15); B.Main.draw();
+fs.writeFileSync(path.join(out, 'reset-everything-confirm.png'), B.G.canvas.toBuffer('image/png'));
+console.log(out);

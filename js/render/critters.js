@@ -15,29 +15,32 @@
   'use strict';
   const G = BB.G;
   const TAU = Math.PI * 2;
-  const OUT = '#3a2a3a';
+  const OUT = '#493345';
 
   // ──── Shared face ────
   function face(c, x, y, s, mood, st) {
     const t = st.t || 0;
-    const blink = st.blink || 0;
+    const blink = st.blink == null ? Math.max(0, Math.sin((t % 193) / 7 * Math.PI)) * (t % 193 < 7 ? 1 : 0) : st.blink;
     const happy = mood < 0.05;
     const ex = 3.6 * s, er = 2.6 * s;
     for (const side of [-1, 1]) {
       const cx = x + side * ex, cy = y;
-      if (happy && st.joy) {
+      if (happy && st.joy && Math.sin(t * 0.075) > 0.15) {
         c.strokeStyle = OUT; c.lineWidth = 1.2 * s; c.lineCap = 'round';
         c.beginPath(); c.arc(cx, cy + er * 0.3, er * 0.8, Math.PI + 0.3, -0.3); c.stroke();
         continue;
       }
-      c.fillStyle = '#fff'; c.strokeStyle = OUT; c.lineWidth = 0.9 * s;
+      const white = c.createLinearGradient(cx, cy - er, cx, cy + er);
+      white.addColorStop(0, '#ffffff'); white.addColorStop(1, '#eee5f1');
+      c.fillStyle = white; c.strokeStyle = OUT; c.lineWidth = 0.85 * s;
       G.ellipse(cx, cy, er, er * 1.1 * (1 - blink * 0.9), 0, c); c.fill(); c.stroke();
       if (blink < 0.8) {
         const look = (st.lookX || 0) * er * 0.3;
-        c.fillStyle = '#1b1422';
-        G.circle(cx + look, cy + er * 0.2 + mood * er * 0.2, er * 0.55, c); c.fill();
+        c.fillStyle = '#5c4169'; G.circle(cx + look, cy + er * 0.18 + mood * er * 0.2, er * 0.65, c); c.fill();
+        c.fillStyle = '#271b32'; G.circle(cx + look, cy + er * 0.18 + mood * er * 0.2, er * 0.43, c); c.fill();
         c.fillStyle = '#fff';
         G.circle(cx + look + er * 0.25, cy - er * 0.1, er * 0.22, c); c.fill();
+        G.circle(cx + look - er * 0.22, cy + er * 0.4, er * 0.1, c); c.fill();
       }
       // droopy lids for gloomy moods
       if (mood > 0.15) {
@@ -61,9 +64,15 @@
     const curve = (0.5 - mood) * 3.2 * s; // + smile, - frown
     c.strokeStyle = OUT; c.lineWidth = 1.2 * s; c.lineCap = 'round';
     if (happy) {
-      c.fillStyle = '#c0395a';
-      c.beginPath(); c.moveTo(x - 2.6 * s, my - 0.6 * s);
-      c.quadraticCurveTo(x, my + 3.8 * s, x + 2.6 * s, my - 0.6 * s); c.closePath(); c.fill(); c.stroke();
+      if (st.joy) {
+        const laugh = 2.8 + Math.sin(t * 0.12) * 0.8;
+        c.fillStyle = '#8d3d64';
+        c.beginPath(); c.moveTo(x - 2.6 * s, my - 0.6 * s);
+        c.quadraticCurveTo(x, my + laugh * s, x + 2.6 * s, my - 0.6 * s); c.closePath(); c.fill(); c.stroke();
+        c.fillStyle = '#f39bb7'; G.ellipse(x, my + 0.8 * s, 1.1 * s, 0.55 * s, 0, c); c.fill();
+      } else {
+        c.beginPath(); c.moveTo(x - 2.4 * s, my - 0.4 * s); c.quadraticCurveTo(x, my + 2.2 * s, x + 2.4 * s, my - 0.4 * s); c.stroke();
+      }
       c.fillStyle = 'rgba(255,140,170,0.55)';
       G.ellipse(x - 6.2 * s, y + 3 * s, 1.8 * s, 1.1 * s, 0, c); c.fill();
       G.ellipse(x + 6.2 * s, y + 3 * s, 1.8 * s, 1.1 * s, 0, c); c.fill();
@@ -120,13 +129,18 @@
 
   // Desaturate toward grey when gloomy
   const tone = (hex, mood) => BB.mix(hex, '#8d8a9a', mood * 0.45);
+  function coat(c, hex, mood, x = 0, y = 0, rx = 14, ry = 10) {
+    const col = tone(hex, mood), g = c.createLinearGradient(x - rx * 0.4, y - ry, x + rx * 0.4, y + ry);
+    g.addColorStop(0, BB.mix(col, '#fff9ef', 0.22)); g.addColorStop(0.5, col); g.addColorStop(1, BB.mix(col, '#674861', 0.14));
+    return g;
+  }
 
   // ──── Bugs ────  (x, y) = centre of body, facing via st.facing
   const BUGS = {
     ladybug(c, st, mood) {
       const t = st.t, walk = st.walk || 0;
       legs(c, 0, 5, 3, 14, 5, t, walk ? 0.4 : 0, OUT, 1);
-      c.fillStyle = tone('#e8403a', mood); c.strokeStyle = OUT; c.lineWidth = 1.3;
+      c.fillStyle = coat(c, '#ee665d', mood); c.strokeStyle = OUT; c.lineWidth = 1.3;
       c.beginPath(); c.ellipse(-2, 0, 12, 9.5, 0, Math.PI, 0); c.lineTo(10, 4); c.quadraticCurveTo(-2, 8, -14, 4); c.closePath(); c.fill(); c.stroke();
       c.fillStyle = '#231a24';
       for (const [sx, sy, r] of [[-7, -3, 2.4], [0, -6, 2], [3, -1, 2.3], [-3, 3, 1.8]]) { G.circle(sx, sy, r, c); c.fill(); }
@@ -181,7 +195,7 @@
       c.fillStyle = 'rgba(220,240,255,0.75)'; c.strokeStyle = 'rgba(80,120,160,0.6)'; c.lineWidth = 1;
       G.ellipse(-3, -10, 7, 4.5, -0.6 + flap, c); c.fill(); c.stroke();
       G.ellipse(3, -10, 6, 4, 0.5 - flap, c); c.fill(); c.stroke();
-      c.fillStyle = tone('#ffd23f', mood); c.strokeStyle = OUT; c.lineWidth = 1.3;
+      c.fillStyle = coat(c, '#ffd658', mood); c.strokeStyle = OUT; c.lineWidth = 1.3;
       G.ellipse(0, 0, 12, 9.5, 0, c); c.fill(); c.stroke();
       c.save(); G.ellipse(0, 0, 12, 9.5, 0, c); c.clip();
       c.fillStyle = tone('#3a2a1e', mood * 0.4);
@@ -210,7 +224,6 @@
       face(c, 0, 1, 1.0, mood, Object.assign({ lid: '#6f52b0' }, st));
     },
     snailet(c, st, mood) {
-      const t = st.t;
       c.fillStyle = tone('#f2c9a0', mood); c.strokeStyle = OUT; c.lineWidth = 1.2;
       c.beginPath(); c.moveTo(-14, 7); c.quadraticCurveTo(0, 9, 14, 6); c.quadraticCurveTo(16, -4, 10, -3); c.lineTo(-14, 5); c.closePath(); c.fill(); c.stroke();
       c.fillStyle = tone('#f59ac0', mood);
@@ -245,46 +258,54 @@
   };
 
   // ──── Animals ────  (same conventions: centre of body, facing right)
-  const FUR_OUT = '#4a3440';
+  const FUR_OUT = '#5b3d4c';
   function ear(c, x, y, rx, ry, rot, col, inner) {
     c.save(); c.translate(x, y); c.rotate(rot);
-    c.fillStyle = col; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+    c.fillStyle = coat(c, col, 0, 0, 0, rx, ry); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
     G.ellipse(0, 0, rx, ry, 0, c); c.fill(); c.stroke();
     if (inner) { c.fillStyle = inner; G.ellipse(0, ry * 0.15, rx * 0.5, ry * 0.65, 0, c); c.fill(); }
     c.restore();
   }
-  function feet(c, xs, y, col, t, walk) {
-    c.fillStyle = col; c.strokeStyle = FUR_OUT; c.lineWidth = 1;
-    xs.forEach((x, i) => { const k = walk ? Math.sin(t * 0.3 + i * 2) * 1.5 : 0; G.ellipse(x + k, y, 3.2, 2.2, 0, c); c.fill(); c.stroke(); });
+  function feet(c, xs, y, col, t, walk, greeting = 0, step = t * 0.3) {
+    c.fillStyle = coat(c, col, 0, 0, y, 13, 4); c.strokeStyle = FUR_OUT; c.lineWidth = 1;
+    xs.forEach((x, i) => {
+      const phase = step + i * Math.PI, k = walk ? Math.sin(phase) * 1.7 : 0;
+      const lift = walk ? Math.max(0, Math.cos(phase)) * 1.8 : i === xs.length - 1 ? greeting * 4 : 0;
+      G.ellipse(x + k, y - lift, 3.3, 2.3 - lift * 0.05, k * 0.07, c); c.fill(); c.stroke();
+    });
   }
-  function nose(c, x, y, col = '#ff8fa8', r = 1.6) { c.fillStyle = col; G.ellipse(x, y, r * 1.2, r, 0, c); c.fill(); }
+  function nose(c, x, y, col = '#ff8fa8', r = 1.6) {
+    c.fillStyle = col; G.ellipse(x, y, r * 1.2, r, 0, c); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.4)'; G.ellipse(x - r * 0.3, y - r * 0.35, r * 0.42, r * 0.24, 0, c); c.fill();
+  }
 
   Object.assign(BUGS, {
     bunny(c, st, mood) {
       const t = st.t, fur = tone('#f6efe8', mood);
       const droop = mood * 0.9; // gloomy bunnies' ears flop down
-      ear(c, 3, -18 + droop * 4, 2.8, 8, -0.15 - droop * 0.9, fur, '#ffb3c8');
+      const twitch = Math.sin(t * 0.08) * 0.07 + (st.greeting || 0) * 0.18;
+      ear(c, 3, -18 + droop * 4, 2.8, 8, -0.15 - droop * 0.9 - twitch, fur, '#ffb3c8');
       c.fillStyle = tone('#ffffff', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       G.circle(-11, 0, 4, c); c.fill(); c.stroke();
-      c.fillStyle = fur; G.ellipse(-2, 2, 11, 8, 0, c); c.fill(); c.stroke();
-      feet(c, [-7, 4], 9, fur, t, st.walk);
+      c.fillStyle = coat(c, '#f6efe8', mood); G.ellipse(-2, 2, 11, 8, 0, c); c.fill(); c.stroke();
+      feet(c, [-7, 4], 9, fur, t, st.walk, st.greeting, st.step);
       G.circle(8, -6, 7.8, c); c.fillStyle = fur; c.fill(); c.stroke();
-      ear(c, 9, -18 + droop * 4, 2.8, 8, 0.2 + droop * 0.9, fur, '#ffb3c8');
+      ear(c, 9, -18 + droop * 4, 2.8, 8, 0.2 + droop * 0.9 + twitch, fur, '#ffb3c8');
       nose(c, 14.5, -4.5);
       face(c, 8.5, -6.5, 0.6, mood, Object.assign({ lid: '#e8dcd0' }, st));
     },
     hedgehog(c, st, mood) {
       const t = st.t;
-      feet(c, [-6, 5], 9, tone('#e8c9a0', mood), t, st.walk);
+      feet(c, [-6, 5], 9, tone('#e8c9a0', mood), t, st.walk, st.greeting, st.step);
       // spiky coat
-      c.fillStyle = tone('#8a6448', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.fillStyle = coat(c, '#9b7658', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       c.beginPath();
       for (let i = 0; i <= 12; i++) {
         const a = Math.PI + (i / 12) * Math.PI * 1.05, r = i % 2 ? 11 : 15;
         c.lineTo(-2 + Math.cos(a) * r, 6 + Math.sin(a) * r * 0.95);
       }
       c.lineTo(8, 8); c.closePath(); c.fill(); c.stroke();
-      c.fillStyle = tone('#f0d6b0', mood);
+      c.fillStyle = coat(c, '#f0d6b0', mood, 8, 1, 8, 7);
       c.beginPath(); c.ellipse(8, 1, 8, 7, 0, 0, TAU); c.fill(); c.stroke();
       c.beginPath(); c.moveTo(13, -1); c.quadraticCurveTo(20, 1, 15, 5); c.closePath(); c.fill();
       nose(c, 18.5, 2, '#3a2a3a', 1.7);
@@ -292,19 +313,21 @@
     },
     bluebird(c, st, mood) {
       const t = st.t, flap = Math.sin(t * 0.5) * 0.7;
-      c.fillStyle = tone('#5aa8f0', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.fillStyle = coat(c, '#72b7ee', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       c.beginPath(); c.moveTo(-10, 0); c.lineTo(-18, -4); c.lineTo(-17, 4); c.closePath(); c.fill(); c.stroke();
       G.circle(0, 0, 10, c); c.fill(); c.stroke();
       c.fillStyle = tone('#ffe6c9', mood); G.ellipse(3, 4, 6.5, 5.5, 0, c); c.fill();
       c.save(); c.translate(-2, -1); c.rotate(-0.4 + flap);
       c.fillStyle = tone('#3f86d4', mood); G.ellipse(-5, 0, 7, 4, 0, c); c.fill(); c.stroke();
+      c.strokeStyle = 'rgba(223,240,255,0.7)'; c.lineWidth = 0.8;
+      for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(-7 + i * 2, -1); c.lineTo(-9 + i * 2, 2); c.stroke(); }
       c.restore();
       c.fillStyle = '#ffb347'; c.beginPath(); c.moveTo(9, 0); c.lineTo(14, 1.5); c.lineTo(9, 3); c.closePath(); c.fill();
       face(c, 3.5, -2.5, 0.55, mood, Object.assign({ lid: '#4a90d8' }, st));
     },
     frog(c, st, mood) {
       const t = st.t, col = tone('#7ed26a', mood);
-      c.fillStyle = col; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.fillStyle = coat(c, '#7ed26a', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       G.ellipse(-8, 6, 5.5, 3.5, 0, c); c.fill(); c.stroke();
       G.ellipse(1, 2, 13, 8.5, 0, c); c.fill(); c.stroke();
       c.fillStyle = tone('#d9f5b8', mood); G.ellipse(3, 5, 8, 4.5, 0, c); c.fill();
@@ -317,13 +340,15 @@
       const t = st.t, fur = tone('#c9b5a8', mood);
       c.strokeStyle = tone('#f0a6b8', mood); c.lineWidth = 1.6; c.lineCap = 'round';
       c.beginPath(); c.moveTo(-11, 4); c.quadraticCurveTo(-20, 6 + Math.sin(t * 0.1) * 3, -22, -4); c.stroke();
-      ear(c, -1, -10, 5, 5.5, 0, fur, '#ffc0cf');
-      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      ear(c, -1, -10, 5, 5.5, Math.sin(t * 0.05) * 0.07, fur, '#ffc0cf');
+      c.fillStyle = coat(c, '#c9b5a8', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       c.beginPath(); c.ellipse(-1, 1, 11, 8, 0, 0, TAU); c.fill(); c.stroke();
       c.beginPath(); c.moveTo(4, -6); c.quadraticCurveTo(17, -2, 16, 3); c.quadraticCurveTo(10, 7, 4, 6); c.closePath(); c.fill(); c.stroke();
       ear(c, 7, -10, 5, 5.5, 0.3, fur, '#ffc0cf');
-      feet(c, [-5, 4], 9, tone('#f0d8d0', mood), t, st.walk);
+      feet(c, [-5, 4], 9, tone('#f0d8d0', mood), t, st.walk, st.greeting, st.step);
       nose(c, 16, 1);
+      c.strokeStyle = 'rgba(93,70,82,0.55)'; c.lineWidth = 0.65;
+      for (const d of [-1, 1]) { c.beginPath(); c.moveTo(14, 2); c.lineTo(20, 2 + d * 2.3); c.stroke(); }
       face(c, 8, -2, 0.55, mood, Object.assign({ lid: '#b0a094' }, st));
     },
     bat(c, st, mood) {
@@ -343,8 +368,7 @@
       c.fillStyle = '#fff'; c.beginPath(); c.moveTo(1, 3.6); c.lineTo(2, 5.6); c.lineTo(3, 3.6); c.fill();
     },
     mole(c, st, mood) {
-      const t = st.t, fur = tone('#6b5670', mood);
-      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.fillStyle = coat(c, '#6b5670', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       G.ellipse(0, 1, 13, 9, 0, c); c.fill(); c.stroke();
       c.fillStyle = tone('#ffb3c8', mood);
       for (const px of [-8, 9]) { G.ellipse(px, 8, 4.5, 3, 0, c); c.fill(); c.stroke(); }
@@ -357,10 +381,10 @@
     },
     bearcub(c, st, mood) {
       const t = st.t, fur = tone('#b57a48', mood), light = tone('#f0cfa0', mood);
-      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
+      c.fillStyle = coat(c, '#b57a48', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
       G.ellipse(-3, 4, 12, 10, 0, c); c.fill(); c.stroke();
       c.fillStyle = light; G.ellipse(0, 6, 6, 6, 0, c); c.fill();
-      feet(c, [-9, 3], 13, fur, t, st.walk);
+      feet(c, [-9, 3], 13, fur, t, st.walk, st.greeting, st.step);
       ear(c, 1, -17, 4, 4, 0, fur, light);
       ear(c, 13, -16, 4, 4, 0, fur, light);
       c.fillStyle = fur; G.circle(7, -8, 9.5, c); c.fill(); c.stroke();
@@ -373,7 +397,7 @@
     },
     owl(c, st, mood) {
       const t = st.t, flap = Math.sin(t * 0.3) * 0.4;
-      c.fillStyle = tone('#a88a6c', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.fillStyle = coat(c, '#b99b7f', mood, 0, 0, 11, 13); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       for (const side of [-1, 1]) { c.save(); c.scale(side, 1); c.rotate(-flap); G.ellipse(10, 2, 5, 9, 0.3, c); c.fill(); c.stroke(); c.restore(); }
       G.ellipse(0, 0, 11, 13, 0, c); c.fill(); c.stroke();
       for (const side of [-1, 1]) { c.beginPath(); c.moveTo(side * 4, -11); c.lineTo(side * 9, -18); c.lineTo(side * 10, -9); c.closePath(); c.fill(); c.stroke(); }
@@ -387,7 +411,7 @@
     },
     turtle(c, st, mood) {
       const t = st.t, skin = tone('#a8d88a', mood);
-      feet(c, [-8, 6], 8, skin, t, st.walk);
+      feet(c, [-8, 6], 8, skin, t, st.walk, st.greeting, st.step);
       c.fillStyle = skin; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       G.circle(13, -1, 5.8, c); c.fill(); c.stroke();
       c.fillStyle = tone('#5fa06a', mood);
@@ -401,8 +425,8 @@
     },
     duckling(c, st, mood) {
       const t = st.t, fluff = tone('#ffe066', mood);
-      feet(c, [-3, 4], 9, '#ffa24a', t, st.walk);
-      c.fillStyle = fluff; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      feet(c, [-3, 4], 9, '#ffa24a', t, st.walk, st.greeting, st.step);
+      c.fillStyle = coat(c, '#ffe782', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       c.beginPath(); c.moveTo(-10, -1); c.lineTo(-15, -5); c.lineTo(-12, 3); c.closePath(); c.fill(); c.stroke();
       G.ellipse(-1, 2, 11, 8, 0, c); c.fill(); c.stroke();
       c.fillStyle = tone('#ffd23a', mood); G.ellipse(-3, 1, 5, 3.5, -0.3, c); c.fill();
@@ -413,7 +437,7 @@
     },
     lamb(c, st, mood) {
       const t = st.t, wool = tone('#ffffff', mood * 0.8);
-      feet(c, [-7, 4], 10, '#5a4a5a', t, st.walk);
+      feet(c, [-7, 4], 10, '#5a4a5a', t, st.walk, st.greeting, st.step);
       c.fillStyle = BB.mix('#d8ccf0', '#9a94a8', mood * 0.4);
       for (let i = 0; i < 9; i++) { const a = i / 9 * TAU; G.circle(-2 + Math.cos(a) * 9, 1 + Math.sin(a) * 6, 5.2, c); c.fill(); }
       c.fillStyle = wool;
@@ -452,12 +476,12 @@
       face(c, 0, -8, 0.7, mood, Object.assign({ lid: '#d85a40' }, st));
     },
     seal(c, st, mood) {
-      const t = st.t, fur = tone('#c9ccd8', mood);
-      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
+      const fur = tone('#c9ccd8', mood);
+      c.fillStyle = coat(c, '#c9ccd8', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
       c.beginPath(); c.moveTo(-15, 6); c.quadraticCurveTo(-20, 2, -19, -1); c.quadraticCurveTo(-14, 4, -9, 3); c.fill(); c.stroke();
       G.ellipse(-2, 2, 13, 8, 0, c); c.fill(); c.stroke();
       c.fillStyle = tone('#eef0f6', mood); G.ellipse(0, 6, 9, 3.5, 0, c); c.fill();
-      c.fillStyle = fur; G.ellipse(3, 7, 5, 2.5, 0.4, c); c.fill(); c.stroke();
+      c.fillStyle = fur; G.ellipse(3, 7 - (st.greeting || 0) * 3, 5, 2.5, 0.4 - (st.greeting || 0) * 0.45, c); c.fill(); c.stroke();
       G.circle(9, -5, 8, c); c.fill(); c.stroke();
       c.fillStyle = tone('#aeb2c0', mood); for (const [dx, dy] of [[-4, -2], [-8, 3], [0, 4]]) { G.circle(dx, dy, 1.3, c); c.fill(); }
       nose(c, 16, -3.5, '#3a3040', 1.6);
@@ -485,22 +509,26 @@
       c.save(); c.translate(-10, 0); c.rotate(wag);
       c.beginPath(); c.moveTo(0, 0); c.lineTo(-8, -6); c.lineTo(-8, 6); c.closePath(); c.fill(); c.stroke();
       c.restore();
-      G.ellipse(0, 0, 12, 8, 0, c); c.fill(); c.stroke();
+      c.fillStyle = coat(c, '#ffb03a', mood); G.ellipse(0, 0, 12, 8, 0, c); c.fill(); c.stroke();
+      c.save(); G.ellipse(0, 0, 12, 8, 0, c); c.clip();
       c.fillStyle = '#ffffff';
       c.fillRect(-4, -7, 3, 14); c.fillRect(4, -7.5, 2.5, 15);
+      c.restore();
       c.strokeStyle = FUR_OUT; G.ellipse(0, 0, 12, 8, 0, c); c.stroke();
       c.fillStyle = col; c.beginPath(); c.moveTo(-2, -7); c.quadraticCurveTo(2, -13, 6, -7); c.fill();
       face(c, 6, -1, 0.55, mood, Object.assign({ lid: '#e0902a' }, st));
     },
     fennec(c, st, mood) {
       const t = st.t, fur = tone('#f0c890', mood), light = tone('#fff4e0', mood);
-      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.fillStyle = coat(c, '#f0c890', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.save(); c.translate(-9, 1); c.rotate(Math.sin(t * 0.09) * (0.08 + (st.greeting || 0) * 0.16)); c.translate(9, -1);
       c.beginPath(); c.moveTo(-10, 0); c.quadraticCurveTo(-22, -2, -20, -10); c.quadraticCurveTo(-15, -4, -8, -3); c.fill(); c.stroke();
       c.fillStyle = light; G.circle(-20, -9, 2.5, c); c.fill();
-      c.fillStyle = fur; G.ellipse(-2, 3, 10, 6.5, 0, c); c.fill(); c.stroke();
-      feet(c, [-7, 3], 10, fur, t, st.walk);
-      ear(c, 3, -17, 4.5, 9, -0.35, fur, '#ffc8b0');
-      ear(c, 13, -17, 4.5, 9, 0.35, fur, '#ffc8b0');
+      c.restore();
+      c.fillStyle = coat(c, '#f0c890', mood); G.ellipse(-2, 3, 10, 6.5, 0, c); c.fill(); c.stroke();
+      feet(c, [-7, 3], 10, fur, t, st.walk, st.greeting, st.step);
+      ear(c, 3, -17, 4.5, 9, -0.35 - Math.sin(t * 0.06) * 0.05, fur, '#ffc8b0');
+      ear(c, 13, -17, 4.5, 9, 0.35 + (st.greeting || 0) * 0.1, fur, '#ffc8b0');
       c.fillStyle = fur; G.circle(8, -5, 7.5, c); c.fill(); c.stroke();
       c.fillStyle = light; G.ellipse(11, -2, 4.5, 3, 0, c); c.fill();
       nose(c, 15, -3, '#3a2a2a', 1.4);
@@ -527,7 +555,7 @@
       c.beginPath(); c.moveTo(-8, 4); c.quadraticCurveTo(-18, 6 + Math.sin(t * 0.2) * 2, -22, 0); c.stroke();
       c.fillStyle = col; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       G.ellipse(-1, 3, 11, 5, 0, c); c.fill(); c.stroke();
-      feet(c, [-7, -3, 3, 7], 8, col, t, st.walk);
+      feet(c, [-7, -3, 3, 7], 8, col, t, st.walk, st.greeting, st.step);
       c.fillStyle = tone('#ffd166', mood); for (const x of [-5, -1, 3]) { G.circle(x, 1, 1.2, c); c.fill(); }
       c.fillStyle = col; G.ellipse(11, -1, 7, 5.5, 0, c); c.fill(); c.stroke();
       face(c, 11, -2, 0.55, mood, Object.assign({ lid: '#5ea040' }, st));
@@ -545,13 +573,13 @@
       face(c, 9, 0, 0.78, mood, Object.assign({ lid: '#3a5a9a' }, st));
     },
     penguin(c, st, mood) {
-      const t = st.t, dark = tone('#2e3a54', mood * 0.6);
-      const waddle = st.walk ? Math.sin(t * 0.3) * 0.12 : 0;
+      const dark = tone('#2e3a54', mood * 0.6);
+      const waddle = st.walk ? Math.sin(st.step) * 0.1 : 0;
       c.save(); c.rotate(waddle);
-      c.fillStyle = dark; c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
+      c.fillStyle = coat(c, '#2e3a54', mood * 0.6); c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
       G.ellipse(0, 0, 9.5, 12, 0, c); c.fill(); c.stroke();
       c.fillStyle = tone('#ffffff', mood); G.ellipse(1.5, 2, 6.5, 9, 0, c); c.fill();
-      c.fillStyle = dark; G.ellipse(-8, 1, 3, 7, 0.3, c); c.fill();
+      c.fillStyle = dark; G.ellipse(-8, 1 - (st.greeting || 0) * 2, 3, 7, 0.3 + (st.greeting || 0) * 0.3, c); c.fill();
       c.fillStyle = '#ffa24a'; c.beginPath(); c.moveTo(6, -4); c.lineTo(11, -2.5); c.lineTo(6, -1); c.fill();
       c.fillStyle = '#ffa24a'; G.ellipse(-3, 12, 3.5, 1.8, 0, c); c.fill(); G.ellipse(4, 12, 3.5, 1.8, 0, c); c.fill();
       face(c, 2, -5, 0.55, mood, Object.assign({ lid: '#3a4664' }, st));
@@ -559,9 +587,9 @@
     },
     polarcub(c, st, mood) {
       const t = st.t, fur = tone('#f6f4ee', mood * 0.7);
-      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
+      c.fillStyle = coat(c, '#f6f4ee', mood * 0.7); c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
       G.ellipse(-3, 3, 13, 9.5, 0, c); c.fill(); c.stroke();
-      feet(c, [-10, -3, 4], 12, fur, t, st.walk);
+      feet(c, [-10, -3, 4], 12, fur, t, st.walk, st.greeting, st.step);
       ear(c, 3, -14, 3.5, 3.5, 0, fur, '#e8dcd8');
       ear(c, 13, -13, 3.5, 3.5, 0, fur, '#e8dcd8');
       c.fillStyle = fur; G.circle(8, -6, 8.5, c); c.fill(); c.stroke();
@@ -574,7 +602,7 @@
       c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       c.beginPath(); c.ellipse(-16, -4, 8, 5, -0.6 + Math.sin(t * 0.08) * 0.2, 0, TAU); c.fill(); c.stroke();
       G.ellipse(-2, 3, 11, 7, 0, c); c.fill(); c.stroke();
-      feet(c, [-7, 4], 10, fur, t, st.walk);
+      feet(c, [-7, 4], 10, fur, t, st.walk, st.greeting, st.step);
       ear(c, 4, -14, 3.5, 6, -0.25, fur, '#dce0ee');
       ear(c, 12, -14, 3.5, 6, 0.3, fur, '#dce0ee');
       c.fillStyle = fur; G.circle(8, -5, 7.5, c); c.fill(); c.stroke();
@@ -584,10 +612,12 @@
     },
     squirrel(c, st, mood) {
       const t = st.t, fur = tone('#c8683a', mood);
-      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.fillStyle = coat(c, '#c8683a', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.save(); c.translate(-5, 5); c.rotate(Math.sin(t * 0.07) * (0.06 + (st.greeting || 0) * 0.12)); c.translate(5, -5);
       c.beginPath(); c.moveTo(-6, 6); c.bezierCurveTo(-24, 6, -22, -22, -8, -18); c.bezierCurveTo(-14, -12, -12, 0, -4, 1); c.fill(); c.stroke();
       c.fillStyle = tone('#e89a6a', mood); G.ellipse(-15, -10, 3.5, 6, 0.3, c); c.fill();
-      c.fillStyle = fur; G.ellipse(1, 2, 7, 8, 0, c); c.fill(); c.stroke();
+      c.restore();
+      c.fillStyle = coat(c, '#c8683a', mood); G.ellipse(1, 2, 7, 8, 0, c); c.fill(); c.stroke();
       c.fillStyle = tone('#f6dcc0', mood); G.ellipse(3, 4, 3.5, 5, 0, c); c.fill();
       ear(c, 3, -15, 2.2, 4, -0.2, fur, '#f0b89a');
       c.fillStyle = fur; G.circle(5, -8, 6.5, c); c.fill(); c.stroke();
@@ -597,9 +627,9 @@
       face(c, 5, -8.5, 0.5, mood, Object.assign({ lid: '#b05a30' }, st));
     },
     fawn(c, st, mood) {
-      const t = st.t, fur = tone('#c88a58', mood);
+      const fur = tone('#c88a58', mood);
       c.strokeStyle = fur; c.lineWidth = 3; c.lineCap = 'round';
-      const k = st.walk ? Math.sin(t * 0.3) * 2 : 0;
+      const k = st.walk ? Math.sin(st.step) * 2 : 0;
       for (const [x, d] of [[-8, 1], [-4, -1], [5, 1], [9, -1]]) { c.beginPath(); c.moveTo(x, 4); c.lineTo(x + d * k, 14); c.stroke(); }
       c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       G.ellipse(0, 2, 12, 6.5, 0, c); c.fill(); c.stroke();
@@ -616,10 +646,12 @@
       c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       c.save(); c.translate(-12, -2); c.rotate(-0.6 + Math.sin(t * 0.08) * 0.1);
       c.fillStyle = fur; G.ellipse(-6, 0, 8, 4.5, 0, c); c.fill(); c.stroke();
+      c.save(); G.ellipse(-6, 0, 8, 4.5, 0, c); c.clip();
       c.fillStyle = '#3a3640'; c.fillRect(-9, -4, 2.5, 8); c.fillRect(-4, -4, 2.5, 8);
       c.restore();
-      c.fillStyle = fur; G.ellipse(-1, 3, 11, 7.5, 0, c); c.fill(); c.stroke();
-      feet(c, [-7, 4], 10, '#3a3640', t, st.walk);
+      c.restore();
+      c.fillStyle = coat(c, '#8e8a94', mood); G.ellipse(-1, 3, 11, 7.5, 0, c); c.fill(); c.stroke();
+      feet(c, [-7, 4], 10, '#3a3640', t, st.walk, st.greeting, st.step);
       ear(c, 3, -13, 3, 3.5, -0.2, fur, '#f0e8f0');
       ear(c, 13, -13, 3, 3.5, 0.2, fur, '#f0e8f0');
       c.fillStyle = fur; G.circle(8, -5, 8, c); c.fill(); c.stroke();
@@ -630,9 +662,10 @@
     },
     capybara(c, st, mood) {
       const t = st.t, fur = tone('#b0784a', mood);
-      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
+      c.fillStyle = coat(c, '#b0784a', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
       G.rrect(-14, -6, 26, 16, 8, c); c.fill(); c.stroke();
-      feet(c, [-9, 6], 11, tone('#8a5a36', mood), t, st.walk);
+      feet(c, [-9, 6], 11, tone('#8a5a36', mood), t, st.walk, st.greeting, st.step);
+      c.fillStyle = fur;
       G.rrect(4, -12, 16, 13, 6, c); c.fill(); c.stroke();
       ear(c, 7, -12, 2, 1.8, 0, tone('#8a5a36', mood), null);
       nose(c, 18, -7, '#3a2a2a', 1.4);
@@ -643,9 +676,9 @@
     },
     monkey(c, st, mood) {
       const t = st.t, fur = tone('#c8bcb0', mood);
-      c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
+      c.fillStyle = coat(c, '#c8bcb0', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       G.ellipse(-2, 3, 10, 8.5, 0, c); c.fill(); c.stroke();
-      feet(c, [-7, 3], 11, fur, t, st.walk);
+      feet(c, [-7, 3], 11, fur, t, st.walk, st.greeting, st.step);
       c.fillStyle = fur; G.circle(6, -7, 8, c); c.fill(); c.stroke();
       c.fillStyle = tone('#ff9fa0', mood); G.ellipse(8, -6, 5.5, 5, 0, c); c.fill(); // pink snow-monkey face
       c.fillStyle = tone('#ff9fa0', mood); G.circle(-1, -8, 2.2, c); c.fill();
@@ -681,9 +714,9 @@
       face(c, 8, -6, 0.58, mood, Object.assign({ lid: '#6ab888' }, st));
     },
     unicorn(c, st, mood) {
-      const t = st.t, fur = tone('#ffffff', mood * 0.7);
+      const fur = tone('#ffffff', mood * 0.7);
       c.strokeStyle = fur; c.lineWidth = 3.2; c.lineCap = 'round';
-      const k = st.walk ? Math.sin(t * 0.3) * 2 : 0;
+      const k = st.walk ? Math.sin(st.step) * 2 : 0;
       for (const [x, d] of [[-8, 1], [-4, -1], [5, 1], [9, -1]]) { c.beginPath(); c.moveTo(x, 4); c.lineTo(x + d * k, 13); c.stroke(); }
       c.fillStyle = fur; c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       G.ellipse(0, 2, 12, 6.5, 0, c); c.fill(); c.stroke();
@@ -707,16 +740,42 @@
     }
   }
 
+  const FLYERS = new Set(['bee', 'moth', 'bluebird', 'bat', 'owl', 'dragon']);
+  const SWIMMERS = new Set(['fish', 'koi', 'jellyfish']);
+  const FOOT = { bunny: 11, frog: 11, hedgehog: 11, bearcub: 15, lamb: 12, turtle: 10, penguin: 13, polarcub: 14, fawn: 14, unicorn: 13, capybara: 13, monkey: 13, squirrel: 11 };
+
+  function shadow(c, kind, x, y, st) {
+    if (FLYERS.has(kind) || SWIMMERS.has(kind) || kind === 'spider') return;
+    const s = st.scale || 1, foot = FOOT[kind] || 10;
+    const gy = st.ground == null ? foot * s : st.ground, lift = Math.max(0, gy - foot * s);
+    c.save(); c.fillStyle = 'rgba(71,48,82,0.10)';
+    G.ellipse(x, y + gy, (14 - Math.min(5, lift * 0.08)) * s, 2.4 * s, 0, c); c.fill();
+    c.fillStyle = 'rgba(71,48,82,0.05)'; G.ellipse(x, y + gy, 10 * s, 1.3 * s, 0, c); c.fill(); c.restore();
+  }
+
   function drawBug(c, kind, x, y, st) {
     const mood = BB.clamp(st.mood == null ? 1 : st.mood, 0, 1);
     const fn = BUGS[kind] || BUGS.ladybug;
+    const t = st.t || 0, s = st.scale || 1, foot = FOOT[kind] || 10;
+    const flying = FLYERS.has(kind), swimming = SWIMMERS.has(kind), dangling = kind === 'spider';
+    const ground = !flying && !swimming && !dangling;
+    const step = st.step == null ? t * 0.3 : st.step;
+    const breath = Math.sin(t * 0.045) * 0.014;
+    const sq = (st.squash || 1) * (1 + breath) * (1 - (st.landing || 0) * 0.14);
+    const bob = ground && st.walk ? -Math.abs(Math.sin(step)) * 0.85 : swimming ? Math.sin(t * 0.055) * 0.6 : 0;
+    const roll = (st.spin || 0) + Math.sin(t * (flying ? 0.06 : 0.035)) * (flying ? 0.035 : swimming ? 0.05 : dangling ? 0.03 : 0.012);
+    const art = Object.assign({}, st, { t, step });
+    if (ground && !st.noShadow) shadow(c, kind, x, y, st);
     c.save();
     c.translate(x + (st.shake || 0), y);
-    const s = st.scale || 1;
-    const sq = st.squash || 1;
-    c.scale((st.facing || 1) * s / Math.sqrt(sq), s * sq);
-    if (st.spin) c.rotate(st.spin);
-    fn(c, st, mood);
+    c.scale((st.facing || 1) * s, s);
+    // Breathe, dance and absorb a landing around the paws, keeping their
+    // floor position stable. All of these transforms affect drawing only.
+    c.translate(0, (ground ? foot : 0) + bob);
+    c.rotate(roll);
+    c.scale(1 / Math.sqrt(sq), sq);
+    c.translate(0, ground ? -foot : 0);
+    fn(c, art, mood);
     c.restore();
     if (mood > 0.02 && !st.noCloud) moodCloud(c, x, y - 24 * (st.scale || 1), mood, st.t);
     if (st.rainbow) rainbow(c, x, y - 22 * (st.scale || 1), st.rainbow);
@@ -1068,5 +1127,5 @@
     c.restore();
   }
 
-  BB.Critters = { drawBug, drawKing, drawElder, moodCloud, rainbow, face, KINDS: Object.keys(BUGS) };
+  BB.Critters = { drawBug, shadow, drawKing, drawElder, moodCloud, rainbow, face, KINDS: Object.keys(BUGS) };
 })(window.BB);

@@ -17,6 +17,7 @@
     enter() {
       this.t = 0; this.chosen = null; this.chosenT = 0;
       this.sel = Math.max(0, CATS.indexOf(BB.Save.data.cat));
+      this.hoverVersion = I().pointerVersion;
       BB.Music.play('lullaby');
     },
 
@@ -53,6 +54,13 @@
         return;
       }
       const inp = I();
+      if (this.hoverVersion !== inp.pointerVersion) {
+        this.hoverVersion = inp.pointerVersion;
+        const p = inp.pointerPos;
+        if (p && p.y > 170 && p.y < 520) for (let i = 0; i < 2; i++) {
+          if (Math.abs(p.x - this.spot(i).x) < 150 && this.sel !== i) this.pick(i);
+        }
+      }
       if (inp.pressed.left) this.pick(0);
       if (inp.pressed.right) this.pick(1);
       if (inp.pressed.jump || inp.pressed.confirm || inp.pressed.bubble) this.confirm();
@@ -100,10 +108,8 @@
         G().bubble(s.x + (i ? -120 : 120), s.y - 150 + Math.sin(t * 0.05 + i) * 8, 16, cat.bubbleTint, 0.9, c);
         G().bubble(s.x + (i ? -100 : 100), s.y - 118 + Math.sin(t * 0.05 + i + 1) * 8, 9, cat.bubbleTint2, 0.9, c);
         if (on && !this.chosen) {
-          // bouncing paw-pointer
-          const py = s.y - 190 + Math.sin(t * 0.12) * 6;
-          c.fillStyle = '#ffffff'; c.strokeStyle = '#4a2a6a'; c.lineWidth = 3;
-          c.beginPath(); c.moveTo(s.x - 14, py - 10); c.lineTo(s.x + 14, py - 10); c.lineTo(s.x, py + 8); c.closePath(); c.fill(); c.stroke();
+          // (beside the kitten's tail, so it never covers a face)
+          BB.UI.selectionPaw(c, s.x + (i ? 104 : -104), s.y - 176, 2.1);
         }
       }
 

@@ -13,8 +13,12 @@
 //   finale      the rainbow party
 //   family &    a member of the kittens' own family, napping somewhere
 //               secret — find them all and they come to the party
+//   kin @       one of Rainbow's own rainbow-coloured relatives (after
+//               Rainbow is rescued): grey and lost until you cheer them
+//               up in their own little maze (play-minimaze.js),
+//               then they ride a rainbow home to the Cat House
 //  (puzzle pieces live in puzzles.js, cat food in food.js and the golden
-//  paw bubbles that teach cat tricks in gestures.js)
+//  smiling-cat bubbles that teach cat tricks in gestures.js)
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -26,7 +30,8 @@
   const S = () => BB.Audio.sfx;
   const TAU = Math.PI * 2;
 
-  const TYPE = { '*': 'sparkle', B: 'bench', R: 'sign', L: 'sign', U: 'sign', D: 'sign', f: 'firefly', T: 'toy', y: 'yarn', n: 'flower', o: 'bud', E: 'elder', F: 'finale', '&': 'family' };
+  const TYPE = { '*': 'sparkle', B: 'bench', R: 'sign', L: 'sign', U: 'sign', D: 'sign', f: 'firefly', T: 'toy', a: 'glasses', y: 'yarn', n: 'flower', o: 'bud', E: 'elder', F: 'finale', '&': 'family', '@': 'kin' };
+  const KIN_RIDE = 210, KIN_GONE = KIN_RIDE + 100; // found → rainbow ride home → gone
   const DIR = { R: [1, 0], L: [-1, 0], U: [0, -1], D: [0, 1] };
   const FLOWER_TUNE = [72, 74, 76, 79, 81, 79, 76, 74];
   let flowerNote = 0;
@@ -53,6 +58,7 @@
     switch (type) {
       case 'sparkle': if (save.sparkles[key]) return null; break;
       case 'toy': th.toy = room.def.toy; if (!th.toy || save.toys[th.toy]) return null; break;
+      case 'glasses': th.item = thing.item; if (!BB.Wardrobe.findItem(th.item) || save.glassesFound[th.item]) return null; break;
       case 'bench': case 'sign': case 'flower': th.y = floorBelow(thing.tx, thing.ty); th.dir = DIR[thing.ch]; break;
       case 'bench_': break;
       case 'firefly': th.homeX = th.x; th.homeY = th.y; th.fly = 0; break;
@@ -64,6 +70,13 @@
         if (th.found) return null; // already home on their cushion
         th.y = floorBelow(thing.tx, thing.ty); th.facing = 1; th.hop = 0; th.hopV = 0;
         break;
+      case 'kin':
+        // Lost once Rainbow has been rescued, until found (then home for good)
+        th.kin = thing.kin;
+        if (!BB.CATS[th.kin] || !save.mazeSolved || (save.kin || {})[th.kin]) return null;
+        th.y = floorBelow(thing.tx, thing.ty); th.facing = -1; th.hop = 0; th.hopV = 0; th.foundT = 0;
+        th.homeDir = BB.World.byId.hm && (BB.World.byId.hm.x + 30) * T < th.x ? -1 : 1;
+        break;
     }
     return th;
   }
@@ -72,7 +85,7 @@
   function guideDir(th) {
     const room = W().byId[th.room];
     const sign = room.things.find(s => DIR[s.ch]);
-    return sign ? DIR[sign.ch] : [BB.zoneDir(room.zone), 0];
+    return sign ? DIR[sign.ch] : [BB.roomDir(room), 0];
   }
 
   function update(th, ctx) {
@@ -117,6 +130,10 @@
       }
       case 'toy':
         if (dist < 30 && ctx.pl.state !== 'rescue') { th.dead = true; ctx.onToy(th); }
+        else if (Math.floor(th.t) % 20 === 0) PT().burst('spark', th.x + (Math.random() - 0.5) * 30, th.y + Math.sin(th.t * 0.05) * 5 + (Math.random() - 0.5) * 30, 1, { color: '#ffffff', speed: 0.3, life: 30 });
+        break;
+      case 'glasses':
+        if (dist < 24 && ctx.pl.state === 'play') { th.dead = true; ctx.onGlasses(th); }
         break;
       case 'yarn': updateYarn(th, ctx, dx, dy); break;
       case 'flower':
@@ -136,7 +153,7 @@
         break;
       }
       case 'finale':
-        // the Rainbow Slide: hop in and slide all the way home
+        // the Starfall float: take hold and drift all the way home
         if (dist < 56 && ctx.pl.state === 'play') ctx.onSlide(th);
         break;
       case 'family':
@@ -156,6 +173,48 @@
           }
         }
         break;
+      case 'kin': updateKin(th, ctx, dx, dist); break;
+    }
+  }
+
+  // Rainbow's relative: sad and grey until found; then the colour floods
+  // back, they say hello, and hop onto a cloud that rides a rainbow home.
+  function updateKin(th, ctx, dx, dist) {
+    if (!th.found) {
+      if (dist < 300) th.facing = dx > 0 ? 1 : -1;
+      // (after leaving their maze early, step away before trying again)
+      if (th.wait && dist > 170) th.wait = false;
+      if (dist < 110 && !th.wait && ctx.pl.state === 'play') ctx.onKin(th);
+      return;
+    }
+    // they finish saying hello before the cloud comes for them
+    // (a safety cap keeps a stalled voice from holding them forever)
+    const line = 'kin_' + th.kin, V = BB.Voice;
+    const talking = V && (V.currentId === line || V.queuedIds.includes(line));
+    if (th.foundT === KIN_RIDE - 40 && talking && (th.talkT = (th.talkT || 0) + 1) < 900) {
+      if (th.t % 22 === 0) PT().heart(th.x + (Math.random() - 0.5) * 24, th.y - 50);
+      return;
+    }
+    th.foundT++;
+    const col = BB.CATS[th.kin].trailColor;
+    if (th.foundT < KIN_RIDE) {
+      th.facing = dx > 0 ? 1 : -1;
+      if (th.foundT < 45 && th.foundT % 3 === 0) PT().burst('spark', th.x + (Math.random() - 0.5) * 40, th.y - 30 - Math.random() * 30, 1, { color: col, speed: 1.2, life: 30 });
+      if (th.t % 22 === 0) PT().heart(th.x + (Math.random() - 0.5) * 24, th.y - 50);
+      if (th.hop === 0 && th.foundT < 150 && Math.random() < 0.035) th.hopV = -3.5;
+      if (th.hopV || th.hop < 0) { th.hop += th.hopV; th.hopV += 0.3; if (th.hop >= 0) { th.hop = 0; th.hopV = 0; } }
+      if (th.foundT === KIN_RIDE - 30) { th.cloud = 0.01; S().bloom(3); }
+      if (th.cloud) th.cloud = Math.min(1, th.cloud + 0.04);
+      return;
+    }
+    // the ride: up and away along a rainbow, toward the Cat House
+    if (th.foundT === KIN_RIDE) { S().whoosh(); th.x0 = th.x; th.y0 = th.y; th.facing = th.homeDir; }
+    const k = (th.foundT - KIN_RIDE) / (KIN_GONE - KIN_RIDE), e = k * k;
+    th.x = th.x0 + th.homeDir * e * 520; th.y = th.y0 - Math.sin(Math.min(1, k * 1.3) * Math.PI / 2) * 300 - e * 120;
+    if (th.foundT % 2 === 0) for (const c of BB.RAINBOW) if (Math.random() < 0.3) PT().trail('star', th.x + (Math.random() - 0.5) * 16, th.y + 4, c);
+    if (th.foundT >= KIN_GONE) {
+      th.dead = true;
+      PT().burst('spark', th.x, th.y, 16, { color: col, speed: 3, life: 36 });
     }
   }
 
@@ -208,6 +267,7 @@
     S().bloom(done);
     PT().burst('spark', th.x, th.y, 12, { color: '#ffd6f0', speed: 2.5, life: 32 });
     if (done >= buds.length) ctx.openGates(room);
+    BB.Save.write(); // keep each flower and its reward, even before the gate opens
   }
 
   // ──── Drawing ────
@@ -249,8 +309,15 @@
         G().drawGlow(x, y + by, 40, '#ffe8a8', 0.7, c);
         BB.HUD.toyIcon(c, th.toy, x, y + by, 1.3, t);
         G().bubble(x, y + by, 20, '#d8f4ff', 0.8, c);
-        if (t % 20 === 0) PT().burst('spark', x + cam.x + (Math.random() - 0.5) * 30, y + cam.y + by + (Math.random() - 0.5) * 30, 1, { color: '#ffffff', speed: 0.3, life: 30 });
         ctx.light(x, y + by, 110, '#ffe8a8', 0.8);
+        break;
+      }
+      case 'glasses': {
+        const by = Math.sin(t * 0.05) * 4;
+        G().drawGlow(x, y + by, 32, '#f6d1ff', 0.55, c);
+        G().bubble(x, y + by, 18, '#dfc9ff', 0.8, c);
+        BB.Wardrobe.findIcon(c, th.item, x, y + by, 1.8, t);
+        ctx.light(x, y, 85, '#f6d1ff', 0.7);
         break;
       }
       case 'yarn':
@@ -296,26 +363,29 @@
         ctx.light(x, y - 20, 120, '#ffe0b0', 0.7);
         break;
       }
+      case 'kin': drawKin(c, x, y, th, cam, ctx); break;
       case 'finale': {
-        // the Rainbow Slide: a rainbow arch, and a slide swooping down
-        // toward home (the Cat House is right below, in the middle)
-        c.save();
-        c.globalAlpha = 0.85;
-        c.lineWidth = 9;
-        const cols = ['#ff7b9c', '#ffcf5c', '#fff27a', '#8fe388', '#7cc8ff', '#b99cff'];
-        cols.forEach((col, i) => {
-          c.strokeStyle = col;
-          c.beginPath(); c.arc(x, y + 16, 120 - i * 9, Math.PI, 0); c.stroke();
-        });
-        c.lineWidth = 7;
-        cols.forEach((col, i) => {
-          c.strokeStyle = col;
-          c.beginPath(); c.moveTo(x - 30 + i * 7, y + 4); c.quadraticCurveTo(x - 10 + i * 7, y + 60, x + 60 + i * 7, y + 120); c.stroke();
-        });
-        c.restore();
-        G().drawGlow(x, y - 30, 120, '#fff4c2', 0.45 + Math.sin(t * 0.08) * 0.15, c);
+        // the Starfall float: a great glowing dandelion to hold on to — it
+        // drifts you over to the Starfall Shaft and all the way down home
+        G().drawGlow(x, y - 70, 130, '#fff4c2', 0.45 + Math.sin(t * 0.08) * 0.15, c);
+        const sway = Math.sin(t * 0.04) * 6, hx = x + sway, hy0 = y - 92;
+        c.strokeStyle = '#7fae5a'; c.lineWidth = 4; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(x, y + 2); c.quadraticCurveTo(x - 8, y - 46, hx, hy0); c.stroke();
+        for (let i = 0; i < 26; i++) {
+          const a = i / 26 * Math.PI * 2 + t * 0.004, r = 30 + (i % 3) * 3;
+          c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 1.5;
+          c.beginPath(); c.moveTo(hx, hy0); c.lineTo(hx + Math.cos(a) * r, hy0 + Math.sin(a) * r); c.stroke();
+          c.fillStyle = '#fffbe6'; G().circle(hx + Math.cos(a) * r, hy0 + Math.sin(a) * r, 3.2, c); c.fill();
+        }
+        c.fillStyle = '#ffe9a0'; G().circle(hx, hy0, 7, c); c.fill();
+        // drifting seeds show the way: over to the shaft, then down
+        for (let i = 0; i < 4; i++) {
+          const k = ((t * 0.006) + i / 4) % 1;
+          c.fillStyle = `rgba(255,251,230,${0.9 * (1 - k)})`;
+          G().circle(hx + k * 160, hy0 - 10 - Math.sin(k * Math.PI) * 30, 2.5, c); c.fill();
+        }
         // a tiny house with a heart: "home is this way"
-        const hy = y - 70 + Math.sin(t * 0.06) * 4;
+        const hy = y - 150 + Math.sin(t * 0.06) * 4;
         c.fillStyle = '#fff4e6'; c.strokeStyle = '#8a5a34'; c.lineWidth = 2;
         c.fillRect(x - 14, hy - 8, 28, 20); c.strokeRect(x - 14, hy - 8, 28, 20);
         c.fillStyle = '#e8706a'; c.beginPath(); c.moveTo(x - 19, hy - 6); c.lineTo(x, hy - 22); c.lineTo(x + 19, hy - 6); c.closePath(); c.fill(); c.stroke();
@@ -323,6 +393,47 @@
         break;
       }
     }
+  }
+
+  // Rainbow's relative: grey and drooping under a rain cloud while lost;
+  // bright again once found, then off home on a cloud along a rainbow.
+  function drawKin(c, x, y, th, cam, ctx) {
+    const m = BB.CATS[th.kin], s = m.size || 1.4, t = th.t;
+    const fade = th.found ? Math.max(0, 1 - th.foundT / 45) : 1;
+    const riding = th.foundT >= KIN_RIDE;
+    if (riding) {
+      const k = (th.foundT - KIN_RIDE) / (KIN_GONE - KIN_RIDE);
+      c.save(); c.lineCap = 'round'; c.globalAlpha = 0.8 * Math.min(1, (1 - k) * 2.5);
+      BB.RAINBOW.forEach((col, i) => {
+        c.strokeStyle = col; c.lineWidth = 3.4; c.beginPath();
+        for (let j = 0; j <= 16; j++) {
+          const q = k * j / 16, e = q * q;
+          const px = th.x0 + th.homeDir * e * 520 - cam.x, py = th.y0 - Math.sin(Math.min(1, q * 1.3) * Math.PI / 2) * 300 - e * 120 - cam.y + 6 + (i - 3) * 3.2;
+          j ? c.lineTo(px, py) : c.moveTo(px, py);
+        }
+        c.stroke();
+      });
+      c.restore();
+    }
+    G().drawGlow(x, y - 24 * s, 46 * s, th.found ? m.trailColor : '#d9d2e6', th.found ? 0.45 : 0.3 + Math.sin(t * 0.05) * 0.08, c);
+    if (th.cloud) { const sc = 0.32 * s * BB.easeOutBack(th.cloud); BB.Backdrops.cloud(c, x - 30 * sc, y + 4 + 10 * sc, sc, 'rgba(255,255,255,0.96)'); }
+    let pose;
+    if (!th.found) pose = { mode: 'sit', sad: 0.9, t, look: Math.sin(t * 0.02) > 0.6 ? 1 : 0, ear: Math.sin(t * 0.03) * 0.3 };
+    else pose = { mode: th.hop < 0 ? 'air' : 'sit', vy: -2, happy: true, t };
+    BB.Kittens.draw(c, BB.Kittens.fadedId(th.kin, fade), pose, x, y - 4 + th.hop, s, th.facing);
+    if (!th.found) {
+      // a little rain cloud of their own, and a tear now and then
+      BB.Critters.moodCloud(c, x, y - 52 * s + Math.sin(t * 0.04) * 2, 1, t, 0.75 * s);
+      const k = (t % 140) / 140;
+      if (k < 0.4) { c.fillStyle = `rgba(150,200,255,${1 - k * 2.5})`; G().ellipse(x + 7 * s * th.facing, y - 22 * s + k * 30, 1.6, 2.4, 0, c); c.fill(); }
+    } else if (th.foundT < 50) {
+      // their colour floods back with a ring of the rainbow
+      const k = th.foundT / 50;
+      c.save(); c.globalAlpha = 1 - k; c.lineWidth = 3;
+      BB.RAINBOW.forEach((col, i) => { c.strokeStyle = col; G().circle(x, y - 22 * s, (20 + k * 70) * s - i * 3, c); c.stroke(); });
+      c.restore();
+    }
+    ctx.light(x, y - 20, 140, th.found ? m.trailColor : '#d9d2e6', 0.7);
   }
 
   function drawBench(c, x, y, th, ctx) {

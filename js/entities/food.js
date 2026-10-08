@@ -13,7 +13,6 @@
   'use strict';
   const C = BB.CFG;
   const T = C.TILE;
-  const TAU = Math.PI * 2;
   const G = () => BB.G;
   const W = () => BB.World;
   const PT = () => BB.Particles;

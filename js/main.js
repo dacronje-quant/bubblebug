@@ -17,13 +17,16 @@
 
     // go('play', opts) — fade through a soft lilac; pause/resume are instant
     go(name, opts) {
+      BB.Voice.stop();
       if (name === 'pause') { this.set('pause'); return; }
-      if (name === 'play-resume') { this.scene = BB.Play; this.name = 'play'; BB.Input.clearAll(); return; }
+      if (name === 'play-resume') { this.scene = BB.Play; this.name = 'play'; BB.RenderMotion.reset(); BB.Input.clearAll(); return; }
       this.next = { name, opts };
       this.fadeDir = 1;
     },
 
     set(name, opts) {
+      BB.Voice.stop();
+      BB.RenderMotion.reset();
       this.name = name;
       this.scene = SCENES[name];
       this.scene.enter(opts || {});
@@ -31,6 +34,7 @@
     },
 
     update() {
+      BB.RenderMotion.beforeTick(this.name);
       if (this.fadeDir) {
         this.fade += this.fadeDir * 0.07;
         if (this.fade >= 1 && this.fadeDir > 0) {
@@ -44,8 +48,25 @@
       this.scene.update();
     },
 
-    draw() {
+    draw(alpha = 1) {
+      return BB.RenderMotion.draw(alpha, () => this.drawScene());
+    },
+
+    drawScene() {
+      const p = BB.Play;
+      const pictureMenu = this.name === 'play' && !!(p.wardrobe || p.gardenChoice || p.portalChoice || p.maze && p.maze.choice || p.cloud && p.cloud.done || p.mini && p.mini.done);
+      document.body.classList.toggle('picture-menu', pictureMenu);
+      document.body.classList.toggle('menu-open', this.name !== 'play' || pictureMenu);
+      const mazeControls = document.body.classList.contains('touch') && document.body.classList.contains('in-maze') && !document.body.classList.contains('menu-open');
+      if (mazeControls !== document.body.classList.contains('maze-controls')) {
+        document.body.classList.toggle('maze-controls', mazeControls);
+        G.resize();
+      }
       G.begin();
+      if (G.surround && (this.name !== 'play' || pictureMenu || p.maze || p.cloud || p.mini)) {
+        G.surround.style.display = 'none'; G.sideHUD = null;
+        document.body.classList.remove('side-hud');
+      }
       const c = G.ctx;
       c.save();
       this.scene.draw(c);
@@ -57,27 +78,14 @@
     },
   };
 
-  // ──── Adaptive quality ────
-  // If frames are consistently slow (an older PC without much graphics
-  // power), gently lower the render resolution until play is smooth.
-  let slowT = 0, avgDt = 16.7;
-  function adaptQuality(dt) {
-    if (document.hidden || dt > 200) return;
-    avgDt = avgDt * 0.95 + dt * 0.05;
-    if (avgDt > 24 && G.scale > 0.8) {
-      if (++slowT > 120) {
-        G.maxScale = Math.max(0.75, Math.min(G.maxScale, G.scale) - 0.25);
-        G.resize(); BB.Tiles.clear();
-        slowT = 0; avgDt = 16.7;
-      }
-    } else slowT = Math.max(0, slowT - 1);
-  }
-
   // ──── Loop ────
-  let acc = 0, last = performance.now();
+  let acc = 0, last = performance.now(), lastWork = 0, lastDraw = 0;
   function frame(now) {
-    adaptQuality(now - last);
-    acc += Math.min(100, now - last);
+    const period = now - last;
+    // Resize before drawing: changing the backing canvas clears its pixels.
+    BB.FrameQuality.sample(period, lastWork, lastDraw);
+    const start = performance.now();
+    acc += Math.min(100, Math.max(0, period));
     last = now;
     let steps = 0;
     while (acc >= C.STEP && steps < 6) {
@@ -89,7 +97,16 @@
       steps++;
     }
     if (steps >= 6) acc = 0;
-    Main.draw();
+    const drawStart = performance.now();
+    Main.draw(acc / C.STEP);
+    const end = performance.now();
+    lastWork = end - start; lastDraw = end - drawStart;
+    // spare time this frame: build the terrain just off screen, and the
+    // backdrop of a zone close by, ahead of time
+    if (Main.name === 'play' && BB.Play.visibleRooms && performance.now() - now < 8) {
+      BB.Tiles.warm(BB.Play.visibleRooms, BB.Camera);
+      BB.Backdrops.warm(BB.Play.backdropsAhead(), now + 10);
+    }
     requestAnimationFrame(frame);
   }
 
@@ -112,7 +129,16 @@
       BB.Input.pointerDown = p;
       e.preventDefault();
     });
-    cv.addEventListener('pointermove', e => { if (BB.Input.pointerDown) BB.Input.pointerDown = G.toLogical(e.clientX, e.clientY); });
+    cv.addEventListener('pointermove', e => {
+      const p = G.toLogical(e.clientX, e.clientY), I = BB.Input;
+      if (I.pointerDown) I.pointerDown = p;
+      if (e.pointerType === 'mouse' && (!I.pointerPos || p.x !== I.pointerPos.x || p.y !== I.pointerPos.y)) {
+        I.pointerPos = p; I.pointerVersion++;
+      }
+    });
+    cv.addEventListener('pointerleave', () => {
+      if (BB.Input.pointerPos) { BB.Input.pointerPos = null; BB.Input.pointerVersion++; }
+    });
     window.addEventListener('pointerup', () => { BB.Input.pointerDown = null; });
     window.addEventListener('pointercancel', () => { BB.Input.pointerDown = null; });
     window.addEventListener('keydown', unlock);
@@ -129,22 +155,48 @@
       e.preventDefault(); e.stopPropagation();
       unlock();
       if (Main.name === 'play') BB.Play.toggleMap();
+      else if (Main.name === 'pause' && BB.Pause.map) BB.Pause.closeMap();
+      else if (Main.name === 'pause') BB.Pause.activate(2);
     });
     // stepping away from the tablet pauses the game
     document.addEventListener('visibilitychange', () => {
+      last = performance.now(); acc = 0; lastWork = lastDraw = 0;
+      BB.RenderMotion.reset(); BB.FrameQuality.reset();
       if (document.hidden && Main.name === 'play' && !BB.Play.gift) Main.go('pause');
     });
 
     BB.Save.load();
     Main.set('title');
     // Developer shortcut (never needed to play): index.html#play=phoebe&room=c4&ab=all
-    // jumps straight into a room, optionally with every power.
+    // jumps straight into a room, optionally with every power; hunt=1 starts
+    // just after Rainbow's rescue (her family is lost). demo=rewards
+    // seeds a save-free preview so a grown-up can try the optional extras.
     const h = location.hash;
     const m = /play=(\w+)/.exec(h);
     if (m) {
       const room = /room=(\w+)/.exec(h), all = /ab=all/.test(h);
-      if (room || all) BB.Save.data = BB.Save.fresh();
+      const demo = /(?:^#|&)demo=rewards(?:&|$)/.test(h);
+      // demo=rainbow: save-free, just after Rainbow's rescue, to find her family
+      const rainbowDemo = /(?:^#|&)demo=rainbow(?:&|$)/.test(h);
+      if (room || all || demo || rainbowDemo) BB.Save.data = BB.Save.fresh();
+      if (demo) {
+        BB.Save.preview = true;
+        BB.World.build();
+        const s = BB.Save.data;
+        for (const th of BB.World.findThings('*').slice(0, 250)) s.sparkles[th.tx + ',' + th.ty] = 1;
+        for (const ch of ['b', 'c']) for (const th of BB.World.findThings(ch)) s.friends[th.tx + ',' + th.ty] = 1;
+        for (const r of BB.World.rooms) if (r.def.family) s.family[r.def.family] = 1;
+        for (const a of BB.Wardrobe.LIST) if (a.boss) s.outfits[a.id] = 1;
+        s.introDone = 1; s.leftHome = 1; s.finale = true;
+      }
       if (all) Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
+      const hunt = s => { BB.World.build(); for (const r of BB.World.rooms) if (r.def.family) s.family[r.def.family] = 1;
+        Object.assign(s, { mazeSolved: true, rainbowUnlocked: true, kinIntro: 1, introDone: 1, leftHome: 1, finale: true }); };
+      if (rainbowDemo) {
+        BB.Save.preview = true; hunt(BB.Save.data); BB.Save.data.kinIntro = 0;
+        Object.keys(BB.Save.data.abilities).forEach(k => { BB.Save.data.abilities[k] = true; });
+      }
+      if (/hunt=1/.test(h)) hunt(BB.Save.data);
       if (room) {
         BB.World.build();
         const r = BB.World.byId[room[1]];

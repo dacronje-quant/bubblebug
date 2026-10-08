@@ -106,7 +106,7 @@
 
     // ── Mushroom Meadow: the Toadstool Toad ──
     toad(c, st) {
-      const m = st.mood, t = st.t;
+      const m = st.mood;
       const green = tone('#6cc27a', m), belly = tone('#e8f5c8', m), dark = tone('#3f8a52', m);
       const hop = st.pose === 'hop';
       // back legs
@@ -277,7 +277,7 @@
     // ── Coral Lagoon: the Grumpy Octopus ──
     octopus(c, st) {
       const m = st.mood, t = st.t;
-      const pink = tone('#ff8fa8', m), dark = tone('#d0607a', m), spot = tone('#ffc0cc', m);
+      const pink = tone('#ff8fa8', m), spot = tone('#ffc0cc', m);
       const slap = st.pose === 'attack' || st.pose === 'tele';
       // tentacles swaying in the water
       c.lineCap = 'round';

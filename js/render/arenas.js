@@ -8,18 +8,20 @@
 (function (BB) {
   'use strict';
   const T = BB.CFG.TILE;
-  const TAU = Math.PI * 2;
   const G = () => BB.G;
   const A = () => BB.Backdrops.art;
 
   const bossOf = (room, play) => (play.ents[room.id] || { bosses: [] }).bosses[0] || null;
 
   function drawBack(c, room, cam, t, play) {
-    const ad = room.def.arena;
+    // a mirror-image room paints its scenery as drawn, then flips the picture
+    const flip = !!room.def.flip;
+    const ad = flip ? room.def.src.arena : room.def.arena;
     const X = col => (room.x + col) * T - cam.x, Y = row => (room.y + row) * T - cam.y;
     const floor = Y(14);
     c.save();
     c.beginPath(); c.rect(X(0), Y(0), room.w * T, room.h * T); c.clip();
+    if (flip) { c.translate(2 * X(0) + room.w * T, 0); c.scale(-1, 1); }
     switch (ad.name) {
       case 'Pond Garden': {
         // a lily pond and a picket fence behind the flowerbeds

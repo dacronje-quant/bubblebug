@@ -65,9 +65,66 @@
     return d;
   }
 
+  // v4 → v5: only the Cat House moved. Keep every existing world
+  // collectible key and room id; move resume / bench coordinates at home.
+  function migrate4(d) {
+    const old = { x: 480 * 32, y: -118 * 32, w: 60 * 32, h: 34 * 32 };
+    const move = p => {
+      if (!p || p.x == null || p.y == null) return;
+      if (p.x + 10 >= old.x && p.x + 10 < old.x + old.w &&
+          p.y + 12 >= old.y && p.y + 12 < old.y + old.h) {
+        p.x -= 630 * 32; p.y += 100 * 32;
+      }
+    };
+    move(d); move(d.bench);
+    d.v = 5;
+    return d;
+  }
+
+  // v8 → v9: the kingdom was rebuilt round the house ("House at the
+  // Heart"). Every room moved as a whole rectangle, some mirror-image; the
+  // Cat House rooms stayed put. Tile keys and the resume / bench spots move
+  // with their room: new = newRoom + (old − oldRoom), mirrored for a
+  // mirror-image room. OLD9 is where each room sat in v8 (id:x:y:w:h).
+  const OLD9 = 'g1:0:0:30:17 g2:30:0:30:17 g3:60:0:45:17 g4:105:-17:30:34 g5:0:-17:60:17 g6:135:-17:30:17 m1:165:-17:30:17 m2:195:-34:30:34 m3:225:-34:30:17 m4:255:-34:60:17 m5:345:-34:30:34 m6:270:-51:30:17 m7:315:-34:30:17 c1:345:0:30:17 c2:375:0:60:17 c3:435:0:30:34 c4:465:17:30:17 c5:525:0:30:34 c6:375:17:60:17 c7:495:17:30:17 h1:525:-17:30:17 h2:555:-34:30:34 h3:585:-34:30:17 h4:615:-34:60:17 h5:525:-34:30:17 h6:675:-34:30:17 r1:705:-34:30:17 r2:735:-34:60:17 r3:795:-51:30:34 r4:825:-51:30:17 r5:855:-51:60:17 r6:735:-51:60:17 r7:915:-51:30:17 k1:945:-68:30:34 k2:975:-68:60:17 k3:1035:-68:30:17 k4:1065:-68:30:17 k5:1095:-68:30:51 k6:975:-85:60:17 l1:1096:-174:30:17 l2:1051:-174:45:17 l3:1021:-174:30:17 l4:991:-157:60:34 lb:1021:-123:30:17 l5:961:-157:30:34 l6:961:-174:30:17 l7:931:-182:30:17 d1:901:-182:30:17 d2:856:-182:45:17 d3:826:-182:30:17 db:826:-165:30:17 d4:796:-182:30:34 d5:751:-165:45:17 d6:721:-165:30:17 f1:691:-165:30:17 f2:661:-182:30:34 f3:631:-182:30:17 f4:586:-190:45:17 fb:586:-207:45:17 f5:556:-190:30:17 f6:526:-190:30:17 a1:496:-190:30:17 a2:451:-190:45:17 ab:451:-173:45:17 a3:421:-190:30:17 a4:376:-190:45:17 a5:346:-190:30:17 a6:316:-190:30:17 s1:286:-190:30:17 s2:241:-190:45:17 sb:241:-207:45:17 s3:211:-190:30:17 s4:166:-201:45:17 s5:136:-212:30:17 s6:106:-212:30:17 t1:76:-212:30:17 t2:31:-212:45:17 tb:31:-229:45:17 t3:1:-212:30:17 t4:-29:-246:30:51 t5:-89:-246:30:17 t6:-59:-246:30:17';
+  function migrate8(d) {
+    const W = BB.World;
+    if (!W.rooms.length) W.build();
+    const old = OLD9.split(' ').map(s => { const [id, x, y, w, h] = s.split(':'); return { id, x: +x, y: +y, w: +w, h: +h }; });
+    const roomAt = (tx, ty) => old.find(o => tx >= o.x && tx < o.x + o.w && ty >= o.y && ty < o.y + o.h);
+    const tile = (tx, ty) => {
+      const o = roomAt(tx, ty), r = o && W.byId[o.id];
+      if (!r) return null;
+      const dx = tx - o.x;
+      return [r.x + (r.def.flip ? o.w - 1 - dx : dx), r.y + (ty - o.y)];
+    };
+    const keys = obj => {
+      const out = {};
+      for (const [k, v] of Object.entries(obj || {})) {
+        const [x, y] = k.split(',').map(Number);
+        const t = tile(x, y);
+        out[t ? t.join(',') : k] = v;
+      }
+      return out;
+    };
+    for (const f of ['sparkles', 'friends', 'buds', 'pads', 'babies', 'keys']) d[f] = keys(d[f]);
+    // a kitten-sized spot in world px (its top-left corner)
+    const spot = p => {
+      if (!p || p.x == null || p.y == null) return;
+      const o = roomAt(Math.floor((p.x + PW / 2) / T), Math.floor((p.y + 12) / T)), r = o && W.byId[o.id];
+      if (!r) return;
+      const dx = p.x - o.x * T;
+      p.x = r.x * T + (r.def.flip ? o.w * T - dx - PW : dx);
+      p.y += (r.y - o.y) * T;
+    };
+    spot(d); spot(d.bench);
+    d.v = 9;
+    return d;
+  }
+
   function fresh() {
     return {
-      v: 4,
+      v: 9,
       cat: 'marshmallow',
       room: null, x: null, y: null,        // resume spot (world px)
       bench: null,                          // last bench rested at {x,y}
@@ -76,11 +133,15 @@
         swim: false, dig: false, spring: false, rings: false, bubbleBounce: false, wings: false,
       },
       family: {},                           // family member id → 1 (found)
+      kin: {},                              // Rainbow's relatives who are home (lost again on a replay)
+      kinIntro: 0,                          // the "find Rainbow's family" card has shown
+      cloudMask: 0,                         // colours gathered in the Cloud Maze (Mama's maze)
       sparkles: {},                         // key → 1
       friends: {},                          // key → 1
       toys: {},                             // toy id → 1
       buds: {},                             // bud key → 1
       gates: {},                            // room id → 1 once its gate is open
+      shortcuts: {},                        // hatch id → 1 once climbed through from below
       bosses: {},                           // arena room id → 1 (cheered up!)
       pads: {},                             // paw pad key → 1 (pressed)
       babies: {},                           // lost baby key → 1 (home with mama)
@@ -90,7 +151,22 @@
       secrets: {},                          // shy-wall room → 1
       visited: {},                          // room id → 1
       outfits: {},                          // things to wear, from the bosses: id → 1
-      wear: { head: null, neck: null },     // what the kitten has on
+      wear: { head: null, neck: null, face: null }, // what the kitten has on
+      starsSpent: 0, heartsSpent: 0,        // collection totals stay untouched
+      purchases: {},                       // optional cosmetic id → 1
+      cosmetics: { bubble: 'classic', trail: 'classic' },
+      residents: {},                       // invited friend species → 1
+      hiddenResidents: {},                 // invited species resting away from the garden
+      fountainUses: 0,
+      mazeSolved: false,
+      mazePosition: null,                  // top-down garden cell, separate from world save point
+      inMaze: false, mazeReturn: null,
+      mazePuzzleVersion: 1, mazeLegacyAccess: false,
+      rainbowUnlocked: false,             // rescued character survives a Rainbow replay
+      replayCount: 0,
+      voiceStory: {},                     // spoken story milestones in this adventure only
+      storyPending: [],                   // story lines cut short before the end (tried again)
+      glassesFound: {},                   // discoveries in this adventure; clothing stays earned
       doors: {},                            // zone → 1 once its cat flap is found (a door opens at home)
       introDone: 0,                         // the wake-up scene has played
       leftHome: 0,                          // been out of the front door
@@ -100,12 +176,15 @@
   }
 
   BB.Save = {
+    preview: false, // explicit reward demo: keep the normal save untouched
     data: fresh(),
     fresh,
     exists() {
+      if (this.preview) return true;
       try { return !!localStorage.getItem(KEY); } catch (e) { return false; }
     },
     load() {
+      if (this.preview) return true;
       try {
         const raw = localStorage.getItem(KEY);
         if (raw) {
@@ -115,9 +194,31 @@
             if (d.cat === 'pip') d.cat = 'phoebe'; // the tabby's early name
             migrate3(d);
           }
-          if (d && d.v === 4) {
+          if (d && d.v === 4) migrate4(d);
+          if (d && d.v === 5) d.v = 6; // defaults give existing players their full collected balance
+          if (d && d.v === 6) {
+            d.v = 7; d.starsSpent = 0; // all collected stars count; keep every old owned item
+            // The old platform maze has become a hedge labyrinth. Resume
+            // beside its entrance; its stars/pads/progress keep their keys.
+            if (d.room === 'nm' || (d.x != null && d.x >= -180 * T && d.x < -150 * T && d.y >= -18 * T && d.y < 16 * T)) {
+              d.room = 'hm'; d.x = -148 * T + 6; d.y = 14 * T - 24;
+            }
+            if (d.bench && d.bench.x >= -180 * T && d.bench.x < -150 * T) d.bench = null;
+          }
+          if (d && d.v === 7) {
+            d.v = 8; d.rainbowUnlocked = !!d.mazeSolved || d.cat === 'rainbow';
+            d.inMaze = d.room === 'nm'; // old nm saves were inside the maze game
+          }
+          if (d && d.v === 8) migrate8(d);
+          if (d && d.v === 9) {
             this.data = Object.assign(fresh(), d);
             this.data.abilities = Object.assign(fresh().abilities, d.abilities || {});
+            this.data.wear = Object.assign(fresh().wear, d.wear || {});
+            this.data.cosmetics = Object.assign(fresh().cosmetics, d.cosmetics || {});
+            for (const field of ['outfits', 'purchases', 'residents', 'hiddenResidents', 'glassesFound', 'voiceStory', 'kin', 'shortcuts']) this.data[field] = Object.assign({}, d[field] || {});
+            // An older active maze can finish its existing route. New
+            // entries use the lantern gates, keeping every pad/star key.
+            if (d.inMaze && !d.mazePuzzleVersion) this.data.mazeLegacyAccess = true;
             return true;
           }
         }
@@ -126,29 +227,86 @@
       return false;
     },
     write() {
+      // Earn activity rewards at the moment their progress is saved,
+      // including in the demo. They remain earned through Rainbow replays.
+      if (BB.Economy) BB.Economy.milestones(this.data);
+      if (this.preview) return;
       try { localStorage.setItem(KEY, JSON.stringify(this.data)); } catch (e) { /* storage full / blocked */ }
     },
     reset() {
       const cat = this.data.cat;
       this.data = fresh();
       this.data.cat = cat;
+      if (this.preview) return;
       try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
+    },
+    resetRainbowFamily() {
+      const old = this.data;
+      if (!old.mazeSolved || !old.rainbowUnlocked) return false;
+      // Replace the save so callbacks from the previous hunt cannot mark
+      // the new hunt's story as heard. Everything else stays earned.
+      const next = Object.assign({}, old, { kin: {}, kinIntro: 0, cloudMask: 0,
+        room: null, x: null, y: null, inMaze: false, mazeReturn: null });
+      next.voiceStory = Object.fromEntries(Object.entries(old.voiceStory || {}).filter(([id]) => !id.startsWith('kin_')));
+      next.storyPending = (Array.isArray(old.storyPending) ? old.storyPending : []).filter(id => !id.startsWith('kin_'));
+      next.storyPending.push('kin_hunt_start');
+      this.data = next;
+      this.write();
+      return true;
+    },
+    rainbowReplay() {
+      const old = this.data;
+      if (!old.mazeSolved || !old.rainbowUnlocked) return false;
+      BB.Economy.milestones(old);
+      const next = fresh();
+      next.cat = 'rainbow'; next.rainbowUnlocked = true;
+      next.replayCount = (Number.isSafeInteger(old.replayCount) && old.replayCount >= 0 ? old.replayCount : 0) + 1;
+      for (const key of Object.keys(next.abilities)) next.abilities[key] = !!old.abilities[key];
+      for (const field of ['outfits', 'wear', 'cosmetics', 'gestures']) next[field] = Object.assign({}, next[field], old[field] || {});
+      // Clothes/styles stay earned; invitations and the fountain belong
+      // to the new world and must never leave an old heart debt behind.
+      const styles = new Set(BB.Cosmetics.LIST.map(item => item.id));
+      next.purchases = Object.fromEntries(Object.entries(old.purchases || {}).filter(([id]) => BB.Wardrobe.BY[id] || styles.has(id)));
+      this.data = next;
+      this.write(); // one complete replacement, including its new checkpoint defaults
+      return true;
     },
     count(obj) { return Object.keys(obj).length; },
   };
 
   // How brave? A grown-up setting chosen on the title screen, kept on this
   // device (so it applies to Continue and New Game alike):
-  //   Easy (default) — bumps just knock the kitten back with a silly boing;
-  //                    no suns are lost and nobody ever gets too sad
-  //   Hard           — bumps and boss sad attacks cost happy suns; with no
-  //                    suns left the kitten floats back to its save point
-  const HARD_KEY = 'bubblepaws_hard';
+  //   Easy   — harmless bumps plus generous jump / landing assistance
+  //   Medium — the former Easy: original movement and harmless bumps
+  //   Hard   — original movement; bumps and sad attacks cost happy suns
+  // Existing non-hard adventures keep their old feel as Medium. Only a
+  // device with no previous choice or adventure defaults to the new Easy.
+  const HARD_KEY = 'bubblepaws_hard', MODE_KEY = 'bubblepaws_difficulty';
+  const MODES = ['easy', 'medium', 'hard'];
   BB.Settings = {
-    hard: (() => { try { return localStorage.getItem(HARD_KEY) === '1'; } catch (e) { return false; } })(),
-    setHard(on) {
-      this.hard = !!on;
-      try { localStorage.setItem(HARD_KEY, on ? '1' : '0'); } catch (e) { /* storage blocked */ }
+    difficulty: (() => {
+      let mode = 'easy';
+      try {
+        const saved = localStorage.getItem(MODE_KEY);
+        if (MODES.includes(saved)) return saved;
+        const old = localStorage.getItem(HARD_KEY);
+        if (old === '1') mode = 'hard';
+        else if (old != null || localStorage.getItem(KEY) != null) mode = 'medium';
+      } catch (e) { /* storage blocked */ }
+      // Save the resolved choice now: a new Easy adventure must still be
+      // Easy after its first progress save, even without touching the picker.
+      try { localStorage.setItem(MODE_KEY, mode); } catch (e) { /* storage blocked */ }
+      return mode;
+    })(),
+    get hard() { return this.difficulty === 'hard'; },
+    get assists() { return this.difficulty === 'easy'; },
+    setDifficulty(mode) {
+      if (!MODES.includes(mode)) return;
+      this.difficulty = mode;
+      try {
+        localStorage.setItem(MODE_KEY, mode);
+        localStorage.setItem(HARD_KEY, mode === 'hard' ? '1' : '0');
+      } catch (e) { /* storage blocked */ }
     },
   };
 })(window.BB);
