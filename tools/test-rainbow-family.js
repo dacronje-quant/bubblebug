@@ -8,6 +8,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const { bootGame } = require('./test-neighbourhood');
+const { happyMazeGraph, cloudMazeGraph } = require('./lib/maze-graph.cjs');
 
 const g = bootGame(), B = g.BB, P = B.Play, RF = B.RainbowFamily;
 const heard = [];
@@ -52,28 +53,15 @@ assert.equal(P.openJourneyChoice('rainbow'), false);
 // Each relative's own happy maze, solved with real key presses: the
 // shortest route from the solver, retrying if a friendly bee is in the way.
 const HM = B.HappyMaze, KEY = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown' };
+const miniGraphs = new Map();
 function plan(def) {
-  const s = HM.find(def, 'S'), k = HM.find(def, 'K'), start = [s.x, s.y, 0].join();
-  const prev = new Map([[start, null]]), q = [[s.x, s.y, 0]];
-  let end = null;
-  while (q.length && !end) {
-    const [x, y, m] = q.shift();
-    for (const d of Object.keys(KEY)) {
-      const n = HM.move(def, x, y, m, d); if (!n) continue;
-      const key = [n.x, n.y, n.mask].join(); if (prev.has(key)) continue;
-      prev.set(key, { from: [x, y, m].join(), d }); q.push([n.x, n.y, n.mask]);
-      if (n.x === k.x && n.y === k.y) { end = key; break; }
-    }
-  }
-  assert.ok(end, def.name + ' can be solved');
-  const dirs = []; for (let key = end; prev.get(key); key = prev.get(key).from) dirs.unshift(prev.get(key).d);
-  // no stuck states: from every reachable state the relative can still be reached
-  for (const key of prev.keys()) {
-    const [x0, y0, m0] = key.split(',').map(Number), seen = new Set([key]), qq = [[x0, y0, m0]]; let ok = false;
-    while (qq.length && !ok) { const [x, y, m] = qq.shift(); for (const d of Object.keys(KEY)) { const n = HM.move(def, x, y, m, d); if (!n) continue; if (n.x === k.x && n.y === k.y) ok = true; const kk = [n.x, n.y, n.mask].join(); if (!seen.has(kk)) { seen.add(kk); qq.push([n.x, n.y, n.mask]); } } }
-    assert.ok(ok, def.name + ' has no stuck state at ' + key);
-  }
-  return dirs;
+  if (!miniGraphs.has(def)) miniGraphs.set(def, happyMazeGraph(HM, def));
+  const graph = miniGraphs.get(def);
+  assert.ok(graph.solution, def.name + ' can be solved');
+  assert.equal(graph.summary.traps, 0, def.name + ' has a reachable trap: ' + JSON.stringify(graph.trapWitness));
+  // All reachable positions/item masks are enumerated before one reverse
+  // graph traversal checks completion. The live walk still tests bee waits.
+  return graph.solution.actions;
 }
 function solveMini() {
   const m = P.mini; assert.ok(m, 'a happy maze is open');
@@ -130,22 +118,8 @@ assert.ok(heard.includes('kin_cloud_maze'));
 // 6. The Cloud Maze: closed colour bridges, a forced order, kept colours.
 const C = B.CloudMaze, key = { '-1,0': 'ArrowLeft', '1,0': 'ArrowRight', '0,-1': 'ArrowUp', '0,1': 'ArrowDown' };
 function solve(from, mask, skip) {
-  const start = [from.x, from.y, mask].join(), prev = new Map([[start, null]]), q = [[from.x, from.y, mask]];
-  while (q.length) {
-    const [x, y, m] = q.shift();
-    if (x === C.MAMA.x && y === C.MAMA.y) {
-      const path = []; let k = [x, y, m].join();
-      while (k) { path.push(k.split(',').map(Number)); k = prev.get(k); }
-      return path.reverse();
-    }
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-      const nx = x + dx, ny = y + dy;
-      if (!C.walkable(nx, ny, m) || C.potAt(nx, ny) === skip) continue;
-      const pot = C.potAt(nx, ny), nm = pot ? m | 1 << C.POTS.indexOf(pot) : m, k = [nx, ny, nm].join();
-      if (!prev.has(k)) { prev.set(k, [x, y, m].join()); q.push([nx, ny, nm]); }
-    }
-  }
-  return null;
+  const graph = cloudMazeGraph(C, { from, mask, skip });
+  return graph.solution ? graph.solution.states.map(s => [s.x, s.y, s.mask]) : null;
 }
 const route = solve(C.START, 0);
 assert.ok(route && route.length > 100, 'Mama can be reached, after a real journey');
@@ -153,8 +127,11 @@ const order = route.map(([x, y]) => C.potAt(x, y)).filter((p, i, a) => p && a.in
 assert.equal(order, 'voygtb', 'each relative opens the way to the next');
 for (const pot of C.POTS) assert.equal(solve(C.START, 0, pot), null, 'every relative is needed: ' + pot);
 assert.equal(C.walkable(3, 2, 0), false, 'the rainbow bridge needs all six colours');
-// every gathered set still leads to Mama: no stuck states
-for (let m = 0; m <= C.ALL; m++) assert.ok(solve(C.START, m), 'reachable from start with colours ' + m);
+// Complete position/colour graph from every saved colour mask, not just
+// a successful START route per mask. Side branches must also reach Mama.
+const cloudGraph = cloudMazeGraph(C, { masks: Array.from({ length: C.ALL + 1 }, (_, i) => i) });
+assert.equal(cloudGraph.summary.traps, 0, 'Cloud Maze has a reachable trap: ' + JSON.stringify(cloudGraph.trapWitness));
+assert.ok(cloudGraph.solution);
 const walk = (steps) => {
   for (const [x, y] of steps) {
     const c = P.cloud, d = key[[x - c.x, y - c.y].join()];

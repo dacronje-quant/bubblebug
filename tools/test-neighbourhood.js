@@ -26,7 +26,9 @@ function bootGame(canvasFactory, options = {}) {
   elements.set('game', canvas());
   for (const id of ['pause-btn', 'map-btn', 'touch']) elements.set(id, element());
   const context = {
-    console, performance, setTimeout, clearTimeout,
+    console, performance: options.clock?.performance || performance,
+    setTimeout: options.clock?.setTimeout || setTimeout,
+    clearTimeout: options.clock?.clearTimeout || clearTimeout,
     innerWidth: 1280, innerHeight: 720, devicePixelRatio: 1,
     addEventListener: listen, matchMedia: () => ({ matches: false }),
     requestAnimationFrame() {}, navigator: { getGamepads: () => [] }, location: { hash: options.hash || '' },
@@ -40,6 +42,18 @@ function bootGame(canvasFactory, options = {}) {
       setItem: (key, value) => storage.set(key, String(value)), removeItem: key => storage.delete(key),
     },
   };
+  // Optional deterministic test clock/randomness. Existing suites keep
+  // their original environment when these options are omitted.
+  if (options.seed != null) {
+    let state = Number(options.seed) >>> 0;
+    context.Math = Object.create(Math);
+    context.Math.random = () => {
+      state = (state + 0x6D2B79F5) >>> 0;
+      let n = Math.imul(state ^ state >>> 15, 1 | state);
+      n ^= n + Math.imul(n ^ n >>> 7, 61 | n);
+      return ((n ^ n >>> 14) >>> 0) / 4294967296;
+    };
+  }
   context.window = context;
   vm.createContext(context);
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
@@ -56,7 +70,10 @@ function bootGame(canvasFactory, options = {}) {
   }
   function tick(n = 1, next = []) {
     keys(next);
-    for (let i = 0; i < n; i++) { context.BB.Input.poll(); context.BB.Main.update(); }
+    for (let i = 0; i < n; i++) {
+      context.BB.Input.poll(); context.BB.Main.update();
+      if (options.clock) options.clock.advance(context.BB.CFG.STEP);
+    }
   }
   function place(id, col, floor) {
     const B = context.BB, P = B.Play, r = B.World.byId[id];

@@ -415,7 +415,7 @@ tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (
 - **Adaptive music.** Boss arenas, parties and the title keep layered songs; each has an 8-bar song in layers (pad, bass, lead, arpeggio, percussion, twinkles). Running swells the arps and percussion, benches fade to a music box, a new friend adds a twinkle layer, dark caves warm the mix, and boss arenas get their own bouncy tune.
 - **Saves.** Progress lives in browser local storage and is written on every room change, save point, friend, gate and reward. Difficulty and sound are separate device settings. Schema v9 carries existing collectibles, resume and bench positions into the compact kingdom, including mirrored rooms, while retaining hidden-glasses discoveries, the maze return point, Rainbow unlock and replay count. Earlier migrations restore the full star total and purchased items and relocate old-house checkpoints. The family-only reset replaces only Rainbow-family quest/story progress and the resume location. The full reset clears the entire adventure. Both previews keep progress entirely in memory and protect the normal save.
 
-### Zero softlocks, proven
+### Sampled reachability and runtime playability checks
 
 ```
 node tools/test-neighbourhood.js       # real scene/physics, migration, routes, puzzles and save checks
@@ -444,22 +444,22 @@ node tools/verify-world.js --stage 10  # just one story stage (0 = start … 10 
 node tools/verify-world.js --map g3    # also print a room with reachable air marked •
 ```
 
-The verifier loads the real game modules and simulates hundreds of button patterns from every reachable standing spot using the game's own physics: walks, hops, run-ups, mid-air steering, double jumps, wall kicks, glides, deep-water swims (paddle up, then steer), bubble bounces, star-wing flapping, and fairy-ring hops. It also follows every cat flap home, lit upstairs door (only to the furthest flap reached in that zone), the Rainbow Lift and the Starfall float. The front door and neighbourhood are physical routes. Eleven story stages (no powers → Double Jump → … → Star Wings → the Starfall float home) run in parallel; `--jobs` limits worker count. Run both movement variants after changing assists. It checks all of the following:
+The verifier loads the real game modules and simulates hundreds of button patterns from sampled resting positions using the game's own physics: walks, hops, run-ups, mid-air steering, double jumps, wall kicks, glides, deep-water swims (paddle up, then steer), bubble bounces, star-wing flapping, and fairy-ring hops. Its graph also models cat flaps, lit upstairs doors (only to the furthest flap reached in that zone), the Rainbow Lift and the Starfall float. The front door and neighbourhood are physical routes. Eleven story stages (no powers → Double Jump → … → Star Wings → the Starfall float home) run in parallel; `--jobs` limits worker count. Run both movement variants after changing assists. These are sampled checks with approximate interactions:
 
-1. each elder and the Starfall float home are reachable with the powers you'd have at that point;
-2. **from every reachable spot the next goal is still reachable** (the gentle rescue from water, mist and steam is modelled too);
-3. every boss and puzzle gate you can walk up to opens: the boss can be reached and bubbled where it sits to sniffle, every paw pad can be stepped on, every lost baby can be walked home to Mama, the key can be carried to its keyhole, and every bell can be bubbled. Gates open mid-search as their wishes come true, and the search carries on through them;
-4. every power gate holds: rooms marked `needs:` a power can't be reached before you have it;
-5. with all powers, every spot can travel back home (free backtracking) and every gate in the kingdom can be opened;
-6. every sparkle, hidden glasses, toy, bench, flower, firefly, critter, family member, rainbow relative, boss, puzzle piece, snack, cat trick, cat flap and lift can be reached, and every bud can be bubbled.
+1. a sampled route reaches each elder or the Starfall float with the prescribed stage powers;
+2. **every sampled standing spot can reach the next goal within the graph**, including modelled rescue edges;
+3. reached boss and puzzle gates open under approximate proximity, bubble and transport conditions; actual attack windows, pad contacts, followers, bell order and save callbacks require runtime tests;
+4. sampled movement does not enter rooms marked `needs:` before that power is available;
+5. with all powers, sampled graph nodes can return home and gates open under the modelled conditions;
+6. movement coverage passes near the listed sparkles, finds, toys, benches, flowers, fireflies, critters, family members, rainbow relatives, bosses, puzzle pieces, snacks, cat tricks, cat flaps and lifts; buds pass an approximate bubble test. Maze rooms are checked separately, and proximity coverage does not itself collect or unlock these items.
 
-Gates stay open once opened (the save remembers), so a stage that starts in a later zone begins with every gate behind it (earlier in the story, in the order `BB.STORY` lists the rooms) already open; the earlier stages prove each of those gates can be opened on the way. The boss moves themselves don't change the map, and every arena's way on is plain floor and ledges.
+Gates stay open once opened in the game, so a later search stage starts with earlier story gates already open, according to `BB.STORY`. Earlier stages check those gates under the same approximate interaction model. The graph retains edges discovered before gates opened, which can mix different collision histories. Actual boss attacks and progression must be exercised through the runtime completion harness.
 
-The separate `--replay` check starts at a fresh Cat House with all learned movement skills and every gate closed. It proves the entire adventure, all twelve family cats, hidden glasses, bosses and puzzles can be reached and completed again, with a route home from every reachable spot. Run it with both movement variants after changing replay or world progression.
+The separate `--replay` check starts at a fresh Cat House with all learned movement skills and every gate closed. It samples movement routes to family cats, finds, collectibles and bosses, models puzzle gate opening, and checks backtracking within its search graph. Rounded body states, retained gate histories, approximate interactions and bounded trajectories limit this coverage; passing does not establish a completed runtime adventure or an unconditional no-lock guarantee. Use `node tools/check-playability.cjs` to execute fresh-save progression and validate earned unlocks and Continue. Run the sampled replay check with both movement variants after changing replay or world progression.
 
-A too-sad pop-back only ever returns the kitten to a spot it has already stood on, which it left using its own moves, so the happy suns can't create a softlock either.
+The game's too-sad pop-back returns the kitten to an earlier checkpoint. The movement search does not execute the full mood, damage or sadness state machine; runtime difficulty and completion tests cover those transitions.
 
-Before any of that, a quick map check makes sure every pool has a floor and walls, so once you can swim, water is safe everywhere (no pool may sit over mist or the edge of the world).
+Before searching, a quick map check flags water tiles directly beside or above mist or the edge of the world. This adjacency check does not establish floor support, swimming safety in every state or complete gameplay liveness.
 
 The starting-stage check requires all 29 adventure neighbourhood stars to be reachable without elder powers. Maze checks prove that each matching lantern and exit is reachable in order, that all corridors and stars remain connected, and that older active routes still resume safely. The indoor door is tested at 0, 11 and 12 cats with all powers in every difficulty. Three successive rescue/full-reset cycles check rebuilt entities, fresh gates, cleared powers/clothes, rediscoveries and reload. Two family-only resets solve all six small mazes and Mama again, while checking other progress stays earned. Garden checks repeat all three games with all 65 visitors, measure movement/facing to catch jitter or snaps, and check saved individual switches without changing the heart ledger. The compact world contains 103 rooms and 860 stars, with 65 critters, 12 toys, 12 family members, 28 benches, 12 bosses and 24 cat flaps.
 

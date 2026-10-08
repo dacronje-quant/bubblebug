@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "cases": [
+    {
+      "name": "easy-1",
+      "mode": "easy",
+      "seed": 1,
+      "ticks": 229502,
+      "requireAllCollectibles": false,
+      "captureFingerprint": "a6b2f32ad81f8faa2dd15688181a43ca285dafef6a6372bc65c548cd46922958",
+      "sha256": "1916f9b79bbfd5b5f2f0556553283c26dfa9502f12c3b25cf25329179e9480cd",
+      "stars": 396,
+      "critters": 65,
+      "compressedBytes": 36895
+    },
+    {
+      "name": "medium-1",
+      "mode": "medium",
+      "seed": 1,
+      "ticks": 180138,
+      "requireAllCollectibles": false,
+      "captureFingerprint": "a6b2f32ad81f8faa2dd15688181a43ca285dafef6a6372bc65c548cd46922958",
+      "sha256": "9fd4196609ae860d37d6a507320bb14542de77f56b57fca185b4c6daeed0bbf7",
+      "stars": 395,
+      "critters": 65,
+      "compressedBytes": 31606
+    },
+    {
+      "name": "hard-1",
+      "mode": "hard",
+      "seed": 1,
+      "ticks": 177507,
+      "requireAllCollectibles": false,
+      "captureFingerprint": "a6b2f32ad81f8faa2dd15688181a43ca285dafef6a6372bc65c548cd46922958",
+      "sha256": "f5890930a62e418830ae55b018849c46ceb3dac24544aa673c45d92bdd9d6554",
+      "stars": 391,
+      "critters": 65,
+      "compressedBytes": 30715
+    },
+    {
+      "name": "easy-1-collectibles",
+      "mode": "easy",
+      "seed": 1,
+      "ticks": 328309,
+      "requireAllCollectibles": true,
+      "captureFingerprint": "a6b2f32ad81f8faa2dd15688181a43ca285dafef6a6372bc65c548cd46922958",
+      "sha256": "a4548bd164ab550ff15c208a6efc3ac8faa04cffbca9bff5e24ee446f9050eb9",
+      "stars": 860,
+      "critters": 65,
+      "compressedBytes": 54240
+    }
+  ]
+}

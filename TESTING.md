@@ -1,3 +1,73 @@
+# Automated playability checks
+
+Run `node tools/check-playability.cjs --quick` for the focused regression
+suites and complete maze state graphs. Successful suite results are reused
+only when the game, test helpers and fixtures have the same source fingerprint.
+Use `--no-cache` to run every selected suite again. Bundled canvas dependencies
+are located automatically when available.
+
+Run `node tools/check-playability.cjs` for those checks plus fresh-save
+adventures in Easy, Medium and Hard. Bundled verified input routes make seed 1
+fast to repeat: every run executes ordinary keyboard inputs through actual
+scene updates from a fresh save, then compares the entire saved state and
+runtime with the recorded expectations. A passing adventure must earn all
+required powers, bosses, both families, puzzles, finds, clothing/styles,
+invitations, the fountain, every fast-travel flap and the permanent shortcut,
+then retain earned progress and the exact saved checkpoint through Continue.
+Discovered routes are independently replayed from another fresh save before
+being cached; repeat runs execute those inputs again. The completion harness
+has no placement/teleport API and does not grant powers or rewards.
+Recorded inputs are test cases, so `--no-cache` still executes them. Historical
+capture hashes are provenance, while cached suite results require the current
+source fingerprint. See `tools/fixtures/playability/README.md` for recordings.
+
+Useful options:
+
+- `--mode easy` selects one difficulty; `--seed 7` varies repeatable gameplay
+  randomness and uses the controller when no recording exists. `--discover`
+  searches for a new route instead of using recorded or cached inputs.
+  `--only adventure` runs only actual progression, and `--only`
+  also accepts suite names or `world` when `--deep` is selected.
+- `--all-collectibles` additionally requires every world/maze star and every
+  critter, using a separate cached route.
+- `--stress` shifts representative actual jump events two ticks earlier/later
+  and requires the controller to recover to the same completion/unlock goals.
+  This samples timing margins; it does not exhaust every possible input.
+- `--browser` replays each completed earned route in Chromium, with exact
+  saved progress checks, sampled drawing throughout room/modal/boss transitions,
+  and desktop/phone captures. Installed Chrome/Edge and
+  bundled Playwright are located automatically when available.
+- `--deep` also runs normal/Easy movement across story/replay and closed/open
+  shortcuts with the existing physics graph search. This is much slower than
+  replay. `--jobs 4` limits concurrent child processes, and `--timeout-ms
+  300000` bounds each child independently of a frozen game.
+
+Results, milestone progress, exact keyboard traces, earned-ID ledgers and
+failure state are written under `test-output/playability/`. A controller that
+cannot find a route is reported as incomplete, with a nonzero exit; it is not
+automatically called a game lock. Quick checks explicitly do not confirm full
+adventure completion. Source changes during a run invalidate its combined
+result.
+
+Confirm a completed cached route in the actual browser with
+`node tools/test-playthrough-browser.js --trace PATH`. It checks exact earned
+save parity, browser persistence and unlocks, with desktop/phone captures.
+Use the usual `NODE_PATH` and `BUBBLEPAWS_BROWSER` settings below when needed.
+`--smoke` validates a short input prefix and is explicitly not a completion
+check. Sampled browser draws use a separate seeded cosmetic random stream:
+decorative door sparkles otherwise change enemy randomness and invalidate
+fixed inputs. Gameplay randomness, physics and earned rewards stay exact.
+This checks rendering throughout a deterministic route; existing touch/gamepad
+and real-time frame-loop suites remain necessary
+for those input/display paths.
+
+The physics verifier now supports `--json PATH`, `--witnesses PATH` and
+`--timeout-ms N`, preserving per-stage progress and bounded search failures.
+Witnesses are route candidates requiring actual gameplay validation. Its
+passing result covers sampled resting-position reachability: merged body
+states, interaction approximations, retained gate-history edges and bounded
+unresolved trajectories prevent an unconditional no-lock guarantee.
+
 # Trying smooth movement and room boundaries
 
 Room glides take 0.2 seconds while the kitten, residents, bubbles and game
@@ -77,7 +147,7 @@ Open [the Rainbow family preview](index.html#play=rainbow&room=hm&demo=rainbow).
 6. In the Cloud Maze, touch Twinkle (purple) near the start: the purple bridges turn solid. Each relative's colour opens the way to the next; bumping a closed bridge wobbles it. Leave by standing on the start cloud for two seconds or tapping the house: gathered colours are kept. The rainbow bridge by Mama needs all six. Reach her: the whole family gathers under a rainbow, then fireworks over the courtyard and rainbow bubbles.
 7. Only now does the sad cloud offer a replay. Its picture cards match New Game on the title: the **house and both families with crossed-out items** reset everything, while **Rainbow's seven relatives with green ticks** reset only her family. Circular arrows mean replay; the big green play arrow is the safe default. Small captions are for adults and reading is not required. Family-only clears the seven relatives and cloud colours, returns you home, and keeps the twelve house cats, your kitten, every skill, item, reward and all other progress. Find all six and Mama again; reload partway through to check progress persists. Full reset shows a second picture warning with the green play arrow selected first; only the red restart arrow clears the whole adventure and opens kitten selection. Before Rainbow's rescue, the title's family-only card has a large padlock.
 
-`node tools/test-rainbow-family.js` checks all of this (including walking the whole Cloud Maze with real key presses and proving there are no stuck states), and `node tools/verify-world.js --replay` proves every relative's perch can be reached with no softlocks.
+`node tools/test-rainbow-family.js` checks these interactions, including walking the Cloud Maze with real key presses. `node tools/test-maze-graph.js` explores the discrete maze states. `node tools/verify-world.js --replay` supplies sampled movement coverage of the relatives' perches; `node tools/check-playability.cjs` requires actual rescues and earned unlocks.
 
 # Trying the home neighbourhood and rewards
 
@@ -98,7 +168,7 @@ The title picker has three modes: **Easy** adds jumping and landing help; **Medi
 
 11. Hover or use keyboard/gamepad to choose New Game, difficulty and a kitten: a translucent paw marks the selected picture. A parked mouse must not undo keyboard selection, and hovering never starts or erases a game. In play, Down before learning a trick shows a smiling-cat/music symbol with a question mark; the same symbol marks the trick pickups, learned-trick HUD, touch button, lesson card and relevant wardrobe reward. Learn a trick, perform it and move to cancel.
 
-The additions have automated checks for saves, every star threshold, real scene inputs, physical routes, puzzles, difficulty and all 65 roaming residents. `node tools/test-maze.js` checks every maze corridor and exit, twelve-cat access, kitten choices and reloads. `node tools/test-rainbow-garden.js` checks the physical indoor lock in all difficulties, the lantern sequence, rescue exit, garden bloom and older active maze/checkpoint compatibility; pass an output folder to render its scenes. `node tools/test-journey.js` finds all three glasses and repeats the rescue/cloud/replay loop three times. `node tools/test-garden.js` repeats every garden game, measures calm movement/facing and safe floors, checks individual switches, the removed All action and reload, and verifies later rescues join without another payment. `node tools/test-critters.js` (with @napi-rs/canvas) renders all 39 species through real updates, checking animation, greetings, landings, moods, distinct art and unchanged entities/saves. Adventure critters keep their original movement and hitboxes; garden visitors roam and play more gently. The world verifier's `--replay` mode proves a fresh world with carried skills, every boss/puzzle gate closed and all collectibles reachable, using both original and Easy movement. Chromium checks cover keyboard/mouse input, every wardrobe category/page, individual garden switches, a complete lantern maze rescue and its exit, reloading, preview save protection and emulated tablet touch. `node tools/test-menu-feedback.js` checks safe menu hover and the gesture inputs; pass an output folder with @napi-rs/canvas available to inspect menu paws, an exact half star bar, visible doorway/wardrobe/garden/pond/lift waits and heart-locked critter sliders. Canvas scenes are rendered for inspection. A physical gamepad/tablet playtest remains useful for judging feel and touch comfort.
+The additions have automated checks for saves, every star threshold, real scene inputs, physical routes, puzzles, difficulty and all 65 roaming residents. `node tools/test-maze.js` checks every maze corridor and exit, twelve-cat access, kitten choices and reloads. `node tools/test-rainbow-garden.js` checks the physical indoor lock in all difficulties, the lantern sequence, rescue exit, garden bloom and older active maze/checkpoint compatibility; pass an output folder to render its scenes. `node tools/test-journey.js` finds all three glasses and repeats the rescue/cloud/replay loop three times. `node tools/test-garden.js` repeats every garden game, measures calm movement/facing and safe floors, checks individual switches, the removed All action and reload, and verifies later rescues join without another payment. `node tools/test-critters.js` (with @napi-rs/canvas) renders all 39 species through real updates, checking animation, greetings, landings, moods, distinct art and unchanged entities/saves. Adventure critters keep their original movement and hitboxes; garden visitors roam and play more gently. The world verifier's `--replay` mode samples movement reachability in a fresh world with carried skills and closed boss/puzzle gates, using both original and Easy movement. Its merged states, approximate interactions and bounded trajectories do not establish runtime completion or an unconditional no-lock guarantee. Use `node tools/check-playability.cjs` for naturally earned progression, unlocks and Continue checks; an unfinished controller run remains incomplete. Chromium checks cover keyboard/mouse input, every wardrobe category/page, individual garden switches, a complete lantern maze rescue and its exit, reloading, preview save protection and emulated tablet touch. `node tools/test-menu-feedback.js` checks safe menu hover and the gesture inputs; pass an output folder with @napi-rs/canvas available to inspect menu paws, an exact half star bar, visible doorway/wardrobe/garden/pond/lift waits and heart-locked critter sliders. Canvas scenes are rendered for inspection. A physical gamepad/tablet playtest remains useful for judging feel and touch comfort.
 
 Family wishes, house decorating and jukebox tunes remain deferred. No recovery benches were added. The approved story voice pack is covered below.
 
@@ -134,7 +204,7 @@ The kingdom is rebuilt round the house: sky on top, caves under the house, the s
 
 Checks:
 
-- `node tools/verify-world.js` (and `--easy`, `--replay`): every stage, zero softlocks, every collectible and hidden thing reachable; the last goal is the Starfall float home.
+- `node tools/verify-world.js` (and `--easy`, `--replay`): sampled stage goals, graph backtracking and approximate collectible/interaction coverage; the last goal is the Starfall float home. Use `node tools/check-playability.cjs` for actual runtime completion and earned unlocks.
 - `node tools/test-finds.js`: the hidden things are where they should be, go straight on when found, show as earned and still unlock by stars.
 - `node tools/test-rainbow-beams.js [shot-dir]`: Rainbow casts beams from her paw by default, one beam cheers up a boss (it still opens the way on and saves), the mirror offers Rainbow beams, and each kitten's choice survives a reload.
 - `node tools/test-camera.js`: the camera holds still in every room, including the narrow link shafts that are thinner than the screen; the kingdom map opens zoomed in on the whole current zone, with name tags that never overlap.
@@ -143,5 +213,5 @@ Checks:
 - `node tools/test-neighbourhood.js` also checks that an older save's sparkles, friends, resume spot and bench move with their rooms (save v9).
 - `node tools/test-climbs.js` preserves all 1,201 original landmarks and checks all 1,779 original standing positions in normal and Easy movement. It reloads older saves across the refreshed rooms, keeps their 756 already-collected stars and other progress, jumps the Pond Walk side route without powers, and tests the discovered Hive door before and after Sticky Paws. It also checks the garden hatch's ascent, safe landing, return drop, saved opening, Continue, family-only reset and full reset, plus the narrow Coral Garden dive pocket.
 - `node tools/test-climbs-browser.js [shot-dir]` traverses the Pond Walk reward loop, complete Golden Tower and garden return shortcut with real keyboard input, including the room seam and final Sticky Paws climb. It captures ten representative climbs and the hatch in both states at desktop and portrait-phone sizes, and checks runtime errors and overflow.
-- For the refreshed trails, run `node tools/verify-world.js --jobs 4`, then `--easy --jobs 4`, `--replay --jobs 1` and `--replay --easy --jobs 1`. The search checks every stage's goal, every reachable standing spot, power gates, all collectibles, closed puzzle/boss gates and the route back home. The explicit Hive requirement is also respected by the house door and wayfinder.
+- For the refreshed trails, run `node tools/verify-world.js --jobs 4`, then `--easy --jobs 4`, `--replay --jobs 1` and `--replay --easy --jobs 1`. The search checks sampled stage goals, standing positions, power gates, coverage near collectibles, approximate puzzle/boss conditions and graph routes home. Its finite plans, merged states and gate histories limit the conclusion. The explicit Hive requirement is also respected by the house door and wayfinder.
 - `node tools/layout-check.js` prints the world box, room coverage, overlaps and any doorway that leads nowhere; `--picture` draws the map in cells.

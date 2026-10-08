@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // ════════════════════════════════════════════════════════════════
-//  WORLD VERIFIER — proves the kingdom has no softlocks.
+//  WORLD VERIFIER — sampled movement and reachability checks.
 //
-//  Loads the real game modules (world, rooms, physics) and explores every
-//  standing spot the kitten can reach, by simulating a large family of
+//  Loads the real game modules (world, rooms, physics) and explores sampled
+//  standing spots by simulating a large family of
 //  button sequences (walks, hops, full jumps, run-ups, mid-air steering,
 //  double jumps, wall kicks, glides, swims, bubble bounces, star-wing
 //  flaps) with the exact movement code the game uses.
@@ -11,17 +11,16 @@
 //  For each story stage (no powers → +Double Jump → … → +Star Wings) it
 //  checks:
 //    1. the next elder (or, at the end, the Starfall float home) is reachable, and
-//    2. from EVERY spot you can reach in that stage, the goal is still
-//       reachable (zero softlocks — falling in water or mist always floats
-//       you back to safety, and that rescue is modelled too), and
-//    3. every boss and puzzle gate you can walk up to opens (the boss can
-//       be bubbled where it sniffles, every paw pad stepped on, every lost
-//       baby walked home, the key carried to its keyhole, every bell rung).
+//    2. every sampled standing spot can reach the goal in the search graph,
+//       including modelled hazard rescue, and
+//    3. reached puzzle gates open under approximated interaction conditions.
 //  With every power it also checks you can always travel home to the start
 //  (for backtracking to secrets), that every gate can be opened, and that
 //  every collectible, critter, boss, puzzle piece, snack, cat trick and
-//  hidden glasses and family member is reachable. (A too-sad pop-back only returns the kitten to a spot it
-//  already stood on, so it can't create a softlock.)
+//  hidden glasses and family member has movement coverage. Collecting them,
+//  completing boss/puzzle interactions, gifts, saves and unlocks requires
+//  separate runtime tests. Finite plans, position rounding and retained
+//  gate-history edges mean this search cannot prove all possible states safe.
 //
 //  Stages start at the previous elder, so they're independent and run in
 //  parallel worker threads (one per CPU core).
@@ -30,7 +29,10 @@
 //  Default: Medium / Hard's original movement. --easy uses Easy's assists.
 //  --replay starts with all powers at home and every gate still closed.
 //  --shortcuts-open checks unlocked hatches once their entry skill is earned.
-//  Exit code 0 = every check passed.
+//  --json PATH writes progress, metrics and the final result.
+//  --timeout-ms N bounds each worker; a timed-out run exits 2 (incomplete).
+//  --witnesses PATH writes candidate goal routes with compressed inputs.
+//  Exit code 0 = sampled checks passed; this is not a complete runtime proof.
 // ════════════════════════════════════════════════════════════════
 'use strict';
 const fs = require('fs');
@@ -60,6 +62,14 @@ const P = BB.Physics, FX = BB.FX;
 const EASY = isMainThread ? process.argv.includes('--easy') : !!workerData.easy;
 const REPLAY = isMainThread ? process.argv.includes('--replay') : !!workerData.replay;
 const SHORTCUTS_OPEN = isMainThread ? process.argv.includes('--shortcuts-open') : !!workerData.shortcutsOpen;
+const WITNESSES = isMainThread ? process.argv.includes('--witnesses') : !!workerData.witnesses;
+const SCOPE = 'Sampled resting-position movement reachability; puzzle interactions are approximated. This is not a complete runtime playthrough or unlock proof.';
+const LIMITATIONS = [
+  'Finite input plans and rounded positions do not cover every input; body and rescue histories can be merged.',
+  'Gate opening retains historical graph edges; routes can combine different gate states.',
+  'Boss, puzzle, collectible and gift interactions require separate runtime tests.',
+  'Maze rooms, save transitions, browser controls and runtime freezes are not proved here.',
+];
 
 // The order elders give their gifts in
 const POWERS = ['doubleJump', 'wallClimb', 'glow', 'float', 'swim', 'dig', 'spring', 'rings', 'bubbleBounce', 'wings'];
@@ -125,28 +135,28 @@ function buildSwimPlans() {
   return plans;
 }
 
-function planInput(pl, t, st) {
-  const inp = { left: false, right: false, jump: false, jumpPressed: false, bubblePressed: false };
-  const setDir = d => { inp.left = d < 0; inp.right = d > 0; };
+function planInput(pl, t, st, inp) {
+  inp.left = false; inp.right = false; inp.jump = false;
+  inp.jumpPressed = false; inp.bubblePressed = false;
   if (st.settling) return inp;
   if (pl.kind === 'swim') {
     inp.jump = pl.stop == null || t < pl.stop;
     if (t === 0) inp.jumpPressed = true;
-    if (t >= pl.wait) setDir(pl.d);
+    if (t >= pl.wait) { inp.left = pl.d < 0; inp.right = pl.d > 0; }
     return inp;
   }
   if (pl.kind === 'walk') {
-    if (t < pl.k || (pl.keep && st.airborne)) setDir(pl.d);
+    if (t < pl.k || (pl.keep && st.airborne)) { inp.left = pl.d < 0; inp.right = pl.d > 0; }
     return inp;
   }
-  if (t < pl.run) { setDir(pl.d); return inp; }
+  if (t < pl.run) { inp.left = pl.d < 0; inp.right = pl.d > 0; return inp; }
   const tj = t - pl.run;
   let d = pl.d;
   if (pl.air === 'stop' && tj >= 12) d = 0;
   else if (pl.air === 'rev' && tj >= 14) d = -pl.d;
   else if (pl.air === 'late' && tj < 10) d = 0;
   else if (pl.air === 'after' && tj < 10 + pl.flap * pl.flaps) d = 0;
-  setDir(d);
+  inp.left = d < 0; inp.right = d > 0;
   if (tj === 0) inp.jumpPressed = true;
   if (pl.dj != null && tj === pl.dj) inp.jumpPressed = true;
   if (pl.flap && tj >= 10 && (tj - 10) % pl.flap === 0 && (tj - 10) / pl.flap < pl.flaps) inp.jumpPressed = true;
@@ -157,48 +167,80 @@ function planInput(pl, t, st) {
 
 const keyOf = (x, y) => Math.round(x / 8) + ',' + Math.round(y);
 
-// Simulate one plan from a node. Returns { node } | { rescue } | null
-function simulate(node, pl, ab, cover) {
+// Simulate one plan: a resting endpoint, hazard rescue, or unresolved budget.
+function simulate(node, pl, ab, cover, metrics, capture = false) {
   const p = P.newBody(node.x, node.y);
   p.grounded = true; p.coyote = C.COYOTE;
   p.lastSafe = { x: node.safeX, y: node.safeY };
   const st = { airborne: false, settling: false };
+  const inp = { left: false, right: false, jump: false, jumpPressed: false, bubblePressed: false };
+  const inputs = capture ? [] : null;
+  let previousTx0 = NaN, previousTy0 = NaN, previousTx1 = NaN, previousTy1 = NaN;
   const maxT = pl.long ? 600 : 320;
   // a long, slow swim through deep water may take a while longer
   for (let t = 0; t < maxT || (p.inWater && t < 1600); t++) {
-    const inp = planInput(pl, t, st);
+    planInput(pl, t, st, inp);
+    if (inputs) {
+      const mask = (inp.left ? 1 : 0) | (inp.right ? 2 : 0) | (inp.jump ? 4 : 0) | (inp.jumpPressed ? 8 : 0);
+      const last = inputs[inputs.length - 1];
+      if (last && last.mask === mask) last.ticks++;
+      else inputs.push({ mask, ticks: 1 });
+    }
     const fx = P.step(p, inp, ab, EASY);
+    if (metrics) metrics.physicsTicks++;
     if (cover) {
       const tx0 = Math.floor(p.x / T), tx1 = Math.floor((p.x + p.w - 1) / T);
       const ty0 = Math.floor(p.y / T), ty1 = Math.floor((p.y + p.h - 1) / T);
-      for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
-        if (tx >= B.x0 && tx < B.x1 && ty >= B.y0 && ty < B.y1) cover[cellIdx(tx, ty)] = 1;
+      if (tx0 !== previousTx0 || ty0 !== previousTy0 || tx1 !== previousTx1 || ty1 !== previousTy1) {
+        for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+          if (tx >= B.x0 && tx < B.x1 && ty >= B.y0 && ty < B.y1) cover[cellIdx(tx, ty)] = 1;
+        }
+        previousTx0 = tx0; previousTy0 = ty0; previousTx1 = tx1; previousTy1 = ty1;
       }
     }
-    if (fx & FX.HAZARD) return { rescue: { x: p.lastSafe.x, y: p.lastSafe.y } };
+    if (fx & FX.HAZARD) return { rescue: { x: p.lastSafe.x, y: p.lastSafe.y }, ticks: t + 1, inputs };
     if (!p.grounded) st.airborne = true;
     if (fx & FX.PORTAL) st.airborne = true; // a ring hop counts as a journey
     const planOver = pl.kind === 'walk' ? t >= pl.k : pl.kind === 'swim' ? t >= pl.wait + 2 : t >= pl.run + 2;
     if (p.grounded && planOver && (st.airborne || pl.kind === 'walk' || t > pl.run + 20)) {
       st.settling = true;
-      if (Math.abs(p.vx) < 0.01) return { node: p };
+      if (Math.abs(p.vx) < 0.01) return { node: p, ticks: t + 1, inputs };
     }
   }
-  return null;
+  return { unresolved: true, activeInput: !!(inp.left || inp.right || inp.jump), end: { x: p.x, y: p.y, vx: p.vx, vy: p.vy, inWater: p.inWater, climbing: p.climbing } };
 }
 
 // ──── Graph exploration (resumable, so gates can open mid-search) ────
-function newState() { return { nodes: new Map(), cover: new Uint8Array(GW * GH), queue: [] }; }
+function newState() {
+  return {
+    nodes: new Map(), cover: new Uint8Array(GW * GH), queue: [], revision: 0,
+    metrics: { plans: 0, physicsTicks: 0, expansions: 0, unresolved: 0, unresolvedActiveInput: 0, unresolvedSamples: [] },
+    progressAt: Date.now(),
+  };
+}
 
 function addNode(st, x, y, sx, sy) {
   const k = keyOf(x, y);
   let n = st.nodes.get(k);
   if (!n) {
-    n = { k, x, y, safeX: sx, safeY: sy, edges: new Set() };
+    n = { k, x, y, safeX: sx, safeY: sy, edges: new Set(), witnesses: WITNESSES ? new Map() : null };
     st.nodes.set(k, n);
     st.queue.push(n);
   }
   return n;
+}
+
+function addEdge(st, from, to, action) {
+  from.edges.add(to.k);
+  if (from.witnesses && action && !from.witnesses.has(to.k)) from.witnesses.set(to.k, { revision: st.revision, ...action });
+}
+
+function reportProgress(st) {
+  const now = Date.now();
+  if (parentPort && now - st.progressAt >= 1000) {
+    st.progressAt = now;
+    parentPort.postMessage({ type: 'progress', stage: workerData.stage, nodes: st.nodes.size, queued: st.queue.length, metrics: { ...st.metrics, unresolvedSamples: undefined } });
+  }
 }
 
 function explore(st, ab) {
@@ -206,18 +248,27 @@ function explore(st, ab) {
   const wetPlans = ab.swim ? plans.concat(buildSwimPlans()) : plans;
   while (st.queue.length) {
     const n = st.queue.pop();
+    st.metrics.expansions++;
     const wet = ab.swim && W.tile(Math.floor((n.x + C.PW / 2) / T), Math.floor((n.y + C.PH / 2) / T)) === '~';
     for (const pl of wet ? wetPlans : plans) {
-      const r = simulate(n, pl, ab, st.cover);
-      if (!r) continue;
+      st.metrics.plans++;
+      const r = simulate(n, pl, ab, st.cover, st.metrics, WITNESSES);
+      if (r.unresolved) {
+        st.metrics.unresolved++;
+        if (r.activeInput) st.metrics.unresolvedActiveInput++;
+        if (st.metrics.unresolvedSamples.length < 12) st.metrics.unresolvedSamples.push({ from: { x: n.x, y: n.y }, plan: pl, ...r });
+        continue;
+      }
       if (r.node) {
         const p = r.node;
-        const safe = P.isSafeFooting(p, ab);
-        n.edges.add(addNode(st, p.x, p.y, safe ? p.x : n.safeX, safe ? p.y : n.safeY).k);
+        const to = addNode(st, p.x, p.y, p.lastSafe.x, p.lastSafe.y);
+        addEdge(st, n, to, WITNESSES ? { kind: 'movement', plan: pl, ticks: r.ticks, inputs: r.inputs } : null);
       } else if (r.rescue) {
-        n.edges.add(addNode(st, r.rescue.x, r.rescue.y, r.rescue.x, r.rescue.y).k);
+        const to = addNode(st, r.rescue.x, r.rescue.y, r.rescue.x, r.rescue.y);
+        addEdge(st, n, to, WITNESSES ? { kind: 'rescue', plan: pl, ticks: r.ticks, inputs: r.inputs } : null);
       }
     }
+    reportProgress(st);
   }
   return st;
 }
@@ -339,6 +390,7 @@ function exploreWithGates(starts, ab, startRoom = null) {
   for (const room of W.rooms) {
     if (behind(room) && room.grid.some(r => r.includes('G'))) { W.openGates(room); opened.add(room.id); }
   }
+  st.revisions = WITNESSES ? [{ revision: 0, openGates: [...opened] }] : null;
   const links = buildLinks();
   const doors = new Map([[0, 1]]); // zone → flaps reached (the front door always leads out)
   const open = lk => !lk.bossRoom || opened.has(lk.bossRoom);
@@ -366,7 +418,7 @@ function exploreWithGates(starts, ab, startRoom = null) {
       if (lk.to && lk.to.x === to.x && lk.to.y === to.y) continue;
       if (lk.to) {
         const old = keyOf(lk.to.x - C.PW / 2, lk.to.y - C.PH);
-        for (const n of st.nodes.values()) if (enters(n, lk)) n.edges.delete(old);
+        for (const n of st.nodes.values()) if (enters(n, lk)) { n.edges.delete(old); if (n.witnesses) n.witnesses.delete(old); }
       }
       lk.to = to;
     }
@@ -376,7 +428,10 @@ function exploreWithGates(starts, ab, startRoom = null) {
       for (const n of [...st.nodes.values()]) {
         if (!enters(n, lk)) continue;
         const d = addNode(st, tx, ty, tx, ty);
-        if (!n.edges.has(d.k)) { n.edges.add(d.k); linked = true; }
+        if (!n.edges.has(d.k)) {
+          addEdge(st, n, d, WITNESSES ? { kind: 'link', link: { flap: lk.flap, door: lk.door, lift: lk.lift, slide: lk.slide } } : null);
+          linked = true;
+        }
       }
     }
     const now = [];
@@ -385,12 +440,38 @@ function exploreWithGates(starts, ab, startRoom = null) {
       if (gateReady(room, st)) { W.openGates(room); opened.add(room.id); now.push(room); }
     }
     if (!now.length && !linked) break;
+    if (now.length) {
+      st.revision++;
+      if (st.revisions) st.revisions.push({ revision: st.revision, openGates: [...opened] });
+    }
     for (const n of st.nodes.values()) {
       const cx = n.x + C.PW / 2, cy = n.y + C.PH / 2;
       if (now.some(r => cx > r.px - 320 && cx < r.px + r.pw + 320 && cy > r.py - 320 && cy < r.py + r.ph + 320)) st.queue.push(n);
     }
   }
   return st;
+}
+
+// These are replay candidates for the separate runtime bot. The search merges
+// positions and gate histories, so emitting a route does not validate it.
+function witnessRoute(nodes, startKey, goalKeys) {
+  const goals = new Set(goalKeys), previous = new Map([[startKey, null]]), queue = [startKey];
+  let goal = null;
+  for (let i = 0; i < queue.length; i++) {
+    const key = queue[i];
+    if (goals.has(key)) { goal = key; break; }
+    const n = nodes.get(key);
+    if (!n) continue;
+    for (const to of n.edges) if (!previous.has(to)) { previous.set(to, key); queue.push(to); }
+  }
+  if (goal == null) return null;
+  const steps = [];
+  for (let to = goal; previous.get(to) != null; to = previous.get(to)) {
+    const from = previous.get(to), a = nodes.get(from), b = nodes.get(to);
+    const spot = n => ({ x: n.x, y: n.y, safeX: n.safeX, safeY: n.safeY });
+    steps.push({ from: spot(a), to: spot(b), action: a.witnesses && a.witnesses.get(to) });
+  }
+  return steps.reverse();
 }
 
 // ──── Gate conditions (everything the gate's picture-sign asks for) ────
@@ -484,6 +565,11 @@ function roomTouched(cover, r) {
   return false;
 }
 
+function reachesGoal(n, thing, goal) {
+  const radius = goal === 'finale' ? 56 : 60;
+  return Math.hypot(n.x + C.PW / 2 - (thing.tx * T + T / 2), n.y + C.PH / 2 - (thing.ty * T + T / 2)) < radius;
+}
+
 // ──── One story stage (runs inside a worker) ────
 function runStage(stage, mapRoom) {
   const out = [];
@@ -491,34 +577,36 @@ function runStage(stage, mapRoom) {
   const fail = msg => { failures++; out.push('  ✗ ' + msg); };
   const pass = msg => out.push('  ✓ ' + msg);
   const t0 = Date.now();
+  let res = null, witness = null;
+  const result = () => ({ out, failures, status: failures ? 'failed' : 'passed', elapsedMs: Date.now() - t0, nodes: res ? res.nodes.size : 0, metrics: res ? res.metrics : null, witness });
   const ab = abilitiesOf(stage.have);
   const start = startFor(stage);
   const th = goalThing(stage.goal);
-  if (!start) { fail('stage start is not placed in the world'); return { out, failures }; }
-  if (!th) { fail(`goal "${stage.goal}" is not placed in the world`); return { out, failures }; }
+  if (!start) { fail('stage start is not placed in the world'); return result(); }
+  if (!th) { fail(`goal "${stage.goal}" is not placed in the world`); return result(); }
 
   const startRoom = W.roomAtPx(start.x + 10, start.y + 12);
-  const res = exploreWithGates([start], ab, stage.i === 0 || REPLAY ? null : startRoom);
+  res = exploreWithGates([start], ab, stage.i === 0 || REPLAY ? null : startRoom);
   out.push(`  explored ${res.nodes.size} standing spots (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
   const keys = [];
   for (const n of res.nodes.values()) {
-    const cx = n.x + C.PW / 2, cy = n.y + C.PH / 2;
-    if (Math.abs(cx - (th.tx * T + 16)) < 56 && Math.abs(cy - (th.ty * T + 16)) < 56) keys.push(n.k);
+    if (reachesGoal(n, th, stage.goal)) keys.push(n.k);
   }
   if (!keys.length) {
     fail(`${NAMES[stage.goal]} is NOT reachable`);
     const seen = new Set();
     for (const n of res.nodes.values()) { const r = W.roomAtPx(n.x + 10, n.y + 12); if (r) seen.add(r.id); }
     out.push('  rooms reached: ' + [...seen].join(' '));
-    return { out, failures };
+    return result();
   }
+  if (WITNESSES) witness = { stage: stage.i, abilities: ab, goal: stage.goal, start, gateRevisions: res.revisions, steps: witnessRoute(res.nodes, keyOf(start.x, start.y), keys), validatedInRuntime: false };
   pass(`${NAMES[stage.goal]} is reachable`);
   const ok = canReach(res.nodes, keys);
   const stuck = [...res.nodes.values()].filter(n => !ok.has(n.k));
   if (stuck.length) {
     fail(`${stuck.length} softlock spot(s) — goal unreachable from:`);
     for (const n of stuck.slice(0, 12)) out.push('      ' + where(n));
-  } else pass('no softlocks: every reachable spot can still reach the goal');
+  } else pass('every sampled standing spot can still reach the goal');
 
   // Every puzzle / boss gate the kitten can walk up to (in this stage's zones) must open
   const goalRoom = W.roomAtTile(th.tx, th.ty);
@@ -588,34 +676,97 @@ function runStage(stage, mapRoom) {
       }
     }
   }
-  return { out, failures };
+  if (res.metrics.unresolved) out.push(`  ! ${res.metrics.unresolved} trajectories reached their tick budget (${res.metrics.unresolvedActiveInput} still holding an input); these are unresolved coverage, not confirmed locks`);
+  return result();
 }
 
 // ──── Main thread: fan the stages out over the CPU cores ────
-if (isMainThread) {
+if (isMainThread && require.main === module) {
   const args = process.argv.slice(2);
-  const mapRoom = args.includes('--map') ? args[args.indexOf('--map') + 1] : null;
-    const only = args.includes('--stage') ? +args[args.indexOf('--stage') + 1] : REPLAY ? POWERS.length : null;
+  const option = name => {
+    if (!args.includes(name)) return null;
+    const value = args[args.indexOf(name) + 1];
+    if (!value || value.startsWith('--')) throw new Error(`${name} requires a value`);
+    return value;
+  };
+  const mapRoom = option('--map');
+  const only = args.includes('--stage') ? Number(option('--stage')) : REPLAY ? POWERS.length : null;
   const todo = STAGES.filter(s => only == null || s.i === only);
   const t0 = Date.now();
   const results = new Array(STAGES.length);
   let next = 0, running = 0;
-  const jobs = args.includes('--jobs') ? Number(args[args.indexOf('--jobs') + 1]) : os.cpus().length;
+  const jobs = args.includes('--jobs') ? Number(option('--jobs')) : os.availableParallelism ? os.availableParallelism() : os.cpus().length;
+  const timeoutMs = args.includes('--timeout-ms') ? Number(option('--timeout-ms')) : 0;
+  const jsonPath = option('--json'), witnessPath = option('--witnesses');
   if (!Number.isInteger(jobs) || jobs < 1 || (only != null && !STAGES[only])) throw new Error('Use --jobs N (N > 0) and --stage 0…10');
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 0 || timeoutMs > 2147483647 || (args.includes('--timeout-ms') && timeoutMs === 0)) throw new Error('Use --timeout-ms N (a positive integer up to 2147483647)');
+  if (mapRoom && !W.byId[mapRoom]) throw new Error(`Unknown room ${mapRoom}`);
+  if (jsonPath && witnessPath && path.resolve(jsonPath).toLowerCase() === path.resolve(witnessPath).toLowerCase()) throw new Error('--json and --witnesses must use different files');
   const cores = Math.max(1, Math.min(jobs, todo.length));
+  const report = {
+    schemaVersion: 1, scope: SCOPE, limitations: LIMITATIONS, status: 'running', complete: false,
+    configuration: { easy: EASY, replay: REPLAY, shortcutsOpen: SHORTCUTS_OPEN, jobs: cores, timeoutMs },
+    startedAt: new Date(t0).toISOString(), elapsedMs: 0, rooms: W.rooms.length,
+    stages: todo.map(s => ({ stage: s.i, goal: s.goal, name: NAMES[s.goal], abilities: s.have, status: 'pending' })),
+  };
+  const entries = new Map(report.stages.map(s => [s.stage, s]));
+  let lastConsoleAt = t0;
+  const writeJson = (filename, value) => {
+    if (!filename) return;
+    const absolute = path.resolve(filename);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    const temporary = absolute + '.tmp';
+    fs.writeFileSync(temporary, JSON.stringify(value, null, 2) + '\n');
+    fs.renameSync(temporary, absolute);
+  };
+  const writeProgress = () => { report.elapsedMs = Date.now() - t0; writeJson(jsonPath, report); };
+  writeProgress();
+  writeJson(witnessPath, { schemaVersion: 1, status: 'running', complete: false, validatedInRuntime: false, stages: [] });
   console.log(`Verifying ${W.rooms.length} rooms in ${EASY ? 'Easy (assists)' : 'Medium / Hard (original movement)'} across ${todo.length} story stage(s) on ${cores} thread(s), shortcuts ${SHORTCUTS_OPEN ? 'open' : 'closed'}…`);
+  console.log('Scope: sampled movement reachability; runtime playthrough and unlocks require separate tests.');
   const launch = () => {
     while (running < cores && next < todo.length) {
       const stage = todo[next++];
       running++;
-      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom, easy: EASY, replay: REPLAY, shortcutsOpen: SHORTCUTS_OPEN } });
-      w.on('message', r => {
+      const entry = entries.get(stage.i), startedAt = Date.now();
+      entry.status = 'running'; entry.startedAt = new Date(startedAt).toISOString();
+      const w = new Worker(__filename, { workerData: { stage: stage.i, mapRoom, easy: EASY, replay: REPLAY, shortcutsOpen: SHORTCUTS_OPEN, witnesses: WITNESSES } });
+      let terminal = false;
+      const record = r => {
+        if (terminal) return;
+        terminal = true;
+        if (timer) clearTimeout(timer);
         results[stage.i] = r;
+        Object.assign(entry, { status: r.status, failures: r.failures, elapsedMs: r.elapsedMs || Date.now() - startedAt, nodes: r.nodes || entry.nodes || 0, metrics: r.metrics || entry.metrics || null, messages: r.out });
+        if (r.status === 'passed' || r.status === 'failed') entry.queued = 0;
+        writeProgress();
+      };
+      const timer = timeoutMs ? setTimeout(() => {
+        record({ out: [`  ! worker exceeded ${timeoutMs}ms; stage coverage is incomplete`], failures: 1, status: 'timedOut' });
+        console.log(`  · timed out: ${NAMES[stage.goal]} after ${timeoutMs}ms`);
+        void w.terminate().catch(e => console.error('Worker termination failed: ' + e.message));
+      }, timeoutMs) : null;
+      w.on('message', r => {
+        if (terminal) return;
+        if (r.type === 'progress') {
+          Object.assign(entry, { nodes: r.nodes, queued: r.queued, metrics: r.metrics, elapsedMs: Date.now() - startedAt });
+          writeProgress();
+          if (Date.now() - lastConsoleAt >= 10000) {
+            console.log(`  · exploring ${NAMES[stage.goal]}: ${r.nodes} spots, ${r.metrics.physicsTicks} physics ticks (${Math.round(entry.elapsedMs / 1000)}s)`);
+            lastConsoleAt = Date.now();
+          }
+          return;
+        }
+        record(r);
         console.log(`  · ${r.failures ? 'FAILED' : 'passed'}: ${NAMES[stage.goal]} (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
         if (r.failures) console.log(r.out.filter(line => line.includes('✗')).join('\n'));
       });
-      w.on('error', e => { results[stage.i] = { out: ['  ✗ worker crashed: ' + e.stack], failures: 1 }; });
-      w.on('exit', () => { running--; if (next < todo.length) launch(); else if (running === 0) finish(); });
+      w.on('error', e => record({ out: ['  ✗ worker crashed: ' + e.stack], failures: 1, status: 'crashed' }));
+      w.on('exit', code => {
+        if (!terminal) record({ out: [`  ✗ worker exited ${code} without a stage result`], failures: 1, status: 'crashed' });
+        running--; if (next < todo.length) launch(); else if (running === 0) finish();
+      });
+      writeProgress();
     }
   };
   // Map checks that need no search: once you can swim, water must be safe
@@ -633,7 +784,7 @@ if (isMainThread) {
     let failures = 0;
     console.log('\n▶ Map checks');
     if (lint.length) { failures += 1; console.log(`  ✗ ${lint.length} water tile(s) a swimmer could float away from:`); lint.slice(0, 12).forEach(l => console.log('      ' + l)); }
-    else console.log('  ✓ every pool has a floor and walls (swimming is always safe)');
+    else console.log('  ✓ no water tile directly adjoins mist or the world edge below, left or right');
     for (const s of todo) {
       const r = results[s.i];
       const have = s.have.length ? '+' + s.have[s.have.length - 1] : 'no powers';
@@ -641,11 +792,20 @@ if (isMainThread) {
       console.log(r.out.join('\n'));
       failures += r.failures;
     }
-    console.log(`\n${failures ? '✗ ' + failures + ' problem(s) found' : '✓ World verified — zero softlocks'}  (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
-    process.exit(failures ? 1 : 0);
+    const incomplete = todo.some(s => ['timedOut', 'crashed'].includes(results[s.i].status));
+    const exitCode = incomplete ? 2 : failures ? 1 : 0;
+    const unresolved = todo.reduce((sum, s) => sum + ((results[s.i].metrics || {}).unresolved || 0), 0);
+    Object.assign(report, { status: incomplete ? 'incomplete' : failures ? 'failed' : 'passed', complete: !incomplete, failures, exitCode, unresolvedTrajectories: unresolved, mapChecks: { failures: lint.length ? 1 : 0, waterIssues: lint } });
+    writeProgress();
+    writeJson(witnessPath, { schemaVersion: 1, status: report.status, complete: report.complete, scope: SCOPE, validatedInRuntime: false, limitations: LIMITATIONS, inputMask: { left: 1, right: 2, jumpHeld: 4, jumpPressed: 8 }, stages: todo.map(s => results[s.i].witness).filter(Boolean) });
+    console.log(`\n${incomplete ? '! Incomplete verification' : failures ? '✗ ' + failures + ' problem(s) found' : '✓ Sampled reachability checks passed'}  (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
+    if (unresolved) console.log(`${unresolved} bounded trajectories remain unresolved; this is not a complete no-lock proof.`);
+    process.exitCode = exitCode;
   };
   launch();
-} else {
+} else if (!isMainThread) {
   const stage = STAGES[workerData.stage];
   parentPort.postMessage(runStage(stage, workerData.mapRoom));
 }
+
+module.exports = { BB, W, P, FX, C, STAGES, buildPlans, buildSwimPlans, planInput, simulate, newState, addNode, explore, witnessRoute, reachesGoal, runStage };
