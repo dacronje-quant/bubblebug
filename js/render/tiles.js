@@ -487,6 +487,22 @@
     c.fillStyle = '#ffd34d'; G.circle(x, y - 7 * s, 1.4 * s, c); c.fill();
   }
 
+  // The same little flower as a ready-made picture, for scenery that
+  // draws dozens of them every frame (one image copy instead of 7 shapes).
+  const flowerSprites = new Map();
+  function flowerStamp(c, x, y, col, s) {
+    const key = col + s + '@' + G.scale;
+    let sp = flowerSprites.get(key);
+    if (!sp) {
+      const r = 4.3 * s + 1.5, h = 11.3 * s + 3;
+      sp = G.offscreen(r * 2, h);
+      sp.ox = r; sp.oy = h - 1.5;
+      flower(sp.ctx, sp.ox, sp.oy, col, s);
+      flowerSprites.set(key, sp);
+    }
+    c.drawImage(sp.canvas, x - sp.ox, y - sp.oy, sp.w, sp.h);
+  }
+
   function crystalCluster(c, x, y, seed, s) {
     const cols = ['#bfe6ff', '#d7c2ff', '#9ff0ff'];
     for (let i = 0; i < 3; i++) {
@@ -1134,5 +1150,5 @@
     for (const [k, v] of squash) { if (v <= 1) squash.delete(k); else squash.set(k, v - 1); }
   }
 
-  BB.Tiles = { warm, drawBounds, drawStatic, drawLive, bounce, tick, flower, crystalCluster, clear: () => cache.clear() };
+  BB.Tiles = { warm, drawBounds, drawStatic, drawLive, bounce, tick, flower, flowerStamp, crystalCluster, clear: () => cache.clear() };
 })(window.BB);

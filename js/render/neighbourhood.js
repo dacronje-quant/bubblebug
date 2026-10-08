@@ -32,13 +32,13 @@
     // A single fence and flowering hedge continue across all three rooms.
     c.strokeStyle = '#d8b589'; c.lineWidth = 6; c.lineCap = 'round';
     const floor = kind === 'maze' ? 32 : 31;
-    for (let col = 1; col < 30; col += 2) {
-      c.beginPath(); c.moveTo(X(col), Y(floor)); c.lineTo(X(col), Y(floor - 1.5)); c.stroke();
-    }
-    c.beginPath(); c.moveTo(X(0), Y(floor - 1)); c.lineTo(X(30), Y(floor - 1)); c.stroke();
-    for (let col = 0; col <= 30; col += 3) {
-      c.fillStyle = '#77b77b'; G().ellipse(X(col), Y(floor - 0.2), 34, 13, 0, c); c.fill();
-    }
+    // (posts, rail and hedge are each one path: same picture, far fewer draw calls)
+    c.beginPath();
+    for (let col = 1; col < 30; col += 2) { c.moveTo(X(col), Y(floor)); c.lineTo(X(col), Y(floor - 1.5)); }
+    c.moveTo(X(0), Y(floor - 1)); c.lineTo(X(30), Y(floor - 1)); c.stroke();
+    c.fillStyle = '#77b77b'; c.beginPath();
+    for (let col = 0; col <= 30; col += 3) { c.moveTo(X(col) + 34, Y(floor - 0.2)); c.ellipse(X(col), Y(floor - 0.2), 34, 13, 0, 0, TAU); }
+    c.fill();
     // Branches follow the actual platforms so the new jumping gaps
     // look open, rather than painting a false bridge across empty air.
     if (kind !== 'maze') {
@@ -57,15 +57,17 @@
     if (kind === 'maze') {
       for (const col of [4, 10, 15]) {
         c.fillStyle = '#82bc8d'; G().ellipse(X(col), Y(32) - 24, 54, 25, 0, c); c.fill();
-        BB.Tiles.flower(c, X(col), Y(32) - 32, '#fff1c2', 0.8);
+        BB.Tiles.flowerStamp(c, X(col), Y(32) - 32, '#fff1c2', 0.8);
       }
     } else tree(c, X(kind === 'garden' ? 21 : kind === 'pond' ? 19 : 15), Y(31), Y(13.5), kind === 'roots', t);
     if (kind !== 'maze') {
       // Flower beds, little flags and spinning pinwheels make the walk
       // feel like a shared garden even before its first friend arrives.
+      c.fillStyle = '#85c27a'; c.beginPath();
+      for (let col = 3; col < 29; col += 3) { c.moveTo(X(col) + 29, Y(31) - 5); c.ellipse(X(col), Y(31) - 5, 29, 10, 0, 0, TAU); }
+      c.fill();
       for (let col = 3; col < 29; col += 3) {
-        c.fillStyle = '#85c27a'; G().ellipse(X(col), Y(31) - 5, 29, 10, 0, c); c.fill();
-        for (let i = -1; i <= 1; i++) BB.Tiles.flower(c, X(col) + i * 14, Y(31) - 16 - (i === 0 ? 6 : 0), ['#ffe5a1', '#ffb3d1', '#cec0f4'][(col + i + 3) % 3], 0.7);
+        for (let i = -1; i <= 1; i++) BB.Tiles.flowerStamp(c, X(col) + i * 14, Y(31) - 16 - (i === 0 ? 6 : 0), ['#ffe5a1', '#ffb3d1', '#cec0f4'][(col + i + 3) % 3], 0.7);
       }
       c.strokeStyle = '#c3a486'; c.lineWidth = 2;
       c.beginPath(); c.moveTo(X(10), Y(17.3)); c.quadraticCurveTo(X(18), Y(19.3), X(26), Y(17.3)); c.stroke();
@@ -92,7 +94,7 @@
       c.fillStyle = '#fff2b0'; G().circle(X(0) + 17, Y(28.2), 5, c); c.fill();
       for (const col of [18, 25]) {
         c.fillStyle = '#c96a4a'; G().rrect(X(col) - 16, Y(31) - 17, 32, 17, 5, c); c.fill();
-        BB.Tiles.flower(c, X(col), Y(31) - 20, '#ff9ec7', 1.3);
+        BB.Tiles.flowerStamp(c, X(col), Y(31) - 20, '#ff9ec7', 1.3);
       }
     } else if (kind === 'roots') {
       // A root arch surrounds the sleepy-bud nook; the live gate remains
@@ -126,7 +128,7 @@
       }
     }
     // A few petals sit at the feet, clear of the kitten and touch buttons.
-    for (const col of [3, 9, 17, 27]) BB.Tiles.flower(c, X(col), Y(room.def.neighbourhood === 'maze' ? 32 : 31) + 4, '#ffd1e8', 0.65);
+    for (const col of [3, 9, 17, 27]) BB.Tiles.flowerStamp(c, X(col), Y(room.def.neighbourhood === 'maze' ? 32 : 31) + 4, '#ffd1e8', 0.65);
     c.restore();
   }
 
