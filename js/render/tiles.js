@@ -830,9 +830,10 @@
     for (let r = y0; r < y1; r++) {
       for (let col = x0; col < x1; col++) {
         const ch = room.grid[r][col];
-        if (ch === '.' || ch === '#' || ch === '-' || ch === 'H' || ch === 'I') continue;
         const tx = room.x + col, ty = room.y + r;
         const x = tx * T - cam.x, y = ty * T - cam.y;
+        if (ch === '-') { if (front && submergedLedge(tx, ty)) drawWater(c, Z, tx, ty, x, y, t); continue; }
+        if (ch === '.' || ch === '#' || ch === 'H' || ch === 'I') continue;
         if (ch === '~') { if (front) drawWater(c, Z, tx, ty, x, y, t); }
         else if (ch === '%') { if (front) drawMist(c, Z, tx, ty, x, y, t); }
         else if (front) continue;
@@ -909,8 +910,20 @@
     }
   }
 
+  // Open air above water makes a surface; anything else (a ledge, a rock,
+  // a ceiling) just sits in the water, so the water runs right up to it.
+  // Air pockets (like the ones the lost family hide in) keep their surface.
+  const airy = ch => ch === '.' || ch === '^' || ch === null;
+  // a one-way ledge out in the water is drawn with water around it
+  function submergedLedge(tx, ty) {
+    const w = W();
+    return w.tile(tx, ty + 1) === '~' && !airy(w.tile(tx, ty - 1)) &&
+      (w.tile(tx, ty - 1) === '~' || w.tile(tx - 1, ty) === '~' || w.tile(tx + 1, ty) === '~' || w.tile(tx, ty - 1) === '-');
+  }
+
   function drawWater(c, Z, tx, ty, x, y, t) {
-    const surface = W().tile(tx, ty - 1) !== '~';
+    const surface = airy(W().tile(tx, ty - 1)) ||
+      (W().tile(tx, ty - 1) === '-' && !submergedLedge(tx, ty - 1));
     const honey = Z.key === 'hive';
     const col = Z.water;
     if (surface && Z.key === 'springs') {
@@ -949,7 +962,7 @@
       // deep water: one flat, see-through tint per tile (darker the deeper
       // you go) so swimmers and sparkles stay easy to see — no banding
       let d = 1;
-      while (d < 14 && W().tile(tx, ty - d) === '~') d++;
+      while (d < 14 && (W().tile(tx, ty - d) === '~' || W().tile(tx, ty - d) === '-')) d++;
       c.fillStyle = BB.rgba(BB.mix(col, '#1a2050', Math.min(0.45, 0.12 + d * 0.025)), honey ? 0.92 : Math.min(0.5, 0.36 + d * 0.01));
       snapRect(c, x, y, T, T);
     }
