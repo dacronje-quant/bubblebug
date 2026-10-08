@@ -174,9 +174,12 @@
         for (let col = x0; col < x1; col++) {
           if (room.grid[r][col] !== '~') continue;
           const tx = room.x + col, ty = room.y + r;
+          // light plays in open water, fading with depth from the surface;
+          // the water right under a ledge or rock stays in its shade
+          const air = ch => ch === '.' || ch === '^' || ch === null;
           if (W().tile(tx, ty - 1) !== '~') continue;
           let d = 1;
-          while (d < 10 && W().tile(tx, ty - d) === '~') d++;
+          while (d < 10 && !air(W().tile(tx, ty - d))) d++;
           if (d >= 10) continue;
           const a = 0.1 * (1 - d / 10);
           const x = tx * T - cam.x, y = ty * T - cam.y;

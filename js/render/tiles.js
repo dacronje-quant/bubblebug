@@ -806,7 +806,9 @@
       // deep water: one flat, see-through tint per tile (darker the deeper
       // you go) so swimmers and sparkles stay easy to see — no banding
       let d = 1;
-      while (d < 14 && (W().tile(tx, ty - d) === '~' || W().tile(tx, ty - d) === '-')) d++;
+      // depth is measured from open air, straight through any ledge or rock
+      // above, so the water under a block is as deep as the water beside it
+      while (d < 14 && !airy(W().tile(tx, ty - d))) d++;
       c.fillStyle = BB.rgba(BB.mix(col, '#1a2050', Math.min(0.45, 0.12 + d * 0.025)), honey ? 0.92 : Math.min(0.5, 0.36 + d * 0.01));
       snapRect(c, x, y, T, T);
     }
