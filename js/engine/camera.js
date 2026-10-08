@@ -83,7 +83,8 @@
     startSlide(room, p, fromRoom) {
       if (this.sameGroup(room, fromRoom)) return;
       const to = this.targetFor(room, p);
-      this.slide = { from: { x: this.x, y: this.y }, to, t: 0, dur: C.ROOM_SLIDE };
+      const zone = fromRoom && fromRoom.zone !== room.zone;
+      this.slide = { from: { x: this.x, y: this.y }, to, t: 0, dur: zone ? C.ZONE_SLIDE : C.ROOM_SLIDE };
     },
 
     get sliding() { return !!this.slide; },
@@ -96,7 +97,9 @@
         // it crossed the room boundary a few ticks ago.
         s.to = this.targetFor(room, p);
         s.t++;
-        const k = BB.easeInOut(Math.min(1, s.t / s.dur));
+        // smootherstep: starts and lands gently, no sudden lurch
+        const u = Math.min(1, s.t / s.dur);
+        const k = u * u * u * (u * (u * 6 - 15) + 10);
         this.x = BB.lerp(s.from.x, s.to.x, k);
         this.y = BB.lerp(s.from.y, s.to.y, k);
         if (s.t >= s.dur) this.slide = null;
