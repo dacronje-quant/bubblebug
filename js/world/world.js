@@ -147,6 +147,7 @@
       this.bounds = { x0, y0, x1, y1 };
       this.hatches = this.rooms.filter(r => r.def.hatch);
       this._checkOverlaps();
+      this._cameraGroups();
       // Flat char-code grid over the whole world: O(1) tile lookups for
       // physics (0 = outside every room).
       this.gw = x1 - x0; this.gh = y1 - y0;
@@ -185,6 +186,35 @@
             throw new Error(`Rooms ${a.id} and ${b.id} overlap`);
           }
         }
+      }
+    },
+
+    // Camera groups: rooms that share one continuous camera, so it scrolls
+    // straight across their seams instead of gliding. Home and its outdoor
+    // rooms are grouped by hand (`cameraGroup`). A zone's ordinary rooms
+    // that sit side by side at the same height group themselves into a
+    // strip. Boss arenas (one screen wide, so the whole fight is in view)
+    // and the link trails between zones keep their own framing.
+    _cameraGroups() {
+      const groups = new Map();
+      // (a hidden link, so rooms stay plain data for saves, snapshots and tools)
+      const link = (r, g) => Object.defineProperty(r, 'camGroup', { value: g, writable: true, configurable: true, enumerable: false });
+      const join = (id, r, strip) => {
+        let g = groups.get(id);
+        if (!g) groups.set(id, g = { id, strip, rooms: [] });
+        g.rooms.push(r); link(r, g);
+      };
+      for (const r of this.rooms) { link(r, null); if (r.def.cameraGroup) join(r.def.cameraGroup, r, false); }
+      const rs = this.rooms.filter(r => !r.def.cameraGroup && !r.def.arena && !r.def.link).sort((a, b) => a.y - b.y || a.x - b.x);
+      for (let i = 1; i < rs.length; i++) {
+        const a = rs[i - 1], b = rs[i];
+        if (a.zone !== b.zone || a.y !== b.y || a.h !== b.h || a.x + a.w !== b.x) continue;
+        if (!a.camGroup) join('strip:' + a.id, a, true);
+        join(a.camGroup.id, b, true);
+      }
+      for (const g of groups.values()) {
+        g.px = Math.min(...g.rooms.map(r => r.px)); g.py = Math.min(...g.rooms.map(r => r.py));
+        g.px1 = Math.max(...g.rooms.map(r => r.px + r.pw)); g.py1 = Math.max(...g.rooms.map(r => r.py + r.ph));
       }
     },
 

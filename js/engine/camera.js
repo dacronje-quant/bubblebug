@@ -1,7 +1,9 @@
 // ════════════════════════════════════════════════════════════════
-//  CAMERA — smooth follow with look-ahead, framed to the current room.
-//  When the kitten crosses into another room the camera glides across
-//  while the kitten and the rest of the adventure keep moving.
+//  CAMERA — smooth follow with look-ahead, framed to the current room, or
+//  to its whole camera group (home and its outdoor rooms; a zone's rooms
+//  side by side at the same height), so it scrolls straight across those
+//  seams. Into any other room it glides across while the kitten and the
+//  rest of the adventure keep moving.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -20,6 +22,14 @@
     floorDepths.set(room, { version: room.version, depth });
     return depth;
   }
+  // A strip of side-by-side rooms shares one floor line: frame it the same
+  // way in each of them (the shallowest floor decides) so the camera never
+  // hops up or down at a seam.
+  function stripDepth(g) {
+    let depth = 0;
+    for (const r of g.rooms) { const d = floorDepth(r); if (d > 0 && (!depth || d < depth)) depth = d; }
+    return depth;
+  }
 
   const Cam = BB.Camera = {
     x: 0, y: 0, lookX: 0, lookY: 0,
@@ -31,19 +41,15 @@
       // Touch play may look a little farther down to keep the lowest firm
       // surface above the controls. The terrain and collision map stay intact.
       const touch = BB.Input.touchEnabled && document.body.classList.contains('touch');
-      const soilDepth = touch ? floorDepth(room) : 0;
+      const g = room.camGroup;
+      const soilDepth = !touch ? 0 : g && g.strip ? stripDepth(g) : floorDepth(room);
       const groundPad = bottom => touch && soilDepth > 0 ? Math.max(0, G.touchFloorReserve - soilDepth - (bottom - room.py - room.ph)) : 0;
       // keep the view inside [lo, hi]; a room narrower (or shorter) than the
       // view is simply centred, so the camera never flips between its edges
       const fit = (v, lo, hi, view) => hi - lo <= view ? lo + (hi - lo - view) / 2 : BB.clamp(v, lo, hi - view);
-      // Home and its outdoor rooms share one continuous camera space.
-      // Seeing the next room before entering it makes the walk legible.
-      if (room.def.cameraGroup) {
-        const group = BB.World.rooms.filter(r => r.def.cameraGroup === room.def.cameraGroup);
-        const x0 = Math.min(...group.map(r => r.px)), y0 = Math.min(...group.map(r => r.py));
-        const x1 = Math.max(...group.map(r => r.px + r.pw)), y1 = Math.max(...group.map(r => r.py + r.ph));
-        return { x: fit(x, x0, x1, G.W), y: fit(y, y0, y1 + groundPad(y1), G.H) };
-      }
+      // A camera group shares one continuous camera space. Seeing the next
+      // room before entering it makes the walk legible.
+      if (g) return { x: fit(x, g.px, g.px1, G.W), y: fit(y, g.py, g.py1 + groundPad(g.py1), G.H) };
       return {
         x: fit(x, room.px, room.px + room.pw, G.W),
         // A connecting shaft may reveal its real ceiling and the hatch
@@ -70,11 +76,12 @@
       this.slide = null;
     },
 
+    // (no glide within a camera group: the camera just scrolls on, and a
+    // glide that brought the kitten into the group finishes as it was)
+    sameGroup(a, b) { return !!(a && b && a.camGroup && a.camGroup === b.camGroup); },
+
     startSlide(room, p, fromRoom) {
-      if (fromRoom && room.def.cameraGroup && room.def.cameraGroup === fromRoom.def.cameraGroup) {
-        this.slide = null;
-        return;
-      }
+      if (this.sameGroup(room, fromRoom)) return;
       const to = this.targetFor(room, p);
       this.slide = { from: { x: this.x, y: this.y }, to, t: 0, dur: C.ROOM_SLIDE };
     },

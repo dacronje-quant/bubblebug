@@ -39,7 +39,7 @@
 
     enter(opts) {
       const save = this.save = BB.Save.data;
-      this._ctx = null; this._gardenCtx = null;
+      this._ctx = null; this._gardenCtx = null; this.dark = null; this.ahead = null; this.aheadAt = 0;
       save.cat = opts.cat || save.cat;
       W().build();
       W().restoreShortcuts(save);
@@ -212,6 +212,7 @@
       if (key) { this.save.used = this.save.used || {}; this.save.used[key] = 1; }
       const pl = this.pl;
       this.traveling = { dest, kind, from, t: 0 };
+      this.ahead = null; // (paint where it lands)
       pl.state = 'travel'; pl.gesture = null;
       pl.body.vx = 0; pl.body.vy = 0;
       this.iris = { t: 0, close: true };
@@ -233,6 +234,7 @@
       // up off the pad, over to the top of the shaft, then all the way down
       const path = [{ x: sx, y: sy }, { x: sx, y: sy - 3 * T }, { x: cx, y: shaft.py + 2 * T }, { x: cx, y: shaft.py + shaft.ph - T }];
       this.traveling = { kind: 'starfall', from: th, path, seg: 0, t: 0, dest: BB.Links.spot(land.tx, land.ty) };
+      this.ahead = null; // (paint where it lands)
       const pl = this.pl;
       pl.state = 'starfall'; pl.gesture = null; b.vx = 0; b.vy = 0;
       S().whoosh(); S().rescue();
@@ -613,6 +615,28 @@
       this.activeBoss = null;
       this.bossCard = null;
       if (this.bossMusic) { this.bossMusic = false; BB.Music.play(BB.ZONES[room.zone].key); }
+    },
+
+    // the current room plus any other room the camera can see
+    roomsOnScreen() {
+      const cam = Cam();
+      const list = W().roomsInRect(cam.x - 32, cam.y - 32, G().W + 64, G().H + 64);
+      if (!list.includes(this.room)) list.unshift(this.room);
+      return list;
+    },
+
+    // Zone backdrops to paint ahead of time (see BB.Backdrops.warm): wherever
+    // a door is about to land, else the zones of rooms within a screen of
+    // the camera, nearest first. Two at most, beside the one on screen.
+    backdropsAhead() {
+      if (this.t < this.aheadAt && this.ahead) return this.ahead;
+      this.aheadAt = this.t + 10;
+      const bz = r => r.def.walkOut ? 0 : r.zone, here = bz(this.room), tr = this.traveling;
+      const dest = tr && tr.dest && W().roomAtPx(tr.dest.x, tr.dest.y - C.PH / 2);
+      const cam = Cam(), w = G().W, h = G().H;
+      const gap = r => Math.hypot(Math.max(0, r.px - (cam.x + w), cam.x - (r.px + r.pw)), Math.max(0, r.py - (cam.y + h), cam.y - (r.py + r.ph)));
+      const near = dest ? [dest] : W().roomsInRect(cam.x - w, cam.y - h, w * 3, h * 3).sort((a, b) => gap(a) - gap(b));
+      return (this.ahead = [...new Set(near.map(bz))].filter(z => z !== here).slice(0, 2));
     },
 
     later(n, fn) { this.timers.push({ n, fn }); },
@@ -1009,7 +1033,8 @@
       // ── Mighty Paws: cracked sandstone crumbles at a touch ──
       if (ab.dig && this.pl.state === 'play') this.crumbleAround(b);
 
-      // ── room change? glide the camera ──
+      // ── room change? the camera scrolls on within a camera group, and
+      //    glides across anywhere else; bubbles in flight keep going ──
       if (this.pl.state === 'play' || this.pl.state === 'bench') {
         const r = W().roomAtPx(b.x + b.w / 2, b.y + b.h / 2);
         if (r && r !== this.room) {
@@ -1019,13 +1044,11 @@
           this.save.visited[r.id] = 1;
           if (this.prevRoom.def.home && r.id === 'ng') this.save.leftHome = 1;
           if (r.def.neighbourhood === 'garden') this.refreshHomeVisitors();
+          if (!cam.sameGroup(r, this.prevRoom)) S().whoosh();
           cam.startSlide(r, b, this.prevRoom);
-          this.slideFrom = this.prevRoom.zone;
           if (r.zone !== this.prevRoom.zone) this.enterZone(r.zone);
           this.pendingCP = true;
           BB.Save.write();
-          BB.Bubbles.clear();
-          S().whoosh();
         }
       }
 
@@ -1045,13 +1068,17 @@
         }
       }
 
-      // ── residents ──
+      // ── residents: of every room on screen, so a neighbour seen across a
+      //    seam (or during a glide) never stands frozen ──
       const ctx = this.ctx();
-      const e = this.ents[this.room.id];
-      for (const th of e.things) BB.Things.update(th, ctx);
-      e.things = e.things.filter(th => !th.dead);
-      for (const bug of e.bugs) { bug.lookAt = b.x; BB.Bugs.update(bug, ctx); }
-      for (const bs of e.bosses) BB.Bosses.update(bs, ctx);
+      const near = this.roomsOnScreen();
+      for (const room of near) {
+        const e = this.ents[room.id];
+        for (const th of e.things) BB.Things.update(th, ctx);
+        e.things = e.things.filter(th => !th.dead);
+        for (const bug of e.bugs) { bug.lookAt = b.x; BB.Bugs.update(bug, ctx); }
+        for (const bs of e.bosses) BB.Bosses.update(bs, ctx);
+      }
       for (const f of this.followers.slice()) BB.Things.update(f, ctx);
       BB.Bosses.updateHazards(ctx);
       BB.Food.updateDrops(ctx);
@@ -1068,14 +1095,14 @@
 
       // ── bubbles ──
       const targets = [];
-      for (const bug of e.bugs) {
+      for (const room of near) for (const bug of this.ents[room.id].bugs) {
         if (bug.state === 'bubbled') continue;
         targets.push({ x: bug.x, y: bug.y, r: bug.r, homing: bug.state === 'gloomy', hit: () => BB.Bugs.hit(bug, ctx) });
       }
       for (const visitor of this.homeVisitors) if (visitor.room === this.room.id) targets.push({ x: visitor.x, y: visitor.y + visitor.hop, r: visitor.r, hit: () => this.petHomeVisitor(visitor) });
-      for (const bs of e.bosses) { const tg = BB.Bosses.target(bs, ctx); if (tg) targets.push(tg); }
+      for (const room of near) for (const bs of this.ents[room.id].bosses) { const tg = BB.Bosses.target(bs, ctx); if (tg) targets.push(tg); }
       for (const tg of BB.Bosses.hazardTargets()) targets.push(tg);
-      for (const th of e.things) { const tg = BB.Things.target(th, ctx); if (tg) targets.push(tg); }
+      for (const room of near) for (const th of this.ents[room.id].things) { const tg = BB.Things.target(th, ctx); if (tg) targets.push(tg); }
       if (this.room.def.home && !this.party) for (const p of BB.Home.familySpots(this.room, this)) {
         targets.push({ x: p.x, y: p.y - 26, r: 24, hit: () => this.pokeFamily(p.id, p.x, p.y) });
       }
@@ -1170,8 +1197,14 @@
     // them up and drawing the pause background could spawn extra particles.
     updateDrawEffects(world = true) {
       const cam = Cam(), room = this.room;
-      const narrow = !room.def.cameraGroup && !cam.sliding && (room.pw < G().W - 1 || room.ph < G().H - 1);
+      const narrow = !room.camGroup && !cam.sliding && (room.pw < G().W - 1 || room.ph < G().H - 1);
       this.narrowDim = BB.lerp(this.narrowDim, narrow ? 1 : 0, 0.08);
+      // darkness eases across a seam between a dark room and a brighter one
+      // (and simply jumps along when the camera does: a door, a respawn)
+      const dk = this.darkness();
+      if (this.darkRev !== cam.revision || this.dark == null || Math.abs(this.dark - dk) < 0.005) this.dark = dk;
+      else this.dark = BB.lerp(this.dark, dk, 0.08);
+      this.darkRev = cam.revision;
       PT().ambientUpdate(BB.ZONES[room.zone].key, !!room.def.rain, cam, this.lastCam);
       this.lastCam.x = cam.x; this.lastCam.y = cam.y;
       if (this.flash > 0) this.flash--;
@@ -1299,7 +1332,7 @@
       const b = this.pl.body;
       const lr = this.save.abilities.glow ? 240 : 150;
       BB.Lighting.add(b.x + b.w / 2 - cam.x, b.y + b.h / 2 - cam.y, lr, '#fff2c8', 1);
-      BB.Lighting.render(c, this.darkness());
+      BB.Lighting.render(c, this.dark == null ? this.darkness() : this.dark);
 
       PT().ambientDraw(c, t);
       this.drawVignette(c);

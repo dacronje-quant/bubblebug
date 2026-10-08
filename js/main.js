@@ -101,8 +101,12 @@
     Main.draw(acc / C.STEP);
     const end = performance.now();
     lastWork = end - start; lastDraw = end - drawStart;
-    // spare time this frame: build the terrain just off screen ahead of time
-    if (Main.name === 'play' && BB.Play.visibleRooms && performance.now() - now < 8) BB.Tiles.warm(BB.Play.visibleRooms, BB.Camera);
+    // spare time this frame: build the terrain just off screen, and the
+    // backdrop of a zone close by, ahead of time
+    if (Main.name === 'play' && BB.Play.visibleRooms && performance.now() - now < 8) {
+      BB.Tiles.warm(BB.Play.visibleRooms, BB.Camera);
+      BB.Backdrops.warm(BB.Play.backdropsAhead(), now + 10);
+    }
     requestAnimationFrame(frame);
   }
 

@@ -70,12 +70,20 @@ unresolved trajectories prevent an unconditional no-lock guarantee.
 
 # Trying smooth movement and room boundaries
 
-Room glides take 0.2 seconds while the kitten, residents, bubbles and game
-timers keep moving. Walk across a zone's horizontal seams and tap Jump during
-the glide. In the tower, repeatedly release and tap Jump for Double Jump,
-Bubble Bounce and Star Wings while passing the upper room boundary. Brief
-taps between ticks should also work. The home and garden still share their
-continuous camera.
+A zone's rooms that sit side by side at the same height share one
+continuous camera, like the home and garden: walk across those seams (for
+example Sparkle Gardens g2 into g3, or the five Moonlit Springs rooms) and the
+camera just scrolls on, with no glide, whoosh or vanishing bubbles; critters
+in the next room keep moving while they're on screen, and a dark room's
+shadow eases into a brighter neighbour's. Boss arenas and link trails keep
+their own framing. Everywhere else (up or down a shaft, into a taller room,
+an arena or the next zone) room glides take 0.2 seconds while the kitten,
+residents, bubbles and game timers keep moving; tap Jump during the glide.
+In the tower, repeatedly release and tap Jump for Double Jump, Bubble Bounce
+and Star Wings while passing the upper room boundary. Brief taps between
+ticks should also work. A zone's backdrop is painted a layer at a time in
+spare frame time while you're near it, so crossing into it never waits on
+the painting.
 
 Rendering interpolates completed 60 Hz game ticks. Compare motion on 60, 90
 and 120 Hz displays; game speed should stay the same, with positions filling

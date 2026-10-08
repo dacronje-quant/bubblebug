@@ -13,7 +13,7 @@
   const TAU = Math.PI * 2;
   const LW = 1200, LH = 720;
   const FACTORS = [0.08, 0.22, 0.45];
-  const cache = new Map(); // zone → [far, mid, near]
+  const cache = new Map(); // zone → [far, mid, near], least recently drawn first
 
   function layerCanvas() { return G.offscreen(LW, LH, 1); }
 
@@ -21,8 +21,10 @@
   function wrap(fn, x) { fn(x); if (x < 200) fn(x + LW); if (x > LW - 200) fn(x - LW); }
 
   // ──── painters ────
+  // (each pauses after a layer, so a zone can be painted a layer at a time
+  // in spare frame time before the kitten gets there)
   const PAINT = {
-    gardens(Z, L, rnd) {
+    *gardens(Z, L, rnd) {
       // far: soft clouds + rolling hills
       let c = L[0].ctx;
       for (let i = 0; i < 7; i++) {
@@ -32,6 +34,7 @@
       hills(c, LH - 250, 70, BB.mix(Z.far, Z.sky[1], 0.35), rnd, 3);
       hills(c, LH - 200, 60, Z.far, rnd, 4);
       // mid: giant flowers & round trees
+      yield;
       c = L[1].ctx;
       for (let i = 0; i < 6; i++) {
         const x = rnd() * LW, h = 220 + rnd() * 200;
@@ -39,74 +42,85 @@
       }
       hills(c, LH - 140, 40, Z.mid, rnd, 5);
       // near: tall grass blades & clover
+      yield;
       c = L[2].ctx;
       grassBlades(c, Z.near, rnd, 26, 260);
       for (let i = 0; i < 4; i++) { const x = rnd() * LW; wrap(xx => clover(c, xx, LH - 40 - rnd() * 60, 40 + rnd() * 30, Z.near), x); }
     },
-    meadow(Z, L, rnd) {
+    *meadow(Z, L, rnd) {
       let c = L[0].ctx;
       for (let i = 0; i < 6; i++) {
         const x = rnd() * LW, h = 300 + rnd() * 220;
         wrap(xx => giantMushroom(c, xx, LH - 80, h, 90 + rnd() * 70, BB.mix(Z.far, Z.sky[0], 0.2), '#8f7fe0', 0.35), x);
       }
+      yield;
       c = L[1].ctx;
       for (let i = 0; i < 7; i++) {
         const x = rnd() * LW, h = 160 + rnd() * 170;
         wrap(xx => giantMushroom(c, xx, LH - 60, h, 60 + rnd() * 50, Z.mid, Z.accent, 0.7), x);
       }
       hills(c, LH - 90, 30, Z.mid, rnd, 5);
+      yield;
       c = L[2].ctx;
       ferns(c, Z.near, rnd);
     },
-    caves(Z, L, rnd) {
+    *caves(Z, L, rnd) {
       let c = L[0].ctx;
       for (let i = 0; i < 9; i++) {
         const x = rnd() * LW, h = 200 + rnd() * 380, w = 30 + rnd() * 50;
         wrap(xx => crystalPillar(c, xx, LH, w, h, BB.mix(Z.far, '#6a7cff', 0.2), 0.25), x);
       }
+      yield;
       c = L[1].ctx;
       stalactites(c, Z.mid, rnd, true);
       stalactites(c, Z.mid, rnd, false);
+      yield;
       c = L[2].ctx;
       for (let i = 0; i < 6; i++) {
         const x = rnd() * LW, h = 80 + rnd() * 140, w = 24 + rnd() * 30;
         wrap(xx => crystalPillar(c, xx, LH, w, h, Z.near, 0.6), x);
       }
     },
-    hive(Z, L, rnd) {
+    *hive(Z, L, rnd) {
       let c = L[0].ctx;
       honeycomb(c, 46, BB.rgba(Z.far, 0.9), BB.rgba(Z.sky[2], 0.5), rnd);
+      yield;
       c = L[1].ctx;
       for (let i = 0; i < 8; i++) {
         const x = rnd() * LW, len = 120 + rnd() * 260;
         wrap(xx => honeyCurtain(c, xx, len, 40 + rnd() * 50, Z.mid, rnd), x);
       }
+      yield;
       c = L[2].ctx;
       for (let i = 0; i < 5; i++) {
         const x = rnd() * LW;
         wrap(xx => combChunk(c, xx, LH - 20, 60 + rnd() * 70, Z.near), x);
       }
     },
-    ruins(Z, L, rnd) {
+    *ruins(Z, L, rnd) {
       let c = L[0].ctx;
       for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => ruinTower(c, xx, LH - 120, 60 + rnd() * 40, 250 + rnd() * 200, Z.far), x); }
       hills(c, LH - 150, 40, Z.far, rnd, 3);
+      yield;
       c = L[1].ctx;
       for (let i = 0; i < 4; i++) { const x = rnd() * LW; wrap(xx => arch(c, xx, LH - 60, 170 + rnd() * 80, 200 + rnd() * 120, Z.mid), x); }
+      yield;
       c = L[2].ctx;
       grassBlades(c, Z.near, rnd, 14, 140);
       for (let i = 0; i < 6; i++) { const x = rnd() * LW; wrap(xx => ivy(c, xx, 0, 120 + rnd() * 200, Z.near, rnd), x); }
     },
-    clouds(Z, L, rnd) {
+    *clouds(Z, L, rnd) {
       let c = L[0].ctx;
       for (let i = 0; i < 3; i++) { const x = 150 + i * 400 + rnd() * 100; wrap(xx => castle(c, xx, LH - 250, 0.8 + rnd() * 0.5, Z.far), x); }
       for (let i = 0; i < 6; i++) { const x = rnd() * LW; wrap(xx => cloud(c, xx, LH - 250 + rnd() * 40, 1.6 + rnd(), 'rgba(255,255,255,0.8)'), x); }
+      yield;
       c = L[1].ctx;
       for (let i = 0; i < 9; i++) { const x = rnd() * LW; wrap(xx => cloud(c, xx, LH - 120 - rnd() * 140, 1.4 + rnd() * 1.4, Z.mid), x); }
+      yield;
       c = L[2].ctx;
       for (let i = 0; i < 8; i++) { const x = rnd() * LW; wrap(xx => cloud(c, xx, LH - 20 - rnd() * 40, 1.2 + rnd() * 1.2, '#ffffff'), x); }
     },
-    lagoon(Z, L, rnd) {
+    *lagoon(Z, L, rnd) {
       // far: a glittering sea, a little island and puffy clouds
       let c = L[0].ctx;
       for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => cloud(c, xx, 70 + rnd() * 120, 0.7 + rnd() * 0.6, 'rgba(255,255,255,0.85)'), x); }
@@ -118,68 +132,78 @@
         wrap(xx => { c.fillStyle = Z.far; c.beginPath(); c.ellipse(xx, LH - 300, 120, 34, 0, Math.PI, 0); c.fill(); palm(c, xx + 20, LH - 330, 110, BB.mix(Z.far, '#3f8a6a', 0.3)); }, x);
       }
       // mid: leaning palm trees on the dunes
+      yield;
       c = L[1].ctx;
       hills(c, LH - 130, 26, Z.mid, rnd, 4);
       for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => palm(c, xx, LH - 120, 220 + rnd() * 120, Z.mid), x); }
       // near: beach grass
+      yield;
       c = L[2].ctx;
       grassBlades(c, Z.near, rnd, 16, 150);
     },
-    dunes(Z, L, rnd) {
+    *dunes(Z, L, rnd) {
       // far: flat-topped mesas shimmering in the heat
       let c = L[0].ctx;
       for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => mesa(c, xx, LH - 220, 160 + rnd() * 160, 120 + rnd() * 140, BB.mix(Z.far, Z.sky[1], 0.35)), x); }
       hills(c, LH - 210, 40, Z.far, rnd, 3);
       // mid: rolling dunes with tall cacti
+      yield;
       c = L[1].ctx;
       hills(c, LH - 150, 60, Z.mid, rnd, 3);
       for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => bigCactus(c, xx, LH - 120, 120 + rnd() * 120, Z.mid), x); }
       // near: sand ridges and dry grass
+      yield;
       c = L[2].ctx;
       hills(c, LH - 40, 30, Z.near, rnd, 6);
       grassBlades(c, Z.near, rnd, 10, 110);
     },
-    frost(Z, L, rnd) {
+    *frost(Z, L, rnd) {
       // far: snowy mountains
       let c = L[0].ctx;
       for (let i = 0; i < 6; i++) { const x = rnd() * LW; wrap(xx => mountain(c, xx, LH - 160, 200 + rnd() * 160, 260 + rnd() * 200, Z.far, '#ffffff'), x); }
       // mid: a frosty pine forest
+      yield;
       c = L[1].ctx;
       hills(c, LH - 120, 30, Z.mid, rnd, 4);
       for (let i = 0; i < 12; i++) { const x = rnd() * LW; wrap(xx => bigPine(c, xx, LH - 110, 140 + rnd() * 140, Z.mid), x); }
       // near: drifts and dark pines
+      yield;
       c = L[2].ctx;
       for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => bigPine(c, xx, LH, 180 + rnd() * 160, Z.near), x); }
       hills(c, LH - 30, 24, '#e8f2ff', rnd, 5);
     },
-    autumn(Z, L, rnd) {
+    *autumn(Z, L, rnd) {
       // far: hills dotted with round orange trees
       let c = L[0].ctx;
       hills(c, LH - 230, 50, BB.mix(Z.far, Z.sky[1], 0.3), rnd, 3);
       for (let i = 0; i < 14; i++) { const x = rnd() * LW; wrap(xx => roundTree(c, xx, LH - 210 - rnd() * 30, 30 + rnd() * 20, BB.mix(Z.far, Z.sky[1], 0.15), BB.mix(Z.far, '#6a4a34', 0.4)), x); }
       hills(c, LH - 180, 40, Z.far, rnd, 4);
       // mid: big maples
+      yield;
       c = L[1].ctx;
       for (let i = 0; i < 6; i++) { const x = rnd() * LW; wrap(xx => roundTree(c, xx, LH - 80 - rnd() * 60, 70 + rnd() * 50, Z.mid, BB.mix(Z.mid, '#3a2010', 0.5), 260), x); }
       hills(c, LH - 100, 30, BB.mix(Z.mid, '#3a2010', 0.3), rnd, 5);
       // near: ferns and leaf piles
+      yield;
       c = L[2].ctx;
       ferns(c, Z.near, rnd);
     },
-    springs(Z, L, rnd) {
+    *springs(Z, L, rnd) {
       // far: a big gentle mountain with a snowy cap
       let c = L[0].ctx;
       for (let i = 0; i < 2; i++) { const x = 300 + i * 600 + rnd() * 100; wrap(xx => mountain(c, xx, LH - 160, 380, 360, Z.far, '#f4e8f4'), x); }
       hills(c, LH - 170, 30, BB.mix(Z.far, Z.mid, 0.5), rnd, 4);
       // mid: bamboo groves with warm lanterns
+      yield;
       c = L[1].ctx;
       for (let i = 0; i < 18; i++) { const x = rnd() * LW; wrap(xx => bamboo(c, xx, LH, 360 + rnd() * 200, 10 + rnd() * 6, Z.mid), x); }
       for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => lantern(c, xx, 180 + rnd() * 200, Z.mid), x); }
       // near: dark bamboo and leaves
+      yield;
       c = L[2].ctx;
       for (let i = 0; i < 7; i++) { const x = rnd() * LW; wrap(xx => bamboo(c, xx, LH, 500 + rnd() * 200, 16 + rnd() * 8, Z.near), x); }
     },
-    starlight(Z, L, rnd) {
+    *starlight(Z, L, rnd) {
       // far: glittering crystal spires and a ringed planet
       let c = L[0].ctx;
       for (let i = 0; i < 8; i++) {
@@ -187,19 +211,23 @@
         wrap(xx => crystalPillar(c, xx, LH, w, h, BB.mix(Z.far, '#8a7aff', 0.2), 0.3), x);
       }
       // mid: little floating islands
+      yield;
       c = L[1].ctx;
       for (let i = 0; i < 6; i++) { const x = rnd() * LW; wrap(xx => floatIsland(c, xx, 180 + rnd() * 300, 60 + rnd() * 50, Z.mid, rnd), x); }
       // near: crystal grass
+      yield;
       c = L[2].ctx;
       grassBlades(c, Z.near, rnd, 20, 160);
       for (let i = 0; i < 4; i++) { const x = rnd() * LW; wrap(xx => crystalPillar(c, xx, LH, 26 + rnd() * 20, 90 + rnd() * 90, Z.near, 0.5), x); }
     },
-    home(Z, L, rnd) {
+    *home(Z, L, rnd) {
       // (the walls hide most of this) a garden seen from indoors
       let c = L[0].ctx;
       hills(c, LH - 230, 50, BB.mix(Z.far, Z.sky[1], 0.3), rnd, 3);
+      yield;
       c = L[1].ctx;
       for (let i = 0; i < 5; i++) { const x = rnd() * LW; wrap(xx => roundTree(c, xx, LH - 90 - rnd() * 40, 60 + rnd() * 30, '#8fcf8a', '#6a4a34', 220), x); }
+      yield;
       c = L[2].ctx;
       hills(c, LH - 40, 20, Z.near, rnd, 5);
     },
@@ -439,16 +467,66 @@
     for (let i = 0; i < 3; i++) { G.twinkle(x + (rnd() - 0.5) * w, y - 6 - rnd() * 10, 3, c); c.fill(); }
   }
 
-  function layersFor(zone) {
-    let L = cache.get(zone);
-    if (!L) {
+  // The three most recently drawn zones stay painted (a dropped canvas gives
+  // its memory back straight away, for Safari on iPads).
+  const pending = new Map(); // zone → { L, gen } being painted a layer at a time
+  const free = L => { for (const l of L) l.canvas.width = l.canvas.height = 0; };
+
+  // Browsers record canvas drawing and only rasterise it when it's first
+  // used, so each finished layer is used once (onto a 1-pixel scratch
+  // canvas) to have that happen while warming up, not on the frame it's needed
+  let speck = null;
+  function* paint(Z, L, rnd) {
+    yield* PAINT[Z.key](Z, L, rnd);
+    speck = speck || G.offscreen(1, 1, 1);
+    for (const l of L) { yield; speck.ctx.drawImage(l.canvas, 0, 0, 1, 1); }
+  }
+
+  function job(zone) {
+    let j = pending.get(zone);
+    if (!j) {
       const Z = BB.ZONES[zone];
-      L = [layerCanvas(), layerCanvas(), layerCanvas()];
-      PAINT[Z.key](Z, L, BB.rng(1234 + zone * 77));
-      cache.set(zone, L);
-      if (cache.size > 3) cache.delete(cache.keys().next().value);
+      const L = [layerCanvas(), layerCanvas(), layerCanvas()];
+      j = { L, gen: paint(Z, L, BB.rng(1234 + zone * 77)) };
+      pending.set(zone, j);
+      if (pending.size > 2) { const k = pending.keys().next().value; free(pending.get(k).L); pending.delete(k); }
     }
+    return j;
+  }
+
+  function store(zone, L) {
+    pending.delete(zone);
+    cache.set(zone, L);
+    while (cache.size > 3) { const k = cache.keys().next().value; free(cache.get(k)); cache.delete(k); }
     return L;
+  }
+
+  function layersFor(zone) {
+    const L = cache.get(zone);
+    if (L) { cache.delete(zone); cache.set(zone, L); return L; } // (most recent last)
+    const j = job(zone);
+    while (!j.gen.next().done);
+    return store(zone, j.L);
+  }
+
+  // Paint zones that aren't ready yet, a layer at a time, until the clock
+  // reaches `until` (a performance.now() time). True once they're all ready.
+  function warm(zones, until) {
+    for (const z of zones) {
+      if (cache.has(z)) continue;
+      const j = job(z);
+      for (;;) {
+        if (performance.now() >= until) return false;
+        if (j.gen.next().done) { store(z, j.L); break; }
+      }
+    }
+    return true;
+  }
+
+  function clear() {
+    for (const j of pending.values()) free(j.L);
+    for (const L of cache.values()) free(L);
+    pending.clear(); cache.clear();
   }
 
   // ──── Live sky ────
@@ -573,7 +651,7 @@
   }
 
   BB.Backdrops = {
-    draw, drawSky, layersFor, cloud, clear: () => cache.clear(),
+    draw, drawSky, layersFor, cloud, warm, clear,
     // painters the boss arenas borrow for their scenery
     art: { giantMushroom, crystalPillar, honeyCurtain, combChunk, arch, ruinTower, palm, roundTree, bamboo, lantern, mountain, bigPine },
   };
