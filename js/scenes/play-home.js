@@ -18,6 +18,7 @@
   const DONE = { x: 776, y: 438, r: 34 };
   const CATEGORIES = ['head', 'neck', 'face', 'bubble', 'trail', 'cat'];
   const pageDot = (i, n) => ({ x: 625 + (i - (n - 1) / 2) * 44, y: 333, r: 20 });
+  const pageArrow = dir => ({ x: 625 + dir * 128, y: 337, r: 22, dir });
 
   // One picture explains each reward's progress, without prices or counts.
   function rewardClue(c, item, x, y, t) {
@@ -233,7 +234,7 @@
       const slot = CATEGORIES[this.wardrobe.tab];
       if (slot === 'bubble' || slot === 'trail') return BB.Cosmetics.LIST.filter(a => a.slot === slot);
       if (slot === 'cat') return BB.GardenMaze.CATS.map(id => ({ id, name: BB.CATS[id].name, slot: 'cat', unlock: { kind: 'rainbow', count: 1 } }));
-      return BB.Wardrobe.LIST.filter(a => a.slot === slot && (slot === 'neck' || !a.boss || this.save.outfits[a.id]))
+      return BB.Wardrobe.LIST.filter(a => a.slot === slot)
         .sort((a, b) => Number(!!b.stars) - Number(!!a.stars));
     },
 
@@ -297,8 +298,12 @@
         if (Math.hypot(p.x - DONE.x, p.y - DONE.y) < DONE.r + 10) return this.closeWardrobe();
         for (let i = 0; i < this.wardrobeTabs(); i++) if (Math.hypot(p.x - this.wardrobeTabX(i), p.y - 88) < 32) { this.wardrobeTab(i); w.focus = 'items'; return; }
         const list = this.wardrobeItems(), page = Math.floor(w.sel / 8), pages = Math.ceil(list.length / 8);
+        if (pages > 1) for (const dir of [-1, 1]) {
+          const q = pageArrow(dir);
+          if (Math.hypot(p.x - q.x, p.y - q.y) < q.r + 8) { w.sel = ((page + dir + pages) % pages) * 8; w.focus = 'items'; S().select(); return; }
+        }
         if (pages > 1) for (let i = 0; i < pages; i++) { const q = pageDot(i, pages); if (Math.hypot(p.x - q.x, p.y - q.y) < q.r) { w.sel = i * 8; w.focus = 'items'; S().select(); return; } }
-        for (let i = page * 8; i < Math.min(list.length, page * 8 + 8); i++) { const q = cell(i % 8); if (Math.hypot(p.x - q.x, p.y - q.y) < q.r + 8) { if (w.sel === i && w.focus === 'items') this.toggleOutfit(i); else { w.sel = i; w.focus = 'items'; S().select(); } break; } }
+        for (let i = page * 8; i < Math.min(list.length, page * 8 + 8); i++) { const q = cell(i % 8); if (Math.hypot(p.x - q.x, p.y - q.y) < q.r + 8) { w.focus = 'items'; this.toggleOutfit(i); break; } }
       }
     },
 
@@ -370,6 +375,16 @@
         c.restore();
       });
       if (pages > 1) {
+        // big bobbing arrows: there are more to see on the next page
+        for (const dir of [-1, 1]) {
+          const q = pageArrow(dir), nudge = Math.sin(t * 0.12) * 3 * dir;
+          c.save(); c.translate(q.x + nudge, q.y);
+          c.fillStyle = '#ffb35c'; c.strokeStyle = '#ffffff'; c.lineWidth = 4;
+          G().circle(0, 0, q.r, c); c.fill(); c.stroke();
+          c.strokeStyle = '#ffffff'; c.lineWidth = 6; c.lineCap = 'round'; c.lineJoin = 'round';
+          c.beginPath(); c.moveTo(-5 * dir, -10); c.lineTo(5 * dir, 0); c.lineTo(-5 * dir, 10); c.stroke();
+          c.restore();
+        }
         for (let i = 0; i < pages; i++) { const q = pageDot(i, pages); c.fillStyle = i === page ? '#ffb35c' : '#d8c8d8'; G().circle(q.x, q.y, i === page ? 10 : 8, c); c.fill(); }
       }
       G().text(selected ? selected.name : 'Found treasures', 625, 365, 18, '#795830', null, 'center', c);

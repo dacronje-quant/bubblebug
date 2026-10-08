@@ -23,12 +23,11 @@ function checks(g) {
   tick(); tick(1, ['KeyX']); assert.equal(save.starsSpent, 0); assert.equal(save.wear.head, null);
   tick();
   tap(B.Play.wardrobeTabX(4), 88); assert.equal(B.Play.wardrobe.tab, 4);
-  tap(593, 178); assert.equal(save.starsSpent, 0); // preview a milestone item
-  tap(593, 178); assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.trail, 'rainbow');
+  tap(593, 178); assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.trail, 'rainbow'); // one tap picks it
   tap(593, 178); assert.equal(save.starsSpent, 0);
   tap(B.Play.wardrobeTabX(3), 88);
-  tap(769, 178); tap(769, 178); assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.bubble, 'flower');
-  tap(505, 88); tap(681, 178); tap(681, 178);
+  tap(769, 178); assert.equal(save.starsSpent, 0); assert.equal(save.cosmetics.bubble, 'flower');
+  tap(505, 88); tap(681, 178);
   assert.equal(save.starsSpent, 0); assert.equal(save.outfits.wizard, 1);
   assert.equal(B.Economy.balance(save, 'stars'), 250);
   assert.equal(JSON.stringify(save.sparkles), stars); assert.equal(JSON.stringify(save.friends), hearts);
