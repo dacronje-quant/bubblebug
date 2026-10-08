@@ -308,8 +308,5 @@
         localStorage.setItem(HARD_KEY, mode === 'hard' ? '1' : '0');
       } catch (e) { /* storage blocked */ }
     },
-    setHard(on) {
-      this.setDifficulty(on ? 'hard' : 'medium');
-    },
   };
 })(window.BB);

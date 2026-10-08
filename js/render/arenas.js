@@ -8,7 +8,6 @@
 (function (BB) {
   'use strict';
   const T = BB.CFG.TILE;
-  const TAU = Math.PI * 2;
   const G = () => BB.G;
   const A = () => BB.Backdrops.art;
 

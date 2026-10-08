@@ -12,7 +12,6 @@
 (function (BB) {
   'use strict';
   const G = () => BB.G;
-  const TAU = Math.PI * 2;
   const BUTTONS = ['resume', 'sound', 'map', 'home'];
 
   BB.Pause = {

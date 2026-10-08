@@ -70,7 +70,6 @@
   // Water is only dangerous before the Sea Turtle's gift; mist always is.
   const hazardous = (ch, ab) => ch === '%' || (ch === '~' && !ab.swim);
 
-  function sideAt(px, py) { return solidSide(W().tile(Math.floor(px / T), Math.floor(py / T))); }
 
   // Is any solid tile overlapping the rectangle?
   function rectSolid(x, y, w, h) {

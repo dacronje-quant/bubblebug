@@ -25,7 +25,7 @@
     return p;
   }
 
-  const P = BB.Particles = {
+  BB.Particles = {
     list, ambient, rain,
     // burst of a kind around (x, y)
     burst(kind, x, y, n = 10, opt = {}) {

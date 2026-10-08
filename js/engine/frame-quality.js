@@ -3,7 +3,7 @@
 (function (BB) {
   'use strict';
   let avgWork = 0, avgDraw = 0, avgPeriod = 0, slow = 0, healthy = 0, cooldown = 0;
-  const Q = BB.FrameQuality = {
+  BB.FrameQuality = {
     reset() { avgWork = avgDraw = avgPeriod = slow = healthy = cooldown = 0; },
     sample(period, work, draw) {
       if (document.hidden || period <= 0 || period > 150) { this.reset(); return; }

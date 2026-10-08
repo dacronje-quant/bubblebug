@@ -27,7 +27,6 @@
   const G = () => BB.G;
   const W = () => BB.World;
   const PT = () => BB.Particles;
-  const S = () => BB.Audio.sfx;
   const HOLD = C.INTERACT_HOLD;
 
   const home = () => W().rooms.find(r => r.def.home);

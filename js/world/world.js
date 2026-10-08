@@ -81,7 +81,7 @@
   const CH = [null];
   for (let i = 1; i < 128; i++) CH[i] = String.fromCharCode(i);
 
-  const World = BB.World = {
+  BB.World = {
     rooms: [],
     byId: {},
     buckets: new Map(),

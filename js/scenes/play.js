@@ -26,7 +26,7 @@
   const FX = BB.FX;
   const NO_INPUT = { left: false, right: false, jump: false, jumpPressed: false, bubblePressed: false };
 
-  const P = BB.Play = {
+  BB.Play = {
     save: null, pl: null, room: null, prevRoom: null,
     ents: {},               // room id → { things: [], bugs: [], bosses: [] }
     zoneCard: 0, cardZone: 0, lastZone: -1,

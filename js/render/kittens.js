@@ -63,7 +63,6 @@
     iris: '#48cfd5', irisLight: '#c1ffff', irisDark: '#36839c', outline: '#9160a1',
     bubbleTint: '#d5bdff', bubbleTint2: '#b1f7ee', trail: 'star', voice: 700,
   });
-  const blueEyes = { iris: '#3d8ff0', irisLight: '#a8e0ff', irisDark: '#123f8f' };
   Object.assign(CATS, {
     mamaMallow: base('marshmallow', {
       id: 'mamaMallow', name: "Marshmallow's Mama", size: 1.6, voice: 470, cushion: '#ffb3d1',
@@ -584,7 +583,6 @@
   // ──── The whole kitten ────
   function drawKitten(c, catId, pose, x, y, scale = 1, facing = 1) {
     const cat = CATS[catId] || CATS.marshmallow;
-    const t = pose.t || 0;
     c.save();
     c.translate(x, y);
     c.scale(scale * facing, scale);

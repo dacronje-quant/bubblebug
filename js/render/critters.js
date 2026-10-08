@@ -224,7 +224,6 @@
       face(c, 0, 1, 1.0, mood, Object.assign({ lid: '#6f52b0' }, st));
     },
     snailet(c, st, mood) {
-      const t = st.t;
       c.fillStyle = tone('#f2c9a0', mood); c.strokeStyle = OUT; c.lineWidth = 1.2;
       c.beginPath(); c.moveTo(-14, 7); c.quadraticCurveTo(0, 9, 14, 6); c.quadraticCurveTo(16, -4, 10, -3); c.lineTo(-14, 5); c.closePath(); c.fill(); c.stroke();
       c.fillStyle = tone('#f59ac0', mood);
@@ -369,7 +368,6 @@
       c.fillStyle = '#fff'; c.beginPath(); c.moveTo(1, 3.6); c.lineTo(2, 5.6); c.lineTo(3, 3.6); c.fill();
     },
     mole(c, st, mood) {
-      const t = st.t, fur = tone('#6b5670', mood);
       c.fillStyle = coat(c, '#6b5670', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.2;
       G.ellipse(0, 1, 13, 9, 0, c); c.fill(); c.stroke();
       c.fillStyle = tone('#ffb3c8', mood);
@@ -478,7 +476,7 @@
       face(c, 0, -8, 0.7, mood, Object.assign({ lid: '#d85a40' }, st));
     },
     seal(c, st, mood) {
-      const t = st.t, fur = tone('#c9ccd8', mood);
+      const fur = tone('#c9ccd8', mood);
       c.fillStyle = coat(c, '#c9ccd8', mood); c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
       c.beginPath(); c.moveTo(-15, 6); c.quadraticCurveTo(-20, 2, -19, -1); c.quadraticCurveTo(-14, 4, -9, 3); c.fill(); c.stroke();
       G.ellipse(-2, 2, 13, 8, 0, c); c.fill(); c.stroke();
@@ -575,7 +573,7 @@
       face(c, 9, 0, 0.78, mood, Object.assign({ lid: '#3a5a9a' }, st));
     },
     penguin(c, st, mood) {
-      const t = st.t, dark = tone('#2e3a54', mood * 0.6);
+      const dark = tone('#2e3a54', mood * 0.6);
       const waddle = st.walk ? Math.sin(st.step) * 0.1 : 0;
       c.save(); c.rotate(waddle);
       c.fillStyle = coat(c, '#2e3a54', mood * 0.6); c.strokeStyle = FUR_OUT; c.lineWidth = 1.3;
@@ -629,7 +627,7 @@
       face(c, 5, -8.5, 0.5, mood, Object.assign({ lid: '#b05a30' }, st));
     },
     fawn(c, st, mood) {
-      const t = st.t, fur = tone('#c88a58', mood);
+      const fur = tone('#c88a58', mood);
       c.strokeStyle = fur; c.lineWidth = 3; c.lineCap = 'round';
       const k = st.walk ? Math.sin(st.step) * 2 : 0;
       for (const [x, d] of [[-8, 1], [-4, -1], [5, 1], [9, -1]]) { c.beginPath(); c.moveTo(x, 4); c.lineTo(x + d * k, 14); c.stroke(); }
@@ -716,7 +714,7 @@
       face(c, 8, -6, 0.58, mood, Object.assign({ lid: '#6ab888' }, st));
     },
     unicorn(c, st, mood) {
-      const t = st.t, fur = tone('#ffffff', mood * 0.7);
+      const fur = tone('#ffffff', mood * 0.7);
       c.strokeStyle = fur; c.lineWidth = 3.2; c.lineCap = 'round';
       const k = st.walk ? Math.sin(st.step) * 2 : 0;
       for (const [x, d] of [[-8, 1], [-4, -1], [5, 1], [9, -1]]) { c.beginPath(); c.moveTo(x, 4); c.lineTo(x + d * k, 13); c.stroke(); }

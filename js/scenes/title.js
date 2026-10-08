@@ -91,16 +91,6 @@
       this.paw(c, x, y, s, -0.18);
       c.restore();
     },
-    playButton(c, x, y, r, t, lit) {
-      const k = 1 + Math.sin(t * 0.08) * 0.06 + (lit ? 0.1 : 0);
-      G().drawGlow(x, y, r * 2.4, '#fff4c2', 0.6, c);
-      c.save(); c.translate(x, y); c.scale(k, k);
-      c.fillStyle = '#5fd48a'; c.strokeStyle = '#ffffff'; c.lineWidth = 6;
-      G().circle(0, 0, r, c); c.fill(); c.stroke();
-      c.fillStyle = '#ffffff';
-      c.beginPath(); c.moveTo(-r * 0.28, -r * 0.42); c.lineTo(r * 0.48, 0); c.lineTo(-r * 0.28, r * 0.42); c.closePath(); c.fill();
-      c.restore();
-    },
   };
 
   const G_ = () => BB.G;

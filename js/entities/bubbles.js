@@ -99,7 +99,6 @@
 
   // the beam's path with a gentle wave rolling along it, head first
   function beamPts(b, cam) {
-    const n = b.hist.length;
     return b.hist.map((p, i) => {
       const w = Math.sin(b.t * 0.3 - i * 0.45 + b.seed) * 2.6 * (i / BEAM_LEN);
       return { x: p.x - cam.x, y: p.y - cam.y + w };

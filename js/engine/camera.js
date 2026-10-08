@@ -31,7 +31,7 @@
     return depth;
   }
 
-  const Cam = BB.Camera = {
+  BB.Camera = {
     x: 0, y: 0, lookX: 0, lookY: 0,
     revision: 0, // snaps mark camera discontinuities for render interpolation
     slide: null, // { from:{x,y}, to:{x,y}, t, dur }
