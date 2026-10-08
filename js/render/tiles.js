@@ -53,10 +53,16 @@
     return { n: isSolid(tx, ty - 1), s: isSolid(tx, ty + 1), e: isSolid(tx + 1, ty), w: isSolid(tx - 1, ty) };
   }
 
-  // depth below the nearest exposed top (for darkening deep ground)
+  // distance to the nearest open air in any direction (for darkening deep
+  // ground). Walls and ceilings stay as light as a floor's surface instead
+  // of darkening like buried soil, so they stand out against the sky.
   function depthAt(tx, ty) {
-    let d = 0;
-    while (d < 6 && isSolid(tx, ty - d - 1) && W().tile(tx, ty - d - 1) !== null) d++;
+    let d = 6;
+    for (const [dx, dy] of [[0, -1], [-1, 0], [1, 0], [0, 1]]) {
+      let n = 0;
+      while (n < d && isSolid(tx + dx * (n + 1), ty + dy * (n + 1))) n++;
+      d = n;
+    }
     return d;
   }
 
@@ -601,23 +607,27 @@
   }
 
   // An exposed solid face needs a readable edge even where its biome's body
-  // colour is close to the backdrop. Keep this inside the collision tile;
-  // grass, roots and other overhanging decoration remain outside it.
+  // colour is close to the backdrop: a dark outline (reads on bright skies)
+  // with a bright rim inside it (reads on dark ones). Keep this inside the
+  // collision tile; grass, roots and other overhanging decoration remain
+  // outside it.
+  const edgeDark = Z => BB.mix(Z.groundDark, '#120c24', 0.55);
+  const edgeLight = Z => BB.mix(Z.groundLight, '#ffffff', 0.55);
   function paintSolidEdges(c, z, x, y, m) {
     const Z = BB.ZONES[z];
     c.save(); tileShape(c, x, y, m); c.clip();
     c.lineWidth = 3; c.lineCap = 'butt';
-    c.strokeStyle = BB.mix(Z.groundDark, '#192039', 0.4);
+    c.strokeStyle = edgeDark(Z);
     c.beginPath();
     if (!m.w) { c.moveTo(x + 1.5, y); c.lineTo(x + 1.5, y + T); }
     if (!m.e) { c.moveTo(x + T - 1.5, y); c.lineTo(x + T - 1.5, y + T); }
     if (!m.s) { c.moveTo(x, y + T - 1.5); c.lineTo(x + T, y + T - 1.5); }
     c.stroke();
-    c.lineWidth = 1.5; c.strokeStyle = Z.groundLight;
+    c.lineWidth = 3; c.strokeStyle = edgeLight(Z);
     c.beginPath();
-    if (!m.w) { c.moveTo(x + 4, y + 2); c.lineTo(x + 4, y + T - 2); }
-    if (!m.e) { c.moveTo(x + T - 4, y + 2); c.lineTo(x + T - 4, y + T - 2); }
-    if (!m.s) { c.moveTo(x + 2, y + T - 4); c.lineTo(x + T - 2, y + T - 4); }
+    if (!m.w) { c.moveTo(x + 4.5, y + (m.n ? 0 : 3)); c.lineTo(x + 4.5, y + T - (m.s ? 0 : 3)); }
+    if (!m.e) { c.moveTo(x + T - 4.5, y + (m.n ? 0 : 3)); c.lineTo(x + T - 4.5, y + T - (m.s ? 0 : 3)); }
+    if (!m.s) { c.moveTo(x + (m.w ? 0 : 3), y + T - 4.5); c.lineTo(x + T - (m.e ? 0 : 3), y + T - 4.5); }
     c.stroke();
     if (!m.n) {
       c.strokeStyle = Z.topDark; c.lineWidth = 2;
@@ -728,36 +738,52 @@
     // Outside-world tiles block sides and heads, but never support feet.
     // Show those actual barriers as zone-coloured masonry/wood/cloud rims.
     // The narrow inner lip remains visible even when the camera stops exactly
-    // at an edge. Real adjoining rooms and open drops receive no false wall.
-    const Z = BB.ZONES[room.zone], P = BB.Physics;
-    const lip = 8, outer = T;
+    // at an edge. Open connections and out-of-world drops receive no false wall.
+    //
+    // A neighbouring room's wall, ceiling or floor right at the seam is
+    // painted by that room, but it sits just off screen whenever the camera
+    // stops at this room's edge, so the kitten bumps into (or lands on)
+    // something it can't see. It gets the same lip, which slims away as the
+    // real block scrolls into view.
+    const P = BB.Physics, lip = 8, outer = T;
     const free = (col, row) => !P.solidSide(room.grid[row][col]);
-    const face = (side, tx, ty) => {
+    const face = (side, col, row) => {
+      const tx = room.x + col, ty = room.y + row;
+      const ax = tx + (side === 'left' ? -1 : side === 'right' ? 1 : 0), ay = ty + (side === 'top' ? -1 : side === 'bottom' ? 1 : 0);
+      const ch = W().tile(ax, ay), out = ch === null;
+      if (out ? side === 'bottom' : !P.solidSide(ch)) return;
       const x = tx * T - cam.x, y = ty * T - cam.y;
       if (x + T < -outer || y + T < -outer || x > G.W + outer || y > G.H + outer) return;
-      c.fillStyle = Z.groundDark;
-      if (side === 'left') c.fillRect(x - outer, y, outer + lip, T);
-      else if (side === 'right') c.fillRect(x + T - lip, y, outer + lip, T);
-      else c.fillRect(x, y - outer, T, outer + lip);
-      c.fillStyle = Z.ground;
-      if (side === 'left') c.fillRect(x - 5, y + 1, lip + 3, T - 2);
-      else if (side === 'right') c.fillRect(x + T - lip + 2, y + 1, lip + 3, T - 2);
-      else c.fillRect(x + 1, y - 5, T - 2, lip + 3);
-      c.strokeStyle = Z.groundLight; c.lineWidth = 2;
-      c.beginPath();
-      if (side === 'left') { c.moveTo(x + lip - 1, y); c.lineTo(x + lip - 1, y + T); }
-      else if (side === 'right') { c.moveTo(x + T - lip + 1, y); c.lineTo(x + T - lip + 1, y + T); }
-      else { c.moveTo(x, y + lip - 1); c.lineTo(x + T, y + lip - 1); }
-      c.stroke();
+      // how much of the neighbour's own block is already on screen
+      const seen = out ? 0 : BB.clamp(side === 'left' ? x : side === 'right' ? G.W - x - T : side === 'top' ? y : G.H - y - T, 0, lip);
+      const depth = lip - seen;
+      if (depth <= 0.5) return;
+      const Z = BB.ZONES[out ? room.zone : W().roomAtTile(ax, ay).zone];
+      // a band a..b px from the seam, into the room (negative: beyond it)
+      const band = (a, b, col) => {
+        c.fillStyle = col;
+        if (side === 'left') c.fillRect(x + a, y, b - a, T);
+        else if (side === 'right') c.fillRect(x + T - b, y, b - a, T);
+        else if (side === 'top') c.fillRect(x, y + a, T, b - a);
+        else c.fillRect(x, y + T - b, T, b - a);
+      };
+      if (out) band(-outer, 0, Z.groundDark);
+      const ice = ch === 'I' && (ICE[Z.key] || ICE.frost);
+      band(0, depth, ice ? ice[0] : ch === 'G' ? '#60994b' : Z.ground);
+      band(Math.max(0, depth - 6), Math.max(0, depth - 3), ice ? '#ffffff' : edgeLight(Z));
+      band(Math.max(0, depth - 3), depth, ice ? ice[2] : edgeDark(Z));
     };
     const col0 = Math.max(0, Math.floor((cam.x - room.px - T) / T));
     const col1 = Math.min(room.w - 1, Math.floor((cam.x + G.W - room.px + T) / T));
-    for (let col = col0; col <= col1; col++) if (free(col, 0) && W().tile(room.x + col, room.y - 1) === null) face('top', room.x + col, room.y);
+    for (let col = col0; col <= col1; col++) {
+      if (free(col, 0)) face('top', col, 0);
+      if (free(col, room.h - 1)) face('bottom', col, room.h - 1);
+    }
     const row0 = Math.max(0, Math.floor((cam.y - room.py - T) / T));
     const row1 = Math.min(room.h - 1, Math.floor((cam.y + G.H - room.py + T) / T));
     for (let row = row0; row <= row1; row++) {
-      if (free(0, row) && W().tile(room.x - 1, room.y + row) === null) face('left', room.x, room.y + row);
-      if (free(room.w - 1, row) && W().tile(room.x + room.w, room.y + row) === null) face('right', room.x + room.w - 1, room.y + row);
+      if (free(0, row)) face('left', 0, row);
+      if (free(room.w - 1, row)) face('right', room.w - 1, row);
     }
   }
 
