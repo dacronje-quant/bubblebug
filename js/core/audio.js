@@ -229,6 +229,36 @@
       tone({ type: 'triangle', freq: 220, to: 150, glide: 0.2, dur: 0.25, vol: 0.12, vib: [9, 12] });
       tone({ freq: 330, to: 280, delay: 0.05, dur: 0.15, vol: 0.05 });
     },
+    // Landing on a critter's head. `p` > 1 for little critters, < 1 for big ones.
+    // Happy: a bright rising "wheee!" squeak. Still sad: a soft, droopy "awww"
+    // (never a hurt sound: every bop cheers them up a little).
+    squeakHappy(p = 1) {
+      tone({ type: 'triangle', freq: 700 * p, to: 1500 * p, glide: 0.1, dur: 0.16, vol: 0.11, vib: [30, 40] });
+      tone({ freq: 1200 * p, to: 1900 * p, delay: 0.1, dur: 0.12, vol: 0.06, verb: 0.3 });
+      noise({ dur: 0.05, vol: 0.03, freq: 2500, q: 2 });
+    },
+    squeakSad(p = 1) {
+      tone({ type: 'triangle', freq: 620 * p, to: 380 * p, glide: 0.28, dur: 0.34, vol: 0.1, vib: [7, 18] });
+      tone({ freq: 900 * p, to: 760 * p, delay: 0.03, dur: 0.18, vol: 0.035 });
+      noise({ dur: 0.05, vol: 0.03, freq: 1800, q: 2 });
+    },
+    // a hidden animal pops out: "peekaboo!" giggle
+    peekaboo() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      tone({ freq: 500, to: 1300, glide: 0.08, at: t, dur: 0.12, vol: 0.09 });
+      [0, 1, 2, 3].forEach(i => tone({ freq: 1100 + (i % 2) * 220, to: 1350 + (i % 2) * 220, at: t + 0.14 + i * 0.075, dur: 0.06, vol: 0.05 }));
+    },
+    rustle() { noise({ dur: 0.22, vol: 0.06, freq: 2600, q: 0.7 }); noise({ delay: 0.1, dur: 0.15, vol: 0.04, freq: 3400, q: 0.7 }); },
+    // a bubble wakes a flower / crystal / mushroom: one pentatonic chime
+    // that climbs as you keep bubbling the scenery
+    bloomChime(i) { if (ctx) { inst.bell(midi(79 + PENTA[i % 6] + 12 * Math.floor((i % 12) / 6)), ctx.currentTime, 0.07, sfxBus, 0.6); } },
+    // P2 joining / catching up with a bubble ride
+    join() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      [67, 72, 76, 79].forEach((m, i) => inst.marimba(midi(m), t + i * 0.06, 0.14, sfxBus));
+    },
     sparkle() {
       if (!ctx) return;
       const now = ctx.currentTime;

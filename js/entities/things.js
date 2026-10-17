@@ -86,7 +86,10 @@
     const dx = pcx - th.x, dy = pcy - th.y, dist = Math.hypot(dx, dy);
     switch (th.type) {
       case 'sparkle':
-        if (dist < 24 && ctx.pl.state !== 'rescue') { th.dead = true; ctx.onSparkle(th); }
+        for (const k of ctx.kittens || [ctx.pl]) {
+          const kb = k.body;
+          if (!th.dead && k.state !== 'rescue' && Math.hypot(kb.x + kb.w / 2 - th.x, kb.y + kb.h / 2 - th.y) < 26) { th.dead = true; ctx.onSparkle(th); }
+        }
         break;
       case 'bench': {
         const near = Math.abs(dx) < 34 && Math.abs(pb.y + pb.h - th.y) < 8 && pb.grounded;
@@ -194,6 +197,8 @@
       case 'bud': return th.bloom ? null : { x: th.x, y: th.y, r: 14, homing: true, hit: () => { bloomBud(th, ctx); return true; } };
       case 'flower': return { x: th.x, y: th.y - 30, r: 16, homing: false, hit: () => { sing(th); return true; } };
       case 'elder': return ctx.save.abilities[th.ability] ? null : { x: th.x, y: th.y, r: 36, homing: true, hit: () => { if (ctx.pl.state === 'play') ctx.onElder(th); return true; } };
+      // a bubble that drifts into a star scoops it up for you
+      case 'sparkle': return { x: th.x, y: th.y, r: 12, homing: false, hit: () => { if (!th.dead) { th.dead = true; ctx.onSparkle(th); } return true; } };
       case 'yarn': return { x: th.x, y: th.y, r: th.r, homing: false, hit: b => { th.vx += b.vx * 0.8; th.vy -= 2; S().yarn(); return true; } };
       default: return null;
     }
@@ -222,11 +227,16 @@
     switch (th.type) {
       case 'sparkle': {
         const by = Math.sin(t * 0.06) * 3;
-        G().drawGlow(x, y + by, 18, '#fff1a8', 0.7, c);
-        c.fillStyle = '#ffd84a'; c.strokeStyle = '#d99a14'; c.lineWidth = 1.2;
-        G().star(x, y + by, 8, 5, 0.48, -Math.PI / 2 + Math.sin(t * 0.04) * 0.25, c); c.fill(); c.stroke();
+        // every few seconds each star gives a little "look at me!" glint
+        const gl = (t + th.x * 0.7) % 200, glint = gl < 24 ? Math.sin(gl / 24 * Math.PI) : 0;
+        const sz = 9 * (1 + glint * 0.25);
+        G().drawGlow(x, y + by, 20 + glint * 10, '#fff1a8', 0.7 + glint * 0.3, c);
+        c.fillStyle = '#ffd84a'; c.strokeStyle = '#d99a14'; c.lineWidth = 1.3;
+        G().star(x, y + by, sz, 5, 0.48, -Math.PI / 2 + Math.sin(t * 0.04) * 0.25 + glint * 0.6, c); c.fill(); c.stroke();
+        c.fillStyle = 'rgba(255,250,210,0.85)';
+        G().star(x - 2, y + by - 2, sz * 0.4, 5, 0.48, -Math.PI / 2, c); c.fill();
         c.fillStyle = 'rgba(255,255,255,0.9)';
-        G().twinkle(x + 5, y + by - 6, 2 + Math.abs(Math.sin(t * 0.08)) * 2.5, c); c.fill();
+        G().twinkle(x + 5, y + by - 6, 2 + Math.abs(Math.sin(t * 0.08)) * 2.5 + glint * 3, c); c.fill();
         ctx.light(x, y + by, 60, '#fff1a8', 0.5);
         break;
       }

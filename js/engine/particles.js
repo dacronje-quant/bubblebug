@@ -40,6 +40,8 @@
     dust(x, y, n = 5, color = '#e8dcc8') {
       for (let i = 0; i < n; i++) spawn({ kind: 'dust', x: x + (Math.random() - 0.5) * 12, y, vx: (Math.random() - 0.5) * 1.6, vy: -Math.random() * 0.8, life: 22 + Math.random() * 12, size: 3 + Math.random() * 3, color, drag: 0.92 });
     },
+    // a little floating bubble (friends blowing bubbles back at you)
+    bubble(x, y, vx = 0) { spawn({ kind: 'bubble', x, y, vx, vy: -0.6 - Math.random() * 0.4, life: 70 + Math.random() * 30, size: 3 + Math.random() * 3, drag: 0.985, rot: Math.random() * 6 }); },
     ring(x, y, color = '#ffffff', size = 10) { spawn({ kind: 'ring', x, y, life: 18, size, color }); },
     // a little celebration firework (party time!)
     firework(x, y) {
@@ -93,6 +95,9 @@
           case 'ring':
             c.strokeStyle = p.color; c.lineWidth = 2 * k;
             G.circle(x, y, p.size * (1.4 - k), c); c.stroke();
+            break;
+          case 'bubble':
+            G.bubble(x + Math.sin((p.max - p.life) * 0.15 + p.rot) * 2, y, p.size, '#d8f4ff', Math.min(1, k * 2), c);
             break;
           case 'dust':
             c.fillStyle = p.color; G.circle(x, y, p.size * (1.2 - k * 0.4), c); c.fill();

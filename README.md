@@ -27,6 +27,11 @@ There's no install, no Node.js and no build step. Everything, sound included, is
 | See-through map (keep playing) | M or Tab | Select / Back | map button, top-right |
 | Pause / home | Esc or P | Start | round pause button, top-right |
 | Do a cat trick (once you've found one) | ▼ or S | D-pad down | orange paw button (appears after the first trick) |
+| A friend joins as a second kitten | 2 | Start on a second gamepad | pause → two-kittens button |
+
+Hopping onto a critter's head works too: *boing!* (see *The gloomy critters*).
+
+**Two kittens.** A friend, brother, sister or grown-up can play along as the other kitten (Marshmallow if you're Phoebe, Phoebe if you're Marshmallow). Press **2** on the keyboard, **Start** on a second gamepad, or the **two-kittens button** in the pause menu. Player two moves with a second gamepad or with **J L** (move), **I** (jump) and **O / U** (bubble), or the number pad (**4 6** move, **8** jump, **0 / 5** bubble). Player two can never get sad: gloomy bumps just boing them back. If they fall behind, wander off screen or tumble into water, a big bubble floats them back beside player one, who leads the way through rooms and doors. A little blue heart bobs over player two's head. To stop, press the two-kittens button again (or just leave the second kitten alone for a minute and it waves bye-bye).
 
 Touch buttons appear automatically on tablets and touchscreens.
 
@@ -128,11 +133,25 @@ Marshmallow's family are Birmans and Siamese-pointed cats in cream, lilac and ch
 
 Bunnies and frogs hop, birds, bats, owls and bees flutter, fish and jellyfish swim, spiders dangle on silk, and everyone else waddles. Every friend you make comes to the rainbow party.
 
+**Hop on their heads!** Jumping onto a critter bounces your kitten up high (higher if you hold jump), and your air powers recharge. A gloomy critter lets out a droopy little "awww"… but it never makes your kitten sadder: every hop cheers it up a little, just like a bubble, and three hops make a friend. Friends squeal a happy "wheee!" and send hearts. Bubble a friend and they giggle and blow a few bubbles back at you.
+
+**The friend parade.** A new friend hops along behind your kitten for a while, following its exact path (up to three at once). At the next cozy bench they wave goodbye and hop home, and they head home when you move on to a new zone too.
+
+**The sticker book** (pause → the purple book) has a page for every zone: a sticker for each kind of critter that lives there (in colour once you've made friends with one), the zone's boss and its hidden toy. Flip pages with ◀ ▶ or the arrows, close it with ✕.
+
 The world has 83 interconnected rooms (the Cat House included), 680 sparkles, 65 gloomy critters, 12 bosses, 12 picture puzzles, 12 cat tricks, 70 fishy treats, 13 food bowls, 25 cozy benches (your own bed at home among them), 24 cat flaps (two per zone), 12 family members and 12 hidden toys (yarn ball, feather wand, jingle bell, toy mouse, paper boat, star cushion, seashell, sand bucket, mitten, kite, rubber duck, toy rocket). There are also guide fireflies, music flowers, sleepy buds that open vine gates when bubbled, and shy walls you can walk right through.
 
 ### ✨ Little touches
 
 Grass and flower tufts bend as your kitten brushes past, then spring back. Paw prints press into snow and sand and slowly fill back in, crunchy leaves kick up in the Autumn Woods, water ripples wherever you splash, underwater light dances in the Coral Lagoon, and soft light shafts slant down in the sunny and moonlit zones. Bosses squash and stretch, wind up before every move, and warm from grey to full colour as their clouds pop. Lost babies and the golden key follow your kitten's exact path.
+
+**Bubble magic.** A bubble that pops against the ground, a wall or a ceiling leaves something behind: a flower in the gardens, a glowing mushroom in the meadow, crystals in the caverns, a snowflake in the peaks, a seashell on the beach, an autumn leaf, a lotus, a tiny rainbow in the clouds… each with a chime that climbs a little scale as you keep bubbling. A bubble that floats into a star scoops it up for you. Collected stars zoom up into the star counter.
+
+**Peekaboo!** Most rooms hide a bush (or a snowdrift, leaf pile, big seashell, honey pot…) that rustles when a kitten comes close or a bubble lands in it, and a silly animal pops out to say hello. Some of them share a fishy treat.
+
+**Life all around.** Butterflies and birds drift through the far-off sky, bats flit about the caverns, bees buzz round the hive, fish swim past in the lagoon, fireflies glow at the springs and stars shoot across the night sky. Soft, out-of-focus grass, crystals, coral, bamboo and snow drift by along the bottom of the screen, closer than your kitten, for a feeling of depth. Floating ledges are chunky with soft shadows underneath, and glimmer gently in dark caves so they're always easy to find. In the air, your kitten's shadow stays on the ground below and shrinks as it goes higher, so landings are easy to judge. When a cheered-up boss says thank you, the zone's critters come hopping in for a little dance party.
+
+**A tidy screen.** The row of power icons under the counters shows for a few seconds when you enter a zone, get a new power or pause, then tucks itself away. Whenever you use a power, its icon pops up in the corner for a moment.
 
 ## ☀ Easy or Hard: happy suns and save points
 
@@ -234,14 +253,14 @@ Each zone has a little brain-teaser that opens a vine gate. The gate wears a pic
 - **Bosses teach a rhythm.** Every sad attack is slow and shown in advance (growing shadows, landing rings, dotted lines, a wind-up wiggle), and the "bubble now!" moment is always the same: when the boss is stuck or sniffling and glows gold.
 - **A home to come back to.** The Cat House is safe, cosy and never far away: every zone has a cat flap home.
 - **Puzzles in pictures.** Every puzzle gate shows what it's waiting for and ticks it off as you go. No puzzle can get stuck: babies and keys follow you everywhere (even after a too-sad pop-back), and a wrong bell just replays the tune.
-- **Friendship, not fighting.** A gloomy critter carries a little rain-cloud over its head. Each bubble shrinks the cloud and lifts its frown (a sad bunny's ears even perk back up). The last bubble wraps it in a big bubble that pops into a rainbow, and it becomes a dancing friend.
+- **Friendship, not fighting.** A gloomy critter carries a little rain-cloud over its head. Each bubble (or hop on its head) shrinks the cloud and lifts its frown (a sad bunny's ears even perk back up). The last one wraps it in a big bubble that pops into a rainbow, and it becomes a dancing friend.
 - **Forgiving movement.** Coyote time, jump buffering, *ledge assist* (arrive a bit low and you're popped up), *corner slip* on head-bonks, variable jump height, and bubbles that gently home in on their target.
 - **Cozy benches.** Stop on one and your kitten curls up, purrs, and the music turns into a lullaby. The game also autosaves on every room change, so nothing is ever lost.
 
 ## 🧑 For grown-ups
 
 - **The map button** (top-right, next to pause; or M, Tab, or a gamepad's Select) floats a see-through map over the game while you keep playing. It's centred on your kitten and shows every visited room in its zone colour, benches, earned powers, a ★ on rooms with every sparkle found, a toy where you found one, a cat face where you found family, each boss (under a rain-cloud until cheered up, then with a heart), dotted lines between fairy-ring twins, and a little house on every cat flap you've found. Press it again to hide it.
-- **Pause** (top-right button, Esc or Start) has four picture buttons: keep playing, sound on/off, the **kingdom map** on parchment, and **home** (back to the title screen).
+- **Pause** (top-right button, Esc or Start) has six picture buttons: keep playing, sound on/off, the **kingdom map** on parchment, the **sticker book**, **two kittens** (a second player joins, or stops), and **home** (back to the title screen).
 - **The kingdom map** always stays at the same comfortable zoom and opens centred on your kitten. Browse it with ◀ ▶ ▲ ▼ held down, by dragging it with a finger or the mouse, or with its big orange arrow buttons (tap to glide, hold to keep going). Every zone you've explored has a name tag, the Cat House sits in the middle, and a small map of the whole ring at the bottom shows the part you're looking at; tap it to jump there. Close it with ✕, Space, the bubble button, Esc or M.
 - **Easy or Hard:** the little picker in the title screen's bottom-right corner (💗 Easy is the default). To switch mid-adventure: pause → home → pick → ▶ Continue.
 - **Start fresh:** choose 🌱 New Game on the title screen, then ✓.
@@ -268,12 +287,15 @@ js/engine/              physics.js (pure movement) · camera.js · particles.js
 js/render/              gfx · kittens (+ family, sad & crying poses) · critters · bossart (the 12 bosses) · tiles
                         backdrops (parallax) · lighting · fx (grass, paw prints, ripples, light shafts) · hud · mapview
                         home (the Cat House) · arenas (each boss arena's scenery)
+                        scenery (background animals, the soft front layer)
 js/entities/            player · bubbles · bugs (all gloomy critters) · bosses (sad attacks & cheering up)
                         puzzles (paw pads, lost babies, keys, song bells) · food (treats & bowls) · gestures (cat tricks)
                         wardrobe (things to wear, from the bosses)
                         links (cat flaps, Cat House doors, the Rainbow Lift) · things (sparkles, benches, elders, the slide…)
-js/scenes/              title (Continue / New Game) · select · play (suns, save points, travel, bosses, party)
-                        play-home (the dressing-up mirror, presents, toys at home) · pause (+ map)
+                        magic (bubble blooms, peekaboo bushes)
+js/scenes/              title (Continue / New Game) · select · play (suns, save points, travel, bosses, party,
+                        the friend parade, the boss dance, the second kitten)
+                        play-home (the dressing-up mirror, presents, toys at home) · pause (+ map, sticker book)
 js/main.js              fixed 60 Hz loop, scene switching, adaptive quality
 tools/                  verify-world.js + dev playtest/screenshot helpers (optional, need Node)
 tools/launcher/         Launcher.cs + icon.ico: source of Play Bubble Paws.exe (see the note at the top of Launcher.cs)

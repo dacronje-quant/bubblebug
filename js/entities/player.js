@@ -51,6 +51,7 @@
     if (pl.state === 'gift' || pl.state === 'party') { idleAnims(pl, true); return 0; }
 
     const inp = input.physicsInput();
+    pl.jumpHeld = inp.jump;
     const anyInput = inp.left || inp.right || inp.jump || input.pressed.bubble;
     // a cat trick in progress (any real input stops it)
     if (pl.gesture) BB.Gestures.tick(pl, { left: inp.left, right: inp.right, jumpPressed: inp.jumpPressed, bubblePressed: input.pressed.bubble });
@@ -176,7 +177,7 @@
       t: pl.t, blink: pl.blink, squash: pl.squash, puff: pl.puff, yawn: pl.yawn,
       ear: pl.ear, lick: pl.lick, happy: pl.happyT > 0, phase: pl.phase, vy: b.vy, tail: 0,
       munch: pl.munchT > 0 ? pl.munchT / pl.munchLen : 0,
-      wear: BB.Play.save && BB.Play.save.wear,
+      wear: pl.guest ? null : BB.Play.save && BB.Play.save.wear,
     };
     p.sad = pl.happyT > 0 ? 0 : pl.sad || 0;
     if (pl.state === 'sad') {
@@ -205,10 +206,15 @@
     const b = pl.body;
     const x = b.x + b.w / 2 - cam.x, y = b.y + b.h - cam.y;
     if (abilities.glow) G().drawGlow(x, y - 12, 70 + Math.sin(pl.t * 0.05) * 6, '#fff3b0', 0.35, c);
-    // soft contact shadow
-    if (b.grounded && pl.state !== 'rescue') {
-      c.fillStyle = 'rgba(20,10,40,0.18)';
-      G().ellipse(x, y + 1, 13, 3, 0, c); c.fill();
+    // soft contact shadow; in the air it stays on the ground below and
+    // shrinks the higher the kitten goes, so landings are easy to judge
+    if (pl.state !== 'rescue' && !b.inWater) {
+      const gy = b.grounded ? b.y + b.h : groundBelow(b);
+      if (gy != null) {
+        const k = 1 - BB.clamp((gy - (b.y + b.h)) / 220, 0, 0.75);
+        c.fillStyle = `rgba(20,10,40,${0.2 * k})`;
+        G().ellipse(x, gy - cam.y + 1, 13 * k, 3.2 * k, 0, c); c.fill();
+      }
     }
     // tricks can spin the whole kitten (a roly-poly roll, chasing its tail)
     const tf = pl.gesture && pl.state === 'play' ? BB.Gestures.transform(pl.gesture.id, pl.gesture.t) : null;
@@ -236,6 +242,18 @@
     c.globalAlpha = 1;
   }
   const G = () => BB.G;
+
+  // the first floor under the kitten's paws (within ~7 tiles), in world px
+  function groundBelow(b) {
+    const T = C.TILE, tx = Math.floor((b.x + b.w / 2) / T);
+    const ab = (BB.Play.save && BB.Play.save.abilities) || {};
+    for (let ty = Math.floor((b.y + b.h) / T); ty < Math.floor((b.y + b.h) / T) + 7; ty++) {
+      const ch = BB.World.tile(tx, ty);
+      if (ch === '~' || ch === '%') return null;
+      if (BB.Physics.landKind(ch, ab)) return ty * T;
+    }
+    return null;
+  }
 
   BB.Player = { create, update, startRescue, draw, pose };
 })(window.BB);

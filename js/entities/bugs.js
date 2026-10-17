@@ -8,6 +8,10 @@
 //  shrinks its rain-cloud; the last one wraps it in a big bubble that
 //  floats up and pops into a rainbow — and a new friend who dances,
 //  hops when you pass by and sends little hearts your way.
+//
+//  Kittens can also hop on a critter's head: *boing!* A gloomy one gives
+//  a droopy little "awww" but cheers up a bit, just like a bubble (it
+//  never makes the kitten sadder). A friend squeaks with joy.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -66,7 +70,7 @@
       mood: friend ? 0 : 1,
       state: friend ? 'happy' : 'gloomy',
       t: Math.floor(Math.random() * 1000), pauseT: 0, shake: 0, bumpCd: 0,
-      hop: 0, hopV: 0, rainbow: 0, danceT: 0, bubbledT: 0, blink: 0, blinkT: 60,
+      hop: 0, hopV: 0, rainbow: 0, danceT: 0, bubbledT: 0, blink: 0, blinkT: 60, squish: 0,
       r: isKing ? 40 : (RADIUS[kind] || 15) * 1.15,
     };
     if (b.behavior === 'walk') {
@@ -88,6 +92,7 @@
     b.t++;
     if (b.shake > 0) b.shake--;
     if (b.bumpCd > 0) b.bumpCd--;
+    if (b.squish > 0) b.squish--;
     if (b.rainbow > 0) b.rainbow--;
     if (b.danceT > 0) b.danceT--;
     if (--b.blinkT <= 0) { b.blinkT = 80 + Math.random() * 160; b.blink = 1; }
@@ -157,6 +162,12 @@
       b.facing = dx > 0 ? 1 : -1;
     }
 
+    // ── a kitten landing on its head: boing! (checked before any bump) ──
+    if (!b.king && b.state !== 'bubbled') {
+      for (const pl of ctx.kittens || [ctx.pl]) if (stompedBy(b, pl)) stomp(b, pl, ctx);
+    }
+    if (b.state === 'bubbled') return;
+
     // ── a gloomy bump makes the kitten sadder (gloomy only) ──
     if (!happy && ctx.pl.state === 'play' && b.bumpCd <= 0 && Math.abs(dx) < b.r * 0.85 + 6 && Math.abs(dy) < b.r * 0.85 + 8) {
       if (ctx.hurt(b.x)) {
@@ -166,6 +177,17 @@
         PT().burst('dot', b.x, b.y - 12, 5, { color: '#d8dce8', speed: 1, life: 24, size: 3, up: 0.6 });
       }
     }
+
+    // ── the second kitten never gets sad: a bump just boings it back ──
+    if (!happy && ctx.kittens && ctx.kittens.length > 1) {
+      const k2 = ctx.kittens[1], kb = k2.body;
+      const ddx = kb.x + kb.w / 2 - b.x, ddy = kb.y + kb.h / 2 - b.y;
+      if (k2.state === 'play' && !(b.bump2 > 0) && Math.abs(ddx) < b.r * 0.85 + 6 && Math.abs(ddy) < b.r * 0.85 + 8) {
+        kb.vx = (ddx >= 0 ? 1 : -1) * 4; if (!kb.inWater) { kb.vy = Math.min(kb.vy, -4.5); kb.grounded = false; }
+        b.bump2 = 40; b.shake = 8; S().hmph();
+      }
+    }
+    if (b.bump2 > 0) b.bump2--;
 
     // ── friends share the love ──
     if (happy && dist < 120 && b.t % 50 === 0) PT().heart(b.x, b.y - 16);
@@ -177,9 +199,12 @@
 
   function hit(b, ctx) {
     if (b.state === 'happy') {
-      // friends giggle at bubbles
+      // friends giggle at bubbles, and blow a few back at you
       for (let i = 0; i < 3; i++) PT().heart(b.x, b.y - 10);
       b.hopV = -3;
+      const dir = (ctx.pl.body.x + 10) > b.x ? 1 : -1;
+      b.facing = dir;
+      for (let i = 0; i < 3; i++) ctx.later(12 + i * 8, () => { PT().bubble(b.x + dir * 12, b.y - 4, dir * (1.2 + Math.random())); S().pop(1.6); });
       return true;
     }
     if (b.state !== 'gloomy') return false;
@@ -195,6 +220,41 @@
       S().whoosh();
     }
     return true;
+  }
+
+  // falling paws coming down on top of the critter
+  function stompedBy(b, pl) {
+    const pb = pl.body;
+    if (pl.state !== 'play' || pb.vy <= 0.5 || pb.grounded || pb.inWater || pb.climbing) return false;
+    const feet = pb.y + pb.h, top = b.y + (b.hop || 0) - b.r * 0.8;
+    if (Math.abs(pb.x + pb.w / 2 - b.x) > b.r * 0.85 + 8) return false;
+    // feet reached the head this tick (or are just inside it)
+    return feet >= top - 2 && feet - pb.vy <= top + 10;
+  }
+
+  function stomp(b, pl, ctx) {
+    const pb = pl.body;
+    // the kitten springs up: higher if jump is held, and air powers recharge
+    pb.vy = pl.jumpHeld ? -10.2 : -7;
+    pb.bouncing = true; // (a full springy rise, even without holding jump)
+    pb.y = Math.min(pb.y, b.y + (b.hop || 0) - b.r * 0.8 - pb.h);
+    pb.grounded = false; pb.djUsed = false; pb.bbUsed = false; pb.coyote = 0; pb.jumpBuf = 0;
+    pl.squash = 1.3; pl.happyT = Math.max(pl.happyT, 20);
+    b.squish = 14; b.bumpCd = 30; b.shake = 6;
+    const top = b.y + (b.hop || 0) - b.r * 0.6;
+    const p = BB.clamp(18 / (b.r || 15), 0.7, 1.3);
+    PT().ring(b.x, top, '#ffffff', 16);
+    if (b.state === 'happy') {
+      S().squeakHappy(p);
+      b.hopV = -3.5; b.danceT = Math.max(b.danceT, 40);
+      for (let i = 0; i < 3; i++) PT().heart(b.x + (Math.random() - 0.5) * 20, top - 6);
+      PT().burst('star', b.x, top, 4, { color: '#ffe27a', speed: 2, life: 24 });
+      return;
+    }
+    // still gloomy: "awww"… but a little happier, like a bubble would make it
+    S().squeakSad(p);
+    PT().burst('dot', b.x, top, 4, { color: '#c8d4ea', speed: 1.4, life: 22, size: 2.4, up: 0.5 });
+    ctx.later && ctx.later(14, () => { if (b.state === 'gloomy') hit(b, ctx); });
   }
 
   function befriend(b, ctx) {
@@ -213,6 +273,29 @@
     ctx.onFriend(b);
   }
 
+  // ── The friend parade: a new friend tags along behind the kitten for a
+  //    while (walking the kitten's own path), until the next cozy bench ──
+  function paradeStep(b, tp, ctx) {
+    b.t++;
+    if (b.squish > 0) b.squish--;
+    if (b.rainbow > 0) b.rainbow--;
+    if (b.danceT > 0) b.danceT--;
+    if (--b.blinkT <= 0) { b.blinkT = 80 + Math.random() * 160; b.blink = 1; }
+    b.blink = Math.max(0, b.blink - 0.2);
+    if (!tp) return;
+    const flyer = b.behavior === 'hover' || b.behavior === 'dangle';
+    const tx = tp.x, ty = flyer ? tp.y - 46 + Math.sin(b.t * 0.08) * 6 : tp.y - (LIFT[b.kind] || 9) * LOOK;
+    const dx = tx - b.x;
+    if (Math.abs(dx) > 0.6) b.facing = dx > 0 ? 1 : -1;
+    b.x = BB.lerp(b.x, tx, 0.25);
+    b.y = BB.lerp(b.y, ty, flyer ? 0.15 : 0.35);
+    // happy little hops while walking along
+    if (!flyer && b.hop === 0 && b.hopV === 0 && Math.abs(dx) > 0.8 && b.t % 22 === 0) b.hopV = -2.4;
+    if (b.hopV || b.hop < 0) { b.hop += b.hopV; b.hopV += 0.3; if (b.hop >= 0) { b.hop = 0; b.hopV = 0; } }
+    if (b.t % 90 === 0) PT().heart(b.x, b.y - 16);
+    b.pauseT = Math.abs(dx) > 0.8 ? 0 : 1; // (legs only patter while moving)
+  }
+
   function draw(c, b, cam) {
     const x = b.x - cam.x, y = b.y - cam.y + (b.hop || 0);
     if (x < -120 || x > BB.G.W + 120 || y < -140 || y > BB.G.H + 120) return;
@@ -224,7 +307,8 @@
     const st = {
       t: b.t, mood: b.mood, facing: b.facing, blink: b.blink, joy: b.state === 'happy' && (b.danceT > 0 || b.t % 200 < 40),
       shake: b.shake ? Math.sin(b.shake * 2) * 2.5 : 0, walk: b.behavior === 'walk' && !b.pauseT, spin: dance,
-      rainbow: b.rainbow > 0 ? Math.min(1, b.rainbow / 40) : 0, squash: b.hopV < 0 ? 1.12 : b.hop < 0 ? 1.05 : 1,
+      rainbow: b.rainbow > 0 ? Math.min(1, b.rainbow / 40) : 0,
+      squash: b.squish > 0 ? 1 - Math.sin(b.squish / 14 * Math.PI) * 0.32 : b.hopV < 0 ? 1.12 : b.hop < 0 ? 1.05 : 1,
       lookX: BB.clamp(((b.lookAt || 0) - b.x) / 100, -1, 1),
     };
     if (b.king) {
@@ -240,5 +324,5 @@
     }
   }
 
-  BB.Bugs = { create, update, hit, draw };
+  BB.Bugs = { create, update, hit, draw, paradeStep, liftOf: kind => (LIFT[kind] || 9) * LOOK };
 })(window.BB);
