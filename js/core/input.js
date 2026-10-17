@@ -10,6 +10,9 @@
 //  pause menu), the second gamepad drives `Input.p2`, and so do the
 //  keys I J K L (with O / U to blow bubbles) and the number pad
 //  (4 6 move, 8 jump, 0 or 5 bubble).
+//  On a tablet, player one plays on the touch buttons, so a single
+//  controller is player two's: its Start joins them (instead of pausing),
+//  and once they've joined every controller belongs to player two.
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -48,7 +51,10 @@
   const kb2Held = blank(), kb2Latch = blank();
   let pad2Held = blank();
   const prev2Held = blank();
-  let joinLatch = false, pad2StartPrev = false;
+  let joinLatch = false, pad2StartPrev = false, swallowStart = false;
+  // when player one last played on the touch buttons / on the first gamepad
+  let lastTouchAt = -1, lastPadAt = -1;
+  const p1OnTouch = () => lastTouchAt > lastPadAt;
 
   // player two's controls, in the same shape as player one's
   const p2 = {
@@ -70,6 +76,11 @@
 
     p2,
     split: false,             // a second kitten is playing (J/K/I/L/O/U & pad 2 are theirs)
+    padsToP2: false,          // …and player one is on touch, so every gamepad is theirs
+
+    // a friend joins as the second kitten, or stops playing
+    startSplit() { this.split = true; this.padsToP2 = p1OnTouch(); swallowStart = true; },
+    endSplit() { this.split = false; this.padsToP2 = false; },
     joinPressed: false,       // someone asked to join as player two this tick
 
     poll() {
@@ -174,13 +185,27 @@
     let n = 0, start2 = false;
     for (const gp of pads) {
       if (!gp || !gp.connected) continue;
-      if (n++ === 0) { readPad(gp, out); continue; }
-      const tmp = blank();
-      if (readPad(gp, tmp)) start2 = true;
-      if (Input.split) { for (const a of ACTIONS) if (tmp[a]) out2[a] = true; }
-      else if (!tmp.pause) { for (const a of ACTIONS) if (tmp[a]) out[a] = true; } // (Start here asks to join instead)
+      const first = n++ === 0, tmp = blank();
+      const start = readPad(gp, tmp);
+      // which kitten does this pad drive? The first one is player one's,
+      // unless player one is playing on the touch buttons (a tablet)
+      const asP2 = Input.split ? !first || Input.padsToP2 : !first || (Input.touchEnabled && p1OnTouch());
+      if (asP2 && start) start2 = true;
+      if (Input.split && asP2) { for (const a of ACTIONS) if (tmp[a]) out2[a] = true; }
+      else if (asP2 && start) { /* Start here asks to join instead of pausing */ }
+      else {
+        for (const a of ACTIONS) if (tmp[a]) out[a] = true;
+        // (while someone is busy on the touch buttons, a friend fiddling with
+        // the controller doesn't take player one over; a few quiet seconds
+        // later, a grown-up playing solo with a controller does)
+        const now = performance.now();
+        if (first && ACTIONS.some(a => tmp[a]) && now - lastTouchAt > 3000) lastPadAt = now;
+      }
     }
     if (start2 && !pad2StartPrev && !Input.split) joinLatch = true;
+    // the Start press that joined player two doesn't also pause the game
+    if (!start2) swallowStart = false;
+    else if (swallowStart) out2.pause = false;
     pad2StartPrev = start2;
     pad2Held = out2;
     return out;
@@ -232,6 +257,7 @@
       if (!a) return;
       e.preventDefault();
       Input.device = 'touch';
+      lastTouchAt = performance.now();
       try { pad.setPointerCapture(e.pointerId); } catch (err) { /* older browsers */ }
       fingers.set(e.pointerId, a);
       recomputeTouch();
@@ -253,7 +279,7 @@
   }
 
   window.addEventListener('pointerdown', e => {
-    if (e.pointerType === 'touch') { Input.enableTouch(); Input.device = 'touch'; }
+    if (e.pointerType === 'touch') { Input.enableTouch(); Input.device = 'touch'; lastTouchAt = performance.now(); }
   }, { passive: true, capture: true });
 
   // Touch-first devices (tablets, phones) show the buttons from the start;

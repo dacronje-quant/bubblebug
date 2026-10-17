@@ -46,7 +46,7 @@
       else if (b === 'map') { this.map = true; this.t = 0; this.drag = null; this.holdT = 0; BB.MapView.openFull(); }
       else if (b === 'book') { const z = BB.Play.room ? BB.Play.room.zone : 0; this.book = { page: z === BB.HOME_ZONE ? 0 : Math.max(0, this.bookPages().indexOf(z)), t: 0, flip: 0 }; }
       else if (b === 'duo') { if (BB.Play.pl2) BB.Play.leaveP2(); else BB.Play.joinP2(); this.leave(); BB.Main.go('play-resume'); }
-      else if (b === 'home') { this.leave(); BB.Play.writeSave(); BB.Play.pl2 = null; BB.Input.split = false; BB.Main.go('title'); }
+      else if (b === 'home') { this.leave(); BB.Play.writeSave(); BB.Play.pl2 = null; BB.Input.endSplit(); BB.Main.go('title'); }
     },
 
     update() {

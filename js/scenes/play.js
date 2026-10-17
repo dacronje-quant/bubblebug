@@ -145,7 +145,7 @@
       this.lantern = null;
       this.iris = { t: 0, close: false };
       this.followers = []; this.trail = []; this.parade = [];
-      this.pl2 = null; BB.Input.split = false;
+      this.pl2 = null; BB.Input.endSplit();
       this.powerShow = 260; this.powerFlash = {}; this.starFly = [];
       this.timers = []; this.orbs = []; this.hopHome = []; this.healFx = [];
       this.guidance = { jobs: {}, next: 0 };
@@ -459,7 +459,7 @@
       pl.guest = true;
       pl.body.grounded = b.grounded; pl.body.facing = b.facing;
       this.pl2 = { pl, quiet: 0, ride: null };
-      BB.Input.split = true;
+      BB.Input.startSplit();
       S().join(); S().meow(cat);
       const x = pl.body.x + 10, y = pl.body.y + 12;
       PT().ring(x, y, '#ffffff', 26);
@@ -474,7 +474,7 @@
       PT().burst('spark', b.x + 10, b.y + 12, 12, { color: '#fff4c2', speed: 2, life: 26 });
       S().peep();
       this.pl2 = null;
-      BB.Input.split = false;
+      BB.Input.endSplit();
     },
 
     // carry player two back beside player one in a big bubble
