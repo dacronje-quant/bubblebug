@@ -273,6 +273,8 @@ Grass and flower tufts bend as your kitten brushes past, then spring back. Paw p
 
 **Life all around.** Butterflies and birds drift through the far-off sky, bats flit about the caverns, bees buzz round the hive, fish swim past in the lagoon, fireflies glow at the springs and stars shoot across the night sky. Soft, out-of-focus grass, crystals, coral, bamboo and snow drift by along the bottom of the screen, closer than your kitten, for a feeling of depth (not at home, in the neighbourhood or in boss arenas). Floating ledges are chunky with soft shadows underneath, and glimmer gently in dark caves so they're always easy to find. In the air, your kitten's shadow stays on the ground below and shrinks as it goes higher, so landings are easy to judge.
 
+**Solid ground underfoot.** The ground under a room's floor carries on down to the bottom of the screen, so you never glimpse another room underneath (on tablets the view sits a little lower to keep the floor clear of the thumb buttons). Real holes and drops stay open, so a way down always shows.
+
 **A tidy screen.** In the compact top-left HUD, the row of power icons shows for a few seconds when you enter a zone or pause, then tucks itself away; whenever you use a power, its icon pops up for a moment. (On wide screens the side rails keep showing everything.)
 
 ## ☀ Easy, Medium or Hard

@@ -1498,6 +1498,8 @@
       for (const r of visible) if (r.def.neighbourhood) BB.Neighbourhood.drawFront(c, r, cam, t);
       for (const r of visible) if (r.def.home) BB.Home.drawFront(c, r, cam, t, this);
       if (this.intro) BB.Home.drawIntro(c, cam, this);
+      // the ground under the floor carries on down: no peeking into the room below
+      for (const r of room.camGroup ? room.camGroup.rooms : [room]) BB.Tiles.drawUnder(c, r, cam);
       // soft out-of-focus plants drifting past in front (not at home, in the
       // neighbourhood or in boss arenas)
       BB.Scenery.drawFront(c, BB.ZONES[room.zone].key, cam, this.frontA == null ? 0 : this.frontA);

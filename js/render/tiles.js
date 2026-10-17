@@ -21,7 +21,25 @@
   const W = () => BB.World;
 
   const solidCh = ch => ch === '#' || ch === 'H' || ch === 'I' || ch === null;
-  const isSolid = (tx, ty) => solidCh(W().tile(tx, ty));
+  // A floor at the bottom of a room reads as ground that carries on down:
+  // under each solid bottom tile, the soil continues (as artwork) even where
+  // another room happens to lie below, unless that room is part of the same
+  // camera group (walked into without a glide). `soilRoom` is the room
+  // being painted, so its bottom soil has no underside edge.
+  let soilRoom = null;
+  function soilCol(room, col) {
+    const ch = room.grid[room.h - 1][col];
+    if (ch !== '#' && ch !== 'I') return false;
+    const below = W().roomAtTile(room.x + col, room.y + room.h);
+    return !below || !room.camGroup || below.camGroup !== room.camGroup;
+  }
+  const isSolid = (tx, ty) => {
+    // (side-by-side rooms of one camera group share their continuing soil)
+    if (soilRoom) for (const r of soilRoom.camGroup ? soilRoom.camGroup.rooms : [soilRoom]) {
+      if (ty >= r.y + r.h && tx >= r.x && tx < r.x + r.w && soilCol(r, tx - r.x)) return true;
+    }
+    return solidCh(W().tile(tx, ty));
+  };
 
   // Terrain is cached in chunks of CHUNK×CHUNK tiles (built only when on
   // screen, kept within a small budget): one huge canvas per room was slow
@@ -690,16 +708,22 @@
     // Continue boundary soil into the world's already-solid exterior. This
     // is artwork only: no tiles or collision data change, and real rooms,
     // water, openings and lower routes are never painted over.
+    // Where another room lies below a solid floor, the continuing soil goes
+    // on a separate `under` layer instead, drawn only while the kitten is in
+    // this room (see drawUnder), so the room below never peeks in.
+    let hasUnder = false;
     if (r1 === room.h) for (let col = c0; col < c1; col++) {
       const ch = room.grid[room.h - 1][col];
-      if (ch !== '#' && ch !== 'I') continue;
+      if (!soilCol(room, col)) continue;
+      const under = W().tile(room.x + col, room.y + room.h) !== null;
       for (let r = room.h; r < room.h + 6; r++) {
         const tx = room.x + col, ty = room.y + r;
-        if (W().tile(tx, ty) !== null) break;
-        tiles.push([ch, tx, ty, col * T, r * T]);
+        if (!under && W().tile(tx, ty) !== null) break;
+        tiles.push([ch, tx, ty, col * T, r * T, under]);
+        hasUnder = hasUnder || under;
       }
     }
-    const out = { canvas: null, shy: null, ext, version: room.version, scale: G.scale };
+    const out = { canvas: null, shy: null, under: null, ext, version: room.version, scale: G.scale };
     if (!tiles.length && !ledges.length) return out; // open sky: nothing to draw
     const layer = () => {
       const o = G.offscreen(ext.x1 - ext.x, ext.y1 - ext.y);
@@ -707,28 +731,31 @@
       o.ctx.beginPath(); o.ctx.rect(ext.x, ext.y, ext.x1 - ext.x, ext.y1 - ext.y); o.ctx.clip();
       return o;
     };
-    const off = layer(), shy = hasShy ? layer() : null;
+    const off = layer(), shy = hasShy ? layer() : null, und = hasUnder ? layer() : null;
     const cloudy = BB.ZONES[z].key === 'clouds';
-    for (const pass of ['outline', 'body', 'sides', 'top', 'bottom', 'edges']) {
-      for (const [ch, tx, ty, x, y] of tiles) {
-        const c = ch === 'H' ? shy.ctx : off.ctx;
-        const m = maskAt(tx, ty);
-        if (pass === 'outline') { if (cloudy) cloudOutline(c, tx, ty, x, y, m); }
-        else if (pass === 'body') { if (ch === 'I') paintIce(c, z, tx, ty, x, y, m); else paintBody(c, z, tx, ty, x, y, m); }
-        else if (ch === 'I') continue;
-        else if (pass === 'sides' && cloudy) {
-          if (!m.w) cloudSide(c, z, tx, ty, x, y, -1);
-          if (!m.e) cloudSide(c, z, tx, ty, x, y, 1);
-        } else if (pass === 'top' && !m.n) paintTop(c, z, tx, ty, x, y, m);
-        else if (pass === 'bottom' && !m.s) paintBottom(c, z, tx, ty, x, y);
-        else if (pass === 'edges') paintSolidEdges(c, z, x, y, m);
+    soilRoom = room; // (its floor's soil carries on down: see isSolid)
+    try {
+      for (const pass of ['outline', 'body', 'sides', 'top', 'bottom', 'edges']) {
+        for (const [ch, tx, ty, x, y, under] of tiles) {
+          const c = under ? und.ctx : ch === 'H' ? shy.ctx : off.ctx;
+          const m = maskAt(tx, ty);
+          if (pass === 'outline') { if (cloudy) cloudOutline(c, tx, ty, x, y, m); }
+          else if (pass === 'body') { if (ch === 'I') paintIce(c, z, tx, ty, x, y, m); else paintBody(c, z, tx, ty, x, y, m); }
+          else if (ch === 'I') continue;
+          else if (pass === 'sides' && cloudy) {
+            if (!m.w) cloudSide(c, z, tx, ty, x, y, -1);
+            if (!m.e) cloudSide(c, z, tx, ty, x, y, 1);
+          } else if (pass === 'top' && !m.n) paintTop(c, z, tx, ty, x, y, m);
+          else if (pass === 'bottom' && !m.s) paintBottom(c, z, tx, ty, x, y);
+          else if (pass === 'edges') paintSolidEdges(c, z, x, y, m);
+        }
       }
-    }
+    } finally { soilRoom = null; }
     // soft shadows under floating ledges first, so they read as solid
     // things you can stand on rather than thin lines
     for (const [tx, ty, x, y] of ledges) ledgeShadow(off.ctx, z, tx, ty, x, y);
     for (const [tx, ty, x, y] of ledges) paintLedge(off.ctx, z, tx, ty, x, y);
-    out.canvas = off.canvas; out.shy = shy && shy.canvas;
+    out.canvas = off.canvas; out.shy = shy && shy.canvas; out.under = und && und.canvas;
     return out;
   }
 
@@ -827,16 +854,46 @@
     const cya = Math.max(0, Math.floor((cam.y - room.py - 32) / (CHUNK * T))), cyb = Math.min(Math.ceil(room.h / CHUNK) - 1, Math.floor((cam.y + G.H - room.py + 32) / (CHUNK * T)));
     if (shyOnly) c.globalAlpha = shyAlpha;
     for (let cy = cya; cy <= cyb; cy++) for (let cx = cxa; cx <= cxb; cx++) {
-      const e = chunk(room, cx, cy), img = shyOnly ? e.shy : e.canvas;
-      if (!img) continue;
-      const ox = room.px + e.ext.x, oy = room.py + e.ext.y, ow = e.ext.x1 - e.ext.x, oh = e.ext.y1 - e.ext.y;
-      const x0 = Math.max(ox, cam.x), y0 = Math.max(oy, cam.y);
-      const x1 = Math.min(ox + ow, cam.x + G.W), y1 = Math.min(oy + oh, cam.y + G.H);
-      if (x1 <= x0 || y1 <= y0) continue;
-      const k = e.scale;
-      c.drawImage(img, (x0 - ox) * k, (y0 - oy) * k, (x1 - x0) * k, (y1 - y0) * k, x0 - cam.x, y0 - cam.y, x1 - x0, y1 - y0);
+      const e = chunk(room, cx, cy);
+      blit(c, room, cam, e, shyOnly ? e.shy : e.canvas);
     }
     c.globalAlpha = 1;
+  }
+
+  // the on-screen part of one cached chunk layer
+  function blit(c, room, cam, e, img) {
+    if (!img) return;
+    const ox = room.px + e.ext.x, oy = room.py + e.ext.y, ow = e.ext.x1 - e.ext.x, oh = e.ext.y1 - e.ext.y;
+    const x0 = Math.max(ox, cam.x), y0 = Math.max(oy, cam.y);
+    const x1 = Math.min(ox + ow, cam.x + G.W), y1 = Math.min(oy + oh, cam.y + G.H);
+    if (x1 <= x0 || y1 <= y0) return;
+    const k = e.scale;
+    // chunk edges rarely fall on whole screen pixels: reach one pixel
+    // further so neighbouring chunks overlap instead of leaving a hairline
+    const px = 1 / k;
+    c.drawImage(img, (x0 - ox) * k, (y0 - oy) * k, (x1 - x0) * k, (y1 - y0) * k, x0 - cam.x, y0 - cam.y, x1 - x0 + px, y1 - y0 + px);
+  }
+
+  // The soil under the current room's floor, covering any room below it
+  // (drawn over the world, under the HUD). Six tiles of real soil art, then
+  // the deepest soil colour on down to the bottom of the screen.
+  function drawUnder(c, room, cam) {
+    const bottom = room.py + room.ph;
+    if (bottom >= cam.y + G.H) return; // the floor's underside isn't on screen
+    const cy = Math.ceil(room.h / CHUNK) - 1;
+    const cxa = Math.max(0, Math.floor((cam.x - room.px - 32) / (CHUNK * T))), cxb = Math.min(Math.ceil(room.w / CHUNK) - 1, Math.floor((cam.x + G.W - room.px + 32) / (CHUNK * T)));
+    for (let cx = cxa; cx <= cxb; cx++) blit(c, room, cam, chunk(room, cx, cy), chunk(room, cx, cy).under);
+    const deep = bottom + 6 * T;
+    if (deep >= cam.y + G.H) return;
+    c.fillStyle = BB.ZONES[room.zone].groundDark;
+    const col0 = Math.max(0, Math.floor((cam.x - room.px) / T)), col1 = Math.min(room.w - 1, Math.floor((cam.x + G.W - room.px) / T));
+    for (let col = col0; col <= col1; col++) {
+      if (!soilCol(room, col) || W().tile(room.x + col, room.y + room.h) === null) continue;
+      let end = col;
+      while (end < col1 && soilCol(room, end + 1) && W().tile(room.x + end + 1, room.y + room.h) !== null) end++;
+      c.fillRect(room.px + col * T - cam.x - 0.5, deep - cam.y - 1, (end - col + 1) * T + 1, cam.y + G.H - deep + 1);
+      col = end;
+    }
   }
 
   // front=false: breezes, petals, gates, mushrooms · front=true: water (over the kitten)
@@ -1182,5 +1239,5 @@
     for (const [k, v] of squash) { if (v <= 1) squash.delete(k); else squash.set(k, v - 1); }
   }
 
-  BB.Tiles = { warm, drawBounds, drawStatic, drawLive, bounce, tick, flower, flowerStamp, crystalCluster, clear: () => cache.clear() };
+  BB.Tiles = { warm, drawBounds, drawStatic, drawUnder, drawLive, bounce, tick, flower, flowerStamp, crystalCluster, clear: () => cache.clear() };
 })(window.BB);
