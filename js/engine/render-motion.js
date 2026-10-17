@@ -30,6 +30,7 @@
       capture(BB.Camera, ['x', 'y']);
       capture(BB.Camera.slide, ['t']);
       capture(p.pl); capture(p.pl && p.pl.body, ['x', 'y']);
+      if (p.pl2) { capture(p.pl2.pl); capture(p.pl2.pl.body, ['x', 'y']); }
       const rooms = p.visibleRooms || [];
       for (const room of [p.room, ...rooms]) {
         const e = room && p.ents[room.id];

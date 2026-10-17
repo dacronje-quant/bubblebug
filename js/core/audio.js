@@ -19,6 +19,15 @@
   const effectGap = { meow: 0.58, purr: 3, sparkle: 0.055, flower: 0.12, firefly: 0.15 };
   let muted = false;
   try { muted = localStorage.getItem('bubblebug_muted') === '1'; } catch (e) { /* private mode */ }
+  // Grown-up volume levels for music, sound effects and the voice: 0 (off)
+  // to 5, kept on this device. 4 is the game's normal mix; 5 is a bit louder.
+  const LEVELS = [0, 0.25, 0.5, 0.75, 1, 1.3];
+  const levels = { music: 4, sfx: 4, voice: 4 };
+  try {
+    const saved = JSON.parse(localStorage.getItem('bubblepaws_volume') || '{}');
+    for (const k in levels) if (Number.isInteger(saved[k]) && saved[k] >= 0 && saved[k] < LEVELS.length) levels[k] = saved[k];
+  } catch (e) { /* private mode / old value */ }
+  const vol = k => LEVELS[levels[k]];
 
   const midi = m => 440 * Math.pow(2, (m - 69) / 12);
 
@@ -38,8 +47,8 @@
     master.connect(comp);
 
     sfxBus = ctx.createGain(); sfxBus.gain.value = 0.8; sfxBus.connect(master);
-    musicBus = ctx.createGain(); musicBus.gain.value = speechActive ? 0.55 * 0.18 : 0.55; musicBus.connect(master);
-    sfxBus.gain.value = speechActive ? 0.8 * 0.4 : 0.8;
+    musicBus = ctx.createGain(); musicBus.gain.value = (speechActive ? 0.55 * 0.18 : 0.55) * vol('music'); musicBus.connect(master);
+    sfxBus.gain.value = (speechActive ? 0.8 * 0.4 : 0.8) * vol('sfx');
 
     // Generated hall reverb: two channels of exponentially decaying noise
     reverb = ctx.createConvolver();
@@ -632,9 +641,9 @@
     const t = ctx.currentTime;
     const eventAmount = t < duckUntil ? duckAmount : 1;
     musicBus.gain.cancelScheduledValues(t);
-    musicBus.gain.setTargetAtTime(0.55 * Math.min(eventAmount, speechActive ? 0.18 : 1), t, speechActive ? 0.06 : eventAmount < 1 ? 0.08 : 0.6);
+    musicBus.gain.setTargetAtTime(0.55 * vol('music') * Math.min(eventAmount, speechActive ? 0.18 : 1), t, speechActive ? 0.06 : eventAmount < 1 ? 0.08 : 0.6);
     sfxBus.gain.cancelScheduledValues(t);
-    sfxBus.gain.setTargetAtTime(0.8 * (speechActive ? 0.4 : 1), t, speechActive ? 0.06 : 0.35);
+    sfxBus.gain.setTargetAtTime(0.8 * vol('sfx') * (speechActive ? 0.4 : 1), t, speechActive ? 0.06 : 0.35);
   }
 
   function finishDuck() {
@@ -655,7 +664,7 @@
       get(target, name) {
         const fn = target[name];
         return (...args) => {
-          if (!ctx || muted || !fn || (speechActive && (name === 'meow' || name === 'purr'))) return;
+          if (!ctx || muted || !fn || !levels.sfx || (speechActive && (name === 'meow' || name === 'purr'))) return;
           const t = ctx.currentTime;
           if (effectGap[name] && lastEffect[name] != null && t - lastEffect[name] < effectGap[name]) return;
           lastEffect[name] = t;
@@ -670,6 +679,18 @@
       if (master) master.gain.setTargetAtTime(m ? 0 : 0.9, ctx.currentTime, 0.05);
     },
     toggle() { this.setMuted(!muted); return muted; },
+    // volume levels: kind = 'music' | 'sfx' | 'voice', n = 0 (off) … 5
+    LEVEL_MAX: LEVELS.length - 1,
+    level(kind) { return levels[kind]; },
+    // how loud the voice should play, 0…1 (recordings can't go past full)
+    get voiceVolume() { return Math.min(1, vol('voice')); },
+    setLevel(kind, n) {
+      if (!(kind in levels)) return;
+      levels[kind] = BB.clamp(Math.round(n), 0, LEVELS.length - 1);
+      try { localStorage.setItem('bubblepaws_volume', JSON.stringify(levels)); } catch (e) { /* ignore */ }
+      if (kind === 'voice' && BB.Voice) { if (!levels.voice) BB.Voice.stop(); else BB.Voice.setVolume(this.voiceVolume); }
+      else mix();
+    },
     setSpeechActive(active) { speechActive = !!active; mix(); },
     // Event ducks can overlap, but never lift the music during speech.
     duck(amount, seconds) {

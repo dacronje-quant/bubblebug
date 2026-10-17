@@ -54,7 +54,8 @@
   let joinLatch = false, pad2StartPrev = false, swallowStart = false;
   // when player one last played on the touch buttons / on the first gamepad
   let lastTouchAt = -1, lastPadAt = -1;
-  const p1OnTouch = () => lastTouchAt > lastPadAt;
+  // (a minute without touching the screen: a lone Start press pauses as usual)
+  const p1OnTouch = () => lastTouchAt > lastPadAt && performance.now() - lastTouchAt < 60000;
 
   // player two's controls, in the same shape as player one's
   const p2 = {
@@ -77,6 +78,8 @@
     p2,
     split: false,             // a second kitten is playing (J/K/I/L/O/U & pad 2 are theirs)
     padsToP2: false,          // …and player one is on touch, so every gamepad is theirs
+    padJoinedAt: -1,          // a controller that could be player two was just connected
+    padLostAt: -1,            // a controller was disconnected
 
     // a friend joins as the second kitten, or stops playing
     startSplit() { this.split = true; this.padsToP2 = p1OnTouch(); swallowStart = true; },
@@ -211,6 +214,13 @@
     return out;
   }
 
+
+  // a controller is plugged in / paired, or goes away (flat battery…)
+  window.addEventListener('gamepadconnected', () => {
+    const n = (navigator.getGamepads ? [...navigator.getGamepads()] : []).filter(p => p && p.connected).length;
+    if (Input.touchEnabled || n >= 2) Input.padJoinedAt = performance.now();
+  });
+  window.addEventListener('gamepaddisconnected', () => { Input.padLostAt = performance.now(); });
 
   // ──── Touch buttons ────
   // Each finger remembers which button it's on; sliding a finger from

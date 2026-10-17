@@ -55,14 +55,21 @@
       return;
     }
     if (th.grow < 1) th.grow = Math.min(1, th.grow + 0.07);
-    if (ctx.pl.state === 'play' && reaches(th, ctx.pl.body)) eat(th, ctx);
+    const k = eater(th, ctx);
+    if (k) eat(th, ctx, k);
   }
 
-  function eat(th, ctx) {
+  // whichever kitten (of one or two) reaches the treat first
+  function eater(th, ctx) {
+    for (const k of ctx.kittens || [ctx.pl]) if (k.state === 'play' && reaches(th, k.body)) return k;
+    return null;
+  }
+
+  function eat(th, ctx, k) {
     th.eaten = true;
     if (th.drop) th.dead = true;
     else th.regrowT = REGROW[th.type];
-    ctx.onEat(th);
+    ctx.onEat(th, k);
   }
 
   // back again: quietly when you weren't looking, with a twinkle when you are
@@ -106,7 +113,8 @@
           S().land(false);
         }
       }
-      if (ctx.pl.state === 'play' && reaches(d, ctx.pl.body)) eat(d, ctx);
+      const k = eater(d, ctx);
+      if (k) eat(d, ctx, k);
       if (d.dead) drops.splice(i, 1);
     }
   }

@@ -145,7 +145,7 @@
       this.lantern = null;
       this.iris = { t: 0, close: false };
       this.followers = []; this.trail = []; this.parade = [];
-      this.pl2 = null; BB.Input.endSplit();
+      this.pl2 = null; BB.Input.endSplit(); this.joinWanted = false;
       this.powerShow = 260; this.powerFlash = {}; this.starFly = [];
       this.timers = []; this.orbs = []; this.hopHome = []; this.healFx = [];
       this.guidance = { jobs: {}, next: 0 };
@@ -501,8 +501,10 @@
       const q = this.pl2, pl = q.pl, b = pl.body, a = this.pl.body;
       const I2 = BB.Input.p2;
       if (I2.any) q.quiet = 0; else q.quiet++;
-      // nobody's played the second kitten for a minute: it waves bye-bye
-      if (q.quiet > 3600) { this.leaveP2(); return; }
+      // nobody's played the second kitten for a minute (or for five seconds
+      // after its controller went away): it waves bye-bye
+      const lost = BB.Input.padsToP2 && BB.Input.padLostAt > 0 && performance.now() - BB.Input.padLostAt < 60000;
+      if (q.quiet > 3600 || (lost && q.quiet > 300)) { this.leaveP2(); return; }
       if (q.ride) {
         const r = q.ride;
         r.t++;
@@ -856,11 +858,12 @@
         onSlide(th) { self.startStarfall(th); },
         // nom nom: in Hard a treat brings a sun back (a bowl, all of them);
         // in Easy it's just yummy
-        onEat(th) {
-          const big = th.type === 'bowl';
-          self.munchT = big ? 70 : 42;
-          self.pl.munchT = self.munchT; self.pl.munchLen = self.munchT;
-          self.pl.happyT = Math.max(self.pl.happyT, 24);
+        onEat(th, who) {
+          const big = th.type === 'bowl', pl = who || self.pl;
+          // (the second kitten munches too; the snack still cheers everyone up)
+          if (pl === self.pl) self.munchT = big ? 70 : 42;
+          pl.munchT = big ? 70 : 42; pl.munchLen = pl.munchT;
+          pl.happyT = Math.max(pl.happyT, 24);
           S().munch(big);
           PT().burst('dot', th.x, th.y - 16, big ? 14 : 8, { color: '#e0a060', speed: 2.2, life: 26, size: 2.4, g: 0.18, up: 0.9 });
           if (BB.Settings.hard && self.mood < C.MOOD_MAX) self.heal(big ? C.MOOD_MAX : 1, th.x, th.y - 24);
@@ -1073,6 +1076,7 @@
       this.t++;
       G().t++;
       const I = BB.Input;
+      if (I.joinPressed && !this.pl2) this.joinWanted = true;
       if (this.replayStarting) return;
       if (this.maze) { this.updateMaze(); return; }
       if (this.cloud) { this.updateCloud(); return; }
@@ -1140,7 +1144,8 @@
         this.save.voiceStory.tutorial_jump = 1;
       }
       this.flashPowers(fx, b, ab);
-      if (I.joinPressed && !this.pl2 && this.pl.state === 'play' && !this.traveling) this.joinP2();
+      // (a join asked for mid-door, mid-menu or mid-nap happens as soon as it can)
+      if (this.joinWanted && (this.pl2 || (this.pl.state === 'play' && !this.traveling && !this.gift))) { this.joinWanted = false; this.joinP2(); }
       if (this.pl2 && !this.traveling) this.updateP2(cam);
       this.pl.invuln = this.invuln;
       this.pl.sad = this.pl.state === 'sad' ? 1 : this.mood <= 1 ? 0.85 : this.mood === 2 ? 0.3 : 0;
@@ -1554,6 +1559,7 @@
       if (this.trickHint > 0) this.drawTrickHint(c, cam);
       this.drawWay(c, cam);
       this.drawGuidance(c, cam);
+      this.drawJoinHint(c, t);
       // (a lesson or present card takes the top of the screen: the zone
       // name steps aside instead of overlapping it)
       BB.HUD.drawZoneCard(c, this.cardZone, this.zoneCard / 40, t);
@@ -1636,6 +1642,37 @@
     drawShy(c, room, cam) {
       const a = this.shy[room.id] == null ? (this.save.secrets[room.id] ? 0.55 : 1) : this.shy[room.id];
       BB.Tiles.drawStatic(c, room, cam, a, true);
+    },
+
+    // A controller was just connected: a picture card shows how a friend
+    // joins (Start on the controller → a second kitten pops in)
+    drawJoinHint(c, t) {
+      const at = BB.Input.padJoinedAt;
+      if (this.pl2 || at < 0) return;
+      const age = (performance.now() - at) / 1000;
+      if (age > 7) return;
+      const a = Math.min(1, age * 4, (7 - age) * 2);
+      const cx = G().W / 2, cy = G().H - 92;
+      c.save(); c.globalAlpha = a;
+      c.fillStyle = 'rgba(255,250,240,0.95)'; c.strokeStyle = '#7cc8ff'; c.lineWidth = 4;
+      G().rrect(cx - 150, cy - 46, 300, 92, 26, c); c.fill(); c.stroke();
+      // the controller, its Start button pulsing
+      const px = cx - 78, pulse = 1 + Math.sin(t * 0.2) * 0.2;
+      c.fillStyle = '#5a5f7a';
+      G().rrect(px - 40, cy - 18, 80, 36, 18, c); c.fill();
+      G().circle(px - 26, cy + 14, 13, c); c.fill(); G().circle(px + 26, cy + 14, 13, c); c.fill();
+      c.fillStyle = '#d8dcef'; c.fillRect(px - 31, cy - 3, 14, 4); c.fillRect(px - 26, cy - 8, 4, 14);
+      c.fillStyle = '#ff7eb6'; G().circle(px + 24, cy - 4, 4, c); c.fill();
+      c.fillStyle = '#7cc8ff'; G().circle(px + 32, cy + 3, 4, c); c.fill();
+      G().drawGlow(px + 3, cy - 6, 16 * pulse, '#fff4c2', 0.9, c);
+      c.fillStyle = '#ffe27a'; G().rrect(px - 3, cy - 9, 12, 6, 3, c); c.fill();
+      // → a second kitten
+      c.strokeStyle = '#9a7ac8'; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
+      c.beginPath(); c.moveTo(cx - 22, cy); c.lineTo(cx + 2, cy); c.moveTo(cx - 6, cy - 8); c.lineTo(cx + 2, cy); c.lineTo(cx - 6, cy + 8); c.stroke();
+      const cat = this.pl.cat === 'phoebe' ? 'marshmallow' : 'phoebe';
+      BB.Kittens.draw(c, cat, { mode: 'sit', happy: true, t, blink: 0 }, cx + 78, cy + 26, 1.25, -1);
+      c.fillStyle = '#7cc8ff'; G().heart(cx + 120, cy - 22, 8, c); c.fill();
+      c.restore();
     },
 
     // a little heart bobbing over the second kitten, so each player can spot theirs

@@ -4,7 +4,9 @@
 //  stops) and home 🏠 (back to the title screen). The sticker book has a
 //  page for each zone: a sticker for every kind of critter living there
 //  (in colour once you've made friends with one), the zone's boss and its
-//  hidden toy. Flip with ◀ ▶, close with ✕. The map shows
+//  hidden toy. Flip with ◀ ▶, close with ✕. The speaker opens the sound
+//  panel: all sound on/off, and how loud the music, the sound effects and
+//  the voice are (◀ ▶ or the − + buttons; kept on this device). The map shows
 //  every room you've visited in its biome colour, a star on rooms
 //  whose sparkles are all found, and your kitten's face where you are.
 //  It stays zoomed in; browse it with ◀ ▶ (▲ ▼) held down, by dragging, or
@@ -22,7 +24,7 @@
 
   BB.Pause = {
     t: 0, focus: 0, map: false, fromPlay: false,
-    enter() { this.t = 0; this.focus = 0; this.map = false; this.book = null; this.fromPlay = false; BB.Music.setMood({ paused: true }); },
+    enter() { this.t = 0; this.focus = 0; this.map = false; this.book = null; this.sound = null; this.fromPlay = false; BB.Music.setMood({ paused: true }); },
     // the map straight from play (map button, M / Tab / Select)
     openMap() {
       BB.Main.go('pause');
@@ -42,7 +44,7 @@
       const b = BUTTONS[i];
       BB.Audio.sfx.select();
       if (b === 'resume') { this.leave(); BB.Main.go('play-resume'); }
-      else if (b === 'sound') BB.Audio.toggle();
+      else if (b === 'sound') this.sound = { row: 0, t: 0 };
       else if (b === 'map') { this.map = true; this.t = 0; this.drag = null; this.holdT = 0; BB.MapView.openFull(); }
       else if (b === 'book') { const z = BB.Play.room ? BB.Play.room.zone : 0; this.book = { page: z === BB.HOME_ZONE ? 0 : Math.max(0, this.bookPages().indexOf(z)), t: 0, flip: 0 }; }
       else if (b === 'duo') { if (BB.Play.pl2) BB.Play.leaveP2(); else BB.Play.joinP2(); this.leave(); BB.Main.go('play-resume'); }
@@ -56,6 +58,7 @@
       const taps = I.takePointers();
       if (this.map) return this.updateMap(I, taps);
       if (this.book) return this.updateBook(I, taps);
+      if (this.sound) return this.updateSound(I, taps);
       if (I.pressed.pause || I.pressed.back) { this.leave(); BB.Main.go('play-resume'); return; }
       if (I.pressed.map) { this.focus = 2; this.activate(2); return; }
       if (I.pressed.left) { this.focus = (this.focus + NB - 1) % NB; BB.Audio.sfx.select(); }
@@ -74,6 +77,7 @@
       c.fillStyle = 'rgba(25,15,45,0.6)'; c.fillRect(0, 0, G().W, G().H);
       if (this.map) return this.drawMap(c);
       if (this.book) return this.drawBook(c);
+      if (this.sound) return this.drawSound(c);
       const t = this.t;
       for (let i = 0; i < NB; i++) {
         const q = this.pos(i), on = i === this.focus;
@@ -143,6 +147,116 @@
     },
 
     drawMap(c) { BB.MapView.draw(c, 'full', this.t); },
+
+    // ──── The sound panel ────
+    // Row 0: all sound on / off. Rows 1-3: music, sound effects, voice,
+    // each from off to a bit louder than normal.
+    soundRows: ['all', 'music', 'sfx', 'voice'],
+    soundRowY(i) { return G().H / 2 - 120 + i * 82; },
+
+    changeSound(row, d) {
+      const A = BB.Audio, kind = this.soundRows[row];
+      if (kind === 'all') { A.toggle(); BB.Audio.sfx.select(); return; }
+      const before = A.level(kind);
+      A.setLevel(kind, before + d);
+      if (A.level(kind) === before) return;
+      if (A.muted && A.level(kind) > 0) A.setMuted(false); // (turning one up turns sound back on)
+      // a little taste of the new level
+      if (kind === 'sfx') BB.Audio.sfx.sparkle();
+      else if (kind === 'voice' && A.level('voice') > 0) { BB.Voice.cancel('story_big_friend'); BB.Voice.play('story_big_friend', 350); }
+      else BB.Audio.sfx.select();
+    },
+
+    updateSound(I, taps) {
+      const sd = this.sound, rows = this.soundRows.length;
+      sd.t++;
+      const close = () => { this.sound = null; this.t = 0; BB.Audio.sfx.select(); };
+      if (sd.t > 8 && (I.pressed.back || I.pressed.pause)) return close();
+      // (▲ is also "jump" on the keyboard, so only ▼/▲ move between rows)
+      if (I.pressed.down) { sd.row = (sd.row + 1) % rows; BB.Audio.sfx.select(); }
+      if (I.pressed.up) { sd.row = (sd.row + rows - 1) % rows; BB.Audio.sfx.select(); }
+      if (I.pressed.left) this.changeSound(sd.row, -1);
+      if (I.pressed.right) this.changeSound(sd.row, 1);
+      if (I.pressed.confirm && sd.row === 0) this.changeSound(0, 0);
+      const cx = G().W / 2;
+      for (const p of taps) {
+        if (Math.hypot(p.x - (cx + 250), p.y - (this.soundRowY(0) - 50)) < 30) return close();
+        for (let i = 0; i < rows; i++) {
+          const y = this.soundRowY(i);
+          if (Math.abs(p.y - y) > 34) continue;
+          sd.row = i;
+          if (i === 0) { if (Math.abs(p.x - cx) < 200) this.changeSound(0, 0); }
+          else if (Math.hypot(p.x - (cx - 110), p.y - y) < 32) this.changeSound(i, -1);
+          else if (Math.hypot(p.x - (cx + 200), p.y - y) < 32) this.changeSound(i, 1);
+          else if (p.x > cx - 80 && p.x < cx + 170) {
+            // tap straight on a bar
+            const n = BB.clamp(Math.floor((p.x - (cx - 70)) / 46) + 1, 0, BB.Audio.LEVEL_MAX);
+            this.changeSound(i, n - BB.Audio.level(this.soundRows[i]));
+          }
+        }
+      }
+    },
+
+    drawSound(c) {
+      const sd = this.sound, A = BB.Audio, cx = G().W / 2;
+      const top = this.soundRowY(0) - 80, bottom = this.soundRowY(3) + 50;
+      c.fillStyle = '#fffaf0'; c.strokeStyle = '#5fb8ff'; c.lineWidth = 5;
+      G().rrect(cx - 290, top, 580, bottom - top, 32, c); c.fill(); c.stroke();
+      // ✕
+      const xx = cx + 250, xy = this.soundRowY(0) - 50;
+      c.fillStyle = '#ffffff'; c.strokeStyle = '#e8c8d8'; c.lineWidth = 2; G().circle(xx, xy, 22, c); c.fill(); c.stroke();
+      c.strokeStyle = '#d06a8a'; c.lineWidth = 5; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(xx - 8, xy - 8); c.lineTo(xx + 8, xy + 8); c.moveTo(xx + 8, xy - 8); c.lineTo(xx - 8, xy + 8); c.stroke();
+      this.soundRows.forEach((kind, i) => {
+        const y = this.soundRowY(i), on = i === sd.row;
+        if (on) { c.fillStyle = 'rgba(95,184,255,0.16)'; G().rrect(cx - 270, y - 34, 500, 68, 22, c); c.fill(); }
+        // the row's picture
+        const ix = cx - 200;
+        c.save(); c.translate(ix, y);
+        c.fillStyle = A.muted ? '#b8b0c8' : '#5fb8ff'; c.strokeStyle = c.fillStyle; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
+        if (kind === 'all') {
+          c.beginPath(); c.moveTo(-20, -8); c.lineTo(-10, -8); c.lineTo(2, -18); c.lineTo(2, 18); c.lineTo(-10, 8); c.lineTo(-20, 8); c.closePath(); c.fill();
+          if (A.muted) { c.strokeStyle = '#d06a8a'; c.beginPath(); c.moveTo(10, -9); c.lineTo(24, 9); c.moveTo(24, -9); c.lineTo(10, 9); c.stroke(); }
+          else { c.beginPath(); c.arc(4, 0, 10, -0.8, 0.8); c.stroke(); c.beginPath(); c.arc(4, 0, 19, -0.8, 0.8); c.stroke(); }
+        } else if (kind === 'music') {
+          // two beamed notes
+          c.beginPath(); c.moveTo(-6, 12); c.lineTo(-6, -14); c.lineTo(14, -18); c.lineTo(14, 8); c.stroke();
+          G().ellipse(-11, 12, 7, 5.5, -0.4, c); c.fill(); G().ellipse(9, 8, 7, 5.5, -0.4, c); c.fill();
+        } else if (kind === 'sfx') {
+          G().bubble(-2, 2, 15, '#bfe8ff', 1, c);
+          c.fillStyle = '#ffd84a'; G().twinkle(14, -14, 7, c); c.fill();
+        } else {
+          // a speech bubble with a smile
+          G().rrect(-20, -16, 40, 28, 12, c); c.fill();
+          c.beginPath(); c.moveTo(-10, 10); c.lineTo(-14, 20); c.lineTo(-2, 12); c.fill();
+          c.strokeStyle = '#ffffff'; c.lineWidth = 3;
+          c.beginPath(); c.arc(0, -4, 8, 0.3, Math.PI - 0.3); c.stroke();
+        }
+        c.restore();
+        if (kind === 'all') {
+          // a big on/off switch
+          const sx = cx + 40, k = A.muted ? 0 : 1;
+          c.fillStyle = A.muted ? '#d8d0e0' : '#5fd48a'; G().rrect(sx - 50, y - 22, 100, 44, 22, c); c.fill();
+          c.fillStyle = '#ffffff'; G().circle(sx - 28 + k * 56, y, 18, c); c.fill();
+          return;
+        }
+        const lv = A.level(kind), max = A.LEVEL_MAX;
+        // − and + buttons
+        for (const [bx, sign] of [[cx - 110, -1], [cx + 200, 1]]) {
+          const dim = (sign < 0 && lv === 0) || (sign > 0 && lv === max);
+          c.fillStyle = dim ? '#e4dee8' : '#5fb8ff'; G().circle(bx, y, 24, c); c.fill();
+          c.strokeStyle = '#ffffff'; c.lineWidth = 5; c.lineCap = 'round';
+          c.beginPath(); c.moveTo(bx - 10, y); c.lineTo(bx + 10, y); if (sign > 0) { c.moveTo(bx, y - 10); c.lineTo(bx, y + 10); } c.stroke();
+        }
+        // the level: bars that grow taller, like a phone's volume
+        for (let n = 1; n <= max; n++) {
+          const bx = cx - 70 + (n - 1) * 46, h = 12 + n * 7, lit = n <= lv;
+          c.fillStyle = lit ? (A.muted ? '#c8c0d0' : n === max ? '#ff9f5c' : '#5fd48a') : '#e8e2ec';
+          G().rrect(bx, y + 22 - h, 32, h, 7, c); c.fill();
+        }
+        if (lv === 0) { c.strokeStyle = '#d06a8a'; c.lineWidth = 4; c.beginPath(); c.moveTo(cx - 74, y + 22); c.lineTo(cx + 160, y - 22); c.stroke(); }
+      });
+    },
 
     // ──── The sticker book ────
     bookPages() { return BB.ZONES.map((z, i) => i).filter(i => i !== BB.HOME_ZONE); },

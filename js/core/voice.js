@@ -40,7 +40,9 @@
   }
   if (synth && 'onvoiceschanged' in synth) synth.onvoiceschanged = () => { voice = pick(); };
 
-  const muted = () => BB.Audio && BB.Audio.muted;
+  // (the voice turned all the way down counts as muted for speech)
+  const muted = () => BB.Audio && (BB.Audio.muted || BB.Audio.voiceVolume === 0);
+  const loud = () => (BB.Audio && BB.Audio.voiceVolume != null ? BB.Audio.voiceVolume : 1);
   function duck() {
     if (BB.Audio) { BB.Audio.setSpeechActive(true); ducked = true; }
   }
@@ -72,7 +74,7 @@
       if (!picked) voice = pick();
       const u = job.utterance = new SpeechSynthesisUtterance(job.clip.text);
       if (voice) u.voice = voice;
-      u.lang = voice ? voice.lang : 'en-GB'; u.rate = 0.95; u.pitch = 1.05; u.volume = 1;
+      u.lang = voice ? voice.lang : 'en-GB'; u.rate = 0.95; u.pitch = 1.05; u.volume = loud();
       u.onend = () => finish(job, true);
       u.onerror = () => finish(job);
       u.onstart = () => started(job);
@@ -91,7 +93,7 @@
       if (!job.clip.file || typeof window.Audio !== 'function') { fallback(job); return; }
       try {
         const a = job.audio = new window.Audio(job.clip.file);
-        a.preload = 'auto'; a.volume = 0.95;
+        a.preload = 'auto'; a.volume = 0.95 * loud();
         a.onended = () => finish(job, true);
         a.onerror = () => fallback(job);
         a.onplaying = () => {
@@ -130,6 +132,8 @@
       }
     },
     get currentId() { return current && current.id; },
+    // the grown-up voice slider moved: a recording already playing follows it
+    setVolume(v) { if (current && current.audio) { try { current.audio.volume = 0.95 * v; } catch (e) { /* optional audio */ } } },
     get queuedIds() { return queue.map(job => job.id); },
     // Walking into another room invalidates pending local announcements,
     // but a line already being heard finishes with its music duck intact.
