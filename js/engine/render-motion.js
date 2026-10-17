@@ -35,7 +35,7 @@
         const e = room && p.ents[room.id];
         if (e) { list(e.things); list(e.bugs); list(e.bosses); }
       }
-      list(p.followers); list(p.homeVisitors); list(p.orbs); list(p.healFx); list(p.hopHome);
+      list(p.followers); list(p.parade); list(p.homeVisitors); list(p.orbs); list(p.healFx); list(p.hopHome);
       list(p.party && p.party.guests); capture(p.party, ['t', 'card']);
       capture(p.iris, ['t']);
       capture(p.gardenBall); capture(p.gift && p.gift.orb);

@@ -41,7 +41,8 @@
   }
 
   // targets: [{ x, y, r, homing, hit(bubble) → true if consumed }]
-  function update(targets) {
+  // onWall(bubble): it popped against solid ground (bubble magic)
+  function update(targets, onWall) {
     for (let i = list.length - 1; i >= 0; i--) {
       const b = list[i];
       b.t++;
@@ -84,7 +85,7 @@
       }
       if (!gone) {
         const ch = BB.World.tile(Math.floor(b.x / T), Math.floor(b.y / T));
-        if (b.t > 2 && BB.Physics.solidSide(ch)) { pop(b); gone = true; }
+        if (b.t > 2 && BB.Physics.solidSide(ch)) { pop(b); gone = true; if (onWall) onWall(b); }
       }
       if (!gone && --b.life <= 0) { pop(b); gone = true; }
       if (gone) list.splice(i, 1);

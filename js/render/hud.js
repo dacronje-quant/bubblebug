@@ -416,19 +416,33 @@
       G.text(String(tricks), px + 58, 32, 22 * (1 + bounce.tricks * 0.2), '#fff4c2', 'rgba(40,20,60,0.6)');
     }
 
-    // abilities, then toys, along the second row
+    // abilities, then toys, along the second row. To keep the play area
+    // clear, the row only shows for a little while (a new zone, a new power,
+    // or while paused); otherwise a power's icon just pops up when used.
+    const show = s.showPowers == null ? 1 : s.showPowers, flash = s.powerFlash || {};
     let x = 26;
     for (const ab of ABILITIES) {
       if (!s.abilities[ab]) continue;
-      c.fillStyle = 'rgba(30,20,50,0.3)'; G.circle(x, 68, 15, c); c.fill();
-      abilityIcon(c, ab, x, 68, 0.95);
+      const f = Math.min(1, (flash[ab] || 0) / 20), a = Math.max(show, f);
+      if (a > 0.01) {
+        const pop = f > show ? 1 + Math.sin(Math.min(1, (flash[ab] || 0) / 60) * Math.PI) * 0.35 : 1;
+        c.save(); c.globalAlpha = a;
+        if (f > show) G.drawGlow(x, 68, 26, '#fff4c2', 0.7 * f, c);
+        c.fillStyle = 'rgba(30,20,50,0.3)'; G.circle(x, 68, 15, c); c.fill();
+        abilityIcon(c, ab, x, 68, 0.95 * pop);
+        c.restore();
+      }
       x += 34;
     }
-    let tx = x + (x > 26 ? 12 : 0);
-    for (const toy of TOYS) {
-      if (!(s.toys || {})[toy]) continue;
-      toyIcon(c, toy, tx, 68, 0.85, t);
-      tx += 27;
+    if (show > 0.01) {
+      c.save(); c.globalAlpha = show;
+      let tx = x + (x > 26 ? 12 : 0);
+      for (const toy of TOYS) {
+        if (!(s.toys || {})[toy]) continue;
+        toyIcon(c, toy, tx, 68, 0.85, t);
+        tx += 27;
+      }
+      c.restore();
     }
     c.restore();
   }

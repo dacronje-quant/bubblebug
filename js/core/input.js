@@ -4,6 +4,12 @@
 //      ◀  ▶  jump  bubble   (plus up/down/pause/map for menus)
 //  `poll()` runs once per simulation tick and produces clean
 //  `pressed` edges so a tap is never lost between frames.
+//
+//  A second kitten (two-player): once a friend joins (press 2 on the
+//  keyboard, Start on a second gamepad, or the two-kittens button in the
+//  pause menu), the second gamepad drives `Input.p2`, and so do the
+//  keys I J K L (with O / U to blow bubbles) and the number pad
+//  (4 6 move, 8 jump, 0 or 5 bubble).
 // ════════════════════════════════════════════════════════════════
 (function (BB) {
   'use strict';
@@ -23,6 +29,13 @@
     KeyM: ['map'], Tab: ['map'],
   };
 
+  // the second kitten's keys (J and K belong to player one until a friend joins)
+  const KEYMAP2 = {
+    KeyJ: ['left'], KeyL: ['right'], KeyI: ['jump'], KeyK: ['down'], KeyO: ['bubble'], KeyU: ['bubble'],
+    Numpad4: ['left'], Numpad6: ['right'], Numpad8: ['jump'], Numpad5: ['bubble'], Numpad0: ['bubble'],
+  };
+  const JOIN_KEYS = { Digit2: 1, Numpad2: 1 };
+
   const blank = () => Object.fromEntries(ACTIONS.map(a => [a, false]));
 
   const kbHeld = blank();
@@ -32,6 +45,18 @@
   const touchLatch = blank();
   let padHeld = blank();
   let prevHeld = blank();
+  const kb2Held = blank(), kb2Latch = blank();
+  let pad2Held = blank();
+  const prev2Held = blank();
+  let joinLatch = false, pad2StartPrev = false;
+
+  // player two's controls, in the same shape as player one's
+  const p2 = {
+    held: blank(), pressed: blank(), any: false,
+    physicsInput() {
+      return { left: this.held.left, right: this.held.right, jump: this.held.jump, jumpPressed: this.pressed.jump, bubblePressed: this.pressed.bubble };
+    },
+  };
 
   const Input = BB.Input = {
     held: blank(),
@@ -43,8 +68,23 @@
     pointerPos: null,         // hover position (mouse), logical coords
     pointerVersion: 0,        // only a new mouse movement changes menu focus
 
+    p2,
+    split: false,             // a second kitten is playing (J/K/I/L/O/U & pad 2 are theirs)
+    joinPressed: false,       // someone asked to join as player two this tick
+
     poll() {
       padHeld = readGamepads();
+      this.joinPressed = joinLatch;
+      joinLatch = false;
+      p2.any = false;
+      for (const a of ACTIONS) {
+        const h = kb2Held[a] || pad2Held[a];
+        p2.held[a] = h;
+        p2.pressed[a] = kb2Latch[a] || (h && !prev2Held[a]);
+        if (p2.pressed[a]) p2.any = true;
+        prev2Held[a] = h;
+        kb2Latch[a] = false;
+      }
       const anyPad = ACTIONS.some(a => padHeld[a]);
       if (anyPad) this.device = 'gamepad';
       this.any = false;
@@ -73,7 +113,7 @@
 
     clearAll() {
       kbCodes.clear();
-      for (const a of ACTIONS) { kbHeld[a] = kbLatch[a] = touchHeld[a] = touchLatch[a] = false; }
+      for (const a of ACTIONS) { kbHeld[a] = kbLatch[a] = touchHeld[a] = touchLatch[a] = kb2Held[a] = kb2Latch[a] = false; }
       fingers.clear();
       recomputeTouch();
     },
@@ -81,6 +121,13 @@
 
   // ──── Keyboard ────
   window.addEventListener('keydown', e => {
+    if (JOIN_KEYS[e.code] && !e.repeat) joinLatch = true;
+    const acts2 = Input.split ? KEYMAP2[e.code] : null;
+    if (acts2) {
+      e.preventDefault();
+      if (!e.repeat) for (const a of acts2) { kb2Held[a] = true; kb2Latch[a] = true; }
+      return;
+    }
     const acts = KEYMAP[e.code];
     if (acts) {
       e.preventDefault();
@@ -94,6 +141,8 @@
     }
   });
   window.addEventListener('keyup', e => {
+    const acts2 = KEYMAP2[e.code];
+    if (acts2) for (const a of acts2) kb2Held[a] = false;
     const acts = KEYMAP[e.code];
     kbCodes.delete(e.code);
     if (acts) for (const a of acts) kbHeld[a] = [...kbCodes].some(code => KEYMAP[code].includes(a));
@@ -101,26 +150,42 @@
   window.addEventListener('blur', () => Input.clearAll());
 
   // ──── Gamepads (standard mapping) ────
+  // The first gamepad is player one. Any other gamepad also drives player
+  // one, until a friend joins: then it's player two's (Start joins them).
+  function readPad(gp, out) {
+    const b = i => !!(gp.buttons[i] && (gp.buttons[i].pressed || gp.buttons[i].value > 0.5));
+    const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
+    if (ax < -0.35 || b(14)) out.left = true;
+    if (ax > 0.35 || b(15)) out.right = true;
+    if (ay < -0.5 || b(12)) out.up = true;
+    if (ay > 0.5 || b(13)) out.down = true;
+    if (b(0) || b(3)) { out.jump = true; out.confirm = true; }
+    if (b(1) || b(2) || b(4) || b(5) || b(6) || b(7)) out.bubble = true;
+    if (b(2)) out.confirm = true;
+    if (b(1)) out.back = true;
+    if (b(9)) out.pause = true;
+    if (b(8)) { out.back = true; out.map = true; }
+    return b(9);
+  }
+
   function readGamepads() {
-    const out = blank();
+    const out = blank(), out2 = blank();
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let n = 0, start2 = false;
     for (const gp of pads) {
       if (!gp || !gp.connected) continue;
-      const b = i => !!(gp.buttons[i] && (gp.buttons[i].pressed || gp.buttons[i].value > 0.5));
-      const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
-      if (ax < -0.35 || b(14)) out.left = true;
-      if (ax > 0.35 || b(15)) out.right = true;
-      if (ay < -0.5 || b(12)) out.up = true;
-      if (ay > 0.5 || b(13)) out.down = true;
-      if (b(0) || b(3)) { out.jump = true; out.confirm = true; }
-      if (b(1) || b(2) || b(4) || b(5) || b(6) || b(7)) out.bubble = true;
-      if (b(2)) out.confirm = true;
-      if (b(1)) out.back = true;
-      if (b(9)) out.pause = true;
-      if (b(8)) { out.back = true; out.map = true; }
+      if (n++ === 0) { readPad(gp, out); continue; }
+      const tmp = blank();
+      if (readPad(gp, tmp)) start2 = true;
+      if (Input.split) { for (const a of ACTIONS) if (tmp[a]) out2[a] = true; }
+      else if (!tmp.pause) { for (const a of ACTIONS) if (tmp[a]) out[a] = true; } // (Start here asks to join instead)
     }
+    if (start2 && !pad2StartPrev && !Input.split) joinLatch = true;
+    pad2StartPrev = start2;
+    pad2Held = out2;
     return out;
   }
+
 
   // ──── Touch buttons ────
   // Each finger remembers which button it's on; sliding a finger from

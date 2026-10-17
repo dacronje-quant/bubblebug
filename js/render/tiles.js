@@ -522,6 +522,15 @@
   }
 
   // ──── One-way ledges ────
+  function ledgeShadow(c, z, tx, ty, x, y) {
+    if (BB.ZONES[z].key === 'clouds' || BB.Physics.solidSide(W().tile(tx, ty + 1))) return;
+    const L = W().tile(tx - 1, ty) === '-', R = W().tile(tx + 1, ty) === '-';
+    const g = c.createLinearGradient(0, y + 10, 0, y + 30);
+    g.addColorStop(0, 'rgba(20,10,40,0.26)'); g.addColorStop(1, 'rgba(20,10,40,0)');
+    c.fillStyle = g;
+    c.fillRect(x + (L ? 0 : 6), y + 10, T - (L ? 0 : 6) - (R ? 0 : 6), 20);
+  }
+
   function paintLedge(c, z, tx, ty, x, y) {
     const Z = BB.ZONES[z];
     const L = W().tile(tx - 1, ty) === '-', R = W().tile(tx + 1, ty) === '-';
@@ -589,17 +598,22 @@
       return;
     }
     if (Z.key === 'caves') {
-      c.fillStyle = BB.rgba('#b8d4ff', 0.85); c.strokeStyle = '#5a6fc0'; c.lineWidth = 1;
-      c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.lineTo(x1 - (R ? 0 : 4), y + 8); c.lineTo(x0 + (L ? 0 : 4), y + 8); c.closePath(); c.fill(); c.stroke();
-      c.fillStyle = 'rgba(255,255,255,0.8)'; c.fillRect(x0 + 2, y + 1, x1 - x0 - 4, 1.5);
+      c.fillStyle = BB.rgba('#7f96e0', 0.95);
+      c.beginPath(); c.moveTo(x0, y + 4); c.lineTo(x1, y + 4); c.lineTo(x1 - (R ? 0 : 6), y + 13); c.lineTo(x0 + (L ? 0 : 6), y + 13); c.closePath(); c.fill();
+      c.fillStyle = BB.rgba('#d4e4ff', 0.97); c.strokeStyle = '#5a6fc0'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.lineTo(x1 - (R ? 0 : 3), y + 7); c.lineTo(x0 + (L ? 0 : 3), y + 7); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.95)'; c.fillRect(x0 + 2, y + 1, x1 - x0 - 4, 1.5);
+      if (h(40) < 0.35) { c.fillStyle = '#ffffff'; G.star(x + 8 + h(41) * 16, y + 4, 2, 4, 0.4, 0, c); c.fill(); }
       return;
     }
-    // wooden / wax plank
+    // wooden / wax plank, with a chunky underside so it reads as solid
+    c.fillStyle = BB.mix(Z.ledgeDark, '#1b1433', 0.25);
+    G.rrect(x0, y + 4, x1 - x0, 9, L && R ? 0 : 4, c); c.fill();
     c.fillStyle = Z.ledgeDark;
     G.rrect(x0, y + 1, x1 - x0, 9, L && R ? 0 : 4, c); c.fill();
     c.fillStyle = Z.ledge;
     G.rrect(x0, y, x1 - x0, 6, L && R ? 0 : 3, c); c.fill();
-    c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(x0 + 2, y + 1, x1 - x0 - 4, 1.5);
+    c.fillStyle = 'rgba(255,255,255,0.45)'; c.fillRect(x0 + 2, y + 1, x1 - x0 - 4, 1.5);
     if (Z.key === 'hive') {
       c.strokeStyle = BB.rgba(Z.ledgeDark, 0.8); c.lineWidth = 1;
       for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(x + 5 + i * 11, y + 1); c.lineTo(x + 8 + i * 11, y + 5); c.lineTo(x + 5 + i * 11, y + 9); c.stroke(); }
@@ -710,6 +724,9 @@
         else if (pass === 'edges') paintSolidEdges(c, z, x, y, m);
       }
     }
+    // soft shadows under floating ledges first, so they read as solid
+    // things you can stand on rather than thin lines
+    for (const [tx, ty, x, y] of ledges) ledgeShadow(off.ctx, z, tx, ty, x, y);
     for (const [tx, ty, x, y] of ledges) paintLedge(off.ctx, z, tx, ty, x, y);
     out.canvas = off.canvas; out.shy = shy && shy.canvas;
     return out;
